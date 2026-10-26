@@ -1,0 +1,11 @@
+{
+  "name": "@vitrina/meta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@meta-sam/parser": "0.1.0"
+  }
+}

@@ -4,19 +4,40 @@ Film it, sell it: a shop films its showroom once, and an AI seller on WhatsApp k
 
 Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Oct 26 – Nov 4, 2026), Startup track, from the team behind [airi.chat](https://airi.chat).
 
-**Status:** building starts on Oct 27. There is no product code yet.
+- [docs/architecture.md](docs/architecture.md): how it works, which Meta models do what, and how it stays separate from airi.chat
+- [HACKATHON.md](HACKATHON.md): how to tell what was built during the hackathon
 
-[HACKATHON.md](HACKATHON.md) explains how to tell what was built during the hackathon.
+## Status
 
-## Working in this repo
+Day 1: the Meta Model API client, the spend cap and the first experiments on a real shop video.
 
-After cloning, turn on the commit-message rule:
+## Setup
+
+Requires Node.js 24, pnpm 11 and ffmpeg.
 
 ```bash
+pnpm install
+cp .env.example .env
 git config core.hooksPath .githooks
 ```
 
-Every commit subject starts with `meta-ai-hackathon: `, for example `meta-ai-hackathon: product tracking from video`.
+Put your Meta Model API key in `.env`. Every commit subject starts with `meta-ai-hackathon: `.
+
+## Run the experiments
+
+```bash
+pnpm spike:video path/to/shop-video.mp4
+pnpm spike:sam path/to/shop-video.mp4 "medal" --file-id=<id printed by spike:video>
+```
+
+The first lists the products Muse Spark sees and hears in the video. The second tracks one kind of product with SAM 3.1 and saves a cut-out of each item. Results go to `.data/spikes/`, which git ignores.
+
+## Checks
+
+```bash
+pnpm typecheck
+pnpm test
+```
 
 ## License
 

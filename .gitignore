@@ -9,9 +9,10 @@ coverage/
 .env.*
 !.env.example
 
-# Raw footage stays out of git
+# Raw footage, spike output and the spend ledger stay out of git
 *.mp4
 *.mov
+.data/
 
 .DS_Store
 Thumbs.db
