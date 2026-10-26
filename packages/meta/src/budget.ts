@@ -6,7 +6,10 @@ import { dirname } from "node:path";
 const TOKEN_PRICES: Readonly<Record<string, { input: number; cachedInput: number; output: number }>> = {
   "muse-spark-1.3": { input: 1.25, cachedInput: 0.15, output: 4.25 },
   // Baseten Model API list price for Muse Spark Open (baseten.co/library/muse-spark-open).
+  // -1026 is the hackathon deployment, available once Baseten approves the credit request;
+  // until then an account only has the public ID.
   "meta-models/muse-spark-open-1026": { input: 1.25, cachedInput: 0.15, output: 4.25 },
+  "meta-models/muse-spark-open": { input: 1.25, cachedInput: 0.15, output: 4.25 },
 };
 
 const SAM_VIDEO_USD_PER_FRAME = 0.2 / 1000;

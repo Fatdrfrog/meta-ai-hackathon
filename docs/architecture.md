@@ -45,11 +45,15 @@ The two meet at one documented contract, the **channel**: a customer message com
 ## Pipeline
 
 ```
-shop video ──► normalize (ffmpeg) ──► Muse Spark: products, narration, prices, SAM concepts
-                                  └─► SAM 3.1: track each product, one id per item ──► best-frame cut-outs
-                                                                    │
-                                              catalog (owner confirms unsure items)
-                                                                    │
+shop video ──► normalize (ffmpeg) ──┬─► audio ──► Scribe: timestamped transcript ──┐
+                                    └─► video ─────────────────────────────────────┴─► Muse Spark: products,
+                                                                                         prices, doubts, clearest
+                                                                                         moment, search phrase
+                                                                                               │
+              sharpest local frame per product ──► SAM 3.1 (one image) ──► cut-out ◄───────────┘
+                                                                              │
+                                                    catalog (owner confirms doubts in the studio)
+                                                                              │
 customer photo / voice note / text ──► channel ──► AI seller (Muse Spark Open) ──► reply with matching products
 ```
 
@@ -57,12 +61,12 @@ customer photo / voice note / text ──► channel ──► AI seller (Muse S
 
 | Model | Job | Notes |
 | --- | --- | --- |
-| Muse Spark 1.3 | Watch the shop video and hear the narration together; list products and spoken prices | MP4 input only |
-| SAM 3.1 | Find and track every product through the video | $0.20 per 1,000 frames, minimum 50 frames per call, up to about 10 minutes per clip |
+| Muse Spark 1.3 | Watch the shop video with the owner's transcript as text; list products, prices, doubts, and each product's clearest moment and search phrase | MP4 input only; about $0.045 per minute of video |
+| SAM 3.1 | Cut each product out of its sharpest frame, found by its search phrase | $0.0025 per image |
 | Muse Spark Open (Baseten) | The customer-facing seller: reads photos and voice notes, matches the catalog, takes orders | Model ID `meta-models/muse-spark-open-1026` |
 | Muse Image | Studio background around the real cut-out; the product pixels are never redrawn | Planned |
 
-Muse Voice Transcribe is not used: its 25 languages include neither Russian nor Kazakh. Voice notes go to Muse Spark's own audio input instead.
+Listening is the one job not done by a Meta model. Muse Voice Transcribe has no Russian or Kazakh, and Muse Spark and Muse Spark Open missed spoken prices in most test runs, so **ElevenLabs Scribe v2** transcribes the owner's narration and buyers' voice notes. Everything after the transcript is Meta's models. See [findings.md](findings.md).
 
 ## Spending
 

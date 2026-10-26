@@ -26,7 +26,20 @@ The same file, with the same prompt or nearly the same, gave very different spee
 
 Five of nine attempts heard nothing, and none got the doll's price (5,000 tenge, "бес мың") right. Input token counts were identical whether or not the speech came through, so a response can't be trusted to have used the audio.
 
-Decision: speech goes to a dedicated speech-to-text model (candidates for Kazakh: OpenAI gpt-4o-transcribe and ElevenLabs Scribe v2), and Meta's models take it from there as text, which they read reliably. The owner confirms prices in the studio. `pnpm spike:speech` scores each candidate against the owner's real prices.
+### A dedicated speech model hears every price
+
+`pnpm spike:speech` transcribes the narration several times per model and checks the prices it reads against the owner's real ones (7 items; rooster and doll confirmed by the owner, the rest agreed by both dedicated models):
+
+| Model | Runs that heard speech | Prices right per run | Time |
+| --- | --- | --- | --- |
+| ElevenLabs Scribe v2 | 5 of 5 | **7/7** in every scored run, both confirmed prices every time | 5–9 s |
+| OpenAI gpt-4o-transcribe | 3 of 3 | 2 runs good; 1 run collapsed "бес жүз" to "5"; garbled Kazakh spelling | 4 s |
+| Muse Spark Open (Baseten) | 2 of 2 | 4–5 of 7, missed both confirmed prices | 12–15 s |
+| Muse Spark 1.3 | 1 of 3 | Mostly nothing heard | 8–12 s |
+
+Scribe also returns word timestamps, so each sentence ("[38.0] Кукла Лолдың бағасы бес мың теңге.") can be matched to the moment the product is on screen.
+
+Decision: ElevenLabs Scribe v2 does the listening. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
 ### SAM 3.1 on one sharp frame beats tracking the whole video
 

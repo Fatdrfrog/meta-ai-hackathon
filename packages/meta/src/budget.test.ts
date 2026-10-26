@@ -17,9 +17,9 @@ test("prices fresh, cached and output tokens separately", () => {
   close(usd, 0.75 + 0.06 + 4.25);
 });
 
-test("Muse Spark Open on Baseten is priced under the hackathon model ID", () => {
+test("Muse Spark Open on Baseten is priced under both its hackathon and public IDs", () => {
   close(tokenCostUsd("meta-models/muse-spark-open-1026", { input_tokens: 1_000_000, output_tokens: 0 }), 1.25);
-  assert.throws(() => tokenCostUsd("meta-models/muse-spark-open", { input_tokens: 1, output_tokens: 1 }), /No price/);
+  close(tokenCostUsd("meta-models/muse-spark-open", { input_tokens: 1_000_000, output_tokens: 0 }), 1.25);
 });
 
 test("refuses models without a known price", () => {
