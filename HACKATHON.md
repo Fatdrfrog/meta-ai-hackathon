@@ -6,7 +6,7 @@ This repository is our entry to the Meta Global AI Developer Hackathon 2026, Sta
 
 Everything in this repository is new work, written between kickoff on Oct 26, 2026 and the deadline on Nov 4, 2026 at 9:00 PM ET.
 
-The first commit, "repository setup", was made a few hours before kickoff. It holds only this file, the README, the license and the commit-message rule, and has no product code.
+The first two commits, made a few hours before kickoff, only set up the repository: this file, the README, the license and the commit-message rule. They have no product code.
 
 ## What already existed
 
