@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { scribeLines } from "./speech-providers.ts";
+import { scribeLines } from "./speech.ts";
 
 const w = (text: string, start: number) => ({ text, type: "word" as const, start });
 const space = { text: " ", type: "spacing" as const, start: 0 };

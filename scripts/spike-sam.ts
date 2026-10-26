@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createMetaClient, loadConfig, openSpendLedger, samVideoCostUsd, segmentVideo, summarizeTracks } from "@vitrina/meta";
-import { countFrames, extractCrop, normalizeVideo } from "./video-tools.ts";
+import { countFrames, extractCrop, normalizeVideo } from "@vitrina/catalog";
 
 const SPIKE_DIR = ".data/spikes";
 

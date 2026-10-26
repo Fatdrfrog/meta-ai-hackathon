@@ -39,6 +39,10 @@ Five of nine attempts heard nothing, and none got the doll's price (5,000 tenge,
 
 Scribe also returns word timestamps, so each sentence ("[38.0] Кукла Лолдың бағасы бес мың теңге.") can be matched to the moment the product is on screen.
 
+### The whole pipeline, one run
+
+Scribe transcribes; Muse Spark watches a muted copy of the video with the transcript as text (given the sound too, it sometimes invented its own narration); each product's sharpest frame goes to SAM 3.1. On the test clip: all 7 products cut out, all 7 prices right, every price backed by a quote that was checked word for word against the transcript. 64 seconds (prepare 13, listen 7, watch 28, cut 15), about $0.07.
+
 Decision: ElevenLabs Scribe v2 does the listening. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
 ### SAM 3.1 on one sharp frame beats tracking the whole video

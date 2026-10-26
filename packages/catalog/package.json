@@ -1,0 +1,12 @@
+{
+  "name": "@vitrina/catalog",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@vitrina/meta": "workspace:*",
+    "sharp": "0.35.5"
+  }
+}

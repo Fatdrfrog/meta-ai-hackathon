@@ -9,7 +9,7 @@ Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/
 
 ## Status
 
-Day 1: the Meta Model API client, the spend cap and the first experiments on a real shop video.
+The video-to-catalog pipeline works end to end: on a 65-second test video, all 7 products cut out and all 7 spoken prices right, in about a minute for $0.07. The owner's studio is next.
 
 ## Setup
 
@@ -21,16 +21,24 @@ cp .env.example .env
 git config core.hooksPath .githooks
 ```
 
-Put your Meta Model API key in `.env`. Every commit subject starts with `meta-ai-hackathon: `.
+Put your keys in `.env`: the Meta Model API key, and an ElevenLabs key for speech. Every commit subject starts with `meta-ai-hackathon: `.
 
-## Run the experiments
+## Build a catalog from a video
 
 ```bash
-pnpm spike:video path/to/shop-video.mp4
-pnpm spike:sam path/to/shop-video.mp4 "medal" --file-id=<id printed by spike:video>
+pnpm catalog path/to/shop-video.mp4
 ```
 
-The first lists the products Muse Spark sees and hears in the video. The second tracks one kind of product with SAM 3.1 and saves a cut-out of each item. Results go to `.data/spikes/`, which git ignores.
+Prints the transcript and every product with its price and the words the price came from, and writes cut-outs and a contact sheet to `.data/catalogs/`, which git ignores.
+
+## Experiments
+
+```bash
+pnpm spike:speech path/to/video.mp4 --expect=prices.json   # score speech models against real prices
+pnpm spike:sam path/to/video.mp4 "medal"                   # track one kind of product through a video
+```
+
+What the experiments found is in [docs/findings.md](docs/findings.md).
 
 ## Checks
 

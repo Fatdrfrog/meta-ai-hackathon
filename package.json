@@ -8,15 +8,14 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "node --test \"packages/*/src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
-    "spike:video": "node --env-file-if-exists=.env scripts/spike-video.ts",
+    "test": "node --test \"packages/*/src/**/*.test.ts\"",
+    "catalog": "node --env-file-if-exists=.env scripts/catalog.ts",
     "spike:sam": "node --env-file-if-exists=.env scripts/spike-sam.ts",
-    "spike:catalog": "node --env-file-if-exists=.env scripts/spike-catalog.ts",
     "spike:speech": "node --env-file-if-exists=.env scripts/spike-speech.ts"
   },
   "dependencies": {
-    "@vitrina/meta": "workspace:*",
-    "sharp": "0.35.5"
+    "@vitrina/catalog": "workspace:*",
+    "@vitrina/meta": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

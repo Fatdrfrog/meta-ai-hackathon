@@ -17,8 +17,7 @@ import {
   openSpendLedger,
   outputText,
 } from "@vitrina/meta";
-import { transcribe as transcribeWith } from "./speech-providers.ts";
-import { durationSeconds, extractAudio, normalizeVideo } from "./video-tools.ts";
+import { durationSeconds, extractAudio, normalizeVideo, transcribe as transcribeWith } from "@vitrina/catalog";
 
 const SPIKE_DIR = ".data/spikes";
 

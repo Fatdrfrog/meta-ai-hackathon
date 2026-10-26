@@ -32,6 +32,34 @@ export async function extractAudio(path: string, outDir: string): Promise<string
   return out;
 }
 
+/** The video without its sound track. */
+export async function muteVideo(path: string, outDir: string): Promise<string> {
+  mkdirSync(outDir, { recursive: true });
+  const out = join(outDir, `${basename(path, extname(path))}.muted.mp4`);
+  await run("ffmpeg", ["-y", "-v", "error", "-i", path, "-an", "-c:v", "copy", "-movflags", "+faststart", out]);
+  return out;
+}
+
+export interface PreparedVideo {
+  /** Upright H.264 MP4 with no sound, for Muse Spark and SAM. */
+  readonly video: string;
+  /** The narration as MP3, for the speech model. */
+  readonly audio: string;
+  readonly durationS: number;
+}
+
+// Muse Spark gets the picture only: given the sound too, it sometimes invented its own narration
+// instead of using the transcript (docs/findings.md).
+export async function prepareVideo(sourcePath: string, outDir: string): Promise<PreparedVideo> {
+  const normalized = await normalizeVideo(sourcePath, outDir);
+  const [video, audio, durationS] = await Promise.all([
+    muteVideo(normalized, outDir),
+    extractAudio(normalized, outDir),
+    durationSeconds(normalized),
+  ]);
+  return { video, audio, durationS };
+}
+
 export async function durationSeconds(path: string): Promise<number> {
   const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path]);
   const seconds = Number.parseFloat(stdout.trim());
