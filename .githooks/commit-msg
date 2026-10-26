@@ -1,0 +1,9 @@
+#!/bin/sh
+# Judges tell hackathon work apart by this prefix, so every commit carries it.
+subject=$(head -n 1 "$1")
+case "$subject" in
+  "meta-ai-hackathon: "?*) exit 0 ;;
+  "Merge "* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+echo "Commit subject must start with \"meta-ai-hackathon: \" (got: $subject)" >&2
+exit 1

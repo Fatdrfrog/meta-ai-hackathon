@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.log
+
+.env
+.env.*
+!.env.example
+
+# Raw footage stays out of git
+*.mp4
+*.mov
+
+.DS_Store
+Thumbs.db

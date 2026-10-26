@@ -1,0 +1,24 @@
+name: Commit convention
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  prefix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Every commit subject starts with "meta-ai-hackathon: "
+        run: |
+          bad=$(git log --no-merges --format='%h %s' | grep -vE '^[0-9a-f]+ meta-ai-hackathon: ' || true)
+          if [ -n "$bad" ]; then
+            echo "Commits without the meta-ai-hackathon: prefix:"
+            echo "$bad"
+            exit 1
+          fi
