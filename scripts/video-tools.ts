@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { basename, extname, join } from "node:path";
 import { promisify } from "node:util";
 
@@ -32,6 +32,27 @@ export async function countFrames(path: string): Promise<number> {
   const frames = Number.parseInt(stdout.trim(), 10);
   if (!Number.isFinite(frames)) throw new Error(`ffprobe could not count frames in ${path}: "${stdout}"`);
   return frames;
+}
+
+/** JPEG frames sampled at `fps` between two moments, in order, with their approximate time. */
+export async function extractFrames(
+  path: string,
+  fromS: number,
+  toS: number,
+  fps: number,
+  outDir: string,
+): Promise<{ path: string; timeS: number }[]> {
+  mkdirSync(outDir, { recursive: true });
+  const start = Math.max(0, fromS);
+  await run("ffmpeg", [
+    "-y", "-v", "error", "-ss", start.toFixed(3), "-i", path,
+    "-t", Math.max(0.1, toS - start).toFixed(3),
+    "-vf", `fps=${fps}`, "-q:v", "2", join(outDir, "frame-%03d.jpg"),
+  ]);
+  return readdirSync(outDir)
+    .filter((name) => /^frame-\d+\.jpg$/.test(name))
+    .sort()
+    .map((name, i) => ({ path: join(outDir, name), timeS: start + i / fps }));
 }
 
 export async function extractCrop(

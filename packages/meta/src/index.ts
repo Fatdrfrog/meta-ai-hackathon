@@ -1,4 +1,5 @@
-export { openSpendLedger, samVideoCostUsd, tokenCostUsd, type SpendLedger, type TokenUsage } from "./budget.ts";
+export { decodeMaskToRaster, type SegmentationMaskRecord } from "@meta-sam/parser";
+export { openSpendLedger, samImageCostUsd, samVideoCostUsd, tokenCostUsd, type SpendLedger, type TokenUsage } from "./budget.ts";
 export {
   createMetaClient,
   MetaApiError,
@@ -9,4 +10,12 @@ export {
   type StreamEvent,
 } from "./client.ts";
 export { loadConfig, type MetaConfig } from "./config.ts";
-export { segmentVideo, summarizeTracks, type SegmentVideoOptions, type Track } from "./sam.ts";
+export {
+  bestMask,
+  segmentImage,
+  segmentVideo,
+  summarizeTracks,
+  type SegmentImageOptions,
+  type SegmentVideoOptions,
+  type Track,
+} from "./sam.ts";

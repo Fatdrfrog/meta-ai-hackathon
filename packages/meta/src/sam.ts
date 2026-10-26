@@ -1,12 +1,42 @@
 import {
   frameIndexOf,
+  parseImageStream,
   parseVideoStream,
   recordsOfKind,
+  type ImageSegmentationResult,
+  type SegmentationMaskRecord,
   type SegmentationRecord,
   type VideoSegmentationResult,
 } from "@meta-sam/parser";
-import { samVideoCostUsd } from "./budget.ts";
+import { samImageCostUsd, samVideoCostUsd } from "./budget.ts";
 import type { MetaClient } from "./client.ts";
+
+function samRequest(client: MetaClient, concept: string, media: Record<string, string>) {
+  return {
+    model: client.config.models.sam,
+    input: [{ type: "message", role: "user", content: [{ type: "input_text", text: concept }, media] }],
+    metadata: { include_confidence: "true" },
+  };
+}
+
+export interface SegmentImageOptions {
+  /** A public URL or a data URL such as `data:image/jpeg;base64,...`. */
+  readonly imageUrl: string;
+  /** One short noun phrase; SAM 3.1 handles lists and negation poorly. */
+  readonly concept: string;
+}
+
+export async function segmentImage(client: MetaClient, options: SegmentImageOptions): Promise<ImageSegmentationResult> {
+  const events = client.streamResponse(
+    samRequest(client, options.concept, { type: "input_image", image_url: options.imageUrl }),
+    samImageCostUsd(1),
+  );
+  const parsed = parseImageStream(events);
+  for await (const _snapshot of parsed) {
+    // Drain the stream; the final result holds every record.
+  }
+  return parsed.finalResult;
+}
 
 export interface SegmentVideoOptions {
   readonly fileId: string;
@@ -18,20 +48,7 @@ export interface SegmentVideoOptions {
 
 export async function segmentVideo(client: MetaClient, options: SegmentVideoOptions): Promise<VideoSegmentationResult> {
   const events = client.streamResponse(
-    {
-      model: client.config.models.sam,
-      input: [
-        {
-          type: "message",
-          role: "user",
-          content: [
-            { type: "input_text", text: options.concept },
-            { type: "input_video", file_id: options.fileId },
-          ],
-        },
-      ],
-      metadata: { include_confidence: "true", mask_encoding: "one_bit" },
-    },
+    samRequest(client, options.concept, { type: "input_video", file_id: options.fileId }),
     samVideoCostUsd(options.frameCount),
   );
   const parsed = parseVideoStream(events);
@@ -39,6 +56,21 @@ export async function segmentVideo(client: MetaClient, options: SegmentVideoOpti
     // Drain the stream; the final result holds every record.
   }
   return parsed.finalResult;
+}
+
+/** The mask SAM is most confident about; on a tie, the larger one. */
+export function bestMask(records: readonly SegmentationRecord[]): SegmentationMaskRecord | undefined {
+  const area = (m: SegmentationMaskRecord) => (m.bounds.right - m.bounds.left) * (m.bounds.bottom - m.bounds.top);
+  let best: SegmentationMaskRecord | undefined;
+  for (const mask of recordsOfKind(records, "mask")) {
+    if (!best) {
+      best = mask;
+      continue;
+    }
+    const diff = (mask.confidence ?? 0) - (best.confidence ?? 0);
+    if (diff > 0 || (diff === 0 && area(mask) > area(best))) best = mask;
+  }
+  return best;
 }
 
 export interface Track {

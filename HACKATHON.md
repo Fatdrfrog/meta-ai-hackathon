@@ -26,6 +26,7 @@ Filled in during the hackathon.
 | Feature | Commits | Meta models used |
 | ------- | ------- | ---------------- |
 | Meta Model API client with a hard spend cap, SAM 3.1 video tracking, first video experiments | `meta-ai-hackathon: Meta Model API client, spend cap and video spikes` | Muse Spark 1.3, SAM 3.1 |
+| Video to catalog cut-outs: per-product SAM on the sharpest frame, mask cut-outs; findings on Muse Spark audio | `meta-ai-hackathon: per-product SAM cut-outs and first findings` | Muse Spark 1.3, SAM 3.1 |
 
 ## Meta models used
 

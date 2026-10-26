@@ -9,6 +9,7 @@ const TOKEN_PRICES: Readonly<Record<string, { input: number; cachedInput: number
 
 const SAM_VIDEO_USD_PER_FRAME = 0.2 / 1000;
 const SAM_MIN_BILLED_FRAMES = 50;
+const SAM_USD_PER_IMAGE = 2.5 / 1000;
 
 export interface TokenUsage {
   readonly input_tokens: number;
@@ -32,6 +33,10 @@ export function tokenCostUsd(model: string, usage: TokenUsage): number {
 
 export function samVideoCostUsd(frames: number): number {
   return Math.max(frames, SAM_MIN_BILLED_FRAMES) * SAM_VIDEO_USD_PER_FRAME;
+}
+
+export function samImageCostUsd(images: number): number {
+  return images * SAM_USD_PER_IMAGE;
 }
 
 export interface SpendEntry {
