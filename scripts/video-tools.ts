@@ -24,6 +24,21 @@ export async function normalizeVideo(path: string, outDir: string): Promise<stri
   return out;
 }
 
+/** Mono 16 kHz MP3 of the narration: small enough to send inline, and both Meta APIs accept MP3. */
+export async function extractAudio(path: string, outDir: string): Promise<string> {
+  mkdirSync(outDir, { recursive: true });
+  const out = join(outDir, `${basename(path, extname(path))}.narration.mp3`);
+  await run("ffmpeg", ["-y", "-v", "error", "-i", path, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "48k", out]);
+  return out;
+}
+
+export async function durationSeconds(path: string): Promise<number> {
+  const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path]);
+  const seconds = Number.parseFloat(stdout.trim());
+  if (!Number.isFinite(seconds)) throw new Error(`ffprobe could not read the duration of ${path}: "${stdout}"`);
+  return seconds;
+}
+
 export async function countFrames(path: string): Promise<number> {
   const { stdout } = await run("ffprobe", [
     "-v", "error", "-select_streams", "v:0", "-count_packets",

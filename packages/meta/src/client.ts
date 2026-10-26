@@ -1,7 +1,9 @@
 import { openAsBlob } from "node:fs";
 import { basename } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { requirePrice, tokenCostUsd, type SpendLedger, type TokenUsage } from "./budget.ts";
 import type { MetaConfig } from "./config.ts";
+import { ApiError } from "./errors.ts";
 import { readSseData } from "./sse.ts";
 
 export interface ResponseRequest {
@@ -25,18 +27,6 @@ export interface StreamEvent {
   readonly [field: string]: unknown;
 }
 
-export class MetaApiError extends Error {
-  readonly status: number;
-  readonly body: string;
-
-  constructor(path: string, status: number, body: string) {
-    super(`Meta Model API ${path} failed with ${status}: ${body.slice(0, 500)}`);
-    this.name = "MetaApiError";
-    this.status = status;
-    this.body = body;
-  }
-}
-
 export interface MetaClient {
   readonly config: MetaConfig;
   readonly ledger: SpendLedger;
@@ -47,15 +37,26 @@ export interface MetaClient {
   streamResponse(body: ResponseRequest, costUsd: number): AsyncGenerator<StreamEvent>;
 }
 
+// The API occasionally answers with a 5xx HTML page; a short retry gets through.
+const RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
+const RETRY_DELAYS_MS = [500, 2000];
+
 export function createMetaClient(config: MetaConfig, ledger: SpendLedger): MetaClient {
   async function post(path: string, init: { headers?: Record<string, string>; body: BodyInit }): Promise<Response> {
-    const res = await fetch(`${config.baseUrl}${path}`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${config.apiKey}`, ...init.headers },
-      body: init.body,
-    });
-    if (!res.ok) throw new MetaApiError(path, res.status, await res.text());
-    return res;
+    for (let attempt = 0; ; attempt++) {
+      const res = await fetch(`${config.baseUrl}${path}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${config.apiKey}`, ...init.headers },
+        body: init.body,
+      });
+      if (res.ok) return res;
+      const delay = RETRY_DELAYS_MS[attempt];
+      if (delay === undefined || !RETRY_STATUSES.has(res.status)) {
+        throw new ApiError("Meta Model API", path, res.status, await res.text());
+      }
+      await res.body?.cancel();
+      await sleep(delay);
+    }
   }
 
   return {

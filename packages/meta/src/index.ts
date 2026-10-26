@@ -1,8 +1,15 @@
 export { decodeMaskToRaster, type SegmentationMaskRecord } from "@meta-sam/parser";
+export {
+  createBasetenClient,
+  loadBasetenConfig,
+  messageText,
+  type BasetenClient,
+  type BasetenConfig,
+  type ChatCompletionJson,
+} from "./baseten.ts";
 export { openSpendLedger, samImageCostUsd, samVideoCostUsd, tokenCostUsd, type SpendLedger, type TokenUsage } from "./budget.ts";
 export {
   createMetaClient,
-  MetaApiError,
   outputText,
   type MetaClient,
   type ResponseJson,
@@ -10,6 +17,7 @@ export {
   type StreamEvent,
 } from "./client.ts";
 export { loadConfig, type MetaConfig } from "./config.ts";
+export { ApiError } from "./errors.ts";
 export {
   bestMask,
   segmentImage,

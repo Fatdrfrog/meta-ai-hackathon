@@ -8,10 +8,11 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "node --test \"packages/*/src/**/*.test.ts\"",
+    "test": "node --test \"packages/*/src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "spike:video": "node --env-file-if-exists=.env scripts/spike-video.ts",
     "spike:sam": "node --env-file-if-exists=.env scripts/spike-sam.ts",
-    "spike:catalog": "node --env-file-if-exists=.env scripts/spike-catalog.ts"
+    "spike:catalog": "node --env-file-if-exists=.env scripts/spike-catalog.ts",
+    "spike:speech": "node --env-file-if-exists=.env scripts/spike-speech.ts"
   },
   "dependencies": {
     "@vitrina/meta": "workspace:*",

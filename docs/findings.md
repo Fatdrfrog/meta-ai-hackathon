@@ -22,7 +22,11 @@ The same file, with the same prompt or nearly the same, gave very different spee
 | Transcription-only prompt, new upload (×2) | Once a Kazakh transcript with two prices different from the first run; once "NO SPEECH" |
 | Audio track alone as `input_audio` (×2) | Once garbled romanized Kazakh with wrong prices; once "I can't hear any audio" |
 
-Input token counts were identical whether or not the speech came through, so a response can't be trusted to have used the audio. Spoken prices therefore need a dedicated speech step, and the owner confirms them in the studio.
+| Speech harness, audio alone, low reasoning effort | "NO SPEECH" |
+
+Five of nine attempts heard nothing, and none got the doll's price (5,000 tenge, "бес мың") right. Input token counts were identical whether or not the speech came through, so a response can't be trusted to have used the audio.
+
+Decision: speech goes to a dedicated speech-to-text model (candidates for Kazakh: OpenAI gpt-4o-transcribe and ElevenLabs Scribe v2), and Meta's models take it from there as text, which they read reliably. The owner confirms prices in the studio. `pnpm spike:speech` scores each candidate against the owner's real prices.
 
 ### SAM 3.1 on one sharp frame beats tracking the whole video
 
