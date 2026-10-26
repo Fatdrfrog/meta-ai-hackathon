@@ -2,6 +2,29 @@
 
 A shop films its products once. Meta's models turn the video into a catalog, and an AI seller uses that catalog to answer customers on WhatsApp.
 
+## Who uses what
+
+| Who | Where | What they do |
+| --- | --- | --- |
+| Shop owner | **Studio**, a mobile web page opened from a link | Upload the product video, confirm the items the AI is unsure about, fix prices, publish, see orders |
+| Buyer | **WhatsApp**, on the shop's number | Send a photo, voice note or question; get matching products; order |
+| Buyer | **Shop page**, a public web catalog | Browse every product for free; tap through to WhatsApp to ask or order |
+| Judges | **Web chat** | The same seller as on WhatsApp, without needing a phone number |
+
+The owner never makes decisions inside WhatsApp. Since October 1, 2026, Meta bills every service message after the first 1,000 per number each month, so a review dialogue in chat would cost money on every tap. The studio does the same job for free.
+
+Owners are also starting to work in assistants like Claude. An MCP server over the same API, so an owner can manage the shop from Claude, is planned after the core works.
+
+## Message costs
+
+Every AI reply to a buyer is a paid message once the free 1,000 are used up, so the seller is built to spend as few as possible:
+
+- One rich reply per buyer turn: a carousel shows up to 10 products in a single message.
+- No "thinking…" or acknowledgement messages.
+- Browsing happens on the free shop page; WhatsApp is for questions and orders.
+- Messages per order is tracked as a cost metric.
+- Buyers arriving from Click-to-WhatsApp ads are free for 72 hours.
+
 ## Separate from airi.chat
 
 [airi.chat](https://airi.chat) is our existing, private WhatsApp product. This project is built apart from it, so judges can see exactly what is new and anyone can run the demo from this repository alone.
