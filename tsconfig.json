@@ -10,7 +10,13 @@
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["scripts", "packages/*/src"]
+  "include": [
+    "scripts",
+    "packages/*/src",
+    "apps/server/src"
+  ]
 }

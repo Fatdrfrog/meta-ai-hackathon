@@ -29,6 +29,7 @@ Filled in during the hackathon.
 | Video to catalog cut-outs: per-product SAM on the sharpest frame, mask cut-outs; findings on Muse Spark audio | `meta-ai-hackathon: per-product SAM cut-outs and first findings` | Muse Spark 1.3, SAM 3.1 |
 | Speech harness scoring models against the owner's real prices; ElevenLabs Scribe chosen for listening | `meta-ai-hackathon: speech harness scored against real prices`, `meta-ai-hackathon: choose ElevenLabs Scribe for speech` | Muse Spark 1.3, Muse Spark Open (compared) |
 | Catalog pipeline: transcript-grounded inventory, prices verified word for word against the narration, SAM cut-outs | `meta-ai-hackathon: catalog pipeline with prices verified against the narration` | Muse Spark 1.3, SAM 3.1 |
+| Owner studio (upload, live progress, shelf review with the owner's own words, confirm) and public shop page; server with a SQLite job queue | `meta-ai-hackathon: owner studio and shop page` | Muse Spark 1.3, SAM 3.1 (through the pipeline) |
 
 ## Meta models used
 

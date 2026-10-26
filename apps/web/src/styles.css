@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Unbounded Variable", "Golos Text Variable", sans-serif;
+  --font-sans: "Golos Text Variable", system-ui, sans-serif;
+
+  --color-ink: #1b2440;
+  --color-ink-soft: #4a5573;
+  --color-line: #dbe2ea;
+  --color-wall: #f3f6fa;
+  --color-shelf: #c3cfdc;
+  --color-tag: #f2b705;
+  --color-action: #007c99;
+  --color-action-dark: #00627a;
+  --color-check: #b4410c;
+  --color-check-bg: #fdf0e8;
+  --color-ok: #1f7a4d;
+}
+
+@layer base {
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-action);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* A paper price tag with a punched hole, the kind clipped to goods at a bazaar stall. */
+  .price-tag {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem 0.3rem 1.45rem;
+    background: var(--color-tag);
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 50%);
+  }
+  .price-tag::before {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    border-radius: 9999px;
+    background: var(--color-wall);
+  }
+  .price-tag[data-empty] {
+    background: #e3e8ef;
+    color: var(--color-ink-soft);
+    font-weight: 500;
+  }
+}
+
+/* The one orchestrated moment: products arriving on the shelf when a video finishes. */
+@media (prefers-reduced-motion: no-preference) {
+  .arrive {
+    animation: arrive 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.96);
+    }
+  }
+}

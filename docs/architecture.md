@@ -72,7 +72,10 @@ Listening is the one job not done by a Meta model. Muse Voice Transcribe has no 
 
 Meta's "Spend Limit" only sends a notification. Every call here goes through a spend ledger (`packages/meta/src/budget.ts`) that refuses calls once estimated spend reaches `META_BUDGET_USD`. A model without a known price can't be called at all.
 
-## What exists so far
+## Code
 
-- `packages/meta`: Meta Model API client (Responses, Files, streaming), SAM 3.1 video segmentation via `@meta-sam/parser`, the spend ledger.
-- `scripts/spike-video.ts`, `scripts/spike-sam.ts`: first experiments on a real shop video, to check the pipeline works before it's built.
+- `packages/meta`: Meta Model API and Baseten clients, SAM 3.1 segmentation through `@meta-sam/parser`, the spend ledger.
+- `packages/catalog`: the video-to-catalog pipeline (ffmpeg, speech, inventory, checks, cut-outs).
+- `apps/server`: Hono server. SQLite (`node:sqlite`) holds shops, videos and products; videos are processed one at a time by a queue in the database that survives restarts. The studio link carries the owner's secret token.
+- `apps/web`: React studio and shop page (Vite, Tailwind).
+- `scripts/`: the catalog CLI and the experiments behind [findings.md](findings.md).
