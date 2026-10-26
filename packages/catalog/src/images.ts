@@ -1,31 +1,20 @@
-import { decodeMaskToRaster, type SegmentationMaskRecord } from "@vitrina/meta";
+import type { SegmentationMaskRecord } from "@vitrina/meta";
 import sharp, { type OverlayOptions } from "sharp";
+import { maskFromRecord, type Box, type Mask } from "./masks.ts";
 
-/** Motion blur ruins product photos; sharp's Laplacian-based score picks the crispest frame. */
-export async function sharpestImage(paths: readonly string[]): Promise<{ path: string; sharpness: number }> {
-  if (paths.length === 0) throw new Error("No frames to choose from.");
-  let best = { path: paths[0]!, sharpness: -1 };
-  for (const path of paths) {
-    const { sharpness } = await sharp(path).stats();
-    if (sharpness > best.sharpness) best = { path, sharpness };
-  }
-  return best;
-}
-
-// SAM returns a 0/1 raster covering the mask's bounds; it becomes the alpha channel of that crop,
-// so the product keeps its real pixels and everything around it turns transparent.
-export async function cutOut(framePath: string, record: SegmentationMaskRecord, outPath: string): Promise<void> {
+// The mask becomes the alpha channel of its crop, so the product keeps its real pixels and
+// everything around it turns transparent.
+export async function cutOutMask(framePath: string, mask: Mask, outPath: string): Promise<void> {
   const { width: frameWidth = 0, height: frameHeight = 0 } = await sharp(framePath).metadata();
-  const left = Math.max(0, Math.round(record.bounds.left));
-  const top = Math.max(0, Math.round(record.bounds.top));
-  const width = Math.min(frameWidth, Math.round(record.bounds.right)) - left;
-  const height = Math.min(frameHeight, Math.round(record.bounds.bottom)) - top;
+  const left = Math.max(0, mask.bounds.left);
+  const top = Math.max(0, mask.bounds.top);
+  const width = Math.min(frameWidth, mask.bounds.right) - left;
+  const height = Math.min(frameHeight, mask.bounds.bottom) - top;
 
-  const raster = decodeMaskToRaster(record.mask);
-  let alpha = Buffer.from(raster.map((v) => v * 255));
-  if (record.mask.width !== width || record.mask.height !== height) {
+  let alpha = Buffer.from(mask.raster.map((v) => v * 255));
+  if (mask.width !== width || mask.height !== height) {
     // sharp writes a resized single-channel image back out as three channels unless told otherwise.
-    alpha = await sharp(alpha, { raw: { width: record.mask.width, height: record.mask.height, channels: 1 } })
+    alpha = await sharp(alpha, { raw: { width: mask.width, height: mask.height, channels: 1 } })
       .resize(width, height, { fit: "fill", kernel: "nearest" })
       .extractChannel(0)
       .raw()
@@ -38,6 +27,52 @@ export async function cutOut(framePath: string, record: SegmentationMaskRecord, 
   await sharp(rgb, { raw: { width, height, channels: 3 } })
     .joinChannel(alpha, { raw: { width, height, channels: 1 } })
     .png()
+    .toFile(outPath);
+}
+
+export const cutOut = (framePath: string, record: SegmentationMaskRecord, outPath: string) =>
+  cutOutMask(framePath, maskFromRecord(record), outPath);
+
+/** Sharpness of one region of a frame, so a sharp background can't make a blurred product look good. */
+export async function regionSharpness(framePath: string, region: Box): Promise<number> {
+  const { width: frameWidth = 0, height: frameHeight = 0 } = await sharp(framePath).metadata();
+  const left = Math.max(0, region.left);
+  const top = Math.max(0, region.top);
+  const width = Math.min(frameWidth, region.right) - left;
+  const height = Math.min(frameHeight, region.bottom) - top;
+  if (width < 1 || height < 1) return 0;
+  const { sharpness } = await sharp(framePath).extract({ left, top, width, height }).stats();
+  return sharpness;
+}
+
+/** Frames side by side with a big number in each corner, for a model to choose from. */
+export async function numberedGrid(paths: readonly string[], outPath: string, columns = 4): Promise<void> {
+  const tileWidth = 360;
+  const tileHeight = 640;
+  const tiles = await Promise.all(
+    paths.map(async (path, i) => ({
+      input: await sharp(path)
+        .resize(tileWidth, tileHeight, { fit: "cover" })
+        .composite([
+          {
+            input: Buffer.from(
+              `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="56"><rect width="64" height="56" fill="#1b2440"/><text x="32" y="40" font-size="36" font-family="Arial" fill="#fff" text-anchor="middle">${i + 1}</text></svg>`,
+            ),
+            left: 0,
+            top: 0,
+          },
+        ])
+        .png()
+        .toBuffer(),
+      left: (i % columns) * tileWidth,
+      top: Math.floor(i / columns) * tileHeight,
+    })),
+  );
+  await sharp({
+    create: { width: columns * tileWidth, height: Math.ceil(paths.length / columns) * tileHeight, channels: 3, background: "#ffffff" },
+  })
+    .composite(tiles)
+    .jpeg({ quality: 85 })
     .toFile(outPath);
 }
 

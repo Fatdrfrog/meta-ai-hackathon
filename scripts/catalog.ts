@@ -43,7 +43,7 @@ console.table(
     english: p.name,
     price: price(p),
     quote: p.price_quote ?? "",
-    cutout: p.cutoutPath ? (p.samConfidence?.toFixed(2) ?? "yes") : "none",
+    cutout: p.cutoutPath ? `${p.cutoutMethod} ${p.samConfidence?.toFixed(2) ?? ""}` : "none",
     confirm: [p.doubt, ...p.checks].filter(Boolean).join(" "),
   })),
 );

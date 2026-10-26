@@ -50,7 +50,7 @@ shop video ──► normalize (ffmpeg) ──┬─► audio ──► Scribe: 
                                                                                          prices, doubts, clearest
                                                                                          moment, search phrase
                                                                                                │
-              sharpest local frame per product ──► SAM 3.1 (one image) ──► cut-out ◄───────────┘
+   per product: Muse picks a frame + box ──► SAM 3.1 tracks it ──► best measured frame ──► cut-out ◄─┘
                                                                               │
                                                     catalog (owner confirms doubts in the studio)
                                                                               │
@@ -62,7 +62,8 @@ customer photo / voice note / text ──► channel ──► AI seller (Muse S
 | Model | Job | Notes |
 | --- | --- | --- |
 | Muse Spark 1.3 | Watch the shop video with the owner's transcript as text; list products, prices, doubts, and each product's clearest moment and search phrase | MP4 input only; about $0.045 per minute of video |
-| SAM 3.1 | Cut each product out of its sharpest frame, found by its search phrase | $0.0025 per image |
+| Muse Spark 1.3 (vision) | For each product, pick the clearest of 8 frames and draw a box around it | Two image calls per product |
+| SAM 3.1 | Track that box through the product's clip at 10 fps; the frame with the best measured mask becomes the cut-out; a "hand" mask is subtracted | About $0.02 per product |
 | Muse Spark Open (Baseten) | The customer-facing seller: reads photos and voice notes, matches the catalog, takes orders | Model ID `meta-models/muse-spark-open-1026` |
 | Muse Image | Studio background around the real cut-out; the product pixels are never redrawn | Planned |
 

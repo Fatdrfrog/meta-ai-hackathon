@@ -1,14 +1,14 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { bestMask, segmentImage, type MetaClient } from "@vitrina/meta";
-import { cutOut, sharpestImage } from "./images.ts";
+import type { MetaClient } from "@vitrina/meta";
+import { cutOutProduct, type CutoutMethod } from "./cutout.ts";
 import { readInventory, type InventoryItem } from "./inventory.ts";
-import { extractFrames, prepareVideo } from "./media.ts";
+import { prepareVideo } from "./media.ts";
 import { transcribe, type SpeechProvider } from "./speech.ts";
 
-const WINDOW_S = 1; // look for the sharpest frame this far either side of the clearest moment
-const SAMPLE_FPS = 10;
-const CUT_CONCURRENCY = 3;
+// Each product takes 35-50 s of mostly waiting on Meta, so most of a shop video runs at once.
+const CUT_CONCURRENCY = 6;
+const MIN_WINDOW_S = 2;
+const MAX_WINDOW_S = 16;
 
 export interface CatalogProduct extends InventoryItem {
   /** Problems found by our own checks, on top of the model's `doubt`. */
@@ -18,6 +18,34 @@ export interface CatalogProduct extends InventoryItem {
   /** Transparent PNG of the product, or null when SAM found nothing; then the frame stands in. */
   readonly cutoutPath: string | null;
   readonly samConfidence: number | null;
+  readonly cutoutMethod: CutoutMethod;
+}
+
+/**
+ * The stretch of video in which each product is presented: from when it first appears until the
+ * next product does, kept between 2 and 16 seconds around its clearest moment.
+ */
+export function presentationWindows(
+  items: readonly Pick<InventoryItem, "first_seen_s" | "clearest_moment_s">[],
+  durationS: number,
+): { fromS: number; toS: number }[] {
+  const order = items.map((item, index) => ({ index, start: item.first_seen_s })).sort((a, b) => a.start - b.start);
+  const windows: { fromS: number; toS: number }[] = new Array(items.length);
+  order.forEach(({ index, start }, k) => {
+    const clearest = Math.min(durationS, Math.max(0, items[index]!.clearest_moment_s));
+    let fromS = Math.max(0, start);
+    let toS = Math.min(durationS, order[k + 1]?.start ?? durationS);
+    if (toS - fromS < MIN_WINDOW_S) {
+      fromS = Math.max(0, clearest - MIN_WINDOW_S / 2);
+      toS = Math.min(durationS, fromS + MIN_WINDOW_S);
+    }
+    if (toS - fromS > MAX_WINDOW_S) {
+      fromS = Math.max(fromS, Math.min(clearest - MAX_WINDOW_S / 2, toS - MAX_WINDOW_S));
+      toS = fromS + MAX_WINDOW_S;
+    }
+    windows[index] = { fromS, toS };
+  });
+  return windows;
 }
 
 export interface CatalogResult {
@@ -107,33 +135,28 @@ export async function buildCatalog(options: BuildCatalogOptions): Promise<Catalo
   elapsed = timer();
   let cut = 0;
   onProgress?.({ stage: "cutting", done: 0, total: inventory.items.length });
-  const products = await mapWithConcurrency(inventory.items, CUT_CONCURRENCY, async (item, index) => {
+  const windows = presentationWindows(inventory.items, prepared.durationS);
+  const products = await mapWithConcurrency(inventory.items, CUT_CONCURRENCY, async (item, index): Promise<CatalogProduct> => {
     const slug = `${String(index + 1).padStart(2, "0")}-${item.sam_phrase.replaceAll(/\W+/g, "-").toLowerCase()}`;
-    const frames = await extractFrames(
-      prepared.video,
-      item.clearest_moment_s - WINDOW_S,
-      item.clearest_moment_s + WINDOW_S,
-      SAMPLE_FPS,
-      join(workDir, "frames", slug),
-    );
-    const frame = await sharpestImage(frames.map((f) => f.path));
-    const segmentation = await segmentImage(meta, {
-      imageUrl: `data:image/jpeg;base64,${readFileSync(frame.path).toString("base64")}`,
-      concept: item.sam_phrase,
+    const cutout = await cutOutProduct({
+      meta,
+      videoPath: prepared.video,
+      ...windows[index]!,
+      product: item.sam_phrase,
+      workDir: join(workDir, "products", slug),
+      outPath: join(workDir, `${slug}.png`),
     });
-    const mask = bestMask(segmentation.records);
-    const cutoutPath = mask ? join(workDir, `${slug}.png`) : null;
-    if (mask && cutoutPath) await cutOut(frame.path, mask, cutoutPath);
     const checks = checkItem(item, transcript);
-    if (!mask) checks.push("The product couldn't be cut out of the video, so the whole frame is shown.");
+    if (cutout.method === "none") checks.push("The product couldn't be cut out of the video, so the whole frame is shown.");
     onProgress?.({ stage: "cutting", done: ++cut, total: inventory.items.length });
     return {
       ...item,
       checks,
-      framePath: frame.path,
-      frameTimeS: frames.find((f) => f.path === frame.path)?.timeS ?? item.clearest_moment_s,
-      cutoutPath,
-      samConfidence: mask?.confidence ?? null,
+      framePath: cutout.framePath,
+      frameTimeS: cutout.frameTimeS,
+      cutoutPath: cutout.cutoutPath,
+      samConfidence: cutout.confidence,
+      cutoutMethod: cutout.method,
     };
   });
 

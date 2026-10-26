@@ -35,7 +35,7 @@ export function VideoInProgress({ video }: { video: ApiVideo }) {
           );
         })}
       </ol>
-      <p className="mt-3 text-sm text-ink-soft">About a minute for a one-minute video. You can leave this page; the shelf keeps building.</p>
+      <p className="mt-3 text-sm text-ink-soft">About two minutes for a one-minute video. You can leave this page; the shelf keeps building.</p>
     </section>
   );
 }

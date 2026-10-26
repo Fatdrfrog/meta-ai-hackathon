@@ -21,6 +21,7 @@ const product = (overrides: Partial<CatalogProduct>): CatalogProduct => ({
   frameTimeS: 38,
   cutoutPath: "doll.png",
   samConfidence: 0.9,
+  cutoutMethod: "tracked",
   ...overrides,
 });
 

@@ -1,4 +1,10 @@
-export { decodeMaskToRaster, type SegmentationMaskRecord } from "@meta-sam/parser";
+export {
+  buildObjectPrompt,
+  decodeMaskToRaster,
+  frameIndexOf,
+  recordsOfKind,
+  type SegmentationMaskRecord,
+} from "@meta-sam/parser";
 export {
   createBasetenClient,
   loadBasetenConfig,

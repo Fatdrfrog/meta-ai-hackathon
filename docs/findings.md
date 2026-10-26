@@ -43,6 +43,25 @@ Scribe also returns word timestamps, so each sentence ("[38.0] Кукла Лол
 
 Scribe transcribes; Muse Spark watches a muted copy of the video with the transcript as text (given the sound too, it sometimes invented its own narration); each product's sharpest frame goes to SAM 3.1. On the test clip: all 7 products cut out, all 7 prices right, every price backed by a quote that was checked word for word against the transcript. 64 seconds (prepare 13, listen 7, watch 28, cut 15), about $0.07.
 
+### Cut-outs: Muse locates, SAM tracks, code measures
+
+Cutting each product from its "sharpest" single frame failed on 2-3 of 7 products, for two reasons:
+
+- **Sharpness of the whole frame picks the background.** The rooster's chosen frame had a crisp wall behind a blurred, half-hidden rooster; a clean view existed half a second later.
+- **Phrase prompts are brittle.** "black phone stand" found nothing in a frame where the stand filled half the picture.
+
+What we tried, on all 7 products:
+
+| Method | Clean, complete cut-outs |
+| --- | --- |
+| Phrase on the frame sharpest overall (first version) | 4-5 of 7 |
+| Muse picks a frame from a numbered grid, boxes it, SAM cuts the box | 4 of 7: fixed the stand, but the hand leaked into the rooster and the dinosaur broke in two |
+| **Muse picks and boxes once; SAM tracks that one object through the product's clip; code scores every frame's mask** | **7 of 7, confidence 0.98-0.99** |
+
+The scoring that works: keep frames whose mask is in one piece and clear of the frame's edge, then only those at least 70% of the object's largest view (otherwise a sharp close-up of the doll's face beat the whole doll), then the sharpest of the *product's own region*. A SAM "hand" mask is subtracted from the winner. Two more lessons: inside a grid, Muse answers boxes in the grid's coordinates, so it only picks the frame there and boxes on the full-size frame; and post-training was not the lever, since every failure was a choice of frame or prompt, not SAM's segmentation.
+
+Cost and time: about $0.03 and 35-50 seconds per product, products in parallel. The whole 65-second test video takes 2-2.5 minutes and about $0.25.
+
 Decision: ElevenLabs Scribe v2 does the listening. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
 ### SAM 3.1 on one sharp frame beats tracking the whole video

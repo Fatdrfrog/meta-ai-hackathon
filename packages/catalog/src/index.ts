@@ -1,11 +1,13 @@
-export { contactSheet, cutOut, sharpestImage } from "./images.ts";
+export { cutOutProduct, type CutoutMethod, type ProductCutout } from "./cutout.ts";
+export { contactSheet, cutOut, cutOutMask } from "./images.ts";
 export { inventoryPrompt, readInventory, type Inventory, type InventoryItem } from "./inventory.ts";
 export {
   countFrames,
   durationSeconds,
+  extractAllFrames,
   extractAudio,
+  extractClip,
   extractCrop,
-  extractFrames,
   muteVideo,
   normalizeVideo,
   prepareVideo,
@@ -14,6 +16,7 @@ export {
 export {
   buildCatalog,
   checkItem,
+  presentationWindows,
   quoteInTranscript,
   type BuildCatalogOptions,
   type CatalogProduct,
