@@ -16,6 +16,8 @@
     "./workspace-ai-spend": "./src/workspace-ai-spend.ts",
     "./elevenlabs-stt": "./src/elevenlabs-stt.ts",
     "./elevenlabs-stt-webhook": "./src/elevenlabs-stt-webhook.ts",
+    "./meta-model-api": "./src/meta-model-api.ts",
+    "./meta-sam": "./src/meta-sam.ts",
     "./media-api": "./src/media-api.ts",
     "./storage-quota": "./src/storage-quota.ts",
     "./creative-asset-read-url": "./src/creative-asset-read-url.ts",
@@ -70,6 +72,7 @@
     "@icecore/scenario-contracts": "workspace:*",
     "@icecore/temporal": "workspace:*",
     "@icecore/whatsapp": "workspace:*",
+    "@meta-sam/parser": "0.1.0",
     "mongoose": "^8.24.4"
   },
   "devDependencies": {

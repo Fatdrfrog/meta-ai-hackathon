@@ -75,7 +75,7 @@ describe("llm analytics event contracts", () => {
     expect(event.total_tokens).toBe(140);
     expect(event.schema_version).toBe(2);
     expect(event.estimated_cost_usd).toBeCloseTo(0.00051, 5);
-    expect(event.pricing_version).toBe("2026-10-claude-text-models");
+    expect(event.pricing_version).toBe("2026-10-meta-muse-spark");
   });
 
   it("maps RAG wide events into RAG turn and deterministic score events", () => {

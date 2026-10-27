@@ -101,5 +101,5 @@ test("keeps Gemini pricing rows for the Vertex fallback", () => {
     resolveLlmModelPricing("gemini-3.5-flash").matchedModel,
     "gemini-3.5-flash",
   );
-  assert.equal(LLM_PRICING_VERSION, "2026-10-claude-text-models");
+  assert.equal(LLM_PRICING_VERSION, "2026-10-meta-muse-spark");
 });

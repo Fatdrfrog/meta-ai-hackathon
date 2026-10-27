@@ -1,4 +1,4 @@
-export const LLM_PRICING_VERSION = "2026-10-claude-text-models";
+export const LLM_PRICING_VERSION = "2026-10-meta-muse-spark";
 
 export type LlmModelPricing = {
   inputUsdPerMillion: number;
@@ -101,6 +101,12 @@ const MODEL_PRICING_USD_PER_MILLION: Record<string, LlmModelPricing> = {
     cacheWriteInputUsdPerMillion: 6.25,
   },
   "gpt-4o-mini": { inputUsdPerMillion: 0.15, outputUsdPerMillion: 0.6 },
+  // Meta Model API list price, verified 2026-10-27 (dev.meta.ai).
+  "muse-spark-1.3": {
+    inputUsdPerMillion: 1.25,
+    outputUsdPerMillion: 4.25,
+    cachedInputUsdPerMillion: 0.15,
+  },
 };
 
 // Conservative estimate boundary: August 13 is documented for Provisioned

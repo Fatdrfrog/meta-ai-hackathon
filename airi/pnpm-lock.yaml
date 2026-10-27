@@ -596,6 +596,9 @@ importers:
       '@icecore/whatsapp':
         specifier: workspace:*
         version: link:../whatsapp
+      '@meta-sam/parser':
+        specifier: 0.1.0
+        version: 0.1.0
       mongoose:
         specifier: ^8.24.4
         version: 8.24.4
@@ -2544,6 +2547,10 @@ packages:
 
   '@mdn/browser-compat-data@5.7.6':
     resolution: {integrity: sha512-7xdrMX0Wk7grrTZQwAoy1GkvPMFoizStUoL+VmtUkAxegbCCec+3FKwOM6yc/uGU5+BEczQHXAlWiqvM8JeENg==}
+
+  '@meta-sam/parser@0.1.0':
+    resolution: {integrity: sha512-099xq4EhULxm7gV+kEllQ9WTaNgwYumGRvCX5WAT2bny/SEh+U9tVT9bAzN1mISOC7TO6mgOt3MJmZ2Mv2RTmw==}
+    engines: {node: ^20.17.0 || >=22.9.0}
 
   '@modelcontextprotocol/client@2.0.0':
     resolution: {integrity: sha512-8f1OghQ2rjzIOfqgUCP+8GiUWqRs89njoWLNqAe8kWmDePv3s1fZXseej+QXemssEuuOvLLmLO/kqM3IQHtISw==}
@@ -12386,6 +12393,8 @@ snapshots:
       '@bufbuild/protobuf': 1.10.1
 
   '@mdn/browser-compat-data@5.7.6': {}
+
+  '@meta-sam/parser@0.1.0': {}
 
   '@modelcontextprotocol/client@2.0.0':
     dependencies:
