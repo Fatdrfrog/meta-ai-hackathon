@@ -62,7 +62,19 @@ The scoring that works: keep frames whose mask is in one piece and clear of the 
 
 Cost and time: about $0.03 and 35-50 seconds per product, products in parallel. The whole 65-second test video takes 2-2.5 minutes and about $0.25.
 
-Decision: ElevenLabs Scribe v2 does the listening. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
+Decision: ElevenLabs Scribe v2 does the listening.
+
+## Oct 27: the AI seller on Muse Spark Open
+
+Muse Spark Open (open weights, served by Baseten) answers buyers. First probes:
+
+- Given no catalog at all, it answered "the doll costs 5000 tenge": an invented price. So every price in a reply is checked in code against the catalog before a buyer sees it; a reply may state any product's price, several of a product it shows or orders, and the order's total. A first version allowed multiples of every product, and the unit tests showed a made-up 4 500 ₸ "discount" passing as fifteen 300 ₸ dinosaurs; multiples are now limited to the products the reply is about.
+- It recognized the doll in a buyer's photo against a numbered sheet of the shop's cut-outs, in one call.
+- Structured JSON output works; with low reasoning effort replies take about a second.
+
+A failed check gets one corrective retry with the problems spelled out; if that fails too, the buyer gets "I'll check with the owner" and the owner gets the question.
+
+`pnpm seller:eval` runs scripted conversations against the test catalog and checks each reply in code: language, product cards, prices, questions passed to the owner, orders only after a name and phone, and length. Its first run caught replies copying catalog details in brackets and an order confirmation that still asked a question; after tightening the instructions, 8 of 8 pass, twice in a row, at 0.7-5.5 seconds per reply. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
 ### SAM 3.1 on one sharp frame beats tracking the whole video
 

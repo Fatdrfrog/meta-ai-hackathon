@@ -14,6 +14,9 @@ importers:
       '@vitrina/meta':
         specifier: workspace:*
         version: link:packages/meta
+      '@vitrina/seller':
+        specifier: workspace:*
+        version: link:packages/seller
     devDependencies:
       '@types/node':
         specifier: 24.19.2
@@ -88,6 +91,12 @@ importers:
       '@meta-sam/parser':
         specifier: 0.1.0
         version: 0.1.0
+
+  packages/seller:
+    dependencies:
+      '@vitrina/meta':
+        specifier: workspace:*
+        version: link:../meta
 
 packages:
 

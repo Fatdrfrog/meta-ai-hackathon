@@ -64,7 +64,7 @@ customer photo / voice note / text ──► channel ──► AI seller (Muse S
 | Muse Spark 1.3 | Watch the shop video with the owner's transcript as text; list products, prices, doubts, and each product's clearest moment and search phrase | MP4 input only; about $0.045 per minute of video |
 | Muse Spark 1.3 (vision) | For each product, pick the clearest of 8 frames and draw a box around it | Two image calls per product |
 | SAM 3.1 | Track that box through the product's clip at 10 fps; the frame with the best measured mask becomes the cut-out; a "hand" mask is subtracted | About $0.02 per product |
-| Muse Spark Open (Baseten) | The customer-facing seller: reads photos and voice notes, matches the catalog, takes orders | Model ID `meta-models/muse-spark-open-1026` |
+| Muse Spark Open (Baseten) | The seller: answers buyers in Kazakh, Russian or English, matches a buyer's photo against a numbered sheet of the shop's cut-outs, takes orders, passes unknowns to the owner; every price and order is checked in code | Hackathon ID `meta-models/muse-spark-open-1026` once approved; `meta-models/muse-spark-open` until then |
 | Muse Image | Studio background around the real cut-out; the product pixels are never redrawn | Planned |
 
 Listening is the one job not done by a Meta model. Muse Voice Transcribe has no Russian or Kazakh, and Muse Spark and Muse Spark Open missed spoken prices in most test runs, so **ElevenLabs Scribe v2** transcribes the owner's narration and buyers' voice notes. Everything after the transcript is Meta's models. See [findings.md](findings.md).

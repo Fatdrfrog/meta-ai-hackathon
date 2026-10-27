@@ -45,14 +45,22 @@ export async function regionSharpness(framePath: string, region: Box): Promise<n
   return sharpness;
 }
 
-/** Frames side by side with a big number in each corner, for a model to choose from. */
-export async function numberedGrid(paths: readonly string[], outPath: string, columns = 4): Promise<void> {
-  const tileWidth = 360;
-  const tileHeight = 640;
+export interface GridLayout {
+  readonly columns?: number;
+  readonly tileWidth?: number;
+  readonly tileHeight?: number;
+  /** "cover" fills each tile (video frames); "contain" shows the whole image on white (cut-outs). */
+  readonly fit?: "cover" | "contain";
+}
+
+/** Images side by side with a big number in each corner, for a model to choose from or refer to. */
+export async function numberedGrid(paths: readonly string[], outPath: string, layout: GridLayout = {}): Promise<void> {
+  const { columns = 4, tileWidth = 360, tileHeight = 640, fit = "cover" } = layout;
   const tiles = await Promise.all(
     paths.map(async (path, i) => ({
       input: await sharp(path)
-        .resize(tileWidth, tileHeight, { fit: "cover" })
+        .resize(tileWidth, tileHeight, { fit, background: "#ffffff" })
+        .flatten({ background: "#ffffff" })
         .composite([
           {
             input: Buffer.from(
@@ -68,8 +76,14 @@ export async function numberedGrid(paths: readonly string[], outPath: string, co
       top: Math.floor(i / columns) * tileHeight,
     })),
   );
+  if (tiles.length === 0) throw new Error("No images for the grid.");
   await sharp({
-    create: { width: columns * tileWidth, height: Math.ceil(paths.length / columns) * tileHeight, channels: 3, background: "#ffffff" },
+    create: {
+      width: Math.min(columns, paths.length) * tileWidth,
+      height: Math.ceil(paths.length / columns) * tileHeight,
+      channels: 3,
+      background: "#ffffff",
+    },
   })
     .composite(tiles)
     .jpeg({ quality: 85 })

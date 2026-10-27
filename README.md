@@ -43,6 +43,12 @@ pnpm catalog path/to/shop-video.mp4
 
 Prints the transcript and every product with its price and the words the price came from, and writes cut-outs and a contact sheet to `.data/catalogs/`, which git ignores.
 
+## Check the AI seller
+
+```bash
+pnpm seller:eval   # scripted buyer conversations against the latest catalog, each reply checked in code
+```
+
 ## Experiments
 
 ```bash

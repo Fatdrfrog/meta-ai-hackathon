@@ -15,11 +15,13 @@
     "test": "node --test \"packages/*/src/**/*.test.ts\" \"apps/server/src/**/*.test.ts\"",
     "catalog": "node --env-file-if-exists=.env scripts/catalog.ts",
     "spike:sam": "node --env-file-if-exists=.env scripts/spike-sam.ts",
-    "spike:speech": "node --env-file-if-exists=.env scripts/spike-speech.ts"
+    "spike:speech": "node --env-file-if-exists=.env scripts/spike-speech.ts",
+    "seller:eval": "node --env-file-if-exists=.env scripts/seller-eval.ts"
   },
   "dependencies": {
     "@vitrina/catalog": "workspace:*",
-    "@vitrina/meta": "workspace:*"
+    "@vitrina/meta": "workspace:*",
+    "@vitrina/seller": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
