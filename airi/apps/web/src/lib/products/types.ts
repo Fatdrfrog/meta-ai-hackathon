@@ -36,6 +36,8 @@ export type WorkspaceProductRecord = {
   name: string;
   /** Whole tenge, or null while the owner hasn't set a price. */
   price: number | null;
+  /** The product cut out of the video on a transparent background, or null. */
+  imageUrl: string | null;
   updatedAt: string | null;
 };
 

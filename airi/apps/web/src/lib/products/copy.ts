@@ -5,16 +5,11 @@
 export const PRODUCTS_COPY = {
   navLabel: "Products",
   title: "Products",
-  description: "What you sell. Airi answers buyers about these products.",
   loading: "Loading products…",
   loadError: "Products couldn't be loaded.",
   retry: "Retry",
   noPrice: "No price yet",
   emptyTitle: "Your products will appear here",
   emptyDescription:
-    "Film your shelf on your phone and say each product's name and price. Airi turns the video into product cards for you to check.",
+    "Film your shelf on your phone and say each product's name and price. Airi turns the video into products for you to check.",
 } as const;
-
-export function productCountLabel(count: number): string {
-  return count === 1 ? "1 product" : `${count} products`;
-}

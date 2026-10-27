@@ -37,6 +37,7 @@ const doll: WorkspaceProductRecord = {
   id: "651f1f77bcf86cd799439031",
   name: "Кукла Лол",
   price: 5000,
+  imageUrl: null,
   updatedAt: "2026-10-27T09:30:00.000Z",
 };
 

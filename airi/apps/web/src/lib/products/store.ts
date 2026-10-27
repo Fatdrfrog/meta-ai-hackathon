@@ -24,6 +24,8 @@ export async function listPublishedProducts(
       typeof row.price === "number" && Number.isFinite(row.price)
         ? row.price
         : null,
+    // Products get photos from the video import, which doesn't store them yet.
+    imageUrl: null,
     updatedAt: toIsoOrNull(row.updatedAt),
   }));
 }

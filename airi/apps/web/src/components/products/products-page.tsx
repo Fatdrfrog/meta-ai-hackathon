@@ -1,20 +1,18 @@
 "use client";
 
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-} from "@/components/ui/async-states";
-import { PageHeader } from "@/components/ui/page-header";
-import { PRODUCTS_COPY, productCountLabel } from "@/lib/products/copy";
-import {
-  formatProductPrice,
-  type ProductsListResponse,
-  type WorkspaceProductRecord,
+import { Button } from "@/components/ui/button";
+import { PRODUCTS_COPY } from "@/lib/products/copy";
+import type {
+  ProductsListResponse,
+  WorkspaceProductRecord,
 } from "@/lib/products/types";
-import { Package } from "lucide-react";
 import type { ReactNode } from "react";
 import useSWR from "swr";
+import {
+  EmptyShelf,
+  ProductShelf,
+  ProductShelfSkeleton,
+} from "./product-shelf";
 import { fetchProducts, productsApiUrl } from "./products-client";
 
 const EMPTY_PRODUCTS: WorkspaceProductRecord[] = [];
@@ -32,66 +30,39 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
   if (!data) {
     body =
       error && !isValidating ? (
-        <ErrorState
-          message={PRODUCTS_COPY.loadError}
-          onRetry={() => void mutate()}
-          retryLabel={PRODUCTS_COPY.retry}
-        />
+        <EmptyShelf>
+          <p className="text-[15px] font-medium">{PRODUCTS_COPY.loadError}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => void mutate()}
+          >
+            {PRODUCTS_COPY.retry}
+          </Button>
+        </EmptyShelf>
       ) : (
         <div role="status" aria-label={PRODUCTS_COPY.loading}>
-          <LoadingState lines={4} />
+          <ProductShelfSkeleton />
         </div>
       );
   } else if (products.length === 0) {
     body = (
-      <EmptyState
-        title={PRODUCTS_COPY.emptyTitle}
-        description={PRODUCTS_COPY.emptyDescription}
-      />
+      <EmptyShelf>
+        <p className="text-[15px] font-medium">{PRODUCTS_COPY.emptyTitle}</p>
+        <p className="max-w-sm text-sm text-balance text-muted-foreground">
+          {PRODUCTS_COPY.emptyDescription}
+        </p>
+      </EmptyShelf>
     );
   } else {
-    body = (
-      <div className="min-w-0 space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {productCountLabel(products.length)}
-        </p>
-        <ul
-          className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
-          aria-label={PRODUCTS_COPY.title}
-        >
-          {products.map(product => (
-            <li
-              key={product.id}
-              className="flex min-w-0 flex-col gap-2 rounded-lg border p-3"
-            >
-              <div className="flex aspect-square items-center justify-center rounded-md bg-muted text-muted-foreground">
-                <Package aria-hidden="true" className="size-8" />
-              </div>
-              <p
-                className="line-clamp-2 font-medium break-words"
-                title={product.name}
-              >
-                {product.name}
-              </p>
-              <p className="text-sm text-muted-foreground tabular-nums">
-                {product.price === null
-                  ? PRODUCTS_COPY.noPrice
-                  : formatProductPrice(product.price)}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+    body = <ProductShelf products={products} />;
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <PageHeader
-        title={PRODUCTS_COPY.title}
-        description={PRODUCTS_COPY.description}
-      />
+    <section className="min-w-0">
+      <h1 className="sr-only">{PRODUCTS_COPY.title}</h1>
       {body}
-    </div>
+    </section>
   );
 }
