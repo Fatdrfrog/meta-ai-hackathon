@@ -21,6 +21,8 @@ const singleSegmentRoutes = new Set([
   "help",
   "onboarding",
   "performance",
+  // Behind a workspace flag and admin-only; otherwise the page redirects to Airi.
+  "products",
   "requests",
   "scenarios",
   "taxonomies",

@@ -68,6 +68,8 @@ const mockAiriChatThreadCreateIndexes = jest.fn();
 const mockAiriChatMessageCreateIndexes = jest.fn();
 const mockAiriChatRunCreateIndexes = jest.fn();
 const mockBusinessLocationCreateIndexes = jest.fn();
+const mockWorkspaceProductCreateIndexes = jest.fn();
+const mockProductVideoImportCreateIndexes = jest.fn();
 const mockCreativeVideoPlanCreateIndexes = jest.fn();
 const mockBehaviorIndexes = jest.fn();
 const mockAnalyticsIndexes = jest.fn();
@@ -565,6 +567,12 @@ jest.mock("@/models/airi-chat-run", () => ({
 jest.mock("@/models/business-location", () => ({
   BusinessLocation: { createIndexes: mockBusinessLocationCreateIndexes },
 }));
+jest.mock("@/models/workspace-product", () => ({
+  WorkspaceProduct: { createIndexes: mockWorkspaceProductCreateIndexes },
+}));
+jest.mock("@/models/product-video-import", () => ({
+  ProductVideoImport: { createIndexes: mockProductVideoImportCreateIndexes },
+}));
 
 jest.mock("@/models/cross-store-outbox", () => {
   const actual = jest.requireActual("@/models/cross-store-outbox");
@@ -740,6 +748,8 @@ describe("ensureIndexes", () => {
       mockAiriChatMessageCreateIndexes,
       mockAiriChatRunCreateIndexes,
       mockBusinessLocationCreateIndexes,
+      mockWorkspaceProductCreateIndexes,
+      mockProductVideoImportCreateIndexes,
       mockCreativeVideoPlanCreateIndexes,
     ]) {
       createIndexes.mockClear();
@@ -1706,6 +1716,8 @@ describe("ensureIndexes", () => {
         mockAiriChatMessageCreateIndexes,
         mockAiriChatRunCreateIndexes,
         mockBusinessLocationCreateIndexes,
+        mockWorkspaceProductCreateIndexes,
+        mockProductVideoImportCreateIndexes,
       ]) {
         expect(createIndexes).toHaveBeenCalledTimes(1);
       }

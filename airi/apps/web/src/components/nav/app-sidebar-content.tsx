@@ -13,6 +13,7 @@ import {
   Mail,
   Megaphone,
   MessageSquare,
+  Package,
   Palette,
   RouteIcon,
   Settings,
@@ -58,6 +59,7 @@ export function AppSidebarContent({ workspaceId }: { workspaceId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasWebWidget, setHasWebWidget] = useState(false);
   const [hasEmailAutomation, setHasEmailAutomation] = useState(false);
+  const [hasProducts, setHasProducts] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -124,6 +126,34 @@ export function AppSidebarContent({ workspaceId }: { workspaceId: string }) {
     return () => controller.abort();
   }, [workspaceId]);
 
+  // Products is for admins behind a workspace flag; the server decides both.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const checkProductsAccess = async () => {
+      try {
+        const response = await fetch(
+          `/api/workspaces/${workspaceId}/products/access`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          }
+        );
+        if (!response.ok) {
+          setHasProducts(false);
+          return;
+        }
+        const payload = (await response.json()) as { available?: unknown };
+        setHasProducts(payload.available === true);
+      } catch {
+        if (controller.signal.aborted) return;
+        setHasProducts(false);
+      }
+    };
+    checkProductsAccess();
+    return () => controller.abort();
+  }, [workspaceId]);
+
   const navMain = [
     {
       title: tAppSidebar("airiChat"),
@@ -155,6 +185,15 @@ export function AppSidebarContent({ workspaceId }: { workspaceId: string }) {
       url: `/panel/w/${workspaceId}/leads`,
       icon: Users,
     },
+    ...(hasProducts
+      ? [
+          {
+            title: tAppSidebar("products"),
+            url: `/panel/w/${workspaceId}/products`,
+            icon: Package,
+          },
+        ]
+      : []),
     ...(hasEmailAutomation
       ? [
           {

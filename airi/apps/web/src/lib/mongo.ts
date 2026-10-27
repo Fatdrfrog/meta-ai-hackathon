@@ -123,6 +123,8 @@ import { AiriChatMessage } from "@/models/airi-chat-message";
 import { AiriChatRun } from "@/models/airi-chat-run";
 import { AiriChatThread } from "@/models/airi-chat-thread";
 import { BusinessLocation } from "@/models/business-location";
+import { WorkspaceProduct } from "@/models/workspace-product";
+import { ProductVideoImport } from "@/models/product-video-import";
 import CrossStoreOutbox, {
   CROSS_STORE_OUTBOX_INDEX_SPECS,
 } from "@/models/cross-store-outbox";
@@ -738,6 +740,8 @@ async function createIndexes() {
   await AiriTurnContext.createIndexes();
   await ensureAiriChatIndexes();
   await BusinessLocation.createIndexes();
+  await WorkspaceProduct.createIndexes();
+  await ProductVideoImport.createIndexes();
   await CustomerEvent.createIndexes();
   await ensureScenarioFlowSubmissionIndexes();
   await ScenarioFlowEvent.collection.createIndex({

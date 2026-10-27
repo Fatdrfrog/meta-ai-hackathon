@@ -167,6 +167,18 @@ describe("last visited page normalization", () => {
     });
   });
 
+  it("remembers Products, which redirects when its flag is off or the user isn't an admin", () => {
+    expect(
+      normalizeLastVisitedHref(
+        `https://airi.chat/panel/w/${workspaceId}/products`
+      )
+    ).toEqual({
+      ok: true,
+      workspaceId,
+      path: `/panel/w/${workspaceId}/products`,
+    });
+  });
+
   it("repairs stored request links whose query was encoded into the pathname", () => {
     expect(
       normalizeStoredLastVisitedPath(

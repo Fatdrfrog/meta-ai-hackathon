@@ -9,6 +9,7 @@ export const WORKSPACE_FEATURE_KEYS = [
   "whatsapp_flow_managed_endpoint",
   "scenario_node_settings_panel",
   "scenario_location_routing",
+  "products",
 ] as const;
 
 export type WorkspaceFeatureKey = (typeof WORKSPACE_FEATURE_KEYS)[number];
@@ -25,6 +26,7 @@ function createDefaultFlags(): WorkspaceFeatureFlags {
     whatsapp_flow_managed_endpoint: false,
     scenario_node_settings_panel: false,
     scenario_location_routing: false,
+    products: false,
   };
 }
 

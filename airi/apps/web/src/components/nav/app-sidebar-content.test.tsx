@@ -33,6 +33,7 @@ jest.mock("next-intl", () => ({
       scenarios: "Scenarios",
       bulkCampaigns: "Bulk campaigns",
       customers: "Leads",
+      products: "Products",
       "messengers.title": "WhatsApp Manager",
       "analytics.title": "Analytics",
       "widget.title": "Web widget",
@@ -220,5 +221,57 @@ describe("AppSidebarContent", () => {
     expect(mockNavSecondaryItems.map(item => item.title)).not.toContain(
       "Settings"
     );
+  });
+
+  it("shows Products after Leads when the server says it's available", async () => {
+    global.fetch = jest.fn(async (url: string) => ({
+      ok: true,
+      json: async () =>
+        url.endsWith("/products/access")
+          ? { available: true }
+          : { sources: [], emailProviderConnected: false, emailSources: [] },
+    })) as jest.Mock;
+
+    render(<AppSidebarContent workspaceId="workspace-1" />);
+
+    expect(
+      await screen.findByRole("link", { name: "Products" })
+    ).toHaveAttribute("href", "/panel/w/workspace-1/products");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/workspaces/workspace-1/products/access",
+      expect.objectContaining({ cache: "no-store" })
+    );
+    const urls = mockNavMainItems.map(item => item.url);
+    expect(urls.indexOf("/panel/w/workspace-1/products")).toBe(
+      urls.indexOf("/panel/w/workspace-1/leads") + 1
+    );
+  });
+
+  it("keeps Products hidden unless the server says it's available", async () => {
+    global.fetch = jest.fn(async (url: string) =>
+      url.endsWith("/products/access")
+        ? { ok: false, json: async () => ({}) }
+        : {
+            ok: true,
+            json: async () => ({
+              sources: [],
+              emailProviderConnected: false,
+              emailSources: [],
+            }),
+          }
+    ) as jest.Mock;
+
+    render(<AppSidebarContent workspaceId="workspace-1" />);
+
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/workspaces/workspace-1/products/access",
+        expect.anything()
+      )
+    );
+    await waitFor(() => expect(mockNavMainItems.length).toBeGreaterThan(0));
+    expect(
+      screen.queryByRole("link", { name: "Products" })
+    ).not.toBeInTheDocument();
   });
 });
