@@ -4,18 +4,27 @@ Film it, sell it: a shop films its showroom once, and an AI seller on WhatsApp k
 
 Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Oct 26 – Nov 4, 2026), Startup track, from the team behind [airi.chat](https://airi.chat).
 
-- [docs/architecture.md](docs/architecture.md): how it works, which Meta models do what, and how it stays separate from airi.chat
+- [docs/architecture.md](docs/architecture.md): how it works, which Meta models do what, and where the work lives
 - [HACKATHON.md](HACKATHON.md): how to tell what was built during the hackathon
-- `airi/`: airi.chat, our existing product, imported as pre-existing code (see HACKATHON.md); it is a separate pnpm workspace
+- `airi/`: airi.chat, our existing product, imported as pre-existing code. The hackathon's product work happens inside it, in later commits that HACKATHON.md lists. It is a separate pnpm workspace
 
 ## Status
 
-- **Pipeline:** on a 65-second test video, all 7 products cut out cleanly and all 7 spoken prices right, in about 2 minutes for $0.25.
+On October 27 the project moved inside airi.chat, where shop owners already run their WhatsApp number. The standalone prototype at the root stays as the experiments and the first working version.
+
+**Inside airi.chat** (`airi/`):
+
+- **Products section** for workspace admins: products shown as cut-outs standing on a shelf.
+- **Meta Model API client:** Muse Spark, Muse Image and SAM 3.1, with timeouts, retries and the cost of every call.
+- **Video-to-products pipeline:** on the 65-second test video, all 7 products found with the right spoken prices, and all 7 photos restored by Muse Image (the owner's hand removed, the product upright on white), in about 2.5 minutes for $0.36.
+- **Next:** the import job, upload on the Products page, a swipe-through review, WhatsApp carousel and order-form drafts, and sending a video to Airi on WhatsApp.
+
+**Prototype** (root):
+
 - **Studio:** the owner uploads a video, watches the shelf being built, fixes names and prices, and confirms products.
 - **Shop page:** buyers see the confirmed products with their price tags and chat with the AI seller, an agent on Muse Spark Open that searches the shelf, matches photos, shows product cards, and places and looks up orders. Orders and questions it can't answer reach the studio.
-- **Next:** the same seller on WhatsApp.
 
-## Run the app
+## Run the prototype
 
 ```bash
 pnpm shop:create "QazOner Group"   # prints the owner's studio link and the shop page link
@@ -65,6 +74,8 @@ What the experiments found is in [docs/findings.md](docs/findings.md).
 pnpm typecheck
 pnpm test
 ```
+
+CI also checks the hackathon's code inside airi.chat: the `airi` job in [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## License
 
