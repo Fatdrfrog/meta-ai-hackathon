@@ -133,3 +133,24 @@ test("a product's clip goes into its own folder, made on the way", async (t) => 
   assert.ok(args.includes("fps=10"));
   assert.equal(args.at(-1), outPath);
 });
+
+test("a long video stops being transcoded a second past the limit; a timeout isn't the video's fault", async (t) => {
+  const dir = await workDir(t);
+  const { calls, runProcess } = fakeProcesses();
+  await prepareProductVideo("in.mp4", dir, { runProcess });
+  const args = calls[0]!.args;
+  assert.equal(
+    args[args.indexOf("-t") + 1],
+    String(MAX_PRODUCT_VIDEO_SECONDS + 1),
+  );
+
+  await assert.rejects(
+    prepareProductVideo("in.mp4", dir, {
+      runProcess: async () => {
+        throw new Error("ffmpeg timed out after 300000ms");
+      },
+    }),
+    (error: unknown) =>
+      !(error instanceof ProductVideoError) && /timed out/.test(String(error)),
+  );
+});

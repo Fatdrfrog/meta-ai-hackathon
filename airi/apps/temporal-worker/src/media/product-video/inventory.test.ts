@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test, { type TestContext } from "node:test";
+import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 
 import {
-  inventoryItemChecks,
+  inventoryChecks,
   parseInventory,
   presentationWindows,
   quoteInTranscript,
@@ -82,23 +86,46 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
   assert.equal(inventory.items.length, 2);
 });
 
-test("a price must come with words the owner said", () => {
+test("a price must come with words the owner said, matching its number", () => {
   assert.equal(quoteInTranscript("БЕС МЫҢ теңге", TRANSCRIPT), true);
   assert.equal(quoteInTranscript("алты мың теңге", TRANSCRIPT), false);
   assert.equal(quoteInTranscript("  ", TRANSCRIPT), false);
+  // However Scribe grouped the digits.
+  assert.equal(quoteInTranscript("2000 теңге", "Бағасы 2 000 теңге."), true);
+  assert.equal(quoteInTranscript("2 000 теңге", "Бағасы 2000 теңге."), true);
 
-  assert.deepEqual(inventoryItemChecks(item(), TRANSCRIPT), []);
+  const transcript = `${TRANSCRIPT}\n[20.1] Телефон 2 000 теңге.`;
   assert.deepEqual(
-    inventoryItemChecks(item({ priceQuote: "алты мың" }), TRANSCRIPT),
-    ["This price doesn't match anything in the narration."],
+    inventoryChecks(
+      [
+        item(),
+        item({ priceQuote: "алты мың" }),
+        item({ price: null, priceQuote: null }),
+        item({ currency: "USD", priceQuote: "бес жүз теңге" }),
+        // Digits in the quote must be the price.
+        item({ price: 20000, priceQuote: "2 000 теңге" }),
+      ],
+      transcript,
+    ),
+    [
+      [],
+      ["This price doesn't match anything in the narration."],
+      ["No price was said for this product."],
+      ["The price is in USD, not tenge."],
+      ["The price differs from the number in the narration."],
+    ],
   );
-  assert.deepEqual(
-    inventoryItemChecks(item({ price: null, priceQuote: null }), TRANSCRIPT),
-    ["No price was said for this product."],
+});
+
+test("two products quoting the same words for their price are both flagged", () => {
+  const [first, second] = inventoryChecks(
+    [item({ name: "Doll" }), item({ name: "Cup" })],
+    TRANSCRIPT,
   );
-  assert.deepEqual(inventoryItemChecks(item({ currency: "USD" }), TRANSCRIPT), [
-    "The price is in USD, not tenge.",
+  assert.deepEqual(first, [
+    "Another product's price comes from the same words.",
   ]);
+  assert.deepEqual(second, first);
 });
 
 test("each product's window runs to the next one, kept between 2 and 16 s", () => {
@@ -123,33 +150,59 @@ test("each product's window runs to the next one, kept between 2 and 16 s", () =
   ]);
 });
 
-test("asks Muse Spark about the uploaded video with the transcript, and prices the call", async () => {
+test("a window always includes the product's clearest moment", () => {
+  // A is clearest at 6 s, after B appeared at 4 s.
+  const [a] = presentationWindows(
+    [
+      { firstSeenSeconds: 0, clearestMomentSeconds: 6 },
+      { firstSeenSeconds: 4, clearestMomentSeconds: 8 },
+    ],
+    20,
+  );
+  assert.deepEqual(a, { fromSeconds: 4, toSeconds: 8 });
+});
+
+async function videoFile(t: TestContext) {
+  const dir = await mkdtemp(join(tmpdir(), "inventory-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const path = join(dir, "video.mp4");
+  await writeFile(path, "video");
+  return path;
+}
+
+const muse = (text: string) => async () => ({
+  id: "r",
+  status: "completed",
+  output: [{ type: "message", content: [{ type: "output_text", text }] }],
+  usage: { input_tokens: 10_000, output_tokens: 1_000 },
+});
+
+test("uploads the video, asks Muse Spark with the transcript, prices the call and deletes the upload", async (t) => {
+  const videoPath = await videoFile(t);
   const requests: Array<Record<string, unknown>> = [];
   const costs: Array<[number, string]> = [];
+  const deleted: string[] = [];
+  let pulses = 0;
 
   const inventory = await readProductInventory(
-    { videoFileId: "file_7", transcript: TRANSCRIPT },
+    { videoPath, transcript: TRANSCRIPT },
     {
+      uploadMetaFile: async (file) => {
+        assert.equal(file.mimeType, "video/mp4");
+        assert.equal(Buffer.from(file.data).toString(), "video");
+        return { id: "file_7" };
+      },
+      deleteMetaFile: async (id) => {
+        deleted.push(id);
+      },
       createMetaResponse: async (request) => {
         requests.push(request);
-        return {
-          id: "r",
-          status: "completed",
-          output: [
-            {
-              type: "message",
-              content: [
-                {
-                  type: "output_text",
-                  text: JSON.stringify({ language: "Kazakh", items: [] }),
-                },
-              ],
-            },
-          ],
-          usage: { input_tokens: 10_000, output_tokens: 1_000 },
-        };
+        return muse(JSON.stringify({ language: "Kazakh", items: [] }))();
       },
       onCost: (usd, what) => costs.push([usd, what]),
+      pulse: () => {
+        pulses++;
+      },
     },
   );
 
@@ -164,4 +217,29 @@ test("asks Muse Spark about the uploaded video with the transcript, and prices t
   assert.equal(costs.length, 1);
   assert.ok(Math.abs(costs[0]![0] - 0.01675) < 1e-9);
   assert.equal(costs[0]![1], "inventory");
+  assert.deepEqual(deleted, ["file_7"]);
+  assert.ok(pulses >= 2);
+});
+
+test("deletes the upload even when the answer can't be read", async (t) => {
+  const videoPath = await videoFile(t);
+  const deleted: string[] = [];
+
+  await assert.rejects(
+    readProductInventory(
+      { videoPath, transcript: "" },
+      {
+        uploadMetaFile: async () => ({ id: "file_8" }),
+        deleteMetaFile: async (id) => {
+          deleted.push(id);
+        },
+        createMetaResponse: muse('{"language": "kk", "items": [{"na'),
+      },
+    ),
+    (error: unknown) =>
+      error instanceof MetaModelApiError &&
+      error.info.code === "invalid_json" &&
+      error.info.transient,
+  );
+  assert.deepEqual(deleted, ["file_8"]);
 });

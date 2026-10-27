@@ -2,13 +2,17 @@ import { estimateLlmCostUsd } from "@icecore/airi-runtime/llm-pricing";
 import {
   createMetaResponse,
   getMetaModels,
+  MetaModelApiError,
   metaResponseText,
   type MetaRequestOptions,
 } from "@icecore/airi-runtime/meta-model-api";
+import { whilePulsing } from "./pulse";
 
 export type AskMuseDeps = {
   createMetaResponse?: typeof createMetaResponse;
   onCost?: (usd: number, what: string) => void;
+  /** Called while a model call runs, so a Temporal activity can heartbeat. */
+  pulse?: () => void;
 };
 
 /** One quick Muse Spark question about images, answered as JSON in `schema`. */
@@ -25,34 +29,36 @@ export async function askMuseAboutImages<T>(
   options?: MetaRequestOptions,
 ): Promise<T> {
   const model = getMetaModels().museSpark;
-  const response = await (deps.createMetaResponse ?? createMetaResponse)(
-    {
-      model,
-      reasoning: { effort: "low" },
-      input: [
-        {
-          type: "message",
-          role: "user",
-          content: [
-            ...request.images.map((image) => ({
-              type: "input_image",
-              image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
-            })),
-            { type: "input_text", text: request.question },
-          ],
+  const response = await whilePulsing(deps.pulse, () =>
+    (deps.createMetaResponse ?? createMetaResponse)(
+      {
+        model,
+        reasoning: { effort: "low" },
+        input: [
+          {
+            type: "message",
+            role: "user",
+            content: [
+              ...request.images.map((image) => ({
+                type: "input_image",
+                image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
+              })),
+              { type: "input_text", text: request.question },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "answer",
+            strict: true,
+            schema: request.schema,
+          },
         },
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "answer",
-          strict: true,
-          schema: request.schema,
-        },
+        max_output_tokens: 3000,
       },
-      max_output_tokens: 3000,
-    },
-    options,
+      options,
+    ),
   );
   deps.onCost?.(
     estimateLlmCostUsd({
@@ -63,5 +69,14 @@ export async function askMuseAboutImages<T>(
     }).totalCostUsd,
     request.purpose,
   );
-  return JSON.parse(metaResponseText(response)) as T;
+  try {
+    return JSON.parse(metaResponseText(response)) as T;
+  } catch {
+    throw new MetaModelApiError({
+      kind: "server",
+      transient: true,
+      code: "invalid_json",
+      message: `Muse Spark's answer (${request.purpose}) wasn't valid JSON`,
+    });
+  }
 }

@@ -1,7 +1,8 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  MetaModelApiError,
+  deleteMetaFile as defaultDeleteMetaFile,
+  isMetaModelRefusal,
   uploadMetaFile as defaultUploadMetaFile,
   type MetaRequestOptions,
 } from "@icecore/airi-runtime/meta-model-api";
@@ -17,6 +18,7 @@ import sharp from "sharp";
 import {
   cropAroundProduct,
   cutOutWithMask,
+  nonWhiteBox,
   numberedGrid,
   regionSharpness,
 } from "./images";
@@ -34,8 +36,10 @@ import {
 import {
   extractClipFrames,
   extractProductClip,
+  ProductVideoError,
   type ProductVideoMediaDeps,
 } from "./media";
+import { whilePulsing } from "./pulse";
 import {
   checkSameProduct,
   restoreProductPhoto,
@@ -69,6 +73,7 @@ export type ProductCutout = {
 export type CutOutProductDeps = RestoreDeps &
   ProductVideoMediaDeps & {
     uploadMetaFile?: typeof defaultUploadMetaFile;
+    deleteMetaFile?: typeof defaultDeleteMetaFile;
     segmentMetaVideo?: typeof defaultSegmentMetaVideo;
     segmentMetaImage?: typeof samImage;
   };
@@ -118,7 +123,8 @@ export async function cutOutProduct(
     deps,
   );
   if (frames.length === 0) {
-    throw new Error(
+    throw new ProductVideoError(
+      "no_frames",
       `No frames between ${request.window.fromSeconds}s and ${request.window.toSeconds}s`,
     );
   }
@@ -143,7 +149,6 @@ export async function cutOutProduct(
         options,
       )
     ]!;
-  deps.pulse?.();
   const box = await boxProduct(
     {
       frame: await readFile(frames[seed]!),
@@ -154,7 +159,6 @@ export async function cutOutProduct(
     deps,
     options,
   );
-  deps.pulse?.();
 
   let found: {
     frameIndex: number;
@@ -171,9 +175,12 @@ export async function cutOutProduct(
   }
   if (!found) {
     // Fallback: the product's phrase on the frame Muse picked.
-    const { result, costUsd } = await (deps.segmentMetaImage ?? samImage)(
-      { imageUrl: await jpegDataUrl(frames[seed]!), prompt: request.samPhrase },
-      options,
+    const imageUrl = await jpegDataUrl(frames[seed]!);
+    const { result, costUsd } = await whilePulsing(deps.pulse, () =>
+      (deps.segmentMetaImage ?? samImage)(
+        { imageUrl, prompt: request.samPhrase },
+        options,
+      ),
     );
     deps.onCost?.(costUsd, "find product");
     const record = bestMetaSamMask(result.records);
@@ -183,7 +190,6 @@ export async function cutOutProduct(
         found = { frameIndex: seed, mask, method: "phrase" };
     }
   }
-  deps.pulse?.();
 
   const originalPath = join(workDir, "original.jpg");
   if (!found) {
@@ -216,7 +222,6 @@ export async function cutOutProduct(
     deps,
     options,
   );
-  deps.pulse?.();
   if (restored.cutout) {
     await writeFile(cutoutPath, restored.cutout);
     return { ...base, method: "restored", notes: [] };
@@ -237,31 +242,39 @@ async function trackAndChoose(
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
 ): Promise<FrameCandidate | undefined> {
-  const { id } = await (deps.uploadMetaFile ?? defaultUploadMetaFile)(
-    {
-      data: await readFile(request.clipPath),
-      filename: "clip.mp4",
-      mimeType: "video/mp4",
-    },
-    options,
+  const data = await readFile(request.clipPath);
+  const { id } = await whilePulsing(deps.pulse, () =>
+    (deps.uploadMetaFile ?? defaultUploadMetaFile)(
+      { data, filename: "clip.mp4", mimeType: "video/mp4" },
+      options,
+    ),
   );
-  const { result, costUsd } = await (
-    deps.segmentMetaVideo ?? defaultSegmentMetaVideo
-  )(
-    {
-      fileId: id,
-      frameCount: request.frames.length,
-      prompt: buildObjectPrompt({
-        size: { width: request.width, height: request.height },
-        objects: [
-          { id: 0, prompts: [{ frame: request.seed, box: request.box }] },
-        ],
-      }),
-    },
-    options,
-  );
-  deps.onCost?.(costUsd, "track product");
-  deps.pulse?.();
+  let result: Awaited<ReturnType<typeof defaultSegmentMetaVideo>>["result"];
+  try {
+    const tracked = await whilePulsing(deps.pulse, () =>
+      (deps.segmentMetaVideo ?? defaultSegmentMetaVideo)(
+        {
+          fileId: id,
+          frameCount: request.frames.length,
+          prompt: buildObjectPrompt({
+            size: { width: request.width, height: request.height },
+            objects: [
+              { id: 0, prompts: [{ frame: request.seed, box: request.box }] },
+            ],
+          }),
+        },
+        options,
+      ),
+    );
+    deps.onCost?.(tracked.costUsd, "track product");
+    result = tracked.result;
+  } finally {
+    // The owner's footage shouldn't stay on Meta's servers; it also expires
+    // by itself within a day if this fails.
+    await (deps.deleteMetaFile ?? defaultDeleteMetaFile)(id).catch(
+      () => undefined,
+    );
+  }
 
   const candidates: FrameCandidate[] = [];
   for (const record of recordsOfKind(result.records, "mask")) {
@@ -313,11 +326,10 @@ async function restoreAndCheck(
       options,
     );
   } catch (error) {
-    // Refused (a safety filter, say): show the product as filmed.
-    if (
-      error instanceof MetaModelApiError &&
-      error.info.kind === "invalid_request"
-    ) {
+    // Refused by a safety filter: show the product as filmed. Anything else,
+    // like a wrong model name, fails loudly instead of quietly downgrading
+    // every photo.
+    if (isMetaModelRefusal(error)) {
       return {
         cutout: null,
         note: "The photo couldn't be cleaned up, so the hand may still show.",
@@ -326,25 +338,29 @@ async function restoreAndCheck(
     throw error;
   }
 
-  const { result, costUsd } = await (deps.segmentMetaImage ?? samImage)(
-    { imageUrl: await jpegDataUrl(restored), prompt: request.samPhrase },
+  const masks = await segmentRestored(
+    restored,
+    request.samPhrase,
+    deps,
     options,
   );
-  deps.onCost?.(costUsd, "cut out restored photo");
-  const record = bestMetaSamMask(result.records);
-  const mask = record ? largestComponent(maskFromRecord(record)).mask : null;
-  if (!mask || maskArea(mask) === 0) {
+  if (masks.length === 0) {
     return {
       cutout: null,
       note: "The cleaned-up photo didn't show the product, so the original is used.",
     };
   }
+  const cutout = await cutOutWithMask(restored, masks, {
+    whiteBackground: true,
+  });
 
+  // The check sees the cut-out a buyer will see, so a part lost by the cut
+  // counts as a difference too.
   const check = await checkSameProduct(
     {
       original: crop.image,
-      restored: await sharp(restored)
-        .resize(1024, 1024, { fit: "inside" })
+      restored: await sharp(cutout)
+        .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
         .flatten({ background: "#ffffff" })
         .jpeg({ quality: 88 })
         .toBuffer(),
@@ -359,7 +375,46 @@ async function restoreAndCheck(
       note: `The cleaned-up photo looked different${check.difference ? ` (${check.difference.replace(/\.$/, "")})` : ""}, so the original is used.`,
     };
   }
-  return {
-    cutout: await cutOutWithMask(restored, mask, { whiteBackground: true }),
-  };
+  return { cutout };
+}
+
+/**
+ * The restored product's masks, from two prompts joined: the box around
+ * everything that isn't white (on Muse's white background, the product) and
+ * the product's name. Each alone lost parts in tests: asked for "phone stand",
+ * SAM cut out only the stand's base; shown the toy phone's box, only its
+ * frame. Nothing else is in the picture, so joining them is safe.
+ */
+async function segmentRestored(
+  image: Buffer,
+  samPhrase: string,
+  deps: CutOutProductDeps,
+  options?: MetaRequestOptions,
+): Promise<Mask[]> {
+  const { width = 0, height = 0 } = await sharp(image).metadata();
+  const box = await nonWhiteBox(image);
+  if (!box) return [];
+  const imageUrl = await jpegDataUrl(image);
+  const prompts = [
+    buildObjectPrompt({
+      size: { width, height },
+      objects: [{ id: 0, prompts: [{ frame: 0, box }] }],
+    }),
+    samPhrase,
+  ];
+  const results = await whilePulsing(deps.pulse, () =>
+    Promise.all(
+      prompts.map((prompt) =>
+        (deps.segmentMetaImage ?? samImage)({ imageUrl, prompt }, options),
+      ),
+    ),
+  );
+  const masks: Mask[] = [];
+  for (const { result, costUsd } of results) {
+    deps.onCost?.(costUsd, "cut out restored photo");
+    const record = bestMetaSamMask(result.records);
+    const mask = record ? maskFromRecord(record) : null;
+    if (mask && maskArea(mask) > 0) masks.push(mask);
+  }
+  return masks;
 }

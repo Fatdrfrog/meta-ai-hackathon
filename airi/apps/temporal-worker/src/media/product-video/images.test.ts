@@ -5,7 +5,12 @@ import { join } from "node:path";
 import test, { type TestContext } from "node:test";
 import sharp from "sharp";
 
-import { cropAroundProduct, cutOutWithMask, numberedGrid } from "./images";
+import {
+  cropAroundProduct,
+  cutOutWithMask,
+  nonWhiteBox,
+  numberedGrid,
+} from "./images";
 import { boxInPixels } from "./locate";
 import {
   chooseFrame,
@@ -57,10 +62,43 @@ test("cuts out with smooth edges, trimmed to the product", async () => {
     [...alphas].some((a) => a > 0 && a < 255),
     "edges are soft, not on/off",
   );
-  // An edge pixel keeps the product's colour instead of fading to white.
-  const edge = (24 * 48 + 4) * 4;
-  assert.ok(data[edge + 3]! > 0 && data[edge + 3]! < 255);
-  assert.ok(data[edge]! > 200 && data[edge + 1]! < 60, "no white halo");
+  const centre = (24 * 48 + 24) * 4;
+  assert.deepEqual([...data.subarray(centre, centre + 4)], [255, 0, 0, 255]);
+});
+
+// Pixels that would show as a pale ring on a dark background: visible, and
+// white rather than the product's red.
+async function haloPixels(png: Buffer): Promise<number> {
+  const { data } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+  let count = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (
+      data[i + 3]! > 40 &&
+      Math.min(data[i]!, data[i + 1]!, data[i + 2]!) > 180
+    )
+      count++;
+  }
+  return count;
+}
+
+test("leaves no white ring, even when SAM's mask is a pixel too big", async () => {
+  const exact = await cutOutWithMask(await redSquare(), halfSizeMask, {
+    whiteBackground: true,
+  });
+  const generous = await cutOutWithMask(
+    await redSquare(),
+    {
+      ...halfSizeMask,
+      raster: new Uint8Array(42 * 42).fill(1),
+      width: 42,
+      height: 42,
+      bounds: { left: 29, top: 29, right: 71, bottom: 71 },
+    },
+    { whiteBackground: true },
+  );
+
+  assert.equal(await haloPixels(exact), 0);
+  assert.equal(await haloPixels(generous), 0);
 });
 
 async function tempFile(t: TestContext, name: string) {
@@ -97,6 +135,16 @@ test("numbers frames in a grid", async (t) => {
   const grid = await numberedGrid([path, path, path, path, path]);
   const meta = await sharp(grid).metadata();
   assert.deepEqual([meta.width, meta.height], [4 * 360, 2 * 640]);
+
+  // A landscape video gets landscape tiles, not its middle third.
+  const wide = await tempFile(t, "wide.jpg");
+  await sharp({
+    create: { width: 64, height: 36, channels: 3, background: "#654321" },
+  })
+    .jpeg()
+    .toFile(wide);
+  const wideGrid = await sharp(await numberedGrid([wide, wide])).metadata();
+  assert.deepEqual([wideGrid.width, wideGrid.height], [2 * 640, 360]);
 });
 
 test("keeps the largest piece of a mask", () => {
@@ -160,4 +208,19 @@ test("asks Muse Image for the crop's shape and an honest restore", () => {
   const prompt = restorePrompt("LOL doll");
   assert.match(prompt, /Remove the person's hand/);
   assert.match(prompt, /do not retouch, beautify or idealise it/);
+});
+
+test("finds the product on a white background by what isn't white", async () => {
+  assert.deepEqual(await nonWhiteBox(await redSquare()), {
+    left: 30,
+    top: 30,
+    right: 70,
+    bottom: 70,
+  });
+  const blank = await sharp({
+    create: { width: 20, height: 20, channels: 3, background: "#ffffff" },
+  })
+    .png()
+    .toBuffer();
+  assert.equal(await nonWhiteBox(blank), null);
 });

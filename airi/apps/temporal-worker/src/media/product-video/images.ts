@@ -30,17 +30,51 @@ function clampBox(box: Box, width: number, height: number): Box | null {
     : null;
 }
 
-/** Frames side by side with a big number in each corner, for Muse Spark to choose from. */
+// How far from pure white still counts as Muse's background (its white has
+// some noise); a frosted white cup still stood out at this setting.
+const WHITE_SLACK = 24;
+
+/**
+ * The box around everything that isn't white: on Muse Image's plain white
+ * background, the whole product. Null for a blank image.
+ */
+export async function nonWhiteBox(image: Buffer): Promise<Box | null> {
+  const flat = await sharp(image).flatten({ background: "#ffffff" }).toBuffer();
+  const { channels } = await sharp(flat).stats();
+  // Nothing darker than near-white anywhere: no product.
+  if (channels.slice(0, 3).every((channel) => channel.min >= 255 - WHITE_SLACK))
+    return null;
+  const { info } = await sharp(flat)
+    .trim({ background: "#ffffff", threshold: WHITE_SLACK })
+    .toBuffer({ resolveWithObject: true });
+  const left = Math.max(0, -(info.trimOffsetLeft ?? 0));
+  const top = Math.max(0, -(info.trimOffsetTop ?? 0));
+  return { left, top, right: left + info.width, bottom: top + info.height };
+}
+
+const GRID_TILE_LONG_SIDE = 640;
+
+/**
+ * Frames side by side with a big number in each corner, for Muse Spark to
+ * choose from. Tiles take the frames' shape, so a landscape video isn't
+ * cropped to its middle third.
+ */
 export async function numberedGrid(
   paths: string[],
-  layout: { columns?: number; tileWidth?: number; tileHeight?: number } = {},
+  columns = 4,
 ): Promise<Buffer> {
-  const { columns = 4, tileWidth = 360, tileHeight = 640 } = layout;
   if (paths.length === 0) throw new Error("No frames for the grid");
+  const { width = 1, height = 1 } = await sharp(paths[0]!).metadata();
+  const scale = GRID_TILE_LONG_SIDE / Math.max(width, height);
+  const tileWidth = Math.round(width * scale);
+  const tileHeight = Math.round(height * scale);
   const tiles = await Promise.all(
     paths.map(async (path, i) => ({
       input: await sharp(path)
-        .resize(tileWidth, tileHeight, { fit: "cover" })
+        .resize(tileWidth, tileHeight, {
+          fit: "contain",
+          background: "#ffffff",
+        })
         .composite([
           {
             input: Buffer.from(
@@ -106,48 +140,82 @@ export async function cropAroundProduct(
 
 const CUTOUT_MAX_SIDE = 1200;
 const CUTOUT_PADDING = 4;
+// Opacity below this, after softening, is the blur's spill onto background.
+const RIM = 40;
 
 /**
- * A transparent PNG of the masked product, trimmed to it. The mask is scaled
- * up smoothly (scaling it pixel by pixel gave staircase edges) and softened by
- * a pixel. On a white background, the white blended into edge pixels is taken
- * back out (C = aF + (1 - a)W, so F = (C - (1 - a)W) / a), so no halo shows
- * when the product is placed on a dark background.
+ * The mask with its outermost pixels removed. SAM's edge is often a pixel
+ * generous, and that pixel is background colour, which shows as a ring.
+ */
+function shrinkByOnePixel(mask: Buffer, width: number, height: number): Buffer {
+  const out = Buffer.alloc(mask.length);
+  const on = (i: number) => mask[i]! >= 128;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x;
+      if (on(i) && on(i - 1) && on(i + 1) && on(i - width) && on(i + width))
+        out[i] = 255;
+    }
+  }
+  return out;
+}
+
+/**
+ * A transparent PNG of the masked product, trimmed to it. Several masks are
+ * joined, for a product SAM found in parts. Each mask is scaled up smoothly
+ * (scaling it pixel by pixel gave staircase edges), then the whole is shrunk
+ * by a pixel and softened. On a white background, the white blended into
+ * edge pixels is taken back out (C = aF + (1 - a)W, so F = (C - (1 - a)W) / a),
+ * so no halo shows when the product is placed on a dark background.
  */
 export async function cutOutWithMask(
   image: Buffer | string,
-  mask: Mask,
+  masks: Mask | Mask[],
   options: { whiteBackground?: boolean } = {},
 ): Promise<Buffer> {
   const { width = 0, height = 0 } = await sharp(image).metadata();
-  const bounds = clampBox(mask.bounds, width, height);
+  const all = Array.isArray(masks) ? masks : [masks];
+  const bounds = clampBox(
+    {
+      left: Math.min(...all.map((mask) => mask.bounds.left)),
+      top: Math.min(...all.map((mask) => mask.bounds.top)),
+      right: Math.max(...all.map((mask) => mask.bounds.right)),
+      bottom: Math.max(...all.map((mask) => mask.bounds.bottom)),
+    },
+    width,
+    height,
+  );
   if (!bounds) throw new Error("The mask is outside its image");
-  const boundsWidth = mask.bounds.right - mask.bounds.left;
-  const boundsHeight = mask.bounds.bottom - mask.bounds.top;
-  const scaled = await sharp(
-    Buffer.from(mask.raster.map((value) => (value ? 255 : 0))),
-    { raw: { width: mask.width, height: mask.height, channels: 1 } },
-  )
-    .resize(boundsWidth, boundsHeight, { fit: "fill", kernel: "cubic" })
-    .extractChannel(0)
-    .raw()
-    .toBuffer();
 
   const placed = Buffer.alloc(width * height);
-  for (let y = 0; y < boundsHeight; y++) {
-    const row = mask.bounds.top + y;
-    if (row < 0 || row >= height) continue;
-    const fromX = Math.max(0, -mask.bounds.left);
-    const toX = Math.min(boundsWidth, width - mask.bounds.left);
-    if (toX <= fromX) continue;
-    scaled.copy(
-      placed,
-      row * width + mask.bounds.left + fromX,
-      y * boundsWidth + fromX,
-      y * boundsWidth + toX,
-    );
+  for (const mask of all) {
+    const boundsWidth = mask.bounds.right - mask.bounds.left;
+    const boundsHeight = mask.bounds.bottom - mask.bounds.top;
+    if (boundsWidth < 1 || boundsHeight < 1) continue;
+    const scaled = await sharp(
+      Buffer.from(mask.raster.map((value) => (value ? 255 : 0))),
+      { raw: { width: mask.width, height: mask.height, channels: 1 } },
+    )
+      .resize(boundsWidth, boundsHeight, { fit: "fill", kernel: "cubic" })
+      .extractChannel(0)
+      .raw()
+      .toBuffer();
+    for (let y = 0; y < boundsHeight; y++) {
+      const row = mask.bounds.top + y;
+      if (row < 0 || row >= height) continue;
+      for (
+        let x = Math.max(0, -mask.bounds.left);
+        x < Math.min(boundsWidth, width - mask.bounds.left);
+        x++
+      ) {
+        const at = row * width + mask.bounds.left + x;
+        placed[at] = Math.max(placed[at]!, scaled[y * boundsWidth + x]!);
+      }
+    }
   }
-  const alpha = await sharp(placed, { raw: { width, height, channels: 1 } })
+  const alpha = await sharp(shrinkByOnePixel(placed, width, height), {
+    raw: { width, height, channels: 1 },
+  })
     .blur(0.8)
     .extractChannel(0)
     .raw()
@@ -160,7 +228,12 @@ export async function cutOutWithMask(
     .toBuffer();
   const rgba = Buffer.alloc(width * height * 4);
   for (let i = 0; i < width * height; i++) {
-    const a = alpha[i]! / 255;
+    // The faint rim the blur spreads past the edge is background: drop it.
+    const opacity = Math.max(
+      0,
+      Math.min(255, Math.round(((alpha[i]! - RIM) * 255) / (255 - RIM))),
+    );
+    const a = opacity / 255;
     for (let c = 0; c < 3; c++) {
       const value = rgb[i * 3 + c]!;
       rgba[i * 4 + c] =
@@ -168,7 +241,7 @@ export async function cutOutWithMask(
           ? Math.max(0, Math.min(255, Math.round((value - (1 - a) * 255) / a)))
           : value;
     }
-    rgba[i * 4 + 3] = alpha[i]!;
+    rgba[i * 4 + 3] = opacity;
   }
 
   const left = Math.max(0, bounds.left - CUTOUT_PADDING);

@@ -2,6 +2,7 @@ import { mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { runProcess, type ProcessRunInput } from "../process-runner";
 import { probeVideoFile } from "../video-probe";
+import { PULSE_INTERVAL_MS } from "./pulse";
 
 // ffmpeg steps of a product video import: one upright, silent H.264 copy for
 // Meta's models, the narration as MP3 for speech-to-text, and per-product
@@ -21,7 +22,6 @@ export type ProductVideoMediaDeps = {
 /** Longer videos cost too much to read, and are rarely one shelf. */
 export const MAX_PRODUCT_VIDEO_SECONDS = 300;
 const FFMPEG_TIMEOUT_MS = 5 * 60_000;
-const PULSE_INTERVAL_MS = 10_000;
 // Local files only, in the containers phones and WhatsApp send.
 const INPUT_GUARD = [
   "-nostdin",
@@ -31,8 +31,12 @@ const INPUT_GUARD = [
   "mov,matroska,webm",
 ];
 
+/**
+ * A problem with the video itself, which retrying won't change: the import
+ * should stop and tell the owner.
+ */
 export class ProductVideoError extends Error {
-  readonly code: "video_too_long" | "video_unreadable";
+  readonly code: "video_too_long" | "video_unreadable" | "no_frames";
 
   constructor(code: ProductVideoError["code"], message: string) {
     super(message);
@@ -78,6 +82,9 @@ export async function prepareProductVideo(
       [
         "-i",
         sourcePath,
+        // Stop a second past the limit, so a long video is refused quickly.
+        "-t",
+        String(MAX_PRODUCT_VIDEO_SECONDS + 1),
         "-an",
         "-vf",
         "scale='if(gt(iw,ih),-2,min(720,iw))':'if(gt(iw,ih),min(720,ih),-2)'",
@@ -96,6 +103,8 @@ export async function prepareProductVideo(
       deps,
     );
   } catch (error) {
+    // A timeout or a cancel isn't the video's fault; only ffmpeg giving up is.
+    if (!/exited with code/.test(String(error))) throw error;
     throw new ProductVideoError(
       "video_unreadable",
       `The video couldn't be read: ${error instanceof Error ? error.message : String(error)}`,

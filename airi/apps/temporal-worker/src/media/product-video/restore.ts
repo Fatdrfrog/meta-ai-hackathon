@@ -3,6 +3,7 @@ import {
   type MetaRequestOptions,
 } from "@icecore/airi-runtime/meta-model-api";
 import { askMuseAboutImages, type AskMuseDeps } from "./ask-muse";
+import { whilePulsing } from "./pulse";
 
 // The owner holds every product while filming, so the hand always hides part
 // of it. Muse Image redraws the product whole, upright, on white; a second
@@ -12,9 +13,12 @@ export type RestoreDeps = AskMuseDeps & {
   editMetaImage?: typeof editMetaImage;
 };
 
-// Without the last two sentences Muse left a cup tilted the way it was held
-// and cleaned up a doll's paint marks; with them it stood the cup upright and
-// kept the marks.
+// Each sentence earned its place on the 7-product test video. Without
+// "upright ... from the front" Muse left a cup tilted the way it was held;
+// without the last sentence it cleaned up a doll's paint marks. "Same
+// position, size, angle" reads as if it fights "upright", but together they
+// kept every part in two runs of 7 out of 7; a version that only asked to
+// keep the filmed side towards the camera dropped a phone stand's base.
 export function restorePrompt(product: string): string {
   return (
     `Product photo cleanup of a ${product}. Remove the person's hand and fingers completely. ` +
@@ -42,12 +46,14 @@ export async function restoreProductPhoto(
   deps: RestoreDeps = {},
   options?: MetaRequestOptions,
 ): Promise<Buffer> {
-  const result = await (deps.editMetaImage ?? editMetaImage)(
-    {
-      prompt: restorePrompt(request.product),
-      images: [{ data: request.crop, mimeType: "image/jpeg" }],
-    },
-    { ...options, size: restoreSize(request.width, request.height) },
+  const result = await whilePulsing(deps.pulse, () =>
+    (deps.editMetaImage ?? editMetaImage)(
+      {
+        prompt: restorePrompt(request.product),
+        images: [{ data: request.crop, mimeType: "image/jpeg" }],
+      },
+      { ...options, size: restoreSize(request.width, request.height) },
+    ),
   );
   deps.onCost?.(result.costUsd, "restore photo");
   return result.image;
@@ -71,8 +77,9 @@ export async function checkSameProduct(
       question:
         `Image 1 is a frame from a shop owner's video showing a ${request.product}, possibly held in a hand. ` +
         `Image 2 is a cleaned-up product photo made from it: the hand removed, the hidden part restored, ` +
-        `the background replaced with white, the product turned upright. Is image 2 the same product as image 1, ` +
-        `with the same type, shape, colours, print and details? Answer same=false only if a buyer who received ` +
+        `the background replaced with white, the product stood upright. Is image 2 the same product as image 1, ` +
+        `with the same type, shape, colours, print and details? Parts missing from image 2, and details invented on sides image 1 doesn't show, count as ` +
+        `differences. Answer same=false only if a buyer who received ` +
         `the item in image 1 would feel misled by image 2; then say what differs in one short English sentence ` +
         `as difference, otherwise difference=null.`,
       schema: {

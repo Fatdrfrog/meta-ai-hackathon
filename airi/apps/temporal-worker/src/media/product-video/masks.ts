@@ -36,7 +36,8 @@ export function maskFromRecord(record: SegmentationMaskRecord): Mask {
       right: Math.round(record.bounds.right),
       bottom: Math.round(record.bounds.bottom),
     },
-    confidence: record.confidence ?? 0,
+    // SAM may leave a record unscored; that says nothing, so it ranks neutral.
+    confidence: record.confidence ?? 1,
   };
 }
 

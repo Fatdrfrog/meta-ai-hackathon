@@ -16,6 +16,18 @@ const SAM_OUTPUT =
   "<|mask;x=0;y=0;data=27,60,~!!!!M!0c[0o91w?q1!pIH4pPRVp2B3'7`e.ioeAf6-k/#Xd8%dX9x(|>" +
   ",1<|box;x1=155;y1=228;x2=202;y2=254;w=320;h=334|>" +
   "<|mask;x=0;y=0;data=27,48,~!!!!J!0c[q=Pj_zs=*4C4(/./x#:/`S_GnD`=o3?X{emCgO$y@|>\n";
+// SAM scores each mask; the box carries its own score.
+const mask0 = (confidence: number) =>
+  "<|mask;x=0;y=0;c=" +
+  confidence +
+  ";data=27,60,~!!!!M!0c[0o91w?q1!pIH4pPRVp2B3'7`e.ioeAf6-k/#Xd8%dX9x(|>";
+const TRACKED_OUTPUT = [0.5, 0.95, 0.7]
+  .map(
+    (confidence, frame) =>
+      `<${frame}f>0<|box;x1=211;y1=228;x2=270;y2=254;w=320;h=334;c=${confidence}|>` +
+      `${mask0(confidence)}\n`,
+  )
+  .join("");
 const WIDTH = 320;
 const HEIGHT = 334;
 
@@ -41,6 +53,7 @@ type Scenario = {
   sameProduct?: boolean;
   difference?: string | null;
   restoreStatus?: number;
+  restoreMessage?: string;
   boxVisible?: boolean;
   samImageOutput?: string;
 };
@@ -106,17 +119,22 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
   const restoredPng = await frame().png().toBuffer();
 
   const requests: string[] = [];
+  const samImagePrompts: string[] = [];
   t.mock.method(globalThis, "fetch", async (url: string, init: RequestInit) => {
     const path = new URL(url).pathname;
     if (path === "/v1/files") {
       requests.push("upload");
       return Response.json({ id: "file_1" });
     }
+    if (path === "/v1/files/file_1" && init.method === "DELETE") {
+      requests.push("delete");
+      return Response.json({ id: "file_1", deleted: true });
+    }
     if (path === "/v1/images/edits") {
       requests.push("restore");
       if (scenario.restoreStatus)
         return Response.json(
-          { error: { message: "refused" } },
+          { error: { message: scenario.restoreMessage ?? "refused" } },
           { status: scenario.restoreStatus },
         );
       return Response.json({
@@ -131,7 +149,13 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
     if (body.stream) {
       const video = content.some((part) => part.type === "input_video");
       requests.push(video ? "sam video" : "sam image");
-      return sse(video ? SAM_OUTPUT : (scenario.samImageOutput ?? SAM_OUTPUT));
+      if (!video)
+        samImagePrompts.push(
+          content.find((part) => part.type === "input_text")!.text!,
+        );
+      return sse(
+        video ? TRACKED_OUTPUT : (scenario.samImageOutput ?? SAM_OUTPUT),
+      );
     }
     const question = content.find((part) => part.type === "input_text")!.text!;
     if (question.includes("numbered frames")) {
@@ -156,9 +180,13 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
   });
 
   const costs: string[] = [];
+  const pulses = { count: 0 };
   const deps = {
     runProcess,
     onCost: (_usd: number, what: string) => costs.push(what),
+    pulse: () => {
+      pulses.count++;
+    },
   };
   const request = {
     videoPath: join(workDir, "video.mp4"),
@@ -167,23 +195,28 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
     samPhrase: "blonde doll in blue dress",
     workDir,
   };
-  return { deps, request, requests, costs, workDir };
+  return { deps, request, requests, costs, pulses, samImagePrompts, workDir };
 }
 
 test("restores the product, cuts it out and keeps the filmed crop", async (t) => {
-  const { deps, request, requests, costs } = await setUp(t);
+  const { deps, request, requests, costs, pulses, samImagePrompts } =
+    await setUp(t);
 
   const cutout = await cutOutProduct(request, deps);
 
   assert.equal(cutout.method, "restored");
   assert.deepEqual(cutout.notes, []);
-  assert.equal(cutout.frameTimeSeconds, 4);
+  // Frame 1 of the clip, SAM's surest view: 4 s + 1/10 s.
+  assert.equal(cutout.frameTimeSeconds, 4.1);
+  assert.equal(cutout.samConfidence, 0.95);
   assert.deepEqual(requests, [
     "pick frame",
     "box",
     "upload",
     "sam video",
+    "delete",
     "restore",
+    "sam image",
     "sam image",
     "same product",
   ]);
@@ -192,6 +225,7 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
     "box product",
     "track product",
     "restore photo",
+    "cut out restored photo",
     "cut out restored photo",
     "same product check",
   ]);
@@ -204,6 +238,15 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
   const original = await sharp(cutout.originalPath).metadata();
   assert.equal(original.format, "jpeg");
   assert.ok(original.width! > width!, "the original keeps room around it");
+  // The restored product is asked for by its box and by its name, joined.
+  const [byBox, byName] = samImagePrompts.slice(-2);
+  assert.ok(
+    byBox!.includes("<|box;x1=0;y1=0;x2=319;y2=333;w=320;h=334"),
+    `box prompt: ${byBox}`,
+  );
+  assert.equal(byName, "blonde doll in blue dress");
+  // Each of the seven Meta calls heartbeats while it runs.
+  assert.ok(pulses.count >= 7, `${pulses.count} pulses`);
 });
 
 test("uses the filmed product when the restored photo looks different", async (t) => {
@@ -222,7 +265,10 @@ test("uses the filmed product when the restored photo looks different", async (t
 });
 
 test("uses the filmed product when Muse Image refuses the photo", async (t) => {
-  const { deps, request, requests } = await setUp(t, { restoreStatus: 400 });
+  const { deps, request, requests } = await setUp(t, {
+    restoreStatus: 400,
+    restoreMessage: "The image was blocked by our safety system.",
+  });
 
   const cutout = await cutOutProduct(request, deps);
 
@@ -239,12 +285,22 @@ test("throws a failure a retry could fix, rather than settling for the filmed ph
   await assert.rejects(cutOutProduct(request, deps), /refused/);
 });
 
+test("a rejected request that isn't a refusal fails loudly instead of downgrading the photo", async (t) => {
+  const { deps, request } = await setUp(t, {
+    restoreStatus: 400,
+    restoreMessage: "Unsupported size 1024x1536",
+  });
+
+  await assert.rejects(cutOutProduct(request, deps), /Unsupported size/);
+});
+
 test("finds the product by name when Muse can't box it, and shows the frame when nothing is found", async (t) => {
   const found = await setUp(t, { boxVisible: false });
   const byName = await cutOutProduct(found.request, found.deps);
   assert.equal(byName.method, "restored");
   assert.ok(!found.requests.includes("sam video"));
-  assert.equal(found.requests.filter((r) => r === "sam image").length, 2);
+  // Once by name on the frame, then box and name on the restored photo.
+  assert.equal(found.requests.filter((r) => r === "sam image").length, 3);
 
   t.mock.restoreAll();
   const nothing = await setUp(t, {
