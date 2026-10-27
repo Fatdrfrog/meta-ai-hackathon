@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { SWRConfig } from "swr";
+import { SWRConfig, useSWRConfig } from "swr";
+import { ProductShelf } from "./product-shelf";
 import { ProductsPage } from "./products-page";
 
 const fetchMock = jest.fn();
@@ -145,13 +146,78 @@ test("shows an error with a retry that loads again", async () => {
     respond(503, { error: "x", code: "load_failed" })
   );
   renderPage();
-  expect(
-    await screen.findByText("Products couldn't be loaded.")
-  ).toBeInTheDocument();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Products couldn't be loaded."
+  );
 
   fetchMock.mockResolvedValueOnce(respond(200, { products: [] }));
   fireEvent.click(screen.getByRole("button", { name: "Retry" }));
   expect(
     await screen.findByText("Your products will appear here")
   ).toBeInTheDocument();
+});
+
+test("tries a refreshed photo link again after the old one failed", () => {
+  const product = (imageUrl: string) => ({
+    id: "p1",
+    name: "Кукла Лол",
+    price: 5000,
+    imageUrl,
+    updatedAt: null,
+  });
+  const { container, rerender } = render(
+    <ProductShelf products={[product("https://storage.test/expired.png")]} />
+  );
+  fireEvent.error(container.querySelector("img")!);
+  expect(container.querySelector("img")).not.toBeInTheDocument();
+
+  rerender(
+    <ProductShelf products={[product("https://storage.test/fresh.png")]} />
+  );
+  expect(container.querySelector("img")).toHaveAttribute(
+    "src",
+    "https://storage.test/fresh.png"
+  );
+});
+
+test("keeps the shelf when a refresh fails", async () => {
+  function Refresh() {
+    const { mutate } = useSWRConfig();
+    return (
+      <button
+        onClick={() => void mutate("/api/workspaces/workspace-1/products")}
+      >
+        refresh
+      </button>
+    );
+  }
+  fetchMock.mockResolvedValueOnce(
+    respond(200, {
+      products: [
+        {
+          id: "p1",
+          name: "Кукла Лол",
+          price: 5000,
+          imageUrl: null,
+          updatedAt: null,
+        },
+      ],
+    })
+  );
+  render(
+    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+      <ProductsPage workspaceId="workspace-1" />
+      <Refresh />
+    </SWRConfig>
+  );
+  await screen.findByText("Кукла Лол");
+
+  fetchMock.mockResolvedValueOnce(
+    respond(503, { error: "x", code: "load_failed" })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "refresh" }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+  expect(screen.getByText("Кукла Лол")).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });

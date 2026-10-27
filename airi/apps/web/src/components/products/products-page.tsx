@@ -22,7 +22,9 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
   const { data, error, isValidating, mutate } = useSWR<ProductsListResponse>(
     productsApiUrl(workspaceId),
     fetchProducts,
-    { shouldRetryOnError: false }
+    // Photos come as signed links that change on every list; refetching on
+    // focus would download every photo again.
+    { shouldRetryOnError: false, revalidateOnFocus: false }
   );
   const products = data?.products ?? EMPTY_PRODUCTS;
 
@@ -31,7 +33,9 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
     body =
       error && !isValidating ? (
         <EmptyShelf>
-          <p className="text-[15px] font-medium">{PRODUCTS_COPY.loadError}</p>
+          <p role="alert" className="text-[15px] font-medium">
+            {PRODUCTS_COPY.loadError}
+          </p>
           <Button
             variant="outline"
             size="sm"

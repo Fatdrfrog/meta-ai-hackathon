@@ -6,7 +6,18 @@ import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 
+import { SWRConfig } from "swr";
+
 import { AppSidebarContent } from "./app-sidebar-content";
+
+// A fresh SWR cache per render, so one test's answers never reach another.
+function renderSidebar() {
+  return render(
+    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+      <AppSidebarContent workspaceId="workspace-1" />
+    </SWRConfig>
+  );
+}
 
 const mockNavMainItems: Array<{ title: string; url: string }> = [];
 const mockNavSecondaryItems: Array<{ title: string; url: string }> = [];
@@ -161,7 +172,7 @@ describe("AppSidebarContent", () => {
   });
 
   it("opens the starter dashboards from the main Analytics entry", async () => {
-    render(<AppSidebarContent workspaceId="workspace-1" />);
+    renderSidebar();
     await waitFor(() => expect(mockNavMainItems.length).toBeGreaterThan(0));
     expect(mockNavMainItems.find(item => item.title === "Analytics")?.url).toBe(
       "/panel/w/workspace-1/analytics"
@@ -169,7 +180,7 @@ describe("AppSidebarContent", () => {
   });
 
   it("does not expose the removed tasks panel route in main navigation", async () => {
-    render(<AppSidebarContent workspaceId="workspace-1" />);
+    renderSidebar();
 
     await waitFor(() => {
       expect(screen.getByLabelText("main nav")).toBeInTheDocument();
@@ -184,7 +195,7 @@ describe("AppSidebarContent", () => {
   });
 
   it("shows Airi chat separately from customer chats", async () => {
-    render(<AppSidebarContent workspaceId="workspace-1" />);
+    renderSidebar();
 
     await waitFor(() => {
       expect(screen.getByLabelText("main nav")).toBeInTheDocument();
@@ -204,7 +215,7 @@ describe("AppSidebarContent", () => {
   });
 
   it("labels the settings entry by its concrete destination", async () => {
-    render(<AppSidebarContent workspaceId="workspace-1" />);
+    renderSidebar();
 
     await waitFor(() => {
       expect(screen.getByLabelText("main nav")).toBeInTheDocument();
@@ -231,7 +242,7 @@ describe("AppSidebarContent", () => {
           : { sources: [], emailProviderConnected: false, emailSources: [] },
     })) as jest.Mock;
 
-    render(<AppSidebarContent workspaceId="workspace-1" />);
+    renderSidebar();
 
     expect(
       await screen.findByRole("link", { name: "Products" })
@@ -246,10 +257,23 @@ describe("AppSidebarContent", () => {
     );
   });
 
-  it("keeps Products hidden unless the server says it's available", async () => {
+  it.each([
+    ["a refusal", async () => ({ ok: false, json: async () => ({}) })],
+    // What a manager or a workspace without the flag gets.
+    [
+      "available: false",
+      async () => ({ ok: true, json: async () => ({ available: false }) }),
+    ],
+    [
+      "a failed request",
+      async () => {
+        throw new TypeError("Failed to fetch");
+      },
+    ],
+  ])("keeps Products hidden after %s", async (_case, accessAnswer) => {
     global.fetch = jest.fn(async (url: string) =>
       url.endsWith("/products/access")
-        ? { ok: false, json: async () => ({}) }
+        ? accessAnswer()
         : {
             ok: true,
             json: async () => ({
@@ -260,7 +284,7 @@ describe("AppSidebarContent", () => {
           }
     ) as jest.Mock;
 
-    render(<AppSidebarContent workspaceId="workspace-1" />);
+    renderSidebar();
 
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith(

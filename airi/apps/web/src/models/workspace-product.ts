@@ -18,7 +18,10 @@ export interface IWorkspaceProduct {
   name: string;
   /** Whole tenge; null until the owner sets a price. */
   price: number | null;
-  /** Order on the shelf: a video's products keep the order they were filmed in. */
+  /**
+   * Place on the workspace's shelf, across all imports. A new video's products
+   * go after everything already there, in the order they were filmed.
+   */
   position: number;
   /** The video this product was found in; absent for one added by hand. */
   importId?: mongoose.Types.ObjectId;
@@ -38,7 +41,16 @@ const WorkspaceProductSchema = new mongoose.Schema<IWorkspaceProduct>(
       default: "draft",
     },
     name: { type: String, required: true, trim: true, maxlength: 160 },
-    price: { type: Number, default: null, min: 0 },
+    price: {
+      type: Number,
+      default: null,
+      min: 0,
+      validate: {
+        validator: (value: number | null) =>
+          value === null || Number.isInteger(value),
+        message: "Prices are whole tenge",
+      },
+    },
     position: { type: Number, default: 0 },
     importId: { type: mongoose.Schema.Types.ObjectId },
     publishedAt: { type: Date },

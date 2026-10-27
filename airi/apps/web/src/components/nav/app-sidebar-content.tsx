@@ -35,11 +35,16 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  fetchProductsAccess,
+  productsAccessUrl,
+} from "@/components/products/products-client";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import type { Route } from "next";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import useSWR from "swr";
 
 import AiriBlackIcon from "../assets/logo_short_black.svg";
 import AiriWhiteIcon from "../assets/logo_short_white.svg";
@@ -60,7 +65,6 @@ export function AppSidebarContent({ workspaceId }: { workspaceId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasWebWidget, setHasWebWidget] = useState(false);
   const [hasEmailAutomation, setHasEmailAutomation] = useState(false);
-  const [hasProducts, setHasProducts] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -128,32 +132,13 @@ export function AppSidebarContent({ workspaceId }: { workspaceId: string }) {
   }, [workspaceId]);
 
   // Products is for admins behind a workspace flag; the server decides both.
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const checkProductsAccess = async () => {
-      try {
-        const response = await fetch(
-          `/api/workspaces/${workspaceId}/products/access`,
-          {
-            cache: "no-store",
-            signal: controller.signal,
-          }
-        );
-        if (!response.ok) {
-          setHasProducts(false);
-          return;
-        }
-        const payload = (await response.json()) as { available?: unknown };
-        setHasProducts(payload.available === true);
-      } catch {
-        if (controller.signal.aborted) return;
-        setHasProducts(false);
-      }
-    };
-    checkProductsAccess();
-    return () => controller.abort();
-  }, [workspaceId]);
+  // Cached per workspace, so reopening the phone menu shows it at once
+  // instead of it appearing late and pushing the items below it down.
+  const { data: hasProducts = false } = useSWR(
+    productsAccessUrl(workspaceId),
+    fetchProductsAccess,
+    { revalidateOnFocus: false }
+  );
 
   const navMain = [
     {

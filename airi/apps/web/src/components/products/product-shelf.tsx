@@ -40,55 +40,20 @@ function ShelfItem({
   product: WorkspaceProductRecord;
   index: number;
 }) {
-  const [image, setImage] = useState<"loading" | "loaded" | "failed">(
-    "loading"
-  );
-  const showImage = product.imageUrl !== null && image !== "failed";
-
   return (
     <li className="flex min-w-0 flex-col">
       <div className={STAGE}>
-        {showImage ? (
-          <div
-            className={cn(
-              "relative flex h-full max-w-full items-end justify-center",
-              image === "loaded"
-                ? "fill-mode-both duration-500 ease-out fade-in slide-in-from-top-4 motion-safe:animate-in"
-                : "opacity-0"
-            )}
-            style={{
-              animationDelay: `${index < SET_DOWN_STAGGERED ? index * SET_DOWN_STEP_MS : 0}ms`,
-            }}
-          >
-            <span
-              aria-hidden="true"
-              className="absolute inset-x-[10%] bottom-0 h-3 translate-y-1/2 rounded-[50%] bg-black/25 blur-md dark:bg-black/70"
-            />
-            {/* Signed storage URLs; next/image would need every bucket host configured. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={product.imageUrl ?? undefined}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              draggable={false}
-              // Decoded first, so the shadow never lands before the product.
-              onLoad={event => {
-                void Promise.resolve(event.currentTarget.decode?.())
-                  .catch(() => undefined)
-                  .finally(() => setImage("loaded"));
-              }}
-              onError={() => setImage("failed")}
-              className="relative max-h-full max-w-full object-contain select-none"
-            />
-          </div>
+        {product.imageUrl ? (
+          // Keyed by URL: a refreshed signed link is tried again even after
+          // the old one expired and failed.
+          <ShelfPhoto
+            key={product.imageUrl}
+            url={product.imageUrl}
+            name={product.name}
+            index={index}
+          />
         ) : (
-          <span
-            aria-hidden="true"
-            className="pb-2 text-7xl leading-none font-extralight text-foreground/20 select-none"
-          >
-            {Array.from(product.name.trim())[0]?.toLocaleUpperCase() ?? ""}
-          </span>
+          <NameInitial name={product.name} />
         )}
       </div>
       <ShelfRail />
@@ -110,6 +75,68 @@ function ShelfItem({
         )}
       </div>
     </li>
+  );
+}
+
+function ShelfPhoto({
+  url,
+  name,
+  index,
+}: {
+  url: string;
+  name: string;
+  index: number;
+}) {
+  const [image, setImage] = useState<"loading" | "loaded" | "failed">(
+    "loading"
+  );
+  if (image === "failed") return <NameInitial name={name} />;
+
+  return (
+    <div
+      className={cn(
+        "relative flex h-full max-w-full items-end justify-center",
+        image === "loaded"
+          ? "fill-mode-both duration-500 ease-out fade-in slide-in-from-top-4 motion-safe:animate-in"
+          : "opacity-0"
+      )}
+      style={{
+        animationDelay: `${index < SET_DOWN_STAGGERED ? index * SET_DOWN_STEP_MS : 0}ms`,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-[10%] bottom-0 h-3 translate-y-1/2 rounded-[50%] bg-black/25 blur-md dark:bg-black/70"
+      />
+      {/* Signed storage URLs; next/image would need every bucket host configured. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        // Decoded first, so the shadow never lands before the product.
+        onLoad={event => {
+          void Promise.resolve(event.currentTarget.decode?.())
+            .catch(() => undefined)
+            .finally(() => setImage("loaded"));
+        }}
+        onError={() => setImage("failed")}
+        className="relative max-h-full max-w-full object-contain select-none"
+      />
+    </div>
+  );
+}
+
+function NameInitial({ name }: { name: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="pb-2 text-7xl leading-none font-extralight text-foreground/20 select-none"
+    >
+      {Array.from(name.trim())[0]?.toLocaleUpperCase() ?? ""}
+    </span>
   );
 }
 
