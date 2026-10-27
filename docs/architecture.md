@@ -64,7 +64,7 @@ customer photo / voice note / text ──► channel ──► AI seller (Muse S
 | Muse Spark 1.3 | Watch the shop video with the owner's transcript as text; list products, prices, doubts, and each product's clearest moment and search phrase | MP4 input only; about $0.045 per minute of video |
 | Muse Spark 1.3 (vision) | For each product, pick the clearest of 8 frames and draw a box around it | Two image calls per product |
 | SAM 3.1 | Track that box through the product's clip at 10 fps; the frame with the best measured mask becomes the cut-out; a "hand" mask is subtracted | About $0.02 per product |
-| Muse Spark Open (Baseten) | The seller: answers buyers in Kazakh, Russian or English, matches a buyer's photo against a numbered sheet of the shop's cut-outs, takes orders, passes unknowns to the owner; every price and order is checked in code | Hackathon ID `meta-models/muse-spark-open-1026` once approved; `meta-models/muse-spark-open` until then |
+| Muse Spark Open (Baseten) | The seller, as a tool-calling agent: works each buyer message through tools (search the shelf, match a buyer's photo against a numbered sheet of the shop's cut-outs, show product cards, place an order, look up past orders, ask the owner) and answers in Kazakh, Russian or English; the tools check its actions and code checks every price in its reply | Hackathon ID `meta-models/muse-spark-open-1026` once approved; `meta-models/muse-spark-open` until then |
 | Muse Image | Studio background around the real cut-out; the product pixels are never redrawn | Planned |
 
 Listening is the one job not done by a Meta model. Muse Voice Transcribe has no Russian or Kazakh, and Muse Spark and Muse Spark Open missed spoken prices in most test runs, so **ElevenLabs Scribe v2** transcribes the owner's narration and buyers' voice notes. Everything after the transcript is Meta's models. See [findings.md](findings.md).
@@ -77,7 +77,7 @@ Meta's "Spend Limit" only sends a notification. Every call here goes through a s
 
 - `packages/meta`: Meta Model API and Baseten clients, SAM 3.1 segmentation through `@meta-sam/parser`, the spend ledger.
 - `packages/catalog`: the video-to-catalog pipeline (ffmpeg, speech, inventory, checks, cut-outs).
-- `packages/seller`: the AI seller (Muse Spark Open) and the checks on its answers.
+- `packages/seller`: the seller agent (Muse Spark Open): its tools, the loop that runs them, and the checks on its replies.
 - `apps/server`: Hono server. SQLite (`node:sqlite`) holds shops, videos, products, chats, orders and questions for the owner; videos are processed one at a time by a queue in the database that survives restarts. The studio link carries the owner's secret token. The public chat is rate-limited per sender, per chat and per shop.
 - `apps/web`: React studio (upload, shelf review, orders, questions) and shop page with the chat (Vite, Tailwind).
 - `scripts/`: the catalog CLI and the experiments behind [findings.md](findings.md).

@@ -288,7 +288,7 @@ export function createApp(store: Store, options: AppOptions) {
       const products = store.products(shop.id).filter((p) => p.confirmed);
       let turn: SellerTurn;
       if (products.length === 0) {
-        turn = { reply: "This shop hasn't put any products on its shelf yet.", productIds: [], order: null, ownerQuestion: null, corrections: [] };
+        turn = { reply: "This shop hasn't put any products on its shelf yet.", productIds: [], order: null, ownerQuestion: null, corrections: [], trace: [] };
       } else {
         try {
           turn = await options.sell({
@@ -305,6 +305,11 @@ export function createApp(store: Store, options: AppOptions) {
             history: history.map((m) => ({ role: m.role, text: m.photoPath ? `${m.text} (sent a photo)`.trim() : m.text })),
             buyerText: text,
             buyerPhotoPath: photoPath ?? undefined,
+            previousOrders: store.conversationOrders(conversation.id).map((o) => ({
+              items: o.items.map((i) => ({ localName: i.localName, quantity: i.quantity })),
+              total: o.total,
+              createdAt: o.createdAt,
+            })),
           });
         } catch (error) {
           console.error(`chat ${conversation.id}: the seller failed`, error);
@@ -326,7 +331,8 @@ export function createApp(store: Store, options: AppOptions) {
         : null;
       if (turn.ownerQuestion) store.addOwnerQuestion(shop.id, conversation.id, turn.ownerQuestion);
       const seller = store.addMessage(conversation.id, { role: "seller", text: turn.reply, productIds: turn.productIds, orderId: order?.id ?? null });
-      if (turn.corrections.length > 0) console.log(`chat ${conversation.id}: seller corrected (${turn.corrections.join("; ")})`);
+      const steps = turn.trace.map((step) => step.tool).join(" → ") || "no tools";
+      console.log(`chat ${conversation.id}: ${steps}${turn.corrections.length > 0 ? ` (corrected: ${turn.corrections.join("; ")})` : ""}`);
       const data: ChatData = { conversationId: conversation.id, messages: [chatMessage(buyer), chatMessage(seller)] };
       return c.json(data);
     },

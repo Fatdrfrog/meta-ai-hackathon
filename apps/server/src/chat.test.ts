@@ -46,7 +46,7 @@ function setup(sell: AppOptions["sell"], options: Partial<AppOptions> = {}) {
   return { store, shop, app, send };
 }
 
-const turn = (overrides: Partial<SellerTurn> = {}): SellerTurn => ({ reply: "Кукла стоит 5000 ₸.", productIds: [], order: null, ownerQuestion: null, corrections: [], ...overrides });
+const turn = (overrides: Partial<SellerTurn> = {}): SellerTurn => ({ reply: "Кукла стоит 5000 ₸.", productIds: [], order: null, ownerQuestion: null, corrections: [], trace: [], ...overrides });
 
 test("a chat keeps its history, and the seller sees it on the next message", async () => {
   const seen: SellerTurnInput[] = [];
@@ -79,6 +79,22 @@ test("orders and questions for the owner reach the studio", async () => {
   assert.deepEqual(studio.questions.map((q) => [q.question, q.done]), [["Есть ли доставка?", false]]);
   const done = await app.request(`/api/studio/${shop.ownerToken}/questions/${studio.questions[0]!.id}`, { method: "PATCH", body: JSON.stringify({ done: true }) });
   assert.equal(done.status, 200);
+});
+
+test("the seller sees the orders placed earlier in the same chat, and only those", async () => {
+  const seen: SellerTurnInput[] = [];
+  const { send } = setup(async (input) => {
+    seen.push(input);
+    return seen.length === 1
+      ? turn({ reply: "Заказ оформлен.", order: { items: [{ productId: input.products[1]!.id, quantity: 2 }], buyerName: null, buyerPhone: "+77011234567", total: 600 } })
+      : turn({ reply: "Ваш заказ: два динозавра, 600 ₸." });
+  });
+  const first = (await (await send({ text: "Два динозавра, 87011234567" })).json()) as ChatData;
+  await send({ text: "Что я заказала?", conversationId: first.conversationId });
+  await send({ text: "Я новый покупатель" });
+  assert.equal(seen[0]!.previousOrders?.length, 0);
+  assert.deepEqual(seen[1]!.previousOrders?.map((o) => [o.items, o.total]), [[[{ localName: "Динозавр", quantity: 2 }], 600]]);
+  assert.equal(seen[2]!.previousOrders?.length, 0);
 });
 
 test("a shop with nothing confirmed answers without calling the model", async () => {

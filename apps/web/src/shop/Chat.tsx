@@ -1,7 +1,7 @@
 import type { ApiChatMessage, ApiOrder, ShopProduct } from "@vitrina/server/api";
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { chatApi, RequestError } from "../api.ts";
-import { formatPrice } from "../format.ts";
+import { formatPrice, keepAmountsTogether } from "../format.ts";
 
 const storageKey = (slug: string) => `vitrina-chat:${slug}`;
 
@@ -243,7 +243,7 @@ function BuyerBubble({ text, photoUrl }: { text: string; photoUrl: string | null
 function SellerReply({ message }: { message: ApiChatMessage }) {
   return (
     <div className="mr-auto max-w-[95%] space-y-2">
-      <p className="w-fit whitespace-pre-wrap break-words rounded-2xl rounded-bl-sm bg-wall px-3.5 py-2">{message.text}</p>
+      <p className="w-fit whitespace-pre-wrap break-words rounded-2xl rounded-bl-sm bg-wall px-3.5 py-2">{keepAmountsTogether(message.text)}</p>
       {message.products.length > 0 && (
         <ul className="flex gap-2 overflow-x-auto pb-1" aria-label="Products in this reply">
           {message.products.map((p) => (

@@ -33,6 +33,7 @@ Filled in during the hackathon.
 | Tracked cut-outs: Muse Spark picks a frame and boxes the product, SAM 3.1 tracks it through the product's clip, code chooses the frame by measuring each mask, hands subtracted; 7/7 clean on the test video | `meta-ai-hackathon: tracked cut-outs chosen by measuring SAM's masks` | Muse Spark 1.3, SAM 3.1 (video tracking) |
 | AI seller: answers in the buyer's language, matches buyer photos, takes orders, passes unknowns to the owner; prices and orders checked in code; scripted evaluation 8/8 | `meta-ai-hackathon: AI seller on Muse Spark Open with checked prices` | Muse Spark Open (open weights, Baseten) |
 | Chat on the shop page (product cards, photo upload, order receipt, rate limits) and the studio's orders and buyer questions | `meta-ai-hackathon: shop page chat with orders and questions in the studio` | Muse Spark Open (open weights, Baseten) |
+| Seller as a tool-calling agent: searches the shelf, matches photos, shows cards, places and looks up orders, asks the owner; tools check its actions, code checks its prices (bare amounts too); evaluation 9/9 | `meta-ai-hackathon: seller as a tool-calling agent on Muse Spark Open` | Muse Spark Open (open weights, Baseten) |
 
 ## Meta models used
 

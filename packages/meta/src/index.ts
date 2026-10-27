@@ -12,6 +12,7 @@ export {
   type BasetenClient,
   type BasetenConfig,
   type ChatCompletionJson,
+  type ToolCall,
 } from "./baseten.ts";
 export { openSpendLedger, samImageCostUsd, samVideoCostUsd, tokenCostUsd, type SpendLedger, type TokenUsage } from "./budget.ts";
 export {

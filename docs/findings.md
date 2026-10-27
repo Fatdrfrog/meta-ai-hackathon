@@ -78,6 +78,20 @@ A failed check gets one corrective retry with the problems spelled out; if that 
 
 Testing the shop page chat in a browser found one more: answering a buyer's photo, the seller said "это товар 5 на фото", leaking the internal label from the product sheet. Label mentions are now one of the checks (and part of the evaluation), and the instructions forbid them. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
+## Oct 27: the seller becomes an agent
+
+The first seller was one call per buyer message: the whole catalog in the prompt, one JSON answer out. It couldn't look anything up, and a shop with hundreds of products won't fit in a prompt. Muse Spark Open on Baseten handles OpenAI-style tool calling across several rounds, so the seller is now an agent with six tools: `search_products`, `match_photo` (the numbered-sheet vision call), `show_products` (cards), `place_order`, `order_status` and `ask_owner`. It gets up to six rounds per buyer message. Its actions are checked inside the tools (real product refs, quantity 1-99, a phone the shop can call), and its final reply still goes through the price and label checks. Every step is kept in a trace.
+
+The first live evaluation, 5 of 9, found things the unit tests couldn't:
+
+- It sent the phone as a JSON number (`87011234567`) though the tool's schema says string, so the order was refused and it asked the buyer for the phone again. The tools now take numbers and strings either way.
+- It wrote prices without the tenge sign ("is 500", "на сумму 300"). The price check only read amounts with ₸, so a bare made-up "для вас 4000" would have passed too. Tools now give prices as "5 000 ₸", and the check reads bare numbers from 100 up as well, leaving out phone numbers and digits inside product names.
+- It said "вот что нашлось:" and never showed the cards. A reply ending in a colon is now sent back for a correction.
+- Word search misses translations: "қуыршақ" doesn't match "Кукла Лол", and it took four searches to get there. A search with no match now returns the whole shelf for shops of up to 30 products, and the Kazakh question takes one search.
+- Asked what they had ordered, it once answered from its own earlier message instead of calling `order_status`. That was right this time, but it only sees the last 12 messages, so it is now told to always check.
+
+After the fixes, 9 of 9 pass, twice in a row. That includes a new order-status case where the buyer orders in one message and asks what they ordered in the next. Replies take 1.4-6 seconds, or about 11 seconds with a buyer photo because of the separate vision call. A full evaluation run costs about $0.03. With an ambiguous request ("телефон-игрушка" matches a toy phone and a phone stand), it now shows both and asks which one.
+
 ### SAM 3.1 on one sharp frame beats tracking the whole video
 
 - Whole video, concept "toy": 16 tracks for 4 real toys (background toys, fragments, the same cup twice, motion blur), $0.39.

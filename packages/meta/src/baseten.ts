@@ -19,8 +19,17 @@ export function loadBasetenConfig(env: NodeJS.ProcessEnv = process.env): Baseten
   };
 }
 
+export interface ToolCall {
+  readonly id: string;
+  readonly type: "function";
+  readonly function: { readonly name: string; readonly arguments: string };
+}
+
 export interface ChatCompletionJson {
-  readonly choices: readonly { readonly message: { readonly content: string | null } }[];
+  readonly choices: readonly {
+    readonly message: { readonly content: string | null; readonly tool_calls?: readonly ToolCall[] | null };
+    readonly finish_reason?: string;
+  }[];
   readonly usage?: {
     readonly prompt_tokens: number;
     readonly completion_tokens: number;

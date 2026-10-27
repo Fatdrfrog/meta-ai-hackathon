@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { numberedGrid, type CatalogResult } from "@vitrina/catalog";
 import { createBasetenClient, loadBasetenConfig, loadConfig, openSpendLedger } from "@vitrina/meta";
-import { LABEL_MENTION, languageOf, pricesInText, runSellerTurn, type SellerMessage, type SellerProduct, type SellerTurn } from "@vitrina/seller";
+import { LABEL_MENTION, languageOf, pricesInText, runSellerTurn, type PastOrder, type SellerMessage, type SellerProduct, type SellerTurn } from "@vitrina/seller";
 
 const args = process.argv.slice(2);
 const option = (name: string) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -46,12 +46,13 @@ const productId = (pattern: RegExp) => products.find((p) => pattern.test(p.name)
 const fails = (...checks: (string | false)[]) => checks.filter((c): c is string => Boolean(c));
 const shows = (t: SellerTurn, pattern: RegExp) => t.productIds.includes(productId(pattern)) || `doesn't show ${pattern}`;
 // Product names are the owner's own words, often Kazakh, so they're left out when judging the language.
-const withoutNames = (text: string) => products.reduce((rest, p) => rest.replaceAll(p.localName, ""), text);
+const withoutNames = (text: string) => products.reduce((rest, p) => rest.replaceAll(new RegExp(p.localName, "giu"), ""), text);
 const speaks = (t: SellerTurn, lang: "kk" | "ru" | "en") => languageOf(withoutNames(t.reply)) === lang || `reply isn't in ${lang}`;
 const tidy = (t: SellerTurn) => !/\([^)]*\b(toy|figurine|accessory|cup|doll)\b[^)]*\)/i.test(t.reply) || "copies catalog details in brackets";
 const states = (t: SellerTurn, price: number) => pricesInText(t.reply).includes(price) || `doesn't state ${price} ₸`;
 const asksOwner = (t: SellerTurn) => t.ownerQuestion !== null || "didn't pass the question to the owner";
 const noOrder = (t: SellerTurn) => t.order === null || "created an order too early";
+const used = (t: SellerTurn, tool: string) => t.trace.some((s) => s.tool === tool) || `didn't use ${tool}`;
 const pass = (r: true | string) => (r === true ? false : r);
 
 const cases: Case[] = [
@@ -91,6 +92,16 @@ const cases: Case[] = [
     check: ([t]) => fails(t!.order !== null && "ordered something unrelated"),
   },
   {
+    name: "order status",
+    turns: ["Хочу купить динозавра. Айгуль, 8 701 123 45 67", "Что я заказала и на какую сумму?"],
+    check: ([first, second]) =>
+      fails(
+        first!.order === null && "no order in the first message",
+        pass(used(second!, "order_status")),
+        pass(states(second!, 300)),
+      ),
+  },
+  {
     name: "order asks for contacts first",
     turns: ["Хочу купить телефон-игрушку", "Айгуль, 8 701 123 45 67"],
     check: ([first, second]) =>
@@ -109,6 +120,7 @@ const report = [];
 for (const c of cases.filter((c) => !only || c.name.includes(only))) {
   const history: SellerMessage[] = [];
   const results: SellerTurn[] = [];
+  const previousOrders: PastOrder[] = [];
   const started = Date.now();
   const spentBefore = ledger.totalUsd();
   for (const turn of c.turns) {
@@ -121,8 +133,16 @@ for (const c of cases.filter((c) => !only || c.name.includes(only))) {
       history,
       buyerText: text,
       buyerPhotoPath: typeof turn === "string" ? undefined : turn.photo,
+      previousOrders,
     });
     results.push(result);
+    if (result.order) {
+      previousOrders.push({
+        items: result.order.items.map((i) => ({ localName: products.find((p) => p.id === i.productId)!.localName, quantity: i.quantity })),
+        total: result.order.total,
+        createdAt: new Date().toISOString(),
+      });
+    }
     history.push({ role: "buyer", text: typeof turn === "string" ? text : `${text} (sent a photo)` }, { role: "seller", text: result.reply });
   }
   // Every reply stays short (the product cards carry names, photos and prices) and never shows the
@@ -135,7 +155,7 @@ for (const c of cases.filter((c) => !only || c.name.includes(only))) {
   report.push({ case: c.name, ok: failures.length === 0, failures, seconds: (Date.now() - started) / 1000, usd: ledger.totalUsd() - spentBefore, results });
   console.log(`${failures.length === 0 ? "PASS" : "FAIL"} ${c.name} (${((Date.now() - started) / 1000).toFixed(1)}s)${failures.length ? `: ${failures.join("; ")}` : ""}`);
   for (const r of results) {
-    console.log(`     → ${r.reply}${r.productIds.length ? ` [shows ${r.productIds.join(",")}]` : ""}${r.ownerQuestion ? ` [owner: ${r.ownerQuestion}]` : ""}${r.order ? ` [order ${JSON.stringify(r.order)}]` : ""}${r.corrections.length ? ` [corrected: ${r.corrections.join("; ")}]` : ""}`);
+    console.log(`     → ${r.reply}${r.productIds.length ? ` [shows ${r.productIds.join(",")}]` : ""}${r.ownerQuestion ? ` [owner: ${r.ownerQuestion}]` : ""}${r.order ? ` [order ${JSON.stringify(r.order)}]` : ""}${r.corrections.length ? ` [corrected: ${r.corrections.join("; ")}]` : ""} [tools: ${r.trace.map((step) => step.tool).join(" → ") || "none"}]`);
   }
 }
 const passed = report.filter((r) => r.ok).length;

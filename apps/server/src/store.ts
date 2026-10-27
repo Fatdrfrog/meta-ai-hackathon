@@ -72,6 +72,7 @@ create table if not exists orders (
   created_at text not null
 );
 create index if not exists orders_by_shop on orders(shop_id, created_at);
+create index if not exists orders_by_conversation on orders(conversation_id, created_at);
 create table if not exists messages (
   id text primary key,
   conversation_id text not null references conversations(id),
@@ -443,6 +444,10 @@ export function openStore(path: string) {
 
     orders(shopId: string): Order[] {
       return all("select * from orders where shop_id = ? order by created_at desc", shopId).map(orderOf);
+    },
+
+    conversationOrders(conversationId: string): Order[] {
+      return all("select * from orders where conversation_id = ? order by created_at, rowid", conversationId).map(orderOf);
     },
 
     addOwnerQuestion(shopId: string, conversationId: string, question: string): void {
