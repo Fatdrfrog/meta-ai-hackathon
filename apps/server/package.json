@@ -13,6 +13,7 @@
     "@hono/node-server": "2.1.5",
     "@vitrina/catalog": "workspace:*",
     "@vitrina/meta": "workspace:*",
+    "@vitrina/seller": "workspace:*",
     "hono": "4.13.14"
   }
 }

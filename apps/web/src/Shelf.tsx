@@ -13,9 +13,18 @@ export interface ShelfItem {
 
 // Products stand on one continuous shelf: the cells touch, so the wall and the shelf edge run
 // across each row like a shop window, and everything editable sits below the shelf line.
-export function Shelf({ items, label }: { items: readonly ShelfItem[]; label: string }) {
+export function Shelf({
+  items,
+  label,
+  columns = "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+}: {
+  items: readonly ShelfItem[];
+  label: string;
+  /** Grid column classes; a page with a side panel needs fewer per row. */
+  columns?: string;
+}) {
   return (
-    <ul aria-label={label} className="grid grid-cols-2 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+    <ul aria-label={label} className={`grid gap-y-8 ${columns}`}>
       {items.map((item) => (
         <li
           key={item.id}

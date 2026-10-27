@@ -1,4 +1,4 @@
-import type { ApiProduct, ProductPatch, ShopPageData, StudioData } from "@vitrina/server/api";
+import type { ApiProduct, ChatData, ProductPatch, ShopPageData, StudioData } from "@vitrina/server/api";
 
 export class RequestError extends Error {}
 
@@ -32,6 +32,13 @@ export function studioApi(token: string) {
 
     retryVideo: (id: string) => request<{ ok: true }>(`${base}/videos/${id}/retry`, { method: "POST" }),
 
+    setQuestionDone: (id: string, done: boolean) =>
+      request<{ ok: true }>(`${base}/questions/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ done }),
+      }),
+
     // XMLHttpRequest rather than fetch, because a phone upload of a big video needs a progress bar.
     uploadVideo: (file: File, onProgress: (fraction: number) => void) =>
       new Promise<void>((resolve, reject) => {
@@ -57,3 +64,17 @@ export function studioApi(token: string) {
 }
 
 export const loadShop = (slug: string) => request<ShopPageData>(`/api/shops/${encodeURIComponent(slug)}`);
+
+export function chatApi(slug: string) {
+  const base = `/api/shops/${encodeURIComponent(slug)}/chat`;
+  return {
+    load: (conversationId: string) => request<ChatData>(`${base}/${encodeURIComponent(conversationId)}`),
+    send: (message: { conversationId: string | null; text: string; photo: File | null }) => {
+      const form = new FormData();
+      if (message.conversationId) form.append("conversationId", message.conversationId);
+      form.append("text", message.text);
+      if (message.photo) form.append("photo", message.photo);
+      return request<ChatData>(base, { method: "POST", body: form });
+    },
+  };
+}

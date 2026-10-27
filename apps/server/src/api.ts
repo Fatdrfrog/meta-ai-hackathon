@@ -40,15 +40,52 @@ export interface ApiShop {
   readonly slug: string;
 }
 
+export interface ApiOrder {
+  readonly id: string;
+  readonly items: readonly { readonly localName: string; readonly quantity: number; readonly price: number | null }[];
+  readonly total: number | null;
+  readonly buyerName: string | null;
+  readonly buyerPhone: string;
+  readonly createdAt: string;
+}
+
+export interface ApiQuestion {
+  readonly id: string;
+  /** Written by the AI seller for the owner, in Russian. */
+  readonly question: string;
+  readonly done: boolean;
+  readonly createdAt: string;
+}
+
 export interface StudioData {
   readonly shop: ApiShop;
   readonly videos: readonly ApiVideo[];
   readonly products: readonly ApiProduct[];
+  readonly orders: readonly ApiOrder[];
+  readonly questions: readonly ApiQuestion[];
 }
+
+export type ShopProduct = Pick<ApiProduct, "id" | "localName" | "name" | "price" | "currency" | "imageUrl">;
 
 export interface ShopPageData {
   readonly shop: ApiShop;
-  readonly products: readonly Pick<ApiProduct, "id" | "localName" | "name" | "price" | "currency" | "imageUrl">[];
+  readonly products: readonly ShopProduct[];
+}
+
+export interface ApiChatMessage {
+  readonly id: string;
+  readonly role: "buyer" | "seller";
+  readonly text: string;
+  readonly photoUrl: string | null;
+  /** Products the seller's reply is about, shown as cards. */
+  readonly products: readonly ShopProduct[];
+  readonly order: ApiOrder | null;
+  readonly createdAt: string;
+}
+
+export interface ChatData {
+  readonly conversationId: string;
+  readonly messages: readonly ApiChatMessage[];
 }
 
 export interface ProductPatch {

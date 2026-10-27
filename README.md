@@ -11,8 +11,8 @@ Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/
 
 - **Pipeline:** on a 65-second test video, all 7 products cut out cleanly and all 7 spoken prices right, in about 2 minutes for $0.25.
 - **Studio:** the owner uploads a video, watches the shelf being built, fixes names and prices, and confirms products.
-- **Shop page:** buyers see the confirmed products with their price tags.
-- **Next:** the AI seller on WhatsApp.
+- **Shop page:** buyers see the confirmed products with their price tags and chat with the AI seller (Muse Spark Open): prices, product cards, photo matching, orders. Orders and questions it can't answer reach the studio.
+- **Next:** the same seller on WhatsApp.
 
 ## Run the app
 

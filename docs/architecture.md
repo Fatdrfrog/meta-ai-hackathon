@@ -77,6 +77,7 @@ Meta's "Spend Limit" only sends a notification. Every call here goes through a s
 
 - `packages/meta`: Meta Model API and Baseten clients, SAM 3.1 segmentation through `@meta-sam/parser`, the spend ledger.
 - `packages/catalog`: the video-to-catalog pipeline (ffmpeg, speech, inventory, checks, cut-outs).
-- `apps/server`: Hono server. SQLite (`node:sqlite`) holds shops, videos and products; videos are processed one at a time by a queue in the database that survives restarts. The studio link carries the owner's secret token.
-- `apps/web`: React studio and shop page (Vite, Tailwind).
+- `packages/seller`: the AI seller (Muse Spark Open) and the checks on its answers.
+- `apps/server`: Hono server. SQLite (`node:sqlite`) holds shops, videos, products, chats, orders and questions for the owner; videos are processed one at a time by a queue in the database that survives restarts. The studio link carries the owner's secret token. The public chat is rate-limited per sender, per chat and per shop.
+- `apps/web`: React studio (upload, shelf review, orders, questions) and shop page with the chat (Vite, Tailwind).
 - `scripts/`: the catalog CLI and the experiments behind [findings.md](findings.md).

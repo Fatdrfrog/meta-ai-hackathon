@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { numberedGrid, type CatalogResult } from "@vitrina/catalog";
 import { createBasetenClient, loadBasetenConfig, loadConfig, openSpendLedger } from "@vitrina/meta";
-import { languageOf, pricesInText, runSellerTurn, type SellerMessage, type SellerProduct, type SellerTurn } from "@vitrina/seller";
+import { LABEL_MENTION, languageOf, pricesInText, runSellerTurn, type SellerMessage, type SellerProduct, type SellerTurn } from "@vitrina/seller";
 
 const args = process.argv.slice(2);
 const option = (name: string) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -125,8 +125,13 @@ for (const c of cases.filter((c) => !only || c.name.includes(only))) {
     results.push(result);
     history.push({ role: "buyer", text: typeof turn === "string" ? text : `${text} (sent a photo)` }, { role: "seller", text: result.reply });
   }
-  // Every reply stays short: the product cards carry names, photos and prices.
-  const failures = [...c.check(results), ...results.filter((r) => r.reply.length > 280).map((r) => `reply is ${r.reply.length} characters long`)];
+  // Every reply stays short (the product cards carry names, photos and prices) and never shows the
+  // model's internal product labels, which the buyer can't see.
+  const failures = [
+    ...c.check(results),
+    ...results.filter((r) => r.reply.length > 280).map((r) => `reply is ${r.reply.length} characters long`),
+    ...results.filter((r) => LABEL_MENTION.test(r.reply)).map(() => "mentions a product label"),
+  ];
   report.push({ case: c.name, ok: failures.length === 0, failures, seconds: (Date.now() - started) / 1000, usd: ledger.totalUsd() - spentBefore, results });
   console.log(`${failures.length === 0 ? "PASS" : "FAIL"} ${c.name} (${((Date.now() - started) / 1000).toFixed(1)}s)${failures.length ? `: ${failures.join("; ")}` : ""}`);
   for (const r of results) {

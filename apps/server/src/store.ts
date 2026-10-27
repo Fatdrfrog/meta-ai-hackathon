@@ -52,6 +52,46 @@ create table if not exists products (
   updated_at text not null
 );
 create index if not exists products_by_shop on products(shop_id, position);
+create table if not exists conversations (
+  id text primary key,
+  shop_id text not null references shops(id),
+  channel text not null,
+  buyer_phone text,
+  created_at text not null,
+  updated_at text not null
+);
+create index if not exists conversations_by_shop on conversations(shop_id, updated_at);
+create table if not exists orders (
+  id text primary key,
+  shop_id text not null references shops(id),
+  conversation_id text not null references conversations(id),
+  items text not null,
+  total real,
+  buyer_name text,
+  buyer_phone text not null,
+  created_at text not null
+);
+create index if not exists orders_by_shop on orders(shop_id, created_at);
+create table if not exists messages (
+  id text primary key,
+  conversation_id text not null references conversations(id),
+  role text not null,
+  text text not null,
+  photo_path text,
+  product_ids text not null,
+  order_id text references orders(id),
+  created_at text not null
+);
+create index if not exists messages_by_conversation on messages(conversation_id, created_at);
+create table if not exists owner_questions (
+  id text primary key,
+  shop_id text not null references shops(id),
+  conversation_id text not null references conversations(id),
+  question text not null,
+  done integer not null default 0,
+  created_at text not null
+);
+create index if not exists owner_questions_by_shop on owner_questions(shop_id, created_at);
 `;
 
 export interface Shop {
@@ -92,7 +132,70 @@ export interface Product {
   readonly updatedAt: string;
 }
 
+export interface Conversation {
+  readonly id: string;
+  readonly shopId: string;
+  readonly channel: "web" | "whatsapp";
+  readonly buyerPhone: string | null;
+}
+
+export interface OrderItem {
+  readonly productId: string;
+  readonly localName: string;
+  readonly quantity: number;
+  readonly price: number | null;
+}
+
+export interface Order {
+  readonly id: string;
+  readonly conversationId: string;
+  readonly items: readonly OrderItem[];
+  readonly total: number | null;
+  readonly buyerName: string | null;
+  readonly buyerPhone: string;
+  readonly createdAt: string;
+}
+
+export interface Message {
+  readonly id: string;
+  readonly conversationId: string;
+  readonly role: "buyer" | "seller";
+  readonly text: string;
+  readonly photoPath: string | null;
+  readonly productIds: readonly string[];
+  readonly orderId: string | null;
+  readonly createdAt: string;
+}
+
+export interface OwnerQuestion {
+  readonly id: string;
+  readonly question: string;
+  readonly done: boolean;
+  readonly createdAt: string;
+}
+
 type Row = Record<string, unknown>;
+
+const orderOf = (r: Row): Order => ({
+  id: r.id as string,
+  conversationId: r.conversation_id as string,
+  items: JSON.parse(r.items as string) as OrderItem[],
+  total: (r.total as number | null) ?? null,
+  buyerName: (r.buyer_name as string | null) ?? null,
+  buyerPhone: r.buyer_phone as string,
+  createdAt: r.created_at as string,
+});
+
+const messageOf = (r: Row): Message => ({
+  id: r.id as string,
+  conversationId: r.conversation_id as string,
+  role: r.role as Message["role"],
+  text: r.text as string,
+  photoPath: (r.photo_path as string | null) ?? null,
+  productIds: JSON.parse(r.product_ids as string) as string[],
+  orderId: (r.order_id as string | null) ?? null,
+  createdAt: r.created_at as string,
+});
 
 const shopOf = (r: Row): Shop => ({
   id: r.id as string,
@@ -287,6 +390,76 @@ export function openStore(path: string) {
 
     deleteProduct(shopId: string, id: string): boolean {
       return run("delete from products where shop_id = ? and id = ?", shopId, id).changes === 1;
+    },
+
+    createConversation(shopId: string, channel: Conversation["channel"], buyerPhone: string | null = null): Conversation {
+      const conversation = { id: randomUUID(), shopId, channel, buyerPhone };
+      const at = now();
+      run("insert into conversations (id, shop_id, channel, buyer_phone, created_at, updated_at) values (?, ?, ?, ?, ?, ?)", conversation.id, shopId, channel, buyerPhone, at, at);
+      return conversation;
+    },
+
+    conversation(shopId: string, id: string): Conversation | undefined {
+      const row = get("select * from conversations where shop_id = ? and id = ?", shopId, id);
+      return row && { id: row.id as string, shopId: row.shop_id as string, channel: row.channel as Conversation["channel"], buyerPhone: (row.buyer_phone as string | null) ?? null };
+    },
+
+    addMessage(
+      conversationId: string,
+      message: Pick<Message, "role" | "text"> & Partial<Pick<Message, "photoPath" | "productIds" | "orderId">>,
+      id: string = randomUUID(),
+    ): Message {
+      const at = now();
+      run(
+        "insert into messages (id, conversation_id, role, text, photo_path, product_ids, order_id, created_at) values (?, ?, ?, ?, ?, ?, ?, ?)",
+        id, conversationId, message.role, message.text, message.photoPath ?? null, JSON.stringify(message.productIds ?? []), message.orderId ?? null, at,
+      );
+      run("update conversations set updated_at = ? where id = ?", at, conversationId);
+      return messageOf(get("select * from messages where id = ?", id)!);
+    },
+
+    messages(conversationId: string): Message[] {
+      return all("select * from messages where conversation_id = ? order by created_at, rowid", conversationId).map(messageOf);
+    },
+
+    messageById(id: string): Message | undefined {
+      const row = get("select * from messages where id = ?", id);
+      return row && messageOf(row);
+    },
+
+    addOrder(shopId: string, order: Omit<Order, "id" | "createdAt">): Order {
+      const id = randomUUID();
+      run(
+        "insert into orders (id, shop_id, conversation_id, items, total, buyer_name, buyer_phone, created_at) values (?, ?, ?, ?, ?, ?, ?, ?)",
+        id, shopId, order.conversationId, JSON.stringify(order.items), order.total, order.buyerName, order.buyerPhone, now(),
+      );
+      return orderOf(get("select * from orders where id = ?", id)!);
+    },
+
+    order(id: string): Order | undefined {
+      const row = get("select * from orders where id = ?", id);
+      return row && orderOf(row);
+    },
+
+    orders(shopId: string): Order[] {
+      return all("select * from orders where shop_id = ? order by created_at desc", shopId).map(orderOf);
+    },
+
+    addOwnerQuestion(shopId: string, conversationId: string, question: string): void {
+      run("insert into owner_questions (id, shop_id, conversation_id, question, created_at) values (?, ?, ?, ?, ?)", randomUUID(), shopId, conversationId, question, now());
+    },
+
+    ownerQuestions(shopId: string): OwnerQuestion[] {
+      return all("select * from owner_questions where shop_id = ? order by done, created_at desc", shopId).map((r) => ({
+        id: r.id as string,
+        question: r.question as string,
+        done: r.done === 1,
+        createdAt: r.created_at as string,
+      }));
+    },
+
+    setQuestionDone(shopId: string, id: string, done: boolean): boolean {
+      return run("update owner_questions set done = ? where shop_id = ? and id = ?", done ? 1 : 0, shopId, id).changes === 1;
     },
 
     /** Confirms every product with nothing left to check. */

@@ -65,6 +65,12 @@ test("an order with an unpriced item has no total", () => {
   assert.equal(turn.order?.total, null);
 });
 
+test("internal product labels must not reach the buyer", () => {
+  assert.match(validateAnswer(answer({ reply: "Да, это товар 5 на фото, 5000 ₸." }), input()).problems.join(), /label/);
+  assert.match(validateAnswer(answer({ reply: "Yes, product #1 costs 5000 ₸." }), input()).problems.join(), /label/);
+  assert.deepEqual(validateAnswer(answer({ reply: "Две куклы по 5000 ₸, напишите номер телефона." }), input()).problems, []);
+});
+
 test("the fallback reply follows the buyer's language", () => {
   assert.equal(languageOf("Қуыршақ қанша тұрады?"), "kk");
   assert.equal(languageOf("Сколько стоит?"), "ru");

@@ -2,8 +2,10 @@ import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { createMetaClient, loadConfig, openSpendLedger } from "@vitrina/meta";
+import { createBasetenClient, createMetaClient, loadBasetenConfig, loadConfig, openSpendLedger } from "@vitrina/meta";
+import { runSellerTurn } from "@vitrina/seller";
 import { createApp } from "./app.ts";
+import { catalogSheet } from "./catalog-sheet.ts";
 import { startJobRunner } from "./jobs.ts";
 import { DATA_DIR, ROOT, WEB_DIST } from "./paths.ts";
 import { openStore } from "./store.ts";
@@ -12,7 +14,15 @@ const config = loadConfig({ ...process.env, SPEND_LEDGER_PATH: process.env.SPEND
 const meta = createMetaClient(config, openSpendLedger(config.ledgerPath, config.budgetUsd));
 const store = openStore(join(DATA_DIR, "vitrina.db"));
 const runner = startJobRunner(store, meta, "elevenlabs");
-const app = createApp(store, { dataDir: DATA_DIR, onVideoQueued: runner.kick });
+// The seller runs on Muse Spark Open through Baseten and shares the spend cap with everything else.
+const baseten = process.env.BASETEN_API_KEY ? createBasetenClient(loadBasetenConfig(), meta.ledger) : undefined;
+if (!baseten) console.warn("BASETEN_API_KEY is not set, so the shop page's chat is off.");
+const app = createApp(store, {
+  dataDir: DATA_DIR,
+  onVideoQueued: runner.kick,
+  sell: baseten && ((input) => runSellerTurn(baseten, input)),
+  catalogSheet: (shopId, items) => catalogSheet(DATA_DIR, shopId, items),
+});
 
 // In production the server also hands out the built web app; in development Vite does.
 if (existsSync(WEB_DIST)) {

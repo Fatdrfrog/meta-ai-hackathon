@@ -3,11 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { studioApi } from "../api.ts";
 import { formatPrice } from "../format.ts";
 import { Shelf } from "../Shelf.tsx";
+import { Orders, Questions } from "./Inbox.tsx";
 import { ProductEditor } from "./ProductEditor.tsx";
 import { UploadVideo } from "./UploadVideo.tsx";
 import { VideoFailed, VideoInProgress, VideoTranscript } from "./VideoStatus.tsx";
 
 const POLL_MS = 2000;
+// New orders and buyer questions arrive from the chat at any time.
+const IDLE_POLL_MS = 15_000;
 
 export function Studio({ token }: { token: string }) {
   const api = useMemo(() => studioApi(token), [token]);
@@ -40,8 +43,7 @@ export function Studio({ token }: { token: string }) {
 
   const building = data?.videos.some((v) => v.status === "queued" || v.status === "processing") ?? false;
   useEffect(() => {
-    if (!building) return;
-    const timer = setInterval(() => void refresh(), POLL_MS);
+    const timer = setInterval(() => void refresh(), building ? POLL_MS : IDLE_POLL_MS);
     return () => clearInterval(timer);
   }, [building, refresh]);
 
@@ -112,6 +114,15 @@ export function Studio({ token }: { token: string }) {
         {failed.map((video) => (
           <VideoFailed key={video.id} video={video} onRetry={() => void api.retryVideo(video.id).then(refresh)} />
         ))}
+
+        <Orders orders={data.orders} />
+        <Questions
+          questions={data.questions}
+          onDone={async (id, done) => {
+            await api.setQuestionDone(id, done);
+            await refresh();
+          }}
+        />
 
         {data.products.length > 0 && (
           <section aria-labelledby="shelf-heading">

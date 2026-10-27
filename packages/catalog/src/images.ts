@@ -33,6 +33,11 @@ export async function cutOutMask(framePath: string, mask: Mask, outPath: string)
 export const cutOut = (framePath: string, record: SegmentationMaskRecord, outPath: string) =>
   cutOutMask(framePath, maskFromRecord(record), outPath);
 
+/** A buyer's photo as an upright JPEG no larger than 1280 px, whatever the phone sent. */
+export async function normalizePhoto(input: Uint8Array, outPath: string): Promise<void> {
+  await sharp(input).rotate().resize(1280, 1280, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 85 }).toFile(outPath);
+}
+
 /** Sharpness of one region of a frame, so a sharp background can't make a blurred product look good. */
 export async function regionSharpness(framePath: string, region: Box): Promise<number> {
   const { width: frameWidth = 0, height: frameHeight = 0 } = await sharp(framePath).metadata();

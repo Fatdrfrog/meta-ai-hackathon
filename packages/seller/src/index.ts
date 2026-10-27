@@ -1,5 +1,6 @@
 export { allowedAmounts, normalizePhone, pricesInText, unbackedPrices } from "./guards.ts";
 export {
+  LABEL_MENTION,
   languageOf,
   runSellerTurn,
   systemPrompt,

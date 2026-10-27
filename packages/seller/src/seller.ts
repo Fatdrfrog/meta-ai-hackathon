@@ -111,13 +111,17 @@ Rules:
 - When the buyer asks something this list doesn't answer (delivery, payment, sizes, stock, a discount, a custom order), say you will ask the owner, and put the question in ask_owner, in Russian, for the owner to read. Otherwise ask_owner is null.
 - show: labels of the products your reply is about, at most 10; the buyer sees them as cards with photos, names and prices. Empty when the reply isn't about products. Because the cards carry the details, name at most two products in the text itself.
 - order: only when the buyer has clearly said what to buy ${ordering}; if they didn't say how many, it's one. Otherwise null. When you place an order, say it's placed and that the shop will contact them about payment and delivery, and ask nothing else in that reply.
-- If the buyer sent a photo, the first image is theirs and the second shows our products with their labels. Find the same product; if none matches, say so and show the closest.`;
+- If the buyer sent a photo, the first image is theirs and the second shows our products with their labels. Find the same product; if none matches, say so and show the closest.
+- Labels and the product sheet are for you only: never mention a label number or the sheet to the buyer.`;
 }
 
 const imagePart = (path: string) => ({
   type: "image_url",
   image_url: { url: `data:${path.endsWith(".png") ? "image/png" : "image/jpeg"};base64,${readFileSync(path).toString("base64")}` },
 });
+
+// "товар 5", "product #2", "№ 3": the labels exist only in the prompt and on the photo sheet.
+export const LABEL_MENTION = /(товар|тауар|номер|label|product)\s*(№|#)?\s*\d|№\s*\d|#\d/i;
 
 /** Checks the model's answer against the catalog; returns the turn and what broke the rules. */
 export function validateAnswer(raw: RawAnswer, input: SellerTurnInput): { turn: Omit<SellerTurn, "corrections">; problems: string[] } {
@@ -152,6 +156,7 @@ export function validateAnswer(raw: RawAnswer, input: SellerTurnInput): { turn: 
     allowedAmounts(known(input.products.map((p) => p.price)), known(referenced.map(priceOf)), order?.total ?? null),
   );
   if (unbacked.length > 0) problems.push(`the reply states prices that aren't in the product list: ${unbacked.join(", ")}`);
+  if (LABEL_MENTION.test(raw.reply)) problems.push("the reply mentions a product label number, which the buyer can't see");
   if (raw.reply.trim() === "") problems.push("the reply is empty");
 
   return { turn: { reply: raw.reply.trim(), productIds, order, ownerQuestion: raw.ask_owner?.trim() || null }, problems };

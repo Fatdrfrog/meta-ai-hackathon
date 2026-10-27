@@ -74,7 +74,9 @@ Muse Spark Open (open weights, served by Baseten) answers buyers. First probes:
 
 A failed check gets one corrective retry with the problems spelled out; if that fails too, the buyer gets "I'll check with the owner" and the owner gets the question.
 
-`pnpm seller:eval` runs scripted conversations against the test catalog and checks each reply in code: language, product cards, prices, questions passed to the owner, orders only after a name and phone, and length. Its first run caught replies copying catalog details in brackets and an order confirmation that still asked a question; after tightening the instructions, 8 of 8 pass, twice in a row, at 0.7-5.5 seconds per reply. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
+`pnpm seller:eval` runs scripted conversations against the test catalog and checks each reply in code: language, product cards, prices, questions passed to the owner, orders only after a name and phone, and length. Its first run caught replies copying catalog details in brackets and an order confirmation that still asked a question; after tightening the instructions, 8 of 8 pass, twice in a row, at 0.7-5.5 seconds per reply.
+
+Testing the shop page chat in a browser found one more: answering a buyer's photo, the seller said "это товар 5 на фото", leaking the internal label from the product sheet. Label mentions are now one of the checks (and part of the evaluation), and the instructions forbid them. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
 ### SAM 3.1 on one sharp frame beats tracking the whole video
 

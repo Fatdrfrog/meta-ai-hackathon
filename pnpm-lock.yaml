@@ -36,6 +36,9 @@ importers:
       '@vitrina/meta':
         specifier: workspace:*
         version: link:../../packages/meta
+      '@vitrina/seller':
+        specifier: workspace:*
+        version: link:../../packages/seller
       hono:
         specifier: 4.13.14
         version: 4.13.14
