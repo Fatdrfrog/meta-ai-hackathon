@@ -55,9 +55,19 @@ export type ElevenLabsCreativeTranscriptionWebhookMetadata = {
   mediaType: "audio" | "video";
 };
 
+/** Always delivered inline (`delivery: "inline"`), so no webhook route reads it. */
+export type ElevenLabsProductVideoTranscriptionMetadata = {
+  workflowKind: "product_video_import";
+  workflowId: string;
+  workspaceId: string;
+  importId: string;
+  mediaType: "audio";
+};
+
 export type ElevenLabsTranscriptionWebhookMetadata =
   | ElevenLabsConversationTranscriptionWebhookMetadata
-  | ElevenLabsCreativeTranscriptionWebhookMetadata;
+  | ElevenLabsCreativeTranscriptionWebhookMetadata
+  | ElevenLabsProductVideoTranscriptionMetadata;
 
 export type ElevenLabsTranscriptionSubmissionResult = {
   requestId: string;
@@ -80,6 +90,12 @@ export type SubmitTranscriptionOptions = {
   fileBuffer?: Buffer | null;
   filename?: string | null;
   timestampsGranularity?: "none" | "word" | "character" | null;
+  /**
+   * "inline" answers in the same request even when a webhook is configured,
+   * for a caller that needs the transcript to carry on (a product video
+   * import) and has no workflow waiting on the webhook's signal.
+   */
+  delivery?: "inline";
 };
 
 function parseEnabledFlag(value: string | undefined): boolean {
@@ -497,10 +513,10 @@ async function submitMediaTranscriptionFromUrl(
   let attemptedInputMode: "file_upload" | "source_url" | null = null;
   let attemptedDeliveryMode: "webhook" | "inline" | null = null;
 
-  const configuredWebhookId = cleanString(
-    process.env.ELEVENLABS_STT_WEBHOOK_ID,
-    240,
-  );
+  const configuredWebhookId =
+    options.delivery === "inline"
+      ? ""
+      : cleanString(process.env.ELEVENLABS_STT_WEBHOOK_ID, 240);
   const submitPreparedInput = async (params: {
     inputMode: "file_upload" | "source_url";
     inputBytes: number | null;

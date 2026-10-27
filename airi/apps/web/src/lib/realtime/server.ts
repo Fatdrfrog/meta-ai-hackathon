@@ -50,6 +50,19 @@ export type CrmBoardChangedRealtimePayload = {
   ownerUserId?: string | null;
 };
 
+/** A product video import moved on, or one of its products got its photo. */
+export type ProductsChangedRealtimeInput = {
+  workspaceId: string;
+  importId: string;
+  reason: "import" | "products_found" | "photo";
+  productId?: string | null;
+};
+
+export type ProductsChangedRealtimePayload = Omit<
+  ProductsChangedRealtimeInput,
+  "workspaceId"
+>;
+
 type LeanConversationWorkspace = {
   workspaceId?: string | null;
 };
@@ -524,6 +537,50 @@ export async function emitCrmBoardChangedRealtimeEvent(
   input: CrmBoardChangedRealtimeInput
 ): Promise<void> {
   await emitRealtimeEvent(buildCrmBoardChangedRealtimeEvent(input));
+}
+
+export function buildProductsChangedRealtimeEvent(
+  input: ProductsChangedRealtimeInput & {
+    eventId?: string;
+    createdAt?: string;
+  }
+): MappedRealtimeEvent {
+  const createdAt = input.createdAt || new Date().toISOString();
+  const eventId = input.eventId || createRealtimeEventId();
+  const productId = input.productId || null;
+
+  return {
+    ...buildRealtimeEvent({
+      eventId,
+      name: "products.changed",
+      workspaceId: input.workspaceId,
+      conversationId: null,
+      createdAt,
+      dedupeKey: [
+        "products.changed",
+        input.workspaceId,
+        input.importId,
+        input.reason,
+        productId || "import",
+        eventId,
+      ].join(":"),
+      payload: {
+        importId: input.importId,
+        reason: input.reason,
+        ...(productId ? { productId } : {}),
+      } satisfies ProductsChangedRealtimePayload,
+    }),
+    channel: buildRealtimeChannelName({
+      kind: "workspace",
+      workspaceId: input.workspaceId,
+    }),
+  };
+}
+
+export async function emitProductsChangedRealtimeEvent(
+  input: ProductsChangedRealtimeInput
+): Promise<void> {
+  await emitRealtimeEvent(buildProductsChangedRealtimeEvent(input));
 }
 
 export function buildConversationClassificationReadyRealtimeEvent(input: {

@@ -17,7 +17,8 @@ On October 27 the project moved inside airi.chat, where shop owners already run 
 - **Products section** for workspace admins: products shown as cut-outs standing on a shelf.
 - **Meta Model API client:** Muse Spark, Muse Image and SAM 3.1, with timeouts, retries and the cost of every call.
 - **Video-to-products pipeline:** on the 65-second test video, all 7 products found with the right spoken prices, and all 7 photos restored by Muse Image (the owner's hand removed, the product upright on white), in about 2.5 minutes for $0.36.
-- **Next:** the import job, upload on the Products page, a swipe-through review, WhatsApp carousel and order-form drafts, and sending a video to Airi on WhatsApp.
+- **Import job:** a Temporal workflow runs the pipeline for each uploaded video, saves every step so a retry resumes without paying again, counts its model calls against the workspace's AI spend limit, and shows products live as they arrive.
+- **Next:** upload on the Products page, a swipe-through review, WhatsApp carousel and order-form drafts, and sending a video to Airi on WhatsApp.
 
 **Prototype** (root):
 

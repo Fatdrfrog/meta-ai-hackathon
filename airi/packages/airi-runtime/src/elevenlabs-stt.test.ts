@@ -483,3 +483,64 @@ test("pins the admitted model and does not make an unreserved webhook fallback r
   );
   assert.deepEqual(submittedModels, ["scribe_v2"]);
 });
+
+test("answers inline when asked to, even with a webhook configured", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = process.env;
+  const calls: Array<{ input: string | URL | Request; init?: RequestInit }> =
+    [];
+
+  process.env = {
+    ...originalEnv,
+    ELEVENLABS_API_KEY: "test-key",
+    ELEVENLABS_STT_ENABLED: "true",
+    ELEVENLABS_STT_WEBHOOK_ID: "webhook-1",
+  };
+  globalThis.fetch = (async (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ) => {
+    calls.push({ input, init });
+    return Response.json({
+      text: "Кукла Лол, бес мың теңге.",
+      language_code: "kaz",
+      words: [{ text: "Кукла", type: "word", start: 1.2 }],
+    });
+  }) as typeof fetch;
+
+  try {
+    const result = await submitElevenLabsAudioTranscriptionFromUrl(
+      "https://storage.invalid/narration.mp3",
+      "audio/mpeg",
+      {
+        workflowKind: "product_video_import",
+        workflowId: "product-video-import:import-1",
+        workspaceId: "workspace-1",
+        importId: "import-1",
+        mediaType: "audio",
+      },
+      {
+        fileBuffer: Buffer.from("mp3 bytes"),
+        filename: "narration.mp3",
+        timestampsGranularity: "word",
+        delivery: "inline",
+      },
+    );
+
+    assert.equal(calls.length, 1);
+    assert.equal(result.deliveryMode, "inline");
+    assert.equal(result.languageCode, "kaz");
+    assert.deepEqual(
+      (result.responsePayload?.words as unknown[] | undefined)?.length,
+      1,
+    );
+    const formData = calls[0]?.init?.body as FormData;
+    assert.equal(formData.get("webhook"), null);
+    assert.equal(formData.get("webhook_id"), null);
+    assert.equal(formData.get("webhook_metadata"), null);
+    assert.equal(formData.get("timestamps_granularity"), "word");
+  } finally {
+    globalThis.fetch = originalFetch;
+    process.env = originalEnv;
+  }
+});

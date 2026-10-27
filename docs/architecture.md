@@ -19,7 +19,7 @@ The project started as a standalone prototype and, on October 27, moved inside [
 | Buyer | **WhatsApp**, on the shop's own number, connected to airi.chat | See products in carousels, ask, order |
 | Judges | The prototype's **web chat** | The AI seller from the prototype, without needing a phone number |
 
-Built so far in airi.chat: the Products section, the Meta Model API client and the pipeline. Uploading from the Products page, the review, the WhatsApp drafts and sending a video to Airi on WhatsApp come next, in that order.
+Built so far in airi.chat: the Products section, the Meta Model API client, the pipeline and the import job that runs it. Uploading from the Products page, the review, the WhatsApp drafts and sending a video to Airi on WhatsApp come next, in that order.
 
 The owner never makes decisions inside WhatsApp. Since October 1, 2026, Meta bills every service message after the first 1,000 per number each month, so a review dialogue in chat would cost money on every tap. The Products section does the same job for free.
 
@@ -47,7 +47,7 @@ shop video ──► normalize (ffmpeg) ──┬─► audio ──► Scribe: 
                                           products with photos, for the owner to check and publish in airi.chat
 ```
 
-In airi.chat the pipeline is in the Temporal worker, `airi/apps/temporal-worker/src/media/product-video/`. On the 7-product test video it found all 7 products with the right prices and restored all 7 photos, in about 2.5 minutes for $0.36 of Meta calls.
+In airi.chat the pipeline is in the Temporal worker, `airi/apps/temporal-worker/src/media/product-video/`, run by one import job per video. The job saves each step as it finishes (the transcript, the draft products, each photo), so a retried job resumes instead of paying again, and the panel hears live as each product's photo lands. On the 7-product test video it found all 7 products with the right prices and restored all 7 photos, in about 3 minutes for $0.37 of Meta calls; a retry after that took 11 s and paid nothing.
 
 ## Models
 
@@ -70,8 +70,13 @@ Meta's "Spend Limit" only sends a notification, so spending is capped in code. I
 In airi.chat:
 
 - `airi/packages/airi-runtime/src/meta-model-api.ts`, `meta-sam.ts`: the Meta Model API client (Muse Spark, Muse Image, SAM 3.1 through `@meta-sam/parser`, file upload), with timeouts and retries Temporal can rely on.
-- `airi/apps/temporal-worker/src/media/product-video/`: the pipeline above.
+- `airi/apps/temporal-worker/src/media/product-video/`: the pipeline above, and `import-job.ts`, which runs it for one import.
+- `airi/apps/temporal-worker/src/workflows/product-video-import.ts` and `activities/product-video-import.ts`: the Temporal workflow and its activity, on the media queue.
+- `airi/apps/web/src/lib/products/imports.ts` and `app/api/workspaces/[workspaceId]/products/imports/`: starting an import from an uploaded video, and following it.
+- `airi/supabase/migrations/20261028090000_workspace_ai_spend_meta_provider.sql`: lets Meta calls count against a workspace's AI spend.
 - `airi/apps/web/src/components/products/`, `lib/products/`, `models/workspace-product.ts`: the Products section and its data.
+
+Going live in airi.chat takes, in order: applying that migration to production; `META_MODEL_API_KEY` in the worker's secrets; deploying the worker, then the web app; and turning on the `products` flag for a workspace. None of these is done yet.
 
 In the prototype:
 

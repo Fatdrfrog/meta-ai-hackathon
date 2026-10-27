@@ -1,26 +1,49 @@
 import mongoose from "mongoose";
 import {
+  PRODUCT_VIDEO_IMPORT_ERROR_CODES,
   PRODUCT_VIDEO_IMPORT_SOURCES,
+  PRODUCT_VIDEO_IMPORT_STAGES,
   PRODUCT_VIDEO_IMPORT_STATUSES,
+  type ProductVideoImportErrorCode,
   type ProductVideoImportSource,
+  type ProductVideoImportStage,
   type ProductVideoImportStatus,
+  type StoredFileRef,
 } from "@/lib/products/types";
 
 /**
  * One shelf video the owner sent, and the job that turns it into draft
- * products (Products). Its products point back to it by `importId`.
+ * products (Products). Its products point back to it by `importId`. The job
+ * saves each step here (the transcript, how far it got), so a retried job
+ * resumes instead of paying for the same work again.
  */
 export interface IProductVideoImport {
   _id: mongoose.Types.ObjectId;
   workspaceId: string;
   source: ProductVideoImportSource;
+  /** The uploaded video, in the workspace's media storage. */
+  video: StoredFileRef & { mimeType?: string; fileName?: string };
   status: ProductVideoImportStatus;
+  stage?: ProductVideoImportStage | null;
+  /** The owner's narration, one timed sentence per line; null until heard. */
+  transcript?: string | null;
+  /** The language the owner spoke, as Muse Spark named it. */
+  language?: string | null;
+  /** Products found, and how many of them have their photo. */
+  productTotal: number;
+  productDone: number;
   /** Draft products the video produced; set once it's ready. */
   productCount: number;
+  /** List-price cost of the Meta model calls, in US dollars. */
+  costUsd: number;
   /** Why it failed, as a code the panel explains. */
-  errorCode?: string;
+  errorCode?: ProductVideoImportErrorCode | null;
+  /** The failure in words, for support; not shown to the owner. */
+  errorMessage?: string | null;
+  workflowId?: string;
   /** The panel user who uploaded it; absent for a WhatsApp video. */
   createdBy?: string;
+  startedAt?: Date;
   finishedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -34,15 +57,40 @@ const ProductVideoImportSchema = new mongoose.Schema<IProductVideoImport>(
       required: true,
       enum: PRODUCT_VIDEO_IMPORT_SOURCES,
     },
+    video: {
+      type: new mongoose.Schema(
+        {
+          bucket: { type: String, required: true },
+          path: { type: String, required: true },
+          mimeType: { type: String },
+          fileName: { type: String, maxlength: 255 },
+        },
+        { _id: false }
+      ),
+      required: true,
+    },
     status: {
       type: String,
       required: true,
       enum: PRODUCT_VIDEO_IMPORT_STATUSES,
       default: "queued",
     },
+    stage: { type: String, enum: [...PRODUCT_VIDEO_IMPORT_STAGES, null] },
+    transcript: { type: String, maxlength: 40_000, default: null },
+    language: { type: String, trim: true, maxlength: 40, default: null },
+    productTotal: { type: Number, default: 0, min: 0 },
+    productDone: { type: Number, default: 0, min: 0 },
     productCount: { type: Number, default: 0, min: 0 },
-    errorCode: { type: String, trim: true, maxlength: 64 },
+    costUsd: { type: Number, default: 0, min: 0 },
+    errorCode: {
+      type: String,
+      enum: [...PRODUCT_VIDEO_IMPORT_ERROR_CODES, null],
+      default: null,
+    },
+    errorMessage: { type: String, maxlength: 500, default: null },
+    workflowId: { type: String },
     createdBy: { type: String },
+    startedAt: { type: Date },
     finishedAt: { type: Date },
   },
   { timestamps: true, collection: "product_video_imports" }

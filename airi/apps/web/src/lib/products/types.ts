@@ -27,6 +27,24 @@ export const PRODUCT_VIDEO_IMPORT_STATUSES = [
 export type ProductVideoImportStatus =
   (typeof PRODUCT_VIDEO_IMPORT_STATUSES)[number];
 
+// The import job's own vocabulary, shared with the worker that runs it.
+export {
+  PRODUCT_PHOTO_METHODS,
+  PRODUCT_VIDEO_IMPORT_ERROR_CODES,
+  PRODUCT_VIDEO_IMPORT_STAGES,
+  type ProductPhotoMethod,
+  type ProductVideoImportErrorCode,
+  type ProductVideoImportStage,
+} from "@icecore/temporal";
+import type {
+  ProductPhotoMethod,
+  ProductVideoImportErrorCode,
+  ProductVideoImportStage,
+} from "@icecore/temporal";
+
+/** A file in the workspace's private media storage. */
+export type StoredFileRef = { bucket: string; path: string };
+
 /** Published products one list returns; far above a small shop's shelf. */
 export const MAX_LISTED_PRODUCTS = 1000;
 
@@ -45,6 +63,41 @@ export type ProductsListResponse = {
   products: WorkspaceProductRecord[];
 };
 
+/** A product an import found, as the owner checks it before publishing. */
+export type DraftProductRecord = WorkspaceProductRecord & {
+  status: WorkspaceProductStatus;
+  /** The catalog name in English, beside the owner's own `name`. */
+  englishName: string | null;
+  /** The narration's words the price came from. */
+  priceQuote: string | null;
+  /** What the owner should confirm, in English. */
+  doubts: string[];
+  photoMethod: ProductPhotoMethod;
+  /** The full-size cut-out; `imageUrl` is its small copy. */
+  photoUrl: string | null;
+  /** The product as filmed, to compare the cleaned-up photo with. */
+  originalUrl: string | null;
+  /** Seconds into the video where the photo was taken. */
+  videoMomentSeconds: number | null;
+};
+
+export type ProductVideoImportRecord = {
+  id: string;
+  status: ProductVideoImportStatus;
+  stage: ProductVideoImportStage | null;
+  /** Products found so far, and how many of them have their photo. */
+  productTotal: number;
+  productDone: number;
+  errorCode: ProductVideoImportErrorCode | null;
+  createdAt: string | null;
+  finishedAt: string | null;
+};
+
+export type ProductVideoImportResponse = {
+  import: ProductVideoImportRecord;
+  products: DraftProductRecord[];
+};
+
 /** Whether this user sees the Products section: the flag is on and they're an admin. */
 export type ProductsAccessResponse = {
   available: boolean;
@@ -54,6 +107,10 @@ export const PRODUCTS_ERROR_CODES = [
   "feature_disabled",
   "admin_required",
   "load_failed",
+  "invalid_request",
+  "video_not_found",
+  "import_not_found",
+  "import_unavailable",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 

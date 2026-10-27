@@ -11,6 +11,7 @@ export {
   campaignNodeRunWorkflow,
 } from "./campaign-node-run";
 export { crawlWebsiteWorkflow } from "./crawl-website";
+export { productVideoImportWorkflow } from "./product-video-import";
 export { conversationMediaAnalysisWorkflow } from "./conversation-media-analysis";
 export { crossStoreOutboxDrainWorkflow } from "./cross-store-outbox-drain";
 export { creativeAssetEditWorkflow } from "./creative-asset-edits";

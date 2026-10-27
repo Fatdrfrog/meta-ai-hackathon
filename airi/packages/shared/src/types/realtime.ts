@@ -131,6 +131,7 @@ export const REALTIME_EVENT_NAMES = [
   "widget.csat.changed",
   "crm.board.changed",
   "campaign.delivery.changed",
+  "products.changed",
 ] as const;
 
 export * from "./requests-realtime";

@@ -97,7 +97,7 @@ export type WorkspaceAiSpendReservation = {
 export async function reserveWorkspaceAiSpend(
   params: WorkspaceAiSpendReservation & {
     supabase: WorkspaceAiRpcClient;
-    provider: "anthropic" | "vertex" | "elevenlabs";
+    provider: "anthropic" | "vertex" | "elevenlabs" | "meta";
   },
 ): Promise<WorkspaceAiSpendReservation> {
   if (

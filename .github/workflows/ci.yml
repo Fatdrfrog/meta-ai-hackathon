@@ -45,26 +45,34 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Dependency direction contract
         run: node .github/scripts/verify-dependency-direction.mjs
+      - name: Dependency direction tests
+        run: node --test .github/scripts/verify-dependency-direction.test.mjs
       - name: Meta Model API client tests
         run: >-
           pnpm --filter @icecore/airi-runtime exec tsx --test
           src/meta-model-api.test.ts src/meta-sam.test.ts src/llm-pricing.test.ts
-      - name: Video-to-products pipeline tests
+          src/elevenlabs-stt.test.ts
+      - name: Video-to-products pipeline and import job tests
         run: >-
           pnpm --filter @icecore/temporal-worker exec tsx --test
           "src/media/product-video/*.test.ts"
+          src/workflow-versioning-source.test.ts
+          src/web-alias-import-shape-source.test.ts
       - name: Products section tests
         run: >-
           pnpm --filter @icecore/web exec jest --ci
           src/lib/products src/components/products src/features/panel/products
           "src/app/api/workspaces/\[workspaceId\]/products"
           src/components/nav/app-sidebar-content.test.tsx
+          src/models/workspace-product.test.ts
           src/lib/mongo-indexes.test.ts src/features/panel/shared/routing
+          src/lib/realtime/server.test.ts
           src/lib/airi/__tests__/llm-pricing.test.ts
           src/lib/airi/__tests__/llm-analytics-events.test.ts
       - name: Type checks
         env:
           NODE_OPTIONS: --max-old-space-size=6144
         run: >-
-          pnpm --filter @icecore/airi-runtime --filter @icecore/temporal-worker
+          pnpm --filter @icecore/shared --filter @icecore/temporal
+          --filter @icecore/airi-runtime --filter @icecore/temporal-worker
           --filter @icecore/web --workspace-concurrency=1 check-types

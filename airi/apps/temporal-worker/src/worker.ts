@@ -37,6 +37,8 @@ import {
   CONVERSATION_MEDIA_ANALYSIS_TRIGGER_AIRI_ACTIVITY,
   CROSS_STORE_OUTBOX_DRAIN_ACTIVITY,
   CREATIVE_IMAGE_GENERATION_ACTIVITY,
+  PRODUCT_VIDEO_IMPORT_ACTIVITY,
+  PRODUCT_VIDEO_IMPORT_FAIL_ACTIVITY,
   CREATIVE_ASSET_FAIL_EDIT_ACTIVITY,
   CREATIVE_ASSET_PROCESS_EDIT_ACTIVITY,
   WAN_AVATAR_FAIL_ACTIVITY,
@@ -127,6 +129,10 @@ import {
   creativeAssetProcessEditActivity,
 } from "./activities/creative-asset-edits.js";
 import { creativeImageGenerationActivity } from "./activities/creative-image-generation.js";
+import {
+  productVideoImportActivity,
+  productVideoImportFailActivity,
+} from "./activities/product-video-import.js";
 import {
   acceptScenarioGenerativeAIVideoActivity,
   acceptScenarioGenerativeAIImageActivity,
@@ -420,6 +426,8 @@ export async function runTemporalWorker(): Promise<void> {
       [HAPPYHORSE_VIDEO_PROCESS_ACTIVITY]: happyHorseVideoProcessActivity,
       [HAPPYHORSE_VIDEO_FAIL_ACTIVITY]: happyHorseVideoFailActivity,
       [CREATIVE_IMAGE_GENERATION_ACTIVITY]: creativeImageGenerationActivity,
+      [PRODUCT_VIDEO_IMPORT_ACTIVITY]: productVideoImportActivity,
+      [PRODUCT_VIDEO_IMPORT_FAIL_ACTIVITY]: productVideoImportFailActivity,
       [CONVERSATION_MEDIA_ANALYSIS_ACTIVITY]:
         conversationMediaAnalysisProcessActivity,
       [CONVERSATION_MEDIA_ANALYSIS_COMPLETE_ACTIVITY]:
@@ -548,6 +556,8 @@ export async function runTemporalWorker(): Promise<void> {
           [HAPPYHORSE_VIDEO_PROCESS_ACTIVITY]: happyHorseVideoProcessActivity,
           [HAPPYHORSE_VIDEO_FAIL_ACTIVITY]: happyHorseVideoFailActivity,
           [CREATIVE_IMAGE_GENERATION_ACTIVITY]: creativeImageGenerationActivity,
+          [PRODUCT_VIDEO_IMPORT_ACTIVITY]: productVideoImportActivity,
+          [PRODUCT_VIDEO_IMPORT_FAIL_ACTIVITY]: productVideoImportFailActivity,
           [CONVERSATION_MEDIA_ANALYSIS_ACTIVITY]:
             conversationMediaAnalysisProcessActivity,
           [CONVERSATION_MEDIA_ANALYSIS_COMPLETE_ACTIVITY]:

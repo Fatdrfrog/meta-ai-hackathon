@@ -39,6 +39,7 @@ import {
   buildConversationClassificationReadyRealtimeEvent,
   buildConversationCallUpdatedRealtimeEvent,
   buildCrmBoardChangedRealtimeEvent,
+  buildProductsChangedRealtimeEvent,
   enqueueConversationClassificationReadyRealtimeEvent,
   enqueueWhatsAppMessageRealtimeEvent,
   mapChannelEventToRealtimeEvent,
@@ -455,6 +456,34 @@ describe("realtime server mapping", () => {
         reason: "stage_moved",
         customerId: "customer-1",
         stageKey: "qualified",
+      },
+      channel: "workspace:workspace-1",
+    });
+  });
+
+  it("builds a workspace Products invalidation for an import", () => {
+    expect(
+      buildProductsChangedRealtimeEvent({
+        workspaceId: "workspace-1",
+        importId: "import-1",
+        reason: "photo",
+        productId: "product-3",
+        eventId: "products-evt-1",
+        createdAt: "2026-10-28T12:00:00.000Z",
+      })
+    ).toEqual({
+      eventId: "products-evt-1",
+      version: 1,
+      name: "products.changed",
+      workspaceId: "workspace-1",
+      conversationId: null,
+      createdAt: "2026-10-28T12:00:00.000Z",
+      dedupeKey:
+        "products.changed:workspace-1:import-1:photo:product-3:products-evt-1",
+      payload: {
+        importId: "import-1",
+        reason: "photo",
+        productId: "product-3",
       },
       channel: "workspace:workspace-1",
     });

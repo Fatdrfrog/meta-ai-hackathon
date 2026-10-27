@@ -18,4 +18,5 @@ export * from "./video-generation/reconcile-contracts";
 export * from "./whatsapp/catalog-contracts";
 export * from "./whatsapp/webhook-contracts";
 export * from "./otp/contracts";
+export * from "./products/contracts";
 export * from "./whatsapp-calls";

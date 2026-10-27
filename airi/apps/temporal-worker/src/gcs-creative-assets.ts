@@ -287,6 +287,36 @@ export async function createGcsCreativeAssetUpload(params: {
   };
 }
 
+/**
+ * Downloads a workspace's stored file to a local path, refusing one larger
+ * than `maxBytes` before reading it.
+ */
+export async function downloadGcsCreativeAssetObject(params: {
+  bucket: string;
+  path: string;
+  workspaceId: string;
+  destination: string;
+  maxBytes: number;
+}): Promise<{ fileSize: number }> {
+  assertCreativeAssetObjectPath({
+    workspaceId: params.workspaceId,
+    path: params.path,
+  });
+  const file = getStorageClient().bucket(params.bucket).file(params.path);
+  const [metadata] = await file.getMetadata();
+  const fileSize = Number(metadata?.size);
+  if (!Number.isFinite(fileSize) || fileSize <= 0) {
+    throw new Error("The stored file is empty or unreadable");
+  }
+  if (fileSize > params.maxBytes) {
+    throw new Error(
+      `The stored file is ${fileSize} bytes; the limit is ${params.maxBytes}`,
+    );
+  }
+  await file.download({ destination: params.destination });
+  return { fileSize };
+}
+
 export async function statGcsCreativeAssetObject(params: {
   storageClient?: GcsCreativeAssetStorageClient;
   bucket: string;
