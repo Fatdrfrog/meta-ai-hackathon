@@ -35,6 +35,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { PRODUCTS_COPY } from "@/lib/products/copy";
 import type { Route } from "next";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -188,7 +189,7 @@ export function AppSidebarContent({ workspaceId }: { workspaceId: string }) {
     ...(hasProducts
       ? [
           {
-            title: tAppSidebar("products"),
+            title: PRODUCTS_COPY.navLabel,
             url: `/panel/w/${workspaceId}/products`,
             icon: Package,
           },

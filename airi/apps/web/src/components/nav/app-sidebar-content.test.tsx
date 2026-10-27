@@ -33,7 +33,6 @@ jest.mock("next-intl", () => ({
       scenarios: "Scenarios",
       bulkCampaigns: "Bulk campaigns",
       customers: "Leads",
-      products: "Products",
       "messengers.title": "WhatsApp Manager",
       "analytics.title": "Analytics",
       "widget.title": "Web widget",

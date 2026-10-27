@@ -6,13 +6,13 @@ import {
   LoadingState,
 } from "@/components/ui/async-states";
 import { PageHeader } from "@/components/ui/page-header";
+import { PRODUCTS_COPY, productCountLabel } from "@/lib/products/copy";
 import {
   formatProductPrice,
   type ProductsListResponse,
   type WorkspaceProductRecord,
 } from "@/lib/products/types";
 import { Package } from "lucide-react";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import useSWR from "swr";
 import { fetchProducts, productsApiUrl } from "./products-client";
@@ -21,7 +21,6 @@ const EMPTY_PRODUCTS: WorkspaceProductRecord[] = [];
 
 /** Products: the workspace's own catalog, which the owner fills by filming their shelf. */
 export function ProductsPage({ workspaceId }: { workspaceId: string }) {
-  const t = useTranslations("ProductsPage");
   const { data, error, isValidating, mutate } = useSWR<ProductsListResponse>(
     productsApiUrl(workspaceId),
     fetchProducts,
@@ -34,31 +33,31 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
     body =
       error && !isValidating ? (
         <ErrorState
-          message={t("loadError")}
+          message={PRODUCTS_COPY.loadError}
           onRetry={() => void mutate()}
-          retryLabel={t("retry")}
+          retryLabel={PRODUCTS_COPY.retry}
         />
       ) : (
-        <div role="status" aria-label={t("loading")}>
+        <div role="status" aria-label={PRODUCTS_COPY.loading}>
           <LoadingState lines={4} />
         </div>
       );
   } else if (products.length === 0) {
     body = (
       <EmptyState
-        title={t("empty.title")}
-        description={t("empty.description")}
+        title={PRODUCTS_COPY.emptyTitle}
+        description={PRODUCTS_COPY.emptyDescription}
       />
     );
   } else {
     body = (
       <div className="min-w-0 space-y-3">
         <p className="text-sm text-muted-foreground">
-          {t("count", { count: products.length })}
+          {productCountLabel(products.length)}
         </p>
         <ul
           className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
-          aria-label={t("title")}
+          aria-label={PRODUCTS_COPY.title}
         >
           {products.map(product => (
             <li
@@ -76,7 +75,7 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
               </p>
               <p className="text-sm text-muted-foreground tabular-nums">
                 {product.price === null
-                  ? t("noPrice")
+                  ? PRODUCTS_COPY.noPrice
                   : formatProductPrice(product.price)}
               </p>
             </li>
@@ -88,7 +87,10 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader
+        title={PRODUCTS_COPY.title}
+        description={PRODUCTS_COPY.description}
+      />
       {body}
     </div>
   );

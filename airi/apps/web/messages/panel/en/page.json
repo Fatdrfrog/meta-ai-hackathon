@@ -1884,18 +1884,5 @@
     "subscribers": "WhatsApp Subscribers",
     "catalog": "Catalog",
     "officialBadge": "Official badge"
-  },
-  "ProductsPage": {
-    "title": "Products",
-    "description": "What you sell. Airi answers buyers about these products.",
-    "loading": "Loading products…",
-    "loadError": "Products couldn't be loaded.",
-    "retry": "Retry",
-    "count": "{count, plural, one {# product} other {# products}}",
-    "noPrice": "No price yet",
-    "empty": {
-      "title": "Your products will appear here",
-      "description": "Film your shelf on your phone and say each product's name and price. Airi turns the video into product cards for you to check."
-    }
   }
 }

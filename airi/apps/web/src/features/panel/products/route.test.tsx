@@ -12,9 +12,6 @@ jest.mock("@/features/panel/shared/workspace", () => ({
 jest.mock("@/lib/workspace-feature-flags", () => ({
   isWorkspaceFeatureEnabled: (...args: unknown[]) => mockFlag(...args),
 }));
-jest.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string) => key,
-}));
 jest.mock("next/navigation", () => ({
   redirect: (path: string) => {
     throw new Error(`redirect:${path}`);
@@ -78,7 +75,9 @@ test("a membership failure shows an alert, not the products", async () => {
     error: { message: "database unavailable" },
   });
   render(await ProductsRoute(params()));
-  expect(screen.getByRole("alert")).toHaveTextContent("loadError");
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Products couldn't be loaded."
+  );
   expect(screen.queryByTestId("products")).not.toBeInTheDocument();
 });
 
