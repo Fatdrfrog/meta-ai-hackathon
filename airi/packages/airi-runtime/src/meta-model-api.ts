@@ -11,9 +11,15 @@ const META_MODEL_API_BASE_URL = "https://api.meta.ai/v1";
 // takes longer.
 const DEFAULT_TIMEOUT_MS = 180_000;
 // The API sometimes answers with a 5xx HTML page that a short retry gets past.
-// Temporal retries whole activities; this keeps one blip from costing a rerun.
+// A 502 or 504 may come after the request was billed, so a retry can charge
+// twice; at a cent or two per call that beats failing a product, which
+// Temporal would then retry whole.
 const RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
 const RETRY_DELAYS_MS = [500, 2_000];
+const MAX_RETRY_AFTER_MS = 10_000;
+// Uploaded shop videos delete themselves after a day even if a job dies
+// before deleting them; the API keeps files forever by default.
+const UPLOAD_EXPIRY_SECONDS = 86_400;
 
 const DEFAULT_MODELS = {
   museSpark: "muse-spark-1.3",
@@ -41,6 +47,7 @@ export type MetaModelApiErrorKind =
   | "rate_limit"
   | "invalid_request"
   | "timeout"
+  | "cancelled"
   | "server"
   | "unknown";
 
@@ -48,6 +55,11 @@ export type MetaModelApiErrorInfo = {
   kind: MetaModelApiErrorKind;
   transient: boolean;
   status?: number;
+  /**
+   * What exactly went wrong, when known: the API's error code, `refusal`, or
+   * why an answer stopped (`max_output_tokens`).
+   */
+  code?: string;
   message: string;
 };
 
@@ -65,6 +77,16 @@ export function isMetaModelApiTransientError(
   error: unknown,
 ): error is MetaModelApiError {
   return error instanceof MetaModelApiError && error.info.transient;
+}
+
+/** A model declined the content itself (a safety filter), as opposed to a malformed request. */
+export function isMetaModelRefusal(error: unknown): error is MetaModelApiError {
+  if (!(error instanceof MetaModelApiError)) return false;
+  if (error.info.kind !== "invalid_request" || error.info.status === 404)
+    return false;
+  return /refus|polic|safety|moderat|blocked/i.test(
+    `${error.info.code ?? ""} ${error.message}`,
+  );
 }
 
 export function isMetaModelApiConfigured(): boolean {
@@ -115,154 +137,178 @@ export type MetaRequestOptions = {
 
 function classifyHttpFailure(
   status: number,
-  message: string,
+  failure: { message: string; code?: string },
 ): MetaModelApiError {
-  const detail = message || `Meta Model API answered ${status}`;
-  if (status === 401 || status === 403) {
+  const message = failure.message || `Meta Model API answered ${status}`;
+  const base = { status, message, code: failure.code };
+  if (status === 401 || status === 403)
+    return new MetaModelApiError({ ...base, kind: "auth", transient: false });
+  if (status === 408)
+    return new MetaModelApiError({ ...base, kind: "timeout", transient: true });
+  if (status === 429)
     return new MetaModelApiError({
-      kind: "auth",
-      transient: false,
-      status,
-      message: detail,
-    });
-  }
-  if (status === 408) {
-    return new MetaModelApiError({
-      kind: "timeout",
-      transient: true,
-      status,
-      message: detail,
-    });
-  }
-  if (status === 429) {
-    return new MetaModelApiError({
+      ...base,
       kind: "rate_limit",
       transient: true,
-      status,
-      message: detail,
     });
-  }
-  if (status >= 400 && status < 500) {
+  if (status >= 400 && status < 500)
     return new MetaModelApiError({
+      ...base,
       kind: "invalid_request",
       transient: false,
-      status,
-      message: detail,
     });
-  }
   return new MetaModelApiError({
+    ...base,
     kind: status >= 500 ? "server" : "unknown",
     transient: true,
-    status,
-    message: detail,
   });
 }
 
-async function errorMessageOf(response: Response): Promise<string> {
+async function failureOf(
+  response: Response,
+): Promise<{ message: string; code?: string }> {
   const text = await response.text().catch(() => "");
   try {
     const payload = JSON.parse(text) as {
-      error?: { message?: unknown } | string;
+      error?: { message?: unknown; code?: unknown; type?: unknown } | string;
       message?: unknown;
     };
+    const error = typeof payload.error === "object" ? payload.error : null;
     const message =
       typeof payload.error === "string"
         ? payload.error
-        : (payload.error?.message ?? payload.message);
-    if (typeof message === "string") return cleanString(message, 500);
+        : (error?.message ?? payload.message);
+    const code = error?.code ?? error?.type;
+    return {
+      message: typeof message === "string" ? cleanString(message, 500) : "",
+      code: typeof code === "string" ? cleanString(code, 120) : undefined,
+    };
   } catch {
     // An HTML error page; keep its start.
+    return { message: cleanString(text, 300) };
   }
-  return cleanString(text, 300);
 }
 
+function retryAfterMs(response: Response): number | null {
+  const value = response.headers.get("retry-after");
+  if (!value) return null;
+  const seconds = Number(value);
+  const ms = Number.isFinite(seconds)
+    ? seconds * 1000
+    : Date.parse(value) - Date.now();
+  return Number.isFinite(ms)
+    ? Math.min(MAX_RETRY_AFTER_MS, Math.max(0, ms))
+    : null;
+}
+
+type OpenResponse = {
+  response: Response;
+  /** Classifies an error met while reading the body, like one met before it. */
+  fail: (error: unknown) => unknown;
+  /** Stops the timer; call once the body has been read. */
+  release: () => void;
+};
+
 /**
- * POSTs to the API and hands back the open response. The timeout covers the
- * whole exchange, including reading a streamed body: `release` must be called
- * once the caller has finished with the response.
+ * Sends a request and hands back the open response. One timeout covers the
+ * whole exchange, retries and reading a streamed body included.
  */
-async function post(
+async function send(
+  method: "POST" | "DELETE",
   path: string,
-  init: { headers?: Record<string, string>; body: BodyInit },
+  init: { headers?: Record<string, string>; body?: BodyInit },
   options: MetaRequestOptions = {},
-): Promise<{ response: Response; release: () => void }> {
+): Promise<OpenResponse> {
   const apiKey = getApiKey();
-  const controller = new AbortController();
   const timeoutMs = options.timeoutMs ?? getTimeoutMs();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
   const onAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
   options.signal?.addEventListener("abort", onAbort, { once: true });
   const release = () => {
     clearTimeout(timer);
     options.signal?.removeEventListener("abort", onAbort);
   };
+  const fail = (error: unknown): unknown => {
+    if (error instanceof MetaModelApiError) return error;
+    if (controller.signal.aborted) {
+      return timedOut
+        ? new MetaModelApiError({
+            kind: "timeout",
+            transient: true,
+            message: `Meta Model API request stopped after ${timeoutMs} ms`,
+          })
+        : new MetaModelApiError({
+            kind: "cancelled",
+            transient: false,
+            message: "Meta Model API request was cancelled",
+          });
+    }
+    return new MetaModelApiError({
+      kind: error instanceof SyntaxError ? "server" : "unknown",
+      transient: true,
+      message:
+        error instanceof SyntaxError
+          ? "Meta Model API sent a response that couldn't be read"
+          : error instanceof Error
+            ? cleanString(error.message, 300)
+            : "Meta Model API request failed",
+    });
+  };
 
   try {
+    if (controller.signal.aborted) throw new Error("aborted before sending");
     for (let attempt = 0; ; attempt++) {
       const response = await fetch(`${META_MODEL_API_BASE_URL}${path}`, {
-        method: "POST",
+        method,
         headers: { authorization: `Bearer ${apiKey}`, ...init.headers },
         body: init.body,
         signal: controller.signal,
       });
-      if (response.ok) return { response, release };
+      if (response.ok) return { response, fail, release };
       const delay = RETRY_DELAYS_MS[attempt];
       if (delay === undefined || !RETRY_STATUSES.has(response.status)) {
-        throw classifyHttpFailure(
-          response.status,
-          await errorMessageOf(response),
-        );
+        throw classifyHttpFailure(response.status, await failureOf(response));
       }
+      const wait = retryAfterMs(response) ?? delay;
       await response.body?.cancel();
-      await sleep(delay, undefined, { signal: controller.signal });
+      await sleep(wait, undefined, { signal: controller.signal });
     }
   } catch (error) {
     release();
-    throw normalizeError(error, controller.signal, timeoutMs);
+    throw fail(error);
   }
 }
 
-function normalizeError(
-  error: unknown,
-  signal: AbortSignal,
-  timeoutMs: number,
-): unknown {
-  if (error instanceof MetaModelApiError) return error;
-  if (signal.aborted) {
-    return new MetaModelApiError({
-      kind: "timeout",
-      transient: true,
-      message: `Meta Model API request stopped after ${timeoutMs} ms or was cancelled`,
-    });
+async function readJson<T>(open: OpenResponse): Promise<T> {
+  try {
+    return (await open.response.json()) as T;
+  } catch (error) {
+    throw open.fail(error);
+  } finally {
+    open.release();
   }
-  return new MetaModelApiError({
-    kind: "unknown",
-    transient: true,
-    message:
-      error instanceof Error
-        ? cleanString(error.message, 300)
-        : "Meta Model API request failed",
-  });
 }
 
-async function postJson<T>(
+function postJson<T>(
   path: string,
   body: unknown,
   options?: MetaRequestOptions,
 ): Promise<T> {
-  const { response, release } = await post(
+  return send(
+    "POST",
     path,
     {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     },
     options,
-  );
-  try {
-    return (await response.json()) as T;
-  } finally {
-    release();
-  }
+  ).then((open) => readJson<T>(open));
 }
 
 export type MetaResponseRequest = {
@@ -280,19 +326,53 @@ export type MetaResponseUsage = {
 export type MetaResponse = {
   id: string;
   status: string;
+  incomplete_details?: { reason?: string } | null;
   output: Array<{
     type: string;
-    content?: Array<{ type: string; text?: string }>;
+    content?: Array<{ type: string; text?: string; refusal?: string }>;
   }>;
   usage?: MetaResponseUsage;
 };
 
-/** One Responses API call (Muse Spark); its usage prices it through llm-pricing. */
-export function createMetaResponse(
+/**
+ * One Responses API call (Muse Spark); its usage prices it through
+ * llm-pricing. Throws unless the answer is complete: a refusal, or an answer
+ * cut off at `max_output_tokens`, would otherwise reach the caller as text.
+ */
+export async function createMetaResponse(
   request: MetaResponseRequest,
   options?: MetaRequestOptions,
 ): Promise<MetaResponse> {
-  return postJson<MetaResponse>("/responses", request, options);
+  const response = await postJson<MetaResponse>("/responses", request, options);
+  const refusal = response.output
+    .flatMap((item) => item.content ?? [])
+    .find((part) => part.type === "refusal");
+  if (refusal) {
+    throw new MetaModelApiError({
+      kind: "invalid_request",
+      transient: false,
+      code: "refusal",
+      message: cleanString(refusal.refusal, 500) || "The model refused",
+    });
+  }
+  if (response.status === "incomplete") {
+    const reason = cleanString(response.incomplete_details?.reason, 120);
+    throw new MetaModelApiError({
+      kind: "invalid_request",
+      transient: false,
+      code: reason || "incomplete",
+      message: `The model's answer was cut off${reason ? ` (${reason})` : ""}`,
+    });
+  }
+  if (response.status !== "completed") {
+    throw new MetaModelApiError({
+      kind: "server",
+      transient: true,
+      code: cleanString(response.status, 40) || undefined,
+      message: `The model's answer ended as "${response.status}"`,
+    });
+  }
+  return response;
 }
 
 export function metaResponseText(response: MetaResponse): string {
@@ -314,7 +394,8 @@ export async function* streamMetaResponse(
   request: MetaResponseRequest,
   options?: MetaRequestOptions,
 ): AsyncGenerator<MetaStreamEvent> {
-  const { response, release } = await post(
+  const open = await send(
+    "POST",
     "/responses",
     {
       headers: {
@@ -326,13 +407,15 @@ export async function* streamMetaResponse(
     options,
   );
   try {
-    if (!response.body) return;
-    for await (const data of readSseData(response.body)) {
+    if (!open.response.body) return;
+    for await (const data of readSseData(open.response.body)) {
       if (data === "[DONE]") return;
       yield JSON.parse(data) as MetaStreamEvent;
     }
+  } catch (error) {
+    throw open.fail(error);
   } finally {
-    release();
+    open.release();
   }
 }
 
@@ -377,31 +460,53 @@ function sseDataOf(block: string): string | undefined {
   return lines.length > 0 ? lines.join("\n") : undefined;
 }
 
-/** Uploads media (a shop video) for later calls to refer to by id. */
+/**
+ * Uploads media (a shop video) for later calls to refer to by id. It expires
+ * after a day; delete it with `deleteMetaFile` once it isn't needed.
+ */
 export async function uploadMetaFile(
   file: { data: Uint8Array; filename: string; mimeType: string },
   options?: MetaRequestOptions,
 ): Promise<{ id: string }> {
   const form = new FormData();
   form.set("purpose", "user_data");
+  form.set("expires_after[anchor]", "created_at");
+  form.set("expires_after[seconds]", String(UPLOAD_EXPIRY_SECONDS));
   form.set(
     "file",
     new Blob([new Uint8Array(file.data)], { type: file.mimeType }),
     file.filename,
   );
-  const { response, release } = await post("/files", { body: form }, options);
+  const json = await readJson<{ id?: unknown }>(
+    await send("POST", "/files", { body: form }, options),
+  );
+  if (typeof json.id !== "string" || !json.id) {
+    throw new MetaModelApiError({
+      kind: "unknown",
+      transient: true,
+      message: "Meta Model API returned no file id",
+    });
+  }
+  return { id: json.id };
+}
+
+/** Removes an uploaded file from Meta's servers; one that is already gone counts as removed. */
+export async function deleteMetaFile(
+  fileId: string,
+  options?: MetaRequestOptions,
+): Promise<void> {
   try {
-    const json = (await response.json()) as { id?: unknown };
-    if (typeof json.id !== "string" || !json.id) {
-      throw new MetaModelApiError({
-        kind: "unknown",
-        transient: true,
-        message: "Meta Model API returned no file id",
-      });
-    }
-    return { id: json.id };
-  } finally {
-    release();
+    const open = await send(
+      "DELETE",
+      `/files/${encodeURIComponent(fileId)}`,
+      {},
+      options,
+    );
+    await open.response.body?.cancel();
+    open.release();
+  } catch (error) {
+    if (error instanceof MetaModelApiError && error.info.status === 404) return;
+    throw error;
   }
 }
 

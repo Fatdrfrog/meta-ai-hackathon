@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 
-import { META_SAM_IMAGE_COST_USD } from "./meta-model-api";
+import {
+  isMetaModelApiTransientError,
+  META_SAM_IMAGE_COST_USD,
+  MetaModelApiError,
+} from "./meta-model-api";
 import {
   bestMetaSamMask,
   decodeMaskToRaster,
@@ -144,5 +148,43 @@ test("the best mask is the most confident, then the largest", () => {
   assert.equal(
     bestMetaSamMask([mask("a", 0.9, 10), mask("b", 0.9, 30)])?.objectId,
     "b",
+  );
+});
+
+test("SAM failures keep the client's error, so retries are decided right", async (t) => {
+  configure(t);
+  t.mock.method(globalThis, "fetch", async () =>
+    Response.json({ error: { message: "bad key" } }, { status: 401 }),
+  );
+
+  await assert.rejects(
+    segmentMetaImage({
+      imageUrl: "data:image/jpeg;base64,AAAA",
+      prompt: "cup",
+    }),
+    (error: unknown) =>
+      error instanceof MetaModelApiError &&
+      error.info.kind === "auth" &&
+      !error.info.transient,
+  );
+});
+
+test("a SAM stream that stops early is an error a retry may fix, not 'nothing found'", async (t) => {
+  configure(t);
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async () =>
+      new Response(
+        `data: ${JSON.stringify({ type: "response.output_text.delta", item_id: "m", output_index: 0, content_index: 0, delta: "<0f>" })}\n\n`,
+        { headers: { "content-type": "text/event-stream" } },
+      ),
+  );
+
+  await assert.rejects(
+    segmentMetaVideo({ fileId: "file_1", prompt: "cup", frameCount: 60 }),
+    (error: unknown) =>
+      isMetaModelApiTransientError(error) &&
+      error.info.code === "incomplete_eof",
   );
 });

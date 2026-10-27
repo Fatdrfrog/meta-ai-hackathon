@@ -103,3 +103,22 @@ test("keeps Gemini pricing rows for the Vertex fallback", () => {
   );
   assert.equal(LLM_PRICING_VERSION, "2026-10-meta-muse-spark");
 });
+
+test("prices Muse Spark, including a newer version set by env", () => {
+  const cost = estimateLlmCostUsd({
+    model: "muse-spark-1.3",
+    promptTokens: 10_000,
+    cachedPromptTokens: 2_000,
+    completionTokens: 1_000,
+  });
+  assert.equal(cost.matchedModel, "muse-spark-1.3");
+  close(
+    cost.totalCostUsd,
+    (8_000 * 1.25 + 2_000 * 0.15 + 1_000 * 4.25) / 1_000_000,
+  );
+  assert.equal(
+    resolveLlmModelPricing("muse-spark-1.4").matchedModel,
+    "muse-spark",
+  );
+  assert.equal(resolveLlmModelPricing("muse-spark-1.4").pricingMatched, true);
+});

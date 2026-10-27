@@ -101,8 +101,14 @@ const MODEL_PRICING_USD_PER_MILLION: Record<string, LlmModelPricing> = {
     cacheWriteInputUsdPerMillion: 6.25,
   },
   "gpt-4o-mini": { inputUsdPerMillion: 0.15, outputUsdPerMillion: 0.6 },
-  // Meta Model API list price, verified 2026-10-27 (dev.meta.ai).
+  // Meta Model API list prices, verified 2026-10-27 (dev.meta.ai). The family
+  // row prices a newer Muse Spark set by env until it gets its own row.
   "muse-spark-1.3": {
+    inputUsdPerMillion: 1.25,
+    outputUsdPerMillion: 4.25,
+    cachedInputUsdPerMillion: 0.15,
+  },
+  "muse-spark": {
     inputUsdPerMillion: 1.25,
     outputUsdPerMillion: 4.25,
     cachedInputUsdPerMillion: 0.15,

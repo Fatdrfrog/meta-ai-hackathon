@@ -3,11 +3,13 @@ import test, { type TestContext } from "node:test";
 
 import {
   createMetaResponse,
+  deleteMetaFile,
   editMetaImage,
   generateMetaImage,
   getMetaModels,
   isMetaModelApiConfigured,
   isMetaModelApiTransientError,
+  isMetaModelRefusal,
   META_MUSE_IMAGE_COST_USD,
   MetaModelApiError,
   metaResponseText,
@@ -288,4 +290,207 @@ test("models can be switched by env; SAM video bills at least 50 frames", (t) =>
   });
   assert.equal(metaSamVideoCostUsd(10), 50 * 0.0002);
   assert.equal(metaSamVideoCostUsd(94), 94 * 0.0002);
+});
+
+const completed = (text = "{}") => ({
+  id: "r",
+  status: "completed",
+  output: [{ type: "message", content: [{ type: "output_text", text }] }],
+});
+
+test("an answer cut off at the token limit is an error a retry won't fix", async (t) => {
+  configure(t);
+  stubFetch(t, () =>
+    Response.json({
+      ...completed('{"items": [{"name": "LOL do'),
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+    }),
+  );
+
+  await assert.rejects(
+    createMetaResponse({ model: "m", input: "x" }),
+    (error: unknown) =>
+      error instanceof MetaModelApiError &&
+      error.info.kind === "invalid_request" &&
+      error.info.code === "max_output_tokens" &&
+      !error.info.transient,
+  );
+});
+
+test("a refusal is an error, not text; a failed answer may be retried", async (t) => {
+  configure(t);
+  stubFetch(t, (_call, index) =>
+    Response.json(
+      index === 0
+        ? {
+            id: "r",
+            status: "completed",
+            output: [
+              {
+                type: "message",
+                content: [
+                  { type: "refusal", refusal: "I can't help with that." },
+                ],
+              },
+            ],
+          }
+        : { ...completed(), status: "failed" },
+    ),
+  );
+
+  await assert.rejects(
+    createMetaResponse({ model: "m", input: "x" }),
+    (error: unknown) =>
+      isMetaModelRefusal(error) &&
+      error.info.code === "refusal" &&
+      error.message === "I can't help with that.",
+  );
+  await assert.rejects(
+    createMetaResponse({ model: "m", input: "x" }),
+    (error: unknown) =>
+      isMetaModelApiTransientError(error) && error.info.code === "failed",
+  );
+});
+
+test("an unreadable body is classified like any other failure", async (t) => {
+  configure(t);
+  stubFetch(
+    t,
+    () =>
+      new Response("<html>oops</html>", {
+        headers: { "content-type": "text/html" },
+      }),
+  );
+
+  await assert.rejects(
+    createMetaResponse({ model: "m", input: "x" }),
+    (error: unknown) =>
+      isMetaModelApiTransientError(error) && error.info.kind === "server",
+  );
+});
+
+test("a caller's cancel stops the call, before or during it, and isn't retried", async (t) => {
+  configure(t);
+  const calls = stubFetch(
+    t,
+    (call) =>
+      new Promise<Response>((_resolve, reject) => {
+        call.init.signal?.addEventListener("abort", () =>
+          reject(new DOMException("aborted", "AbortError")),
+        );
+      }),
+  );
+  const isCancel = (error: unknown) =>
+    error instanceof MetaModelApiError &&
+    error.info.kind === "cancelled" &&
+    !error.info.transient;
+
+  await assert.rejects(
+    createMetaResponse(
+      { model: "m", input: "x" },
+      { signal: AbortSignal.abort() },
+    ),
+    isCancel,
+  );
+  assert.equal(calls.length, 0);
+
+  const controller = new AbortController();
+  const pending = createMetaResponse(
+    { model: "m", input: "x" },
+    { signal: controller.signal },
+  );
+  setTimeout(() => controller.abort(), 10);
+  await assert.rejects(pending, isCancel);
+});
+
+test("the timeout covers a stream that stalls after its first event", async (t) => {
+  configure(t, { META_MODEL_API_TIMEOUT_MS: "40" });
+  stubFetch(t, (call) => {
+    const encoder = new TextEncoder();
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"type":"first"}\n\n'));
+          call.init.signal?.addEventListener("abort", () =>
+            controller.error(new DOMException("aborted", "AbortError")),
+          );
+        },
+      }),
+    );
+  });
+
+  const events: string[] = [];
+  await assert.rejects(
+    (async () => {
+      for await (const event of streamMetaResponse({ model: "m", input: "x" }))
+        events.push(event.type);
+    })(),
+    (error: unknown) =>
+      isMetaModelApiTransientError(error) && error.info.kind === "timeout",
+  );
+  assert.deepEqual(events, ["first"]);
+});
+
+test("waits as long as Retry-After asks", async (t) => {
+  configure(t);
+  const calls = stubFetch(t, (_call, index) =>
+    index === 0
+      ? new Response("busy", { status: 503, headers: { "retry-after": "0" } })
+      : Response.json(completed()),
+  );
+
+  const started = Date.now();
+  await createMetaResponse({ model: "m", input: "x" });
+
+  assert.equal(calls.length, 2);
+  assert.ok(Date.now() - started < 400, "no default 500 ms wait");
+});
+
+test("uploads expire after a day, and can be deleted sooner", async (t) => {
+  configure(t);
+  const calls = stubFetch(t, (call) =>
+    call.init.method === "DELETE"
+      ? call.url.endsWith("/gone")
+        ? Response.json({ error: { message: "not found" } }, { status: 404 })
+        : Response.json({ id: "file_9", deleted: true })
+      : Response.json({ id: "file_9" }),
+  );
+
+  await uploadMetaFile({
+    data: new Uint8Array([1]),
+    filename: "clip.mp4",
+    mimeType: "video/mp4",
+  });
+  const form = calls[0]?.init.body as FormData;
+  assert.equal(form.get("expires_after[anchor]"), "created_at");
+  assert.equal(form.get("expires_after[seconds]"), "86400");
+
+  await deleteMetaFile("file_9");
+  assert.equal(calls[1]?.init.method, "DELETE");
+  assert.equal(calls[1]?.url, "https://api.meta.ai/v1/files/file_9");
+  await deleteMetaFile("gone");
+});
+
+test("only a content refusal counts as a refusal", () => {
+  const error = (status: number, message: string, code?: string) =>
+    new MetaModelApiError({
+      kind: "invalid_request",
+      transient: false,
+      status,
+      code,
+      message,
+    });
+
+  assert.equal(
+    isMetaModelRefusal(error(400, "Blocked by our safety system")),
+    true,
+  );
+  assert.equal(
+    isMetaModelRefusal(error(400, "bad", "content_policy_violation")),
+    true,
+  );
+  assert.equal(isMetaModelRefusal(error(400, "unsupported size")), false);
+  assert.equal(isMetaModelRefusal(error(404, "model not found")), false);
+  assert.equal(isMetaModelRefusal(new Error("refused")), false);
 });
