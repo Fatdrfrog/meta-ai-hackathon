@@ -1,0 +1,925 @@
+[
+  {
+    "id": "ga-01",
+    "lang": "en",
+    "text": "What were the most common customer complaints this month?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-02",
+    "lang": "en",
+    "text": "Summarize why customers asked for refunds last week.",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-03",
+    "lang": "en",
+    "text": "Which questions do my managers answer the slowest?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-04",
+    "lang": "en",
+    "text": "Give me three ideas to cut our weekend response time.",
+    "expectedIntent": "general_answer",
+    "notes": "Recommendations in prose, no artifact."
+  },
+  {
+    "id": "ga-05",
+    "lang": "en",
+    "text": "How many chats came from Instagram compared to WhatsApp last month?",
+    "expectedIntent": "general_answer",
+    "notes": "Names channels but asks about own data, not connection."
+  },
+  {
+    "id": "ga-06",
+    "lang": "en",
+    "text": "Write a polite reply to a customer who is angry about a late delivery.",
+    "expectedIntent": "general_answer",
+    "notes": "One-off reply text, not a reusable template."
+  },
+  {
+    "id": "ga-07",
+    "lang": "ru",
+    "text": "Какие вопросы клиенты задают чаще всего?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-08",
+    "lang": "ru",
+    "text": "Почему клиенты отказываются после того, как узнают цену?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-09",
+    "lang": "ru",
+    "text": "Сделай краткую сводку по обращениям за вчера",
+    "expectedIntent": "general_answer",
+    "notes": "Create verb, but the output is a summary."
+  },
+  {
+    "id": "ga-10",
+    "lang": "ru",
+    "text": "Какой менеджер лучше всего закрывает заявки?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-11",
+    "lang": "ru",
+    "text": "Объясни, что значит высокий процент неотвеченных сообщений",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-12",
+    "lang": "kz",
+    "text": "Осы аптада клиенттер қандай сұрақтарды жиі қойды?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-13",
+    "lang": "kz",
+    "text": "Клиенттер неге бағаға наразы?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "ga-14",
+    "lang": "kz",
+    "text": "Кешегі өтінімдер бойынша қысқаша қорытынды жаса",
+    "expectedIntent": "general_answer",
+    "notes": "Kazakh create verb with a summary as output."
+  },
+  {
+    "id": "ga-15",
+    "lang": "kz",
+    "text": "Қай менеджер клиенттерге ең баяу жауап береді?",
+    "expectedIntent": "general_answer"
+  },
+
+  {
+    "id": "pc-01",
+    "lang": "en",
+    "text": "How do I connect my WhatsApp Business number?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-02",
+    "lang": "en",
+    "text": "What can Airi do for my sales team?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-03",
+    "lang": "en",
+    "text": "How do I add a teammate to my workspace?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-04",
+    "lang": "en",
+    "text": "Does airi.chat have a free trial?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-05",
+    "lang": "en",
+    "text": "Can I connect Instagram Direct to Airi?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-06",
+    "lang": "en",
+    "text": "Where do I change the language Airi replies in?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-07",
+    "lang": "ru",
+    "text": "Как подключить WhatsApp к платформе?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-08",
+    "lang": "ru",
+    "text": "Хочу регистрацию через вотсап",
+    "expectedIntent": "product_capability",
+    "notes": "Channel registration, not a customer sign-up form."
+  },
+  {
+    "id": "pc-09",
+    "lang": "ru",
+    "text": "Сколько стоит тариф Pro?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-10",
+    "lang": "ru",
+    "text": "Что умеет Airi?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-11",
+    "lang": "ru",
+    "text": "Как настроить Telegram бота?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-12",
+    "lang": "ru",
+    "text": "Как пригласить сотрудника в рабочее пространство?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-13",
+    "lang": "kz",
+    "text": "WhatsApp-ты қалай қосамын?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-14",
+    "lang": "kz",
+    "text": "Airi не істей алады?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "pc-15",
+    "lang": "kz",
+    "text": "Instagram-ды платформаға қалай байланыстырамын?",
+    "expectedIntent": "product_capability"
+  },
+
+  {
+    "id": "wt-01",
+    "lang": "en",
+    "text": "Create a WhatsApp template reminding customers about tomorrow's appointment",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-02",
+    "lang": "en",
+    "text": "Draft a template for order shipped notifications",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-03",
+    "lang": "en",
+    "text": "Write a marketing template announcing our autumn sale",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-04",
+    "lang": "en",
+    "text": "I need a utility template with the order number and delivery date as variables",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-05",
+    "lang": "en",
+    "text": "Make a template that thanks customers after a purchase with a Leave review button",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-06",
+    "lang": "en",
+    "text": "Can you prepare a WhatsApp template for abandoned carts?",
+    "expectedIntent": "whatsapp_template",
+    "notes": "Create request phrased as a question."
+  },
+  {
+    "id": "wt-07",
+    "lang": "ru",
+    "text": "Создай шаблон WhatsApp с напоминанием о записи",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-08",
+    "lang": "ru",
+    "text": "Напиши шаблон приветствия для новых клиентов",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-09",
+    "lang": "ru",
+    "text": "Подготовь шаблон сообщения о готовности заказа",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-10",
+    "lang": "ru",
+    "text": "Нужен шаблон для уведомления о скидке 20%",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-11",
+    "lang": "ru",
+    "text": "Сделай шаблон с кнопкой «Позвонить менеджеру»",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-12",
+    "lang": "kz",
+    "text": "Ертеңгі жазылу туралы еске салатын WhatsApp шаблонын жаса",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-13",
+    "lang": "kz",
+    "text": "Жаңа клиенттерге арналған сәлемдесу шаблонын дайында",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-14",
+    "lang": "kz",
+    "text": "Тапсырыс жеткізілгені туралы хабарлама шаблонын құр",
+    "expectedIntent": "whatsapp_template"
+  },
+  {
+    "id": "wt-15",
+    "lang": "en",
+    "text": "Create a template for a survey invitation",
+    "expectedIntent": "whatsapp_template",
+    "notes": "Names a survey, but the artifact is the invitation template."
+  },
+
+  {
+    "id": "wf-01",
+    "lang": "en",
+    "text": "Create a lead form that collects name, phone and preferred branch",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-02",
+    "lang": "en",
+    "text": "Build a WhatsApp Flow for booking a table",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-03",
+    "lang": "en",
+    "text": "Make a customer satisfaction survey with three questions",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-04",
+    "lang": "en",
+    "text": "Design a registration form for our yoga classes",
+    "expectedIntent": "whatsapp_flow",
+    "notes": "Registration of the tenant's customers, not of the channel."
+  },
+  {
+    "id": "wf-05",
+    "lang": "en",
+    "text": "I want customers to pick a delivery slot through a WhatsApp form",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-06",
+    "lang": "en",
+    "text": "Draft a questionnaire to qualify new wholesale leads",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-07",
+    "lang": "ru",
+    "text": "Создай анкету для записи на пробное занятие",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-08",
+    "lang": "ru",
+    "text": "Сделай опрос удовлетворённости после доставки",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-09",
+    "lang": "ru",
+    "text": "Составь форму заявки на кредит с полями ИИН и сумма",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-10",
+    "lang": "ru",
+    "text": "Нужна форма, где клиент выбирает услугу и время",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-11",
+    "lang": "ru",
+    "text": "Подготовь флоу для записи к врачу",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-12",
+    "lang": "kz",
+    "text": "Сынақ сабағына жазылуға арналған сауалнама жаса",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-13",
+    "lang": "kz",
+    "text": "Клиенттің аты мен телефонын жинайтын форма құр",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-14",
+    "lang": "kz",
+    "text": "Жеткізуден кейін қанағаттану сауалнамасын дайында",
+    "expectedIntent": "whatsapp_flow"
+  },
+  {
+    "id": "wf-15",
+    "lang": "kz",
+    "text": "Дәрігерге жазылу үшін WhatsApp Flow жаса",
+    "expectedIntent": "whatsapp_flow"
+  },
+
+  {
+    "id": "os-01",
+    "lang": "en",
+    "text": "Scan my WhatsApp conversations and rank the biggest growth opportunities",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-02",
+    "lang": "en",
+    "text": "What should Airi work on next based on my customer chats?",
+    "expectedIntent": "opportunity_scan",
+    "notes": "Names Airi but asks for a ranked plan from own data."
+  },
+  {
+    "id": "os-03",
+    "lang": "en",
+    "text": "Find the top objections in my sales conversations and rank them by impact",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-04",
+    "lang": "en",
+    "text": "Which unmet demand signals are hiding in our Instagram DMs?",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-05",
+    "lang": "en",
+    "text": "Review my channels and tell me where we are losing leads",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-06",
+    "lang": "en",
+    "text": "Diagnose support gaps in last month's conversations and prioritise what to fix first",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-07",
+    "lang": "ru",
+    "text": "Проанализируй переписки и найди возможности для роста продаж",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-08",
+    "lang": "ru",
+    "text": "Где мы теряем клиентов? Покажи главные точки роста",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-09",
+    "lang": "ru",
+    "text": "Найди в диалогах самые частые возражения и отсортируй по важности",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-10",
+    "lang": "ru",
+    "text": "Что Airi стоит взять в работу в первую очередь по нашим клиентам?",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-11",
+    "lang": "ru",
+    "text": "Посмотри наши каналы и составь список упущенных возможностей",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-12",
+    "lang": "kz",
+    "text": "Клиенттермен хат алмасуды талдап, өсу мүмкіндіктерін тап",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-13",
+    "lang": "kz",
+    "text": "Біз клиенттерді қай жерде жоғалтып жатырмыз? Негізгі мүмкіндіктерді көрсет",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-14",
+    "lang": "kz",
+    "text": "Диалогтардағы жиі кездесетін қарсылықтарды маңыздылығы бойынша сұрыпта",
+    "expectedIntent": "opportunity_scan"
+  },
+  {
+    "id": "os-15",
+    "lang": "en",
+    "text": "Rank the opportunities in the files I attached",
+    "expectedIntent": "opportunity_scan"
+  },
+
+  {
+    "id": "mc-01",
+    "lang": "en",
+    "text": "Build a bulk campaign for customers who haven't bought in 90 days",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-02",
+    "lang": "en",
+    "text": "Plan a three-step follow-up sequence for leads who didn't reply",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-03",
+    "lang": "en",
+    "text": "Create a no-show recovery scenario for missed appointments",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-04",
+    "lang": "en",
+    "text": "Draft a Black Friday campaign with WhatsApp messages and an Instagram ad",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-05",
+    "lang": "en",
+    "text": "Set up booking reminders 24 hours and 2 hours before the visit",
+    "expectedIntent": "marketing_campaign",
+    "notes": "Reminder workflow, not a single template."
+  },
+  {
+    "id": "mc-06",
+    "lang": "en",
+    "text": "Make a Canva creative pack and posting plan for our new menu launch",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-07",
+    "lang": "en",
+    "text": "Create a win-back campaign for lapsed VIP customers",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-08",
+    "lang": "ru",
+    "text": "Создай рассылку для клиентов, которые не покупали 3 месяца",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-09",
+    "lang": "ru",
+    "text": "Спланируй кампанию к 8 марта с напоминаниями и скидкой",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-10",
+    "lang": "ru",
+    "text": "Сделай сценарий дожима для лидов, которые не ответили",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-11",
+    "lang": "ru",
+    "text": "Подготовь план рекламной кампании в Instagram на месяц",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-12",
+    "lang": "ru",
+    "text": "Настрой цепочку напоминаний о записи и повторное приглашение для не пришедших",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-13",
+    "lang": "kz",
+    "text": "90 күн сатып алмаған клиенттерге жаппай тарату жаса",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-14",
+    "lang": "kz",
+    "text": "Наурыз мерекесіне жеңілдікпен науқан жоспарла",
+    "expectedIntent": "marketing_campaign"
+  },
+  {
+    "id": "mc-15",
+    "lang": "kz",
+    "text": "Жауап бермеген лидтерге үш қадамды еске салу тізбегін құр",
+    "expectedIntent": "marketing_campaign"
+  },
+
+  {
+    "id": "ig-01",
+    "lang": "en",
+    "text": "Generate an image of a cozy coffee shop interior for a post",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-02",
+    "lang": "en",
+    "text": "Create a banner with our autumn discount, 1080x1080",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-03",
+    "lang": "en",
+    "text": "Draw a product photo of white sneakers on a pastel background",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-04",
+    "lang": "en",
+    "text": "Make a picture of a smiling dentist for our profile",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-05",
+    "lang": "en",
+    "text": "Design a visual for the new pizza combo",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-06",
+    "lang": "en",
+    "text": "Give me an illustration of a delivery courier on a scooter",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-07",
+    "lang": "ru",
+    "text": "Сгенерируй картинку с осенней скидкой для сторис",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-08",
+    "lang": "ru",
+    "text": "Нарисуй баннер для акции «2 по цене 1»",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-09",
+    "lang": "ru",
+    "text": "Сделай изображение торта на день рождения в стиле минимализм",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-10",
+    "lang": "ru",
+    "text": "Создай фото букета пионов на белом фоне",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-11",
+    "lang": "ru",
+    "text": "Нарисуй логотип кофейни в тёплых тонах",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-12",
+    "lang": "kz",
+    "text": "Жаңа мәзірге арналған сурет жаса",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-13",
+    "lang": "kz",
+    "text": "Күзгі жеңілдік туралы баннер сал",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-14",
+    "lang": "kz",
+    "text": "Ақ фондағы гүл шоғының суретін генерацияла",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "ig-15",
+    "lang": "ru",
+    "text": "Нужна обложка для поста про новое меню",
+    "expectedIntent": "image_generation"
+  },
+
+  {
+    "id": "ma-01",
+    "lang": "en",
+    "text": "@meta show spend by campaign for the last 7 days",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-02",
+    "lang": "en",
+    "text": "@meta list my ad accounts",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-03",
+    "lang": "en",
+    "text": "@meta pause the campaign with the highest CPA",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-04",
+    "lang": "en",
+    "text": "How did my Facebook ad campaigns perform yesterday?",
+    "expectedIntent": "meta_ads_mcp",
+    "notes": "Live Meta Ads data without the @meta mention."
+  },
+  {
+    "id": "ma-05",
+    "lang": "en",
+    "text": "Show me the CTR of my Instagram ads this week from Ads Manager",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-06",
+    "lang": "en",
+    "text": "Increase the daily budget of the Spring Sale ad set to $50",
+    "expectedIntent": "meta_ads_mcp",
+    "notes": "Live write action; must end in a confirmation, not a plan."
+  },
+  {
+    "id": "ma-07",
+    "lang": "ru",
+    "text": "@meta сколько мы потратили на рекламу за месяц?",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-08",
+    "lang": "ru",
+    "text": "@meta покажи кампании с CTR ниже 1%",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-09",
+    "lang": "ru",
+    "text": "Покажи статистику моих рекламных кампаний в Facebook за неделю",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-10",
+    "lang": "ru",
+    "text": "Останови объявление с самой высокой ценой за лид в Ads Manager",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-11",
+    "lang": "ru",
+    "text": "@meta сравни расходы с прошлым месяцем",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-12",
+    "lang": "kz",
+    "text": "@meta соңғы 7 күндегі жарнама шығындарын көрсет",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-13",
+    "lang": "kz",
+    "text": "@meta жарнамалық аккаунттарымның тізімін шығар",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-14",
+    "lang": "kz",
+    "text": "Facebook жарнамаларымның кешегі нәтижесін көрсет",
+    "expectedIntent": "meta_ads_mcp"
+  },
+  {
+    "id": "ma-15",
+    "lang": "kz",
+    "text": "@meta ең қымбат жарнаманы тоқтат",
+    "expectedIntent": "meta_ads_mcp"
+  },
+
+  {
+    "id": "tr-01",
+    "lang": "en",
+    "text": "How do WhatsApp templates get approved by Meta?",
+    "expectedIntent": "product_capability",
+    "notes": "Question about templates, not a create request."
+  },
+  {
+    "id": "tr-02",
+    "lang": "en",
+    "text": "What is the difference between a WhatsApp template and a Flow?",
+    "expectedIntent": "product_capability",
+    "notes": "Names both builders; asks for an explanation."
+  },
+  {
+    "id": "tr-03",
+    "lang": "en",
+    "text": "How do I submit a template for approval in Airi?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "tr-04",
+    "lang": "en",
+    "text": "Can you create a template for order confirmations?",
+    "expectedIntent": "whatsapp_template",
+    "notes": "Polite create request phrased as a question."
+  },
+  {
+    "id": "tr-05",
+    "lang": "en",
+    "text": "How do I create a WhatsApp Flow in airi.chat?",
+    "expectedIntent": "product_capability",
+    "notes": "Create wording inside a how-to question."
+  },
+  {
+    "id": "tr-06",
+    "lang": "ru",
+    "text": "Как создать шаблон в WhatsApp?",
+    "expectedIntent": "product_capability",
+    "notes": "Create wording inside a how-to question."
+  },
+  {
+    "id": "tr-07",
+    "lang": "en",
+    "text": "Prepare a summary of the survey answers",
+    "expectedIntent": "general_answer",
+    "notes": "Create verb whose object is a summary, not the survey."
+  },
+  {
+    "id": "tr-08",
+    "lang": "ru",
+    "text": "Сделай отчёт по шаблонам, которые чаще всего читают",
+    "expectedIntent": "general_answer",
+    "notes": "Report about templates, not a template."
+  },
+  {
+    "id": "tr-09",
+    "lang": "en",
+    "text": "Make an image for the template header",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "tr-10",
+    "lang": "en",
+    "text": "Create a campaign that sends our new template to all VIP customers",
+    "expectedIntent": "marketing_campaign",
+    "notes": "Template named inside a broader campaign."
+  },
+  {
+    "id": "tr-11",
+    "lang": "en",
+    "text": "Write ad copy for a Facebook campaign about our new menu",
+    "expectedIntent": "marketing_campaign",
+    "notes": "Planning copy, not live Meta Ads tools."
+  },
+  {
+    "id": "tr-12",
+    "lang": "ru",
+    "text": "Подготовь рекламную кампанию в Facebook для новой коллекции, запускать пока не надо",
+    "expectedIntent": "marketing_campaign",
+    "notes": "Plan only; no live Meta Ads action."
+  },
+  {
+    "id": "tr-13",
+    "lang": "en",
+    "text": "I want a lead form for my customers to sign up via WhatsApp",
+    "expectedIntent": "whatsapp_flow",
+    "notes": "Customer sign-up form, not channel registration."
+  },
+  {
+    "id": "tr-14",
+    "lang": "en",
+    "text": "How many people filled in our registration form last week?",
+    "expectedIntent": "general_answer",
+    "notes": "Question about form results."
+  },
+  {
+    "id": "tr-15",
+    "lang": "ru",
+    "text": "Сколько клиентов заполнили анкету на этой неделе?",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "tr-16",
+    "lang": "en",
+    "text": "Show me the results of the satisfaction survey",
+    "expectedIntent": "general_answer"
+  },
+  {
+    "id": "tr-17",
+    "lang": "en",
+    "text": "Make a picture for our Instagram campaign",
+    "expectedIntent": "image_generation",
+    "notes": "One image for a campaign, not the campaign."
+  },
+  {
+    "id": "tr-18",
+    "lang": "en",
+    "text": "@meta how do I connect my ad account?",
+    "expectedIntent": "meta_ads_mcp",
+    "notes": "@meta wins over platform how-to."
+  },
+  {
+    "id": "tr-19",
+    "lang": "en",
+    "text": "How do I connect Meta Ads to Airi?",
+    "expectedIntent": "product_capability",
+    "notes": "Connection how-to without @meta."
+  },
+  {
+    "id": "tr-20",
+    "lang": "ru",
+    "text": "Что такое шаблон WhatsApp и зачем он нужен?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "tr-21",
+    "lang": "ru",
+    "text": "Покажи, какие шаблоны у нас уже одобрены",
+    "expectedIntent": "general_answer",
+    "notes": "Own data about templates, not a create request."
+  },
+  {
+    "id": "tr-22",
+    "lang": "kz",
+    "text": "WhatsApp шаблоны деген не?",
+    "expectedIntent": "product_capability"
+  },
+  {
+    "id": "tr-23",
+    "lang": "kz",
+    "text": "Шаблонды қалай жасаймын?",
+    "expectedIntent": "product_capability",
+    "notes": "Kazakh how-to with a create verb."
+  },
+  {
+    "id": "tr-24",
+    "lang": "ru",
+    "text": "Добавь в шаблон WhatsApp кнопку «Записаться»",
+    "expectedIntent": "whatsapp_template",
+    "notes": "Known router gap: the platform how-to rule reads «добав» next to WhatsApp as a connection request."
+  },
+  {
+    "id": "tr-25",
+    "lang": "en",
+    "text": "Build a booking flow with reminders and a no-show follow-up",
+    "expectedIntent": "marketing_campaign",
+    "notes": "Known router gap: the create-Flow rule fires although reminders and no-show recovery make it a campaign workflow."
+  },
+  {
+    "id": "tr-26",
+    "lang": "ru",
+    "text": "Нарисуй картинку для шапки шаблона",
+    "expectedIntent": "image_generation"
+  },
+  {
+    "id": "tr-27",
+    "lang": "kz",
+    "text": "Жарнама науқанына арналған мәтін жазып бер, іске қоспа",
+    "expectedIntent": "marketing_campaign",
+    "notes": "Copy for an ad campaign, explicitly not launched."
+  }
+]

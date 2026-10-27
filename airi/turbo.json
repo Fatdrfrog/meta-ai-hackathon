@@ -1,0 +1,119 @@
+{
+  "$schema": "https://v2-9-1.turborepo.dev/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NEXT_PUBLIC_*",
+        "SUPABASE_*",
+        "MONGODB_*",
+        "TELEGRAM_*",
+        "TIKTOK_*",
+        "REALTIME_*",
+        "OPENAI_*",
+        "POSTMARK_*",
+        "UPSTASH_*",
+        "STRIPE_*",
+        "NODE_ENV",
+        "CRON_SECRET",
+        "ENCRYPTION_SECRET",
+        "MONGODB_URI",
+        "GROK_API_KEY",
+        "WHATSAPP_*",
+        "META_*",
+        "INTERCOM_*",
+        "AIRI_*",
+        "GOOGLE_*",
+        "GCP_PROJECT_NUMBER",
+        "GCP_SERVICE_ACCOUNT_EMAIL",
+        "GCP_WORKLOAD_IDENTITY_POOL_ID",
+        "GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID",
+        "CONVERSATION_CLASSIFICATION_*",
+        "POSTGRES_*",
+        "INSTAGRAM_VERIFY_TOKEN",
+        "COHERE_API_*",
+        "NVIDIA_NIM_*",
+        "INSTAGRAM_APP_SECRET",
+        "ELEVENLABS_*",
+        "EMAIL_CAMPAIGNS_V1",
+        "VERTEX_*",
+        "ANTHROPIC_*",
+        "AI_CHAT_*",
+        "TEMPORAL_*",
+        "REDIS_URL",
+        "PUSHER_APP_ID",
+        "PUSHER_SECRET",
+        "QSTASH_URL",
+        "QSTASH_TOKEN",
+        "QSTASH_CURRENT_SIGNING_KEY",
+        "QSTASH_NEXT_SIGNING_KEY",
+        "CLASSIFICATION_PROVIDER",
+        "LANGSMITH_TRACING",
+        "LANGSMITH_ENDPOINT",
+        "LANGSMITH_API_KEY",
+        "LANGSMITH_PROJECT",
+        "CANVA_CLIENT_ID",
+        "CANVA_CLIENT_SECRET",
+        "CANVA_REDIRECT_URI",
+        "HIGGSFIELD_API_KEY",
+        "HIGGSFIELD_API_SECRET",
+        "HIGGSFIELD_WEBHOOK_SECRET",
+        "HIGGSFIELD_IMAGE_MODEL",
+        "HIGGSFIELD_IMAGE_TO_VIDEO_MODEL",
+        "LIVEKIT_URL",
+        "LIVEKIT_API_KEY",
+        "LIVEKIT_API_SECRET",
+        "INSIGHTS_TRIGGER_ALLOWED_COMPANY_IDS",
+        "GCP_AI_GATEWAY_URL",
+        "GCP_MEDIA_API_URL",
+        "GCS_*",
+        "ALIBABA_*",
+        "QWEN_IMAGE_MODEL",
+        "LLM_ANALYTICS_*",
+        "LLM_WHATSAPP_FEEDBACK_PROMPT_ENABLED",
+        "LLM_WHATSAPP_FEEDBACK_TESTERS",
+        "POSTHOG_*"
+      ]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "@icecore/widget#build": {
+      "outputs": ["dist/**"],
+      "cache": true
+    },
+    "@icecore/airi-runtime#check-types": {
+      "dependsOn": ["^check-types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/apps/web/src/**"]
+    },
+    "@icecore/airi-runtime#test": {
+      "dependsOn": ["^test"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/apps/web/src/**"],
+      "outputs": []
+    },
+    "@icecore/temporal-worker#check-types": {
+      "dependsOn": ["^check-types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/apps/web/src/**"]
+    },
+    "@icecore/temporal-worker#test": {
+      "dependsOn": ["^test"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/apps/web/src/**"],
+      "outputs": []
+    }
+  }
+}

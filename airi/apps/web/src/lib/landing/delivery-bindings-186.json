@@ -1,0 +1,5837 @@
+[
+  {
+    "catalogId": "seasonal-offer",
+    "locale": "ru",
+    "templateId": "1069669322718759",
+    "templateName": "airi_demo_seasonal_offer_ru_v1",
+    "language": "ru",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "Terra"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "Terra"
+    }
+  },
+  {
+    "catalogId": "abandoned-cart",
+    "locale": "ru",
+    "templateId": "28911318911818396",
+    "templateName": "airi_demo_abandoned_cart_ru_v1",
+    "language": "ru",
+    "values": {
+      "1": "Алекс",
+      "2": "Sora"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "Sora"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:abandoned-cart:ru:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:abandoned-cart:ru:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "repeat-purchase",
+    "locale": "ru",
+    "templateId": "1156790116844561",
+    "templateName": "airi_demo_repeat_purchase_ru_v1",
+    "language": "ru",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "Mora"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "Mora"
+    }
+  },
+  {
+    "catalogId": "welcome",
+    "locale": "ru",
+    "templateId": "953052697861818",
+    "templateName": "airi_demo_welcome_ru_v1",
+    "language": "ru",
+    "values": {
+      "1": "Алекс"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:welcome:ru:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:welcome:ru:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "order-confirmation",
+    "locale": "ru",
+    "templateId": "1117238717913610",
+    "templateName": "airi_demo_order_confirmation_ru_v1",
+    "language": "ru",
+    "values": {
+      "1": "Алекс",
+      "2": "1042"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "1042"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:order-confirmation:ru:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:order-confirmation:ru:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "shipping-update",
+    "locale": "ru",
+    "templateId": "1080695561452299",
+    "templateName": "airi_demo_shipping_update_ru_v1",
+    "language": "ru",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c4d7d947a7a07d289f81303a81ed5e9118ea45f382bb6b3ad86a453ee968e39d-shipping-update.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "1042"
+          },
+          {
+            "type": "text",
+            "text": "четверг"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "1042",
+      "3": "четверг"
+    }
+  },
+  {
+    "catalogId": "appointment-reminder",
+    "locale": "ru",
+    "templateId": "1618625143251977",
+    "templateName": "airi_demo_appointment_reminder_ru_v1",
+    "language": "ru",
+    "values": {
+      "1": "Алекс",
+      "2": "завтра",
+      "3": "14:00"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "завтра"
+          },
+          {
+            "type": "text",
+            "text": "14:00"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:appointment-reminder:ru:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:appointment-reminder:ru:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "course-enrollment",
+    "locale": "ru",
+    "templateId": "2154956458792840",
+    "templateName": "airi_demo_course_enrollment_ru_v1",
+    "language": "ru",
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_course_demo_ru_v1"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "автоматизацию WhatsApp"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "автоматизацию WhatsApp"
+    }
+  },
+  {
+    "catalogId": "payment-reminder",
+    "locale": "ru",
+    "templateId": "1080575861262874",
+    "templateName": "airi_demo_payment_reminder_ru_v1",
+    "language": "ru",
+    "values": {
+      "1": "Алекс",
+      "2": "204",
+      "3": "пятницы"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "204"
+          },
+          {
+            "type": "text",
+            "text": "пятницы"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:payment-reminder:ru:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:payment-reminder:ru:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "feedback",
+    "locale": "ru",
+    "templateId": "1572445984083875",
+    "templateName": "airi_demo_feedback_ru_v1",
+    "language": "ru",
+    "values": {
+      "1": "Алекс",
+      "2": "наш шоурум"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "наш шоурум"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:feedback:ru:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:feedback:ru:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "back-in-stock",
+    "locale": "ru",
+    "templateId": "3975455925963692",
+    "templateName": "airi_demo_back_in_stock_ru_v1",
+    "language": "ru",
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс"
+    }
+  },
+  {
+    "catalogId": "birthday-offer",
+    "locale": "ru",
+    "templateId": "1424525396312507",
+    "templateName": "airi_demo_birthday_offer_ru_v1",
+    "language": "ru",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "BIRTHDAY"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "BIRTHDAY"
+    }
+  },
+  {
+    "catalogId": "enquiry-follow-up",
+    "locale": "ru",
+    "templateId": "1399712955575861",
+    "templateName": "airi_demo_enquiry_follow_up_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей",
+      "service_name": "решение для общения с клиентами"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          },
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "решение для общения с клиентами"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "discovery-recap",
+    "locale": "ru",
+    "templateId": "2348944425931498",
+    "templateName": "airi_demo_discovery_recap_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "quote-ready",
+    "locale": "ru",
+    "templateId": "3362381620633615",
+    "templateName": "airi_demo_quote_ready_ru_v1",
+    "language": "ru",
+    "values": {
+      "quote_reference": "Q-204",
+      "service_name": "консультация по интерьеру и подбор товаров",
+      "quoted_total": "180 долларов США"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/7afca6a7b0b885cf9aec426b91f86587b0a4f7eabf92371e6a8aefe822abae45-quote-ready-ru.pdf",
+              "filename": "quote-ready-ru.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "quote_reference",
+            "text": "Q-204"
+          },
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "консультация по интерьеру и подбор товаров"
+          },
+          {
+            "type": "text",
+            "parameter_name": "quoted_total",
+            "text": "180 долларов США"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "quote-question",
+    "locale": "ru",
+    "templateId": "1353137710008307",
+    "templateName": "airi_demo_quote_question_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей",
+      "quote_reference": "Q-204"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          },
+          {
+            "type": "text",
+            "parameter_name": "quote_reference",
+            "text": "Q-204"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "proposal-comparison",
+    "locale": "ru",
+    "templateId": "2644929985976169",
+    "templateName": "airi_demo_proposal_comparison_ru_v1",
+    "language": "ru",
+    "values": {}
+  },
+  {
+    "catalogId": "decision-check-in",
+    "locale": "ru",
+    "templateId": "1732057444577325",
+    "templateName": "airi_demo_decision_check_in_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей",
+      "project_name": "пилотный проект переписки с клиентами"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          },
+          {
+            "type": "text",
+            "parameter_name": "project_name",
+            "text": "пилотный проект переписки с клиентами"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "showroom-visit-follow-up",
+    "locale": "ru",
+    "templateId": "1976088456415537",
+    "templateName": "airi_demo_showroom_visit_follow_up_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей",
+      "product_name": "Ваза Terra"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Ваза Terra"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "home-service-quote",
+    "locale": "ru",
+    "templateId": "1442744324741611",
+    "templateName": "airi_demo_home_service_quote_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_home_service_quote_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "appointment-booking",
+    "locale": "ru",
+    "templateId": "1810382463325931",
+    "templateName": "airi_demo_appointment_booking_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_appointment_booking_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "restaurant-table",
+    "locale": "ru",
+    "templateId": "1138959475364365",
+    "templateName": "airi_demo_restaurant_table_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_restaurant_table_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "travel-date-range",
+    "locale": "ru",
+    "templateId": "1079482588405132",
+    "templateName": "airi_demo_travel_date_range_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_travel_date_range_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "event-registration",
+    "locale": "ru",
+    "templateId": "1608185984181539",
+    "templateName": "airi_demo_event_registration_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_event_registration_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "appointment-rescheduled",
+    "locale": "ru",
+    "templateId": "1064649003055293",
+    "templateName": "airi_demo_appointment_rescheduled_ru_v1",
+    "language": "ru",
+    "values": {
+      "appointment_reference": "DEMO-A-318",
+      "previous_time": "14 октября 2026, 14:30 UTC",
+      "appointment_time": "15 октября 2026, 14:30 UTC"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "appointment_reference",
+            "text": "DEMO-A-318"
+          },
+          {
+            "type": "text",
+            "parameter_name": "previous_time",
+            "text": "14 октября 2026, 14:30 UTC"
+          },
+          {
+            "type": "text",
+            "parameter_name": "appointment_time",
+            "text": "15 октября 2026, 14:30 UTC"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "visit-preparation",
+    "locale": "ru",
+    "templateId": "1139387501938781",
+    "templateName": "airi_demo_visit_preparation_ru_v1",
+    "language": "ru",
+    "values": {
+      "service_name": "консультацию по оформлению комнаты"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "консультацию по оформлению комнаты"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "delivery-preferences",
+    "locale": "ru",
+    "templateId": "1087417450663400",
+    "templateName": "airi_demo_delivery_preferences_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_delivery_preferences_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "return-request",
+    "locale": "ru",
+    "templateId": "2655430698241703",
+    "templateName": "airi_demo_return_request_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_return_request_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "pickup-ready",
+    "locale": "ru",
+    "templateId": "1744660349925289",
+    "templateName": "airi_demo_pickup_ready_ru_v1",
+    "language": "ru",
+    "values": {
+      "order_reference": "DEMO-O-426"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "location",
+            "location": {
+              "latitude": 48.8584,
+              "longitude": 2.2945,
+              "name": "Пример: Эйфелева башня",
+              "address": "Авеню Анатоль Франс, 5, 75007 Париж, Франция"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "order_reference",
+            "text": "DEMO-O-426"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "repair-progress",
+    "locale": "ru",
+    "templateId": "2048147402567964",
+    "templateName": "airi_demo_repair_progress_ru_v1",
+    "language": "ru",
+    "values": {
+      "case_reference": "DEMO-R-182",
+      "product_name": "настольная лампа"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "case_reference",
+            "text": "DEMO-R-182"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "настольная лампа"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-completed",
+    "locale": "ru",
+    "templateId": "1123801710588174",
+    "templateName": "airi_demo_service_completed_ru_v1",
+    "language": "ru",
+    "values": {
+      "service_reference": "S-1042"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_reference",
+            "text": "S-1042"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "refund-status",
+    "locale": "ru",
+    "templateId": "28964968573100082",
+    "templateName": "airi_demo_refund_status_ru_v1",
+    "language": "ru",
+    "values": {
+      "refund_reference": "DEMO-RF-091",
+      "refund_amount": "24 доллара США"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "refund_reference",
+            "text": "DEMO-RF-091"
+          },
+          {
+            "type": "text",
+            "parameter_name": "refund_amount",
+            "text": "24 доллара США"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "subscription-renewal",
+    "locale": "ru",
+    "templateId": "1118242780897993",
+    "templateName": "airi_demo_subscription_renewal_ru_v1",
+    "language": "ru",
+    "values": {
+      "plan_name": "Studio на месяц",
+      "renewal_date": "31 октября 2026"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "plan_name",
+            "text": "Studio на месяц"
+          },
+          {
+            "type": "text",
+            "parameter_name": "renewal_date",
+            "text": "31 октября 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-summary",
+    "locale": "ru",
+    "templateId": "1834968824350222",
+    "templateName": "airi_demo_service_summary_ru_v1",
+    "language": "ru",
+    "values": {
+      "service_reference": "S-1042"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/90346214a162c17c0621938446ab013c50cbd77e5955c7a9493b8a49967a7f8b-service-summary-ru.pdf",
+              "filename": "service-summary-ru.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_reference",
+            "text": "S-1042"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-finder",
+    "locale": "ru",
+    "templateId": "1845519269961742",
+    "templateName": "airi_demo_product_finder_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_product_finder_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-comparison",
+    "locale": "ru",
+    "templateId": "1444004101016434",
+    "templateName": "airi_demo_product_comparison_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "room-styling",
+    "locale": "ru",
+    "templateId": "28654579067531994",
+    "templateName": "airi_demo_room_styling_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-care",
+    "locale": "ru",
+    "templateId": "1893132001648803",
+    "templateName": "airi_demo_product_care_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "video",
+            "video": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/b29b550b301ca925fa8bff233c2e4986feac9606fb95b12c628339f218641c91-product-care-ru.mp4"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "bundle-idea",
+    "locale": "ru",
+    "templateId": "3331850217000090",
+    "templateName": "airi_demo_bundle_idea_ru_v1",
+    "language": "ru",
+    "values": {
+      "product_name": "Корзина Mora"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Корзина Mora"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "sizing-guide",
+    "locale": "ru",
+    "templateId": "3130501290614843",
+    "templateName": "airi_demo_sizing_guide_ru_v1",
+    "language": "ru",
+    "values": {
+      "small_dimensions": "24 × 18 см",
+      "large_dimensions": "32 × 24 см"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "small_dimensions",
+            "text": "24 × 18 см"
+          },
+          {
+            "type": "text",
+            "parameter_name": "large_dimensions",
+            "text": "32 × 24 см"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "gift-selection",
+    "locale": "ru",
+    "templateId": "1078466758441219",
+    "templateName": "airi_demo_gift_selection_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "onboarding-guide",
+    "locale": "ru",
+    "templateId": "1635147071319183",
+    "templateName": "airi_demo_onboarding_guide_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/caa676705b548dd113955290218fe27f1119300cf92fd7ac2b9992ecc290959f-onboarding-guide-ru.pdf",
+              "filename": "onboarding-guide-ru.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "event-agenda",
+    "locale": "ru",
+    "templateId": "1089352670728251",
+    "templateName": "airi_demo_event_agenda_ru_v1",
+    "language": "ru",
+    "values": {
+      "event_name": "Практикум по общению с клиентами",
+      "event_time": "10:00–11:00"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/626923b93bc8c4bc3e0c70d6c8979bdde972579c93be0d39adbe8c65ea06efc9-event-agenda-ru.pdf",
+              "filename": "event-agenda-ru.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "event_name",
+            "text": "Практикум по общению с клиентами"
+          },
+          {
+            "type": "text",
+            "parameter_name": "event_time",
+            "text": "10:00–11:00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "first-week-checklist",
+    "locale": "ru",
+    "templateId": "4707249122880200",
+    "templateName": "airi_demo_first_week_checklist_ru_v1",
+    "language": "ru",
+    "values": {
+      "course_name": "Основы общения с клиентами"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "course_name",
+            "text": "Основы общения с клиентами"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "account-setup-checklist",
+    "locale": "ru",
+    "templateId": "2083641772320385",
+    "templateName": "airi_demo_account_setup_checklist_ru_v1",
+    "language": "ru",
+    "values": {}
+  },
+  {
+    "catalogId": "subscription-change-summary",
+    "locale": "ru",
+    "templateId": "2500380190430645",
+    "templateName": "airi_demo_subscription_change_summary_ru_v1",
+    "language": "ru",
+    "values": {
+      "previous_plan": "Studio на месяц",
+      "new_plan": "Studio на год",
+      "effective_date": "1 ноября 2026"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "previous_plan",
+            "text": "Studio на месяц"
+          },
+          {
+            "type": "text",
+            "parameter_name": "new_plan",
+            "text": "Studio на год"
+          },
+          {
+            "type": "text",
+            "parameter_name": "effective_date",
+            "text": "1 ноября 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "privacy-request-acknowledgement",
+    "locale": "ru",
+    "templateId": "1973274487359774",
+    "templateName": "airi_demo_privacy_request_acknowledgement_ru_v1",
+    "language": "ru",
+    "values": {
+      "request_reference": "DEMO-PR-014"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "request_reference",
+            "text": "DEMO-PR-014"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "contact-airi",
+    "locale": "ru",
+    "templateId": "1071034622232728",
+    "templateName": "airi_demo_contact_airi_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_contact_airi_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "preference-center",
+    "locale": "ru",
+    "templateId": "1091594423730705",
+    "templateName": "airi_demo_preference_center_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_preference_center_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "feedback-survey",
+    "locale": "ru",
+    "templateId": "2814501105600983",
+    "templateName": "airi_demo_feedback_survey_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_feedback_survey_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "company-contact",
+    "locale": "ru",
+    "templateId": "1400091102298777",
+    "templateName": "airi_demo_company_contact_ru_v1",
+    "language": "ru",
+    "values": {}
+  },
+  {
+    "catalogId": "branch-directory",
+    "locale": "ru",
+    "templateId": "1391597683133007",
+    "templateName": "airi_demo_branch_directory_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "location",
+            "location": {
+              "latitude": -33.8568,
+              "longitude": 151.2153,
+              "name": "Пример: Сиднейский оперный театр",
+              "address": "Беннелонг-Пойнт, Сидней, Новый Южный Уэльс 2000, Австралия"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-hours",
+    "locale": "ru",
+    "templateId": "1510007990889046",
+    "templateName": "airi_demo_service_hours_ru_v1",
+    "language": "ru",
+    "values": {
+      "weekday_hours": "09:00–18:00",
+      "saturday_hours": "10:00–14:00"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "weekday_hours",
+            "text": "09:00–18:00"
+          },
+          {
+            "type": "text",
+            "parameter_name": "saturday_hours",
+            "text": "10:00–14:00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "human-handoff",
+    "locale": "ru",
+    "templateId": "3175937819261365",
+    "templateName": "airi_demo_human_handoff_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "learning-path",
+    "locale": "ru",
+    "templateId": "1409567397408133",
+    "templateName": "airi_demo_learning_path_ru_v1",
+    "language": "ru",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_learning_path_ru_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "lesson-recap",
+    "locale": "ru",
+    "templateId": "1373398154562652",
+    "templateName": "airi_demo_lesson_recap_ru_v1",
+    "language": "ru",
+    "values": {
+      "lesson_title": "Понятные ответы клиентам"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "lesson_title",
+            "text": "Понятные ответы клиентам"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "practice-challenge",
+    "locale": "ru",
+    "templateId": "1134892652308588",
+    "templateName": "airi_demo_practice_challenge_ru_v1",
+    "language": "ru",
+    "values": {}
+  },
+  {
+    "catalogId": "study-plan",
+    "locale": "ru",
+    "templateId": "1102304539500890",
+    "templateName": "airi_demo_study_plan_ru_v1",
+    "language": "ru",
+    "values": {
+      "learning_goal": "Понятное общение с клиентами"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "learning_goal",
+            "text": "Понятное общение с клиентами"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "webinar-follow-up",
+    "locale": "ru",
+    "templateId": "1935456800765553",
+    "templateName": "airi_demo_webinar_follow_up_ru_v1",
+    "language": "ru",
+    "values": {
+      "webinar_title": "Как улучшить общение с клиентами"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "webinar_title",
+            "text": "Как улучшить общение с клиентами"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "loyalty-milestone",
+    "locale": "ru",
+    "templateId": "1636015991227938",
+    "templateName": "airi_demo_loyalty_milestone_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей",
+      "milestone_count": "5"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          },
+          {
+            "type": "text",
+            "parameter_name": "milestone_count",
+            "text": "5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "care-check-in",
+    "locale": "ru",
+    "templateId": "2337541186784194",
+    "templateName": "airi_demo_care_check_in_ru_v1",
+    "language": "ru",
+    "values": {
+      "customer_name": "Алексей",
+      "product_name": "Корзина Mora"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алексей"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Корзина Mora"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "community-invitation",
+    "locale": "ru",
+    "templateId": "2041051893187073",
+    "templateName": "airi_demo_community_invitation_ru_v1",
+    "language": "ru",
+    "values": {
+      "event_name": "Уютный уголок"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "event_name",
+            "text": "Уютный уголок"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "seasonal-offer",
+    "locale": "en",
+    "templateId": "1852884399402417",
+    "templateName": "airi_demo_seasonal_offer_en_v1",
+    "language": "en",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "Terra"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Alex",
+      "2": "Terra"
+    }
+  },
+  {
+    "catalogId": "abandoned-cart",
+    "locale": "en",
+    "templateId": "28476872645296754",
+    "templateName": "airi_demo_abandoned_cart_en_v1",
+    "language": "en",
+    "values": {
+      "1": "Alex",
+      "2": "Sora"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "Sora"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:abandoned-cart:en:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:abandoned-cart:en:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "repeat-purchase",
+    "locale": "en",
+    "templateId": "1843225683770723",
+    "templateName": "airi_demo_repeat_purchase_en_v1",
+    "language": "en",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "Mora"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Alex",
+      "2": "Mora"
+    }
+  },
+  {
+    "catalogId": "welcome",
+    "locale": "en",
+    "templateId": "2091027081778421",
+    "templateName": "airi_demo_welcome_en_v1",
+    "language": "en",
+    "values": {
+      "1": "Alex"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:welcome:en:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:welcome:en:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "order-confirmation",
+    "locale": "en",
+    "templateId": "2516504815503341",
+    "templateName": "airi_demo_order_confirmation_en_v1",
+    "language": "en",
+    "values": {
+      "1": "Alex",
+      "2": "1042"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "1042"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:order-confirmation:en:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:order-confirmation:en:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "shipping-update",
+    "locale": "en",
+    "templateId": "2103933416892480",
+    "templateName": "airi_demo_shipping_update_en_v1",
+    "language": "en",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c4d7d947a7a07d289f81303a81ed5e9118ea45f382bb6b3ad86a453ee968e39d-shipping-update.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "1042"
+          },
+          {
+            "type": "text",
+            "text": "Thursday"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Alex",
+      "2": "1042",
+      "3": "Thursday"
+    }
+  },
+  {
+    "catalogId": "appointment-reminder",
+    "locale": "en",
+    "templateId": "29080719151546507",
+    "templateName": "airi_demo_appointment_reminder_en_v1",
+    "language": "en",
+    "values": {
+      "1": "Alex",
+      "2": "tomorrow",
+      "3": "14:00"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "tomorrow"
+          },
+          {
+            "type": "text",
+            "text": "14:00"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:appointment-reminder:en:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:appointment-reminder:en:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "course-enrollment",
+    "locale": "en",
+    "templateId": "2610425079435467",
+    "templateName": "airi_demo_course_enrollment_en_v1",
+    "language": "en",
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_course_demo_en_v1"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "WhatsApp automation"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Alex",
+      "2": "WhatsApp automation"
+    }
+  },
+  {
+    "catalogId": "payment-reminder",
+    "locale": "en",
+    "templateId": "1503379968599496",
+    "templateName": "airi_demo_payment_reminder_en_v1",
+    "language": "en",
+    "values": {
+      "1": "Alex",
+      "2": "204",
+      "3": "Friday"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "204"
+          },
+          {
+            "type": "text",
+            "text": "Friday"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:payment-reminder:en:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:payment-reminder:en:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "feedback",
+    "locale": "en",
+    "templateId": "1783203072877414",
+    "templateName": "airi_demo_feedback_en_v1",
+    "language": "en",
+    "values": {
+      "1": "Alex",
+      "2": "our showroom"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "our showroom"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:feedback:en:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:feedback:en:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "back-in-stock",
+    "locale": "en",
+    "templateId": "1133829685747378",
+    "templateName": "airi_demo_back_in_stock_en_v1",
+    "language": "en",
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Alex"
+    }
+  },
+  {
+    "catalogId": "birthday-offer",
+    "locale": "en",
+    "templateId": "3876559689153203",
+    "templateName": "airi_demo_birthday_offer_en_v1",
+    "language": "en",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "text": "BIRTHDAY"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Alex",
+      "2": "BIRTHDAY"
+    }
+  },
+  {
+    "catalogId": "enquiry-follow-up",
+    "locale": "en",
+    "templateId": "27808639538810397",
+    "templateName": "airi_demo_enquiry_follow_up_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex",
+      "service_name": "a customer messaging setup"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "a customer messaging setup"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "discovery-recap",
+    "locale": "en",
+    "templateId": "1128097906443016",
+    "templateName": "airi_demo_discovery_recap_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "quote-ready",
+    "locale": "en",
+    "templateId": "2199912710562609",
+    "templateName": "airi_demo_quote_ready_en_v1",
+    "language": "en",
+    "values": {
+      "quote_reference": "Q-204",
+      "service_name": "home styling consultation and product shortlist",
+      "quoted_total": "180 USD"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/4dcbaa81d6c70f3293c7c54cc29d93409729244d3a150fdf90bdc4263f4d8a7b-quote-ready.pdf",
+              "filename": "quote-ready.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "quote_reference",
+            "text": "Q-204"
+          },
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "home styling consultation and product shortlist"
+          },
+          {
+            "type": "text",
+            "parameter_name": "quoted_total",
+            "text": "180 USD"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "quote-question",
+    "locale": "en",
+    "templateId": "1644074759942209",
+    "templateName": "airi_demo_quote_question_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex",
+      "quote_reference": "Q-204"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "parameter_name": "quote_reference",
+            "text": "Q-204"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "proposal-comparison",
+    "locale": "en",
+    "templateId": "2421751538597191",
+    "templateName": "airi_demo_proposal_comparison_en_v1",
+    "language": "en",
+    "values": {}
+  },
+  {
+    "catalogId": "decision-check-in",
+    "locale": "en",
+    "templateId": "1590769992791494",
+    "templateName": "airi_demo_decision_check_in_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex",
+      "project_name": "your messaging pilot"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "parameter_name": "project_name",
+            "text": "your messaging pilot"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "showroom-visit-follow-up",
+    "locale": "en",
+    "templateId": "1050643584665732",
+    "templateName": "airi_demo_showroom_visit_follow_up_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex",
+      "product_name": "Terra vase"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Terra vase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "home-service-quote",
+    "locale": "en",
+    "templateId": "2127309654541261",
+    "templateName": "airi_demo_home_service_quote_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_home_service_quote_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "appointment-booking",
+    "locale": "en",
+    "templateId": "1252157603752294",
+    "templateName": "airi_demo_appointment_booking_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_appointment_booking_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "restaurant-table",
+    "locale": "en",
+    "templateId": "1040723382340414",
+    "templateName": "airi_demo_restaurant_table_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_restaurant_table_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "travel-date-range",
+    "locale": "en",
+    "templateId": "1745848096674782",
+    "templateName": "airi_demo_travel_date_range_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_travel_date_range_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "event-registration",
+    "locale": "en",
+    "templateId": "1371510171425894",
+    "templateName": "airi_demo_event_registration_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_event_registration_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "appointment-rescheduled",
+    "locale": "en",
+    "templateId": "3018215228524403",
+    "templateName": "airi_demo_appointment_rescheduled_en_v1",
+    "language": "en",
+    "values": {
+      "appointment_reference": "DEMO-A-318",
+      "previous_time": "14 Oct 2026, 14:30 UTC",
+      "appointment_time": "15 Oct 2026, 14:30 UTC"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "appointment_reference",
+            "text": "DEMO-A-318"
+          },
+          {
+            "type": "text",
+            "parameter_name": "previous_time",
+            "text": "14 Oct 2026, 14:30 UTC"
+          },
+          {
+            "type": "text",
+            "parameter_name": "appointment_time",
+            "text": "15 Oct 2026, 14:30 UTC"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "visit-preparation",
+    "locale": "en",
+    "templateId": "1587724016427478",
+    "templateName": "airi_demo_visit_preparation_en_v1",
+    "language": "en",
+    "values": {
+      "service_name": "a room styling consultation"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "a room styling consultation"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "delivery-preferences",
+    "locale": "en",
+    "templateId": "1087195740585374",
+    "templateName": "airi_demo_delivery_preferences_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_delivery_preferences_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "return-request",
+    "locale": "en",
+    "templateId": "1409989864073611",
+    "templateName": "airi_demo_return_request_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_return_request_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "pickup-ready",
+    "locale": "en",
+    "templateId": "2307748183324538",
+    "templateName": "airi_demo_pickup_ready_en_v1",
+    "language": "en",
+    "values": {
+      "order_reference": "DEMO-O-426"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "location",
+            "location": {
+              "latitude": 48.8584,
+              "longitude": 2.2945,
+              "name": "Demo pin: Eiffel Tower",
+              "address": "5 avenue Anatole France, 75007 Paris, France"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "order_reference",
+            "text": "DEMO-O-426"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "repair-progress",
+    "locale": "en",
+    "templateId": "1631468771671480",
+    "templateName": "airi_demo_repair_progress_en_v1",
+    "language": "en",
+    "values": {
+      "case_reference": "DEMO-R-182",
+      "product_name": "a desk lamp"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "case_reference",
+            "text": "DEMO-R-182"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "a desk lamp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-completed",
+    "locale": "en",
+    "templateId": "2185359125527715",
+    "templateName": "airi_demo_service_completed_en_v1",
+    "language": "en",
+    "values": {
+      "service_reference": "S-1042"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_reference",
+            "text": "S-1042"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "refund-status",
+    "locale": "en",
+    "templateId": "1050017791416874",
+    "templateName": "airi_demo_refund_status_en_v1",
+    "language": "en",
+    "values": {
+      "refund_reference": "DEMO-RF-091",
+      "refund_amount": "24 USD"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "refund_reference",
+            "text": "DEMO-RF-091"
+          },
+          {
+            "type": "text",
+            "parameter_name": "refund_amount",
+            "text": "24 USD"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "subscription-renewal",
+    "locale": "en",
+    "templateId": "1132998699083784",
+    "templateName": "airi_demo_subscription_renewal_en_v1",
+    "language": "en",
+    "values": {
+      "plan_name": "Studio monthly",
+      "renewal_date": "31 Oct 2026"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "plan_name",
+            "text": "Studio monthly"
+          },
+          {
+            "type": "text",
+            "parameter_name": "renewal_date",
+            "text": "31 Oct 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-summary",
+    "locale": "en",
+    "templateId": "960651393167450",
+    "templateName": "airi_demo_service_summary_en_v1",
+    "language": "en",
+    "values": {
+      "service_reference": "S-1042"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/b03dd7848bfb1c26ad0d45e74295297aff0b33f930dfe770ed20b97a35008c4f-service-summary.pdf",
+              "filename": "service-summary.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_reference",
+            "text": "S-1042"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-finder",
+    "locale": "en",
+    "templateId": "1114672761051376",
+    "templateName": "airi_demo_product_finder_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_product_finder_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-comparison",
+    "locale": "en",
+    "templateId": "1570140400968693",
+    "templateName": "airi_demo_product_comparison_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "room-styling",
+    "locale": "en",
+    "templateId": "938997598896450",
+    "templateName": "airi_demo_room_styling_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-care",
+    "locale": "en",
+    "templateId": "2700542987014965",
+    "templateName": "airi_demo_product_care_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "video",
+            "video": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/ca576f2e74ec330ef7d9497f2b6a676cee1b101923763fef71dc853faa2f35c8-product-care.mp4"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "bundle-idea",
+    "locale": "en",
+    "templateId": "2137355643528143",
+    "templateName": "airi_demo_bundle_idea_en_v1",
+    "language": "en",
+    "values": {
+      "product_name": "Mora basket"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Mora basket"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "sizing-guide",
+    "locale": "en",
+    "templateId": "1914424586194589",
+    "templateName": "airi_demo_sizing_guide_en_v1",
+    "language": "en",
+    "values": {
+      "small_dimensions": "24 × 18 cm",
+      "large_dimensions": "32 × 24 cm"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "small_dimensions",
+            "text": "24 × 18 cm"
+          },
+          {
+            "type": "text",
+            "parameter_name": "large_dimensions",
+            "text": "32 × 24 cm"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "gift-selection",
+    "locale": "en",
+    "templateId": "1115186047760787",
+    "templateName": "airi_demo_gift_selection_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "onboarding-guide",
+    "locale": "en",
+    "templateId": "3014866282184579",
+    "templateName": "airi_demo_onboarding_guide_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/e3298cbe879195f8db63ace75277955c312cced556c06a0269867ae57371a39d-onboarding-guide.pdf",
+              "filename": "onboarding-guide.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "event-agenda",
+    "locale": "en",
+    "templateId": "1412416294190366",
+    "templateName": "airi_demo_event_agenda_en_v1",
+    "language": "en",
+    "values": {
+      "event_name": "Customer conversations workshop",
+      "event_time": "10:00–11:00"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/648a70c681e9c30f0da1111b20774ca50c9b9525287ac20f17e9debf20c7d4b3-event-agenda.pdf",
+              "filename": "event-agenda.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "event_name",
+            "text": "Customer conversations workshop"
+          },
+          {
+            "type": "text",
+            "parameter_name": "event_time",
+            "text": "10:00–11:00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "first-week-checklist",
+    "locale": "en",
+    "templateId": "1393265232961607",
+    "templateName": "airi_demo_first_week_checklist_en_v1",
+    "language": "en",
+    "values": {
+      "course_name": "Customer conversations basics"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "course_name",
+            "text": "Customer conversations basics"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "account-setup-checklist",
+    "locale": "en",
+    "templateId": "1097706165949905",
+    "templateName": "airi_demo_account_setup_checklist_en_v1",
+    "language": "en",
+    "values": {}
+  },
+  {
+    "catalogId": "subscription-change-summary",
+    "locale": "en",
+    "templateId": "29443819991872563",
+    "templateName": "airi_demo_subscription_change_summary_en_v1",
+    "language": "en",
+    "values": {
+      "previous_plan": "Studio monthly",
+      "new_plan": "Studio annual",
+      "effective_date": "1 Nov 2026"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "previous_plan",
+            "text": "Studio monthly"
+          },
+          {
+            "type": "text",
+            "parameter_name": "new_plan",
+            "text": "Studio annual"
+          },
+          {
+            "type": "text",
+            "parameter_name": "effective_date",
+            "text": "1 Nov 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "privacy-request-acknowledgement",
+    "locale": "en",
+    "templateId": "1131622496070117",
+    "templateName": "airi_demo_privacy_request_acknowledgement_en_v1",
+    "language": "en",
+    "values": {
+      "request_reference": "DEMO-PR-014"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "request_reference",
+            "text": "DEMO-PR-014"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "contact-airi",
+    "locale": "en",
+    "templateId": "982039681579809",
+    "templateName": "airi_demo_contact_airi_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_contact_airi_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "preference-center",
+    "locale": "en",
+    "templateId": "28488633310829388",
+    "templateName": "airi_demo_preference_center_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_preference_center_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "feedback-survey",
+    "locale": "en",
+    "templateId": "1094648973265998",
+    "templateName": "airi_demo_feedback_survey_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_feedback_survey_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "company-contact",
+    "locale": "en",
+    "templateId": "1391999102966738",
+    "templateName": "airi_demo_company_contact_en_v1",
+    "language": "en",
+    "values": {}
+  },
+  {
+    "catalogId": "branch-directory",
+    "locale": "en",
+    "templateId": "28472542232387567",
+    "templateName": "airi_demo_branch_directory_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "location",
+            "location": {
+              "latitude": -33.8568,
+              "longitude": 151.2153,
+              "name": "Demo pin: Sydney Opera House",
+              "address": "Bennelong Point, Sydney NSW 2000, Australia"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-hours",
+    "locale": "en",
+    "templateId": "963929852804655",
+    "templateName": "airi_demo_service_hours_en_v1",
+    "language": "en",
+    "values": {
+      "weekday_hours": "09:00–18:00",
+      "saturday_hours": "10:00–14:00"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "weekday_hours",
+            "text": "09:00–18:00"
+          },
+          {
+            "type": "text",
+            "parameter_name": "saturday_hours",
+            "text": "10:00–14:00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "human-handoff",
+    "locale": "en",
+    "templateId": "1510339030905610",
+    "templateName": "airi_demo_human_handoff_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "learning-path",
+    "locale": "en",
+    "templateId": "1073207932373920",
+    "templateName": "airi_demo_learning_path_en_v1",
+    "language": "en",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_learning_path_en_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "lesson-recap",
+    "locale": "en",
+    "templateId": "1586479393278702",
+    "templateName": "airi_demo_lesson_recap_en_v1",
+    "language": "en",
+    "values": {
+      "lesson_title": "Clear customer replies"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "lesson_title",
+            "text": "Clear customer replies"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "practice-challenge",
+    "locale": "en",
+    "templateId": "1077271118542531",
+    "templateName": "airi_demo_practice_challenge_en_v1",
+    "language": "en",
+    "values": {}
+  },
+  {
+    "catalogId": "study-plan",
+    "locale": "en",
+    "templateId": "1086003627738754",
+    "templateName": "airi_demo_study_plan_en_v1",
+    "language": "en",
+    "values": {
+      "learning_goal": "Clear customer conversations"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "learning_goal",
+            "text": "Clear customer conversations"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "webinar-follow-up",
+    "locale": "en",
+    "templateId": "961535516413976",
+    "templateName": "airi_demo_webinar_follow_up_en_v1",
+    "language": "en",
+    "values": {
+      "webinar_title": "Better customer conversations"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "webinar_title",
+            "text": "Better customer conversations"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "loyalty-milestone",
+    "locale": "en",
+    "templateId": "1617580216393744",
+    "templateName": "airi_demo_loyalty_milestone_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex",
+      "milestone_count": "5"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "parameter_name": "milestone_count",
+            "text": "5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "care-check-in",
+    "locale": "en",
+    "templateId": "1435098005257455",
+    "templateName": "airi_demo_care_check_in_en_v1",
+    "language": "en",
+    "values": {
+      "customer_name": "Alex",
+      "product_name": "Mora basket"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Alex"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Mora basket"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "community-invitation",
+    "locale": "en",
+    "templateId": "28541368232139120",
+    "templateName": "airi_demo_community_invitation_en_v1",
+    "language": "en",
+    "values": {
+      "event_name": "A calmer corner"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "event_name",
+            "text": "A calmer corner"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "seasonal-offer",
+    "locale": "kz",
+    "templateId": "1078958388216520",
+    "templateName": "airi_demo_seasonal_offer_kk_v1",
+    "language": "kk",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "Terra"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "Terra"
+    }
+  },
+  {
+    "catalogId": "abandoned-cart",
+    "locale": "kz",
+    "templateId": "1087558170646820",
+    "templateName": "airi_demo_abandoned_cart_kk_v1",
+    "language": "kk",
+    "values": {
+      "1": "Алекс",
+      "2": "Sora"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "Sora"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:abandoned-cart:kz:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:abandoned-cart:kz:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "repeat-purchase",
+    "locale": "kz",
+    "templateId": "1125182669950303",
+    "templateName": "airi_demo_repeat_purchase_kk_v1",
+    "language": "kk",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "Mora"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "Mora"
+    }
+  },
+  {
+    "catalogId": "welcome",
+    "locale": "kz",
+    "templateId": "1774005640412963",
+    "templateName": "airi_demo_welcome_kk_v1",
+    "language": "kk",
+    "values": {
+      "1": "Алекс"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:welcome:kz:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:welcome:kz:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "order-confirmation",
+    "locale": "kz",
+    "templateId": "1420936569378506",
+    "templateName": "airi_demo_order_confirmation_kk_v1",
+    "language": "kk",
+    "values": {
+      "1": "Алекс",
+      "2": "1042"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "1042"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:order-confirmation:kz:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:order-confirmation:kz:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "shipping-update",
+    "locale": "kz",
+    "templateId": "2161296471443645",
+    "templateName": "airi_demo_shipping_update_kk_v1",
+    "language": "kk",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c4d7d947a7a07d289f81303a81ed5e9118ea45f382bb6b3ad86a453ee968e39d-shipping-update.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "1042"
+          },
+          {
+            "type": "text",
+            "text": "бейсенбі"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "1042",
+      "3": "бейсенбі"
+    }
+  },
+  {
+    "catalogId": "appointment-reminder",
+    "locale": "kz",
+    "templateId": "1655320519345586",
+    "templateName": "airi_demo_appointment_reminder_kk_v1",
+    "language": "kk",
+    "values": {
+      "1": "Алекс",
+      "2": "ертең",
+      "3": "14:00"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "ертең"
+          },
+          {
+            "type": "text",
+            "text": "14:00"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:appointment-reminder:kz:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:appointment-reminder:kz:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "course-enrollment",
+    "locale": "kz",
+    "templateId": "4680653882170210",
+    "templateName": "airi_demo_course_enrollment_kk_v1",
+    "language": "kk",
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_course_demo_kk_v1"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "WhatsApp автоматтандыру"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "WhatsApp автоматтандыру"
+    }
+  },
+  {
+    "catalogId": "payment-reminder",
+    "locale": "kz",
+    "templateId": "1589756036281434",
+    "templateName": "airi_demo_payment_reminder_kk_v1",
+    "language": "kk",
+    "values": {
+      "1": "Алекс",
+      "2": "204",
+      "3": "жұмаға"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "204"
+          },
+          {
+            "type": "text",
+            "text": "жұмаға"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:payment-reminder:kz:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:payment-reminder:kz:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "feedback",
+    "locale": "kz",
+    "templateId": "1460304125963328",
+    "templateName": "airi_demo_feedback_kk_v1",
+    "language": "kk",
+    "values": {
+      "1": "Алекс",
+      "2": "біздің шоурумға"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "біздің шоурумға"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 0,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:feedback:kz:0"
+          }
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "quick_reply",
+        "index": 1,
+        "parameters": [
+          {
+            "type": "payload",
+            "payload": "airi_demo:feedback:kz:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "back-in-stock",
+    "locale": "kz",
+    "templateId": "1633978684804720",
+    "templateName": "airi_demo_back_in_stock_kk_v1",
+    "language": "kk",
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс"
+    }
+  },
+  {
+    "catalogId": "birthday-offer",
+    "locale": "kz",
+    "templateId": "956530280848755",
+    "templateName": "airi_demo_birthday_offer_kk_v1",
+    "language": "kk",
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "text": "BIRTHDAY"
+          }
+        ]
+      }
+    ],
+    "values": {
+      "1": "Алекс",
+      "2": "BIRTHDAY"
+    }
+  },
+  {
+    "catalogId": "enquiry-follow-up",
+    "locale": "kz",
+    "templateId": "1127517149625731",
+    "templateName": "airi_demo_enquiry_follow_up_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс",
+      "service_name": "клиенттермен хабар алмасуды баптау"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "клиенттермен хабар алмасуды баптау"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "discovery-recap",
+    "locale": "kz",
+    "templateId": "1764243392376846",
+    "templateName": "airi_demo_discovery_recap_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "quote-ready",
+    "locale": "kz",
+    "templateId": "1103173575527982",
+    "templateName": "airi_demo_quote_ready_kk_v1",
+    "language": "kk",
+    "values": {
+      "quote_reference": "Q-204",
+      "service_name": "үйді безендіру кеңесі және тауарларды іріктеу",
+      "quoted_total": "180 USD"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/5894150e28d14071126e721813ca6efa559f40de2671118aff23990165eb88da-quote-ready-kz.pdf",
+              "filename": "quote-ready-kz.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "quote_reference",
+            "text": "Q-204"
+          },
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "үйді безендіру кеңесі және тауарларды іріктеу"
+          },
+          {
+            "type": "text",
+            "parameter_name": "quoted_total",
+            "text": "180 USD"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "quote-question",
+    "locale": "kz",
+    "templateId": "2089227715291764",
+    "templateName": "airi_demo_quote_question_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс",
+      "quote_reference": "Q-204"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "parameter_name": "quote_reference",
+            "text": "Q-204"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "proposal-comparison",
+    "locale": "kz",
+    "templateId": "1425803159484702",
+    "templateName": "airi_demo_proposal_comparison_kk_v1",
+    "language": "kk",
+    "values": {}
+  },
+  {
+    "catalogId": "decision-check-in",
+    "locale": "kz",
+    "templateId": "1131197205937928",
+    "templateName": "airi_demo_decision_check_in_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс",
+      "project_name": "хабар алмасу пилоты"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "parameter_name": "project_name",
+            "text": "хабар алмасу пилоты"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "showroom-visit-follow-up",
+    "locale": "kz",
+    "templateId": "957287894106435",
+    "templateName": "airi_demo_showroom_visit_follow_up_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс",
+      "product_name": "Terra вазасы"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Terra вазасы"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "home-service-quote",
+    "locale": "kz",
+    "templateId": "1138927445338077",
+    "templateName": "airi_demo_home_service_quote_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_home_service_quote_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "appointment-booking",
+    "locale": "kz",
+    "templateId": "1580907320160605",
+    "templateName": "airi_demo_appointment_booking_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_appointment_booking_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "restaurant-table",
+    "locale": "kz",
+    "templateId": "1100348752857481",
+    "templateName": "airi_demo_restaurant_table_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_restaurant_table_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "travel-date-range",
+    "locale": "kz",
+    "templateId": "1756953488940101",
+    "templateName": "airi_demo_travel_date_range_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_travel_date_range_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "event-registration",
+    "locale": "kz",
+    "templateId": "1725384985201920",
+    "templateName": "airi_demo_event_registration_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_event_registration_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "appointment-rescheduled",
+    "locale": "kz",
+    "templateId": "2556289424870833",
+    "templateName": "airi_demo_appointment_rescheduled_kk_v1",
+    "language": "kk",
+    "values": {
+      "appointment_reference": "DEMO-A-318",
+      "previous_time": "2026 ж. 14 қазан, 14:30 UTC",
+      "appointment_time": "2026 ж. 15 қазан, 14:30 UTC"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "appointment_reference",
+            "text": "DEMO-A-318"
+          },
+          {
+            "type": "text",
+            "parameter_name": "previous_time",
+            "text": "2026 ж. 14 қазан, 14:30 UTC"
+          },
+          {
+            "type": "text",
+            "parameter_name": "appointment_time",
+            "text": "2026 ж. 15 қазан, 14:30 UTC"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "visit-preparation",
+    "locale": "kz",
+    "templateId": "1514958293731448",
+    "templateName": "airi_demo_visit_preparation_kk_v1",
+    "language": "kk",
+    "values": {
+      "service_name": "бөлмені безендіру кеңесі"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_name",
+            "text": "бөлмені безендіру кеңесі"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "delivery-preferences",
+    "locale": "kz",
+    "templateId": "1779279713111576",
+    "templateName": "airi_demo_delivery_preferences_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_delivery_preferences_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "return-request",
+    "locale": "kz",
+    "templateId": "1069099545721070",
+    "templateName": "airi_demo_return_request_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_return_request_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "pickup-ready",
+    "locale": "kz",
+    "templateId": "1124757333506817",
+    "templateName": "airi_demo_pickup_ready_kk_v1",
+    "language": "kk",
+    "values": {
+      "order_reference": "DEMO-O-426"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "location",
+            "location": {
+              "latitude": 48.8584,
+              "longitude": 2.2945,
+              "name": "Үлгі орын: Эйфель мұнарасы",
+              "address": "Анатоль Франс даңғылы, 5, 75007 Париж, Франция"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "order_reference",
+            "text": "DEMO-O-426"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "repair-progress",
+    "locale": "kz",
+    "templateId": "921960530749283",
+    "templateName": "airi_demo_repair_progress_kk_v1",
+    "language": "kk",
+    "values": {
+      "case_reference": "DEMO-R-182",
+      "product_name": "үстел шамы"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "case_reference",
+            "text": "DEMO-R-182"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "үстел шамы"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-completed",
+    "locale": "kz",
+    "templateId": "4707804806121124",
+    "templateName": "airi_demo_service_completed_kk_v1",
+    "language": "kk",
+    "values": {
+      "service_reference": "S-1042"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_reference",
+            "text": "S-1042"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "refund-status",
+    "locale": "kz",
+    "templateId": "28809762351991943",
+    "templateName": "airi_demo_refund_status_kk_v1",
+    "language": "kk",
+    "values": {
+      "refund_reference": "DEMO-RF-091",
+      "refund_amount": "24 USD"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "refund_reference",
+            "text": "DEMO-RF-091"
+          },
+          {
+            "type": "text",
+            "parameter_name": "refund_amount",
+            "text": "24 USD"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "subscription-renewal",
+    "locale": "kz",
+    "templateId": "1623715772581016",
+    "templateName": "airi_demo_subscription_renewal_kk_v1",
+    "language": "kk",
+    "values": {
+      "plan_name": "Studio айлық",
+      "renewal_date": "2026 ж. 31 қазан"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "plan_name",
+            "text": "Studio айлық"
+          },
+          {
+            "type": "text",
+            "parameter_name": "renewal_date",
+            "text": "2026 ж. 31 қазан"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-summary",
+    "locale": "kz",
+    "templateId": "1111440348070811",
+    "templateName": "airi_demo_service_summary_kk_v1",
+    "language": "kk",
+    "values": {
+      "service_reference": "S-1042"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/ff298a8cc69356dd3d4621946f9201c70bd8594d7190fddeb1a05276c259c04a-service-summary-kz.pdf",
+              "filename": "service-summary-kz.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "service_reference",
+            "text": "S-1042"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-finder",
+    "locale": "kz",
+    "templateId": "1638495087908153",
+    "templateName": "airi_demo_product_finder_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_product_finder_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-comparison",
+    "locale": "kz",
+    "templateId": "980889567671364",
+    "templateName": "airi_demo_product_comparison_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "room-styling",
+    "locale": "kz",
+    "templateId": "2537495186773106",
+    "templateName": "airi_demo_room_styling_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "carousel",
+        "cards": [
+          {
+            "card_index": 0,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/f4beeaf67153820760d54b98c759bf0c45161aa88724a51b4324ca277035a236-back-in-stock-01.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 1,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "card_index": 2,
+            "components": [
+              {
+                "type": "header",
+                "parameters": [
+                  {
+                    "type": "image",
+                    "image": {
+                      "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/fab5c094ae681207fe954d97a5c590b479705a1bab260eda84fed31b88f484ec-back-in-stock-03.png"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "product-care",
+    "locale": "kz",
+    "templateId": "1807339853793200",
+    "templateName": "airi_demo_product_care_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "video",
+            "video": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/4cb812f5d6826599fe5e88595da4175e814d88fac8c87500041047bdcca5e6f1-product-care-kz.mp4"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "bundle-idea",
+    "locale": "kz",
+    "templateId": "1082106021252079",
+    "templateName": "airi_demo_bundle_idea_kk_v1",
+    "language": "kk",
+    "values": {
+      "product_name": "Mora себеті"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Mora себеті"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "sizing-guide",
+    "locale": "kz",
+    "templateId": "2012928559380096",
+    "templateName": "airi_demo_sizing_guide_kk_v1",
+    "language": "kk",
+    "values": {
+      "small_dimensions": "24 × 18 см",
+      "large_dimensions": "32 × 24 см"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/6675c8ccb42e902bf2beb979ba9295939d41caefdb79af1155d5a0de34eca83e-back-in-stock-02.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "small_dimensions",
+            "text": "24 × 18 см"
+          },
+          {
+            "type": "text",
+            "parameter_name": "large_dimensions",
+            "text": "32 × 24 см"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "gift-selection",
+    "locale": "kz",
+    "templateId": "2402433410289604",
+    "templateName": "airi_demo_gift_selection_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "onboarding-guide",
+    "locale": "kz",
+    "templateId": "2526100424557252",
+    "templateName": "airi_demo_onboarding_guide_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/b3c5dada023ec6b308ce4ecce46cb417cee3f5975cf743916f93798a880b1b28-onboarding-guide-kz.pdf",
+              "filename": "onboarding-guide-kz.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "event-agenda",
+    "locale": "kz",
+    "templateId": "1117182130648811",
+    "templateName": "airi_demo_event_agenda_kk_v1",
+    "language": "kk",
+    "values": {
+      "event_name": "Клиенттермен сөйлесу практикумы",
+      "event_time": "10:00–11:00"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "document",
+            "document": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/0b9ca52d35b60affa42862efc3eb3586ade14d0461007725a575e748ab141ebf-event-agenda-kz.pdf",
+              "filename": "event-agenda-kz.pdf"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "event_name",
+            "text": "Клиенттермен сөйлесу практикумы"
+          },
+          {
+            "type": "text",
+            "parameter_name": "event_time",
+            "text": "10:00–11:00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "first-week-checklist",
+    "locale": "kz",
+    "templateId": "2032137830837832",
+    "templateName": "airi_demo_first_week_checklist_kk_v1",
+    "language": "kk",
+    "values": {
+      "course_name": "Клиенттермен сөйлесу негіздері"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "course_name",
+            "text": "Клиенттермен сөйлесу негіздері"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "account-setup-checklist",
+    "locale": "kz",
+    "templateId": "1485670363397116",
+    "templateName": "airi_demo_account_setup_checklist_kk_v1",
+    "language": "kk",
+    "values": {}
+  },
+  {
+    "catalogId": "subscription-change-summary",
+    "locale": "kz",
+    "templateId": "1130955999447340",
+    "templateName": "airi_demo_subscription_change_summary_kk_v1",
+    "language": "kk",
+    "values": {
+      "previous_plan": "Studio айлық",
+      "new_plan": "Studio жылдық",
+      "effective_date": "2026 ж. 1 қараша"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "previous_plan",
+            "text": "Studio айлық"
+          },
+          {
+            "type": "text",
+            "parameter_name": "new_plan",
+            "text": "Studio жылдық"
+          },
+          {
+            "type": "text",
+            "parameter_name": "effective_date",
+            "text": "2026 ж. 1 қараша"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "privacy-request-acknowledgement",
+    "locale": "kz",
+    "templateId": "2173035876945958",
+    "templateName": "airi_demo_privacy_request_acknowledgement_kk_v1",
+    "language": "kk",
+    "values": {
+      "request_reference": "DEMO-PR-014"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "request_reference",
+            "text": "DEMO-PR-014"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "contact-airi",
+    "locale": "kz",
+    "templateId": "1586225426570841",
+    "templateName": "airi_demo_contact_airi_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_contact_airi_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "preference-center",
+    "locale": "kz",
+    "templateId": "849418051550990",
+    "templateName": "airi_demo_preference_center_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_preference_center_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "feedback-survey",
+    "locale": "kz",
+    "templateId": "1058120197256399",
+    "templateName": "airi_demo_feedback_survey_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_feedback_survey_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "company-contact",
+    "locale": "kz",
+    "templateId": "2145528036034743",
+    "templateName": "airi_demo_company_contact_kk_v1",
+    "language": "kk",
+    "values": {}
+  },
+  {
+    "catalogId": "branch-directory",
+    "locale": "kz",
+    "templateId": "873964119043871",
+    "templateName": "airi_demo_branch_directory_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "location",
+            "location": {
+              "latitude": -33.8568,
+              "longitude": 151.2153,
+              "name": "Үлгі орын: Сидней опера театры",
+              "address": "Беннелонг-Пойнт, Сидней, NSW 2000, Австралия"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "service-hours",
+    "locale": "kz",
+    "templateId": "1426069806158185",
+    "templateName": "airi_demo_service_hours_kk_v1",
+    "language": "kk",
+    "values": {
+      "weekday_hours": "09:00–18:00",
+      "saturday_hours": "10:00–14:00"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "weekday_hours",
+            "text": "09:00–18:00"
+          },
+          {
+            "type": "text",
+            "parameter_name": "saturday_hours",
+            "text": "10:00–14:00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "human-handoff",
+    "locale": "kz",
+    "templateId": "1795821481434792",
+    "templateName": "airi_demo_human_handoff_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "learning-path",
+    "locale": "kz",
+    "templateId": "1639983604489915",
+    "templateName": "airi_demo_learning_path_kk_v1",
+    "language": "kk",
+    "values": {},
+    "components": [
+      {
+        "type": "button",
+        "sub_type": "flow",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "action",
+            "action": {
+              "flow_token": "airi_public_demo_learning_path_kk_v1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "lesson-recap",
+    "locale": "kz",
+    "templateId": "1767180834567102",
+    "templateName": "airi_demo_lesson_recap_kk_v1",
+    "language": "kk",
+    "values": {
+      "lesson_title": "Клиентке түсінікті жауаптар"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "lesson_title",
+            "text": "Клиентке түсінікті жауаптар"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "practice-challenge",
+    "locale": "kz",
+    "templateId": "1450628783602408",
+    "templateName": "airi_demo_practice_challenge_kk_v1",
+    "language": "kk",
+    "values": {}
+  },
+  {
+    "catalogId": "study-plan",
+    "locale": "kz",
+    "templateId": "2337356237034830",
+    "templateName": "airi_demo_study_plan_kk_v1",
+    "language": "kk",
+    "values": {
+      "learning_goal": "Клиентпен түсінікті әңгімелер"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "learning_goal",
+            "text": "Клиентпен түсінікті әңгімелер"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "webinar-follow-up",
+    "locale": "kz",
+    "templateId": "1428446106099633",
+    "templateName": "airi_demo_webinar_follow_up_kk_v1",
+    "language": "kk",
+    "values": {
+      "webinar_title": "Клиентпен нәтижелі сөйлесу"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "webinar_title",
+            "text": "Клиентпен нәтижелі сөйлесу"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "loyalty-milestone",
+    "locale": "kz",
+    "templateId": "1826803518502415",
+    "templateName": "airi_demo_loyalty_milestone_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс",
+      "milestone_count": "5"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/c39ef7720a7313d1f37c9072c1d45f2ab6c9724203191abf674051fe18703fea-birthday-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "parameter_name": "milestone_count",
+            "text": "5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "care-check-in",
+    "locale": "kz",
+    "templateId": "2321811838634609",
+    "templateName": "airi_demo_care_check_in_kk_v1",
+    "language": "kk",
+    "values": {
+      "customer_name": "Алекс",
+      "product_name": "Mora себеті"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/abe22ed14e6f33ad39b450a1b9981160c86fd62e729467600d0e37fb88ef23f7-repeat-purchase.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "customer_name",
+            "text": "Алекс"
+          },
+          {
+            "type": "text",
+            "parameter_name": "product_name",
+            "text": "Mora себеті"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "catalogId": "community-invitation",
+    "locale": "kz",
+    "templateId": "1868653527913889",
+    "templateName": "airi_demo_community_invitation_kk_v1",
+    "language": "kk",
+    "values": {
+      "event_name": "Жайлы бұрыш"
+    },
+    "components": [
+      {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "https://wnycyavumykzejnjelfb.supabase.co/storage/v1/object/public/business-media/whatsapp-template-headers/41b51d55-697c-4455-875a-9a7238bdf272/public-demo/9654c40017b12fb6e46bebbe31a559bc3cd168f1530911b59380e3fb297e549e-seasonal-offer.png"
+            }
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "parameter_name": "event_name",
+            "text": "Жайлы бұрыш"
+          }
+        ]
+      }
+    ]
+  }
+]

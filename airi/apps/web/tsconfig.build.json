@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    ".next",
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "e2e/**",
+    "tests/**",
+    "test-fixtures/**",
+    "jest.mocks/**",
+    "playwright*.config.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.eval.ts",
+    "**/*.eval.tsx",
+    "**/*test-utils.ts",
+    "**/*test-utils.tsx",
+    "**/*.fixtures.ts",
+    "**/*-fixtures.ts",
+    "**/*.test-mock.ts"
+  ]
+}

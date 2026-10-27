@@ -1,0 +1,103 @@
+# React Doctor — finds security, performance, correctness, accessibility,
+# bundle-size, and architecture issues in React codebases.
+#
+# Docs: https://www.react.doctor/ci
+# Source: https://github.com/millionco/react-doctor
+
+name: React Doctor
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "apps/web/**"
+      - "apps/widget/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".github/scripts/web-build-env-contracts.test.mjs"
+      - ".github/scripts/web-typescript-contracts.test.mjs"
+      - ".github/scripts/validation-workflow-contracts.test.mjs"
+      - ".github/scripts/committed-secrets.test.mjs"
+      - ".cursor/**"
+      - ".github/workflows/replay-temporal-workflows.yml"
+      - ".github/workflows/rag-golden.yml"
+      - ".github/workflows/react-doctor.yml"
+      - ".github/workflows/airi-harness-tests.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/web/**"
+      - "apps/widget/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".github/scripts/web-build-env-contracts.test.mjs"
+      - ".github/scripts/web-typescript-contracts.test.mjs"
+      - ".github/scripts/validation-workflow-contracts.test.mjs"
+      - ".github/scripts/committed-secrets.test.mjs"
+      - ".cursor/**"
+      - ".github/workflows/replay-temporal-workflows.yml"
+      - ".github/workflows/rag-golden.yml"
+      - ".github/workflows/react-doctor.yml"
+      - ".github/workflows/airi-harness-tests.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: write
+
+concurrency:
+  group: react-doctor-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-typescript:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Validate validation workflow concurrency
+        run: node --test .github/scripts/validation-workflow-contracts.test.mjs
+
+      - name: Check for committed credentials
+        run: node --test .github/scripts/committed-secrets.test.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate web TypeScript build contract
+        run: >-
+          node --test
+          .github/scripts/web-build-env-contracts.test.mjs
+          .github/scripts/web-typescript-contracts.test.mjs
+
+      - name: Check production types
+        env:
+          NODE_OPTIONS: --max-old-space-size=3584
+        run: pnpm --filter @icecore/web run check-types
+
+  react-doctor:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: millionco/react-doctor@v2
+        with:
+          project: "apps/web,apps/widget"

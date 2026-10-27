@@ -1,0 +1,26 @@
+{
+  "Workspaces": {
+    "selectWorkspace": "Select a workspace",
+    "workspaces": "Workspaces",
+    "manageWorkspaces": "Manage workspaces…",
+    "createWorkspace": "New workspace",
+    "workspaceRoutingDescription": "Separate teams, brands or locations.",
+    "createWorkspaceDescription": "Create the next workspace, then connect that workspace's WhatsApp number.",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Support Team",
+    "createButton": "Create workspace",
+    "createAndConnectWhatsapp": "Create and connect WhatsApp",
+    "openWorkspace": "Open",
+    "connectWhatsapp": "WhatsApp setup",
+    "currentWorkspace": "Current",
+    "creating": "Creating…",
+    "loadError": "Could not load workspaces. Refresh the page to try again.",
+    "limitError": "Workspace limit reached. Review your plan to create another.",
+    "permissionError": "Only workspace admins can create workspaces.",
+    "createError": "Could not create this workspace. Try again.",
+    "nameError": "Use a name with 2–100 characters.",
+    "emptyWorkspaces": "No workspaces available.",
+    "openWorkspaceNamed": "Open {name}",
+    "trialError": "Your trial has ended. Review your plan to create a workspace."
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+.next/
+dist/
+build/
+*.config.js
+*.config.mjs
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

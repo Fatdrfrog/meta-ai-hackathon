@@ -1,0 +1,2357 @@
+{
+  "WhatsAppHistorySync": {
+    "rangeDays": "History range (days)",
+    "standardAllowance": "The standard company import allowance is {messages, number} messages or {mib, number} MiB. Contact support for larger imports.",
+    "pausedTitle": "History import paused",
+    "pausedDescription": "The company's history import allowance is used up. Received history is preserved. Contact support to increase capacity and resume this import.",
+    "pausedPlanDescription": "History import is paused by your plan. History that hasn't been imported yet resumes automatically within about an hour after you upgrade.",
+    "idleTitle": "History not requested",
+    "idleDescription": "History sharing is available when a WhatsApp Business app number is connected.",
+    "requestingTitle": "Requesting history",
+    "requestingDescription": "Waiting for Meta to confirm the request. A second request is not available.",
+    "requestUnknownTitle": "Checking history request",
+    "requestUnknownDescription": "Meta may have accepted the request. We are checking its status; do not reconnect just to retry.",
+    "requestedTitle": "Waiting for WhatsApp history",
+    "requestedDescription": "Meta accepted the request. Approve history sharing in the WhatsApp Business app. Messages appear after they are saved.",
+    "receivingTitle": "Receiving WhatsApp history",
+    "receivingDescription": "WhatsApp is transferring history. Saved messages are available while the remaining messages are processed.",
+    "savingTitle": "Saving WhatsApp history",
+    "savingDescription": "WhatsApp finished transferring history. Remaining messages are still being saved.",
+    "completedTitle": "History saved",
+    "completedDescription": "All received history messages have been processed.",
+    "planSkippedTitle": "Some chats weren't imported",
+    "planSkippedDescription": "Your plan's limits stopped some chats from being imported. Upgrade, then contact support to import them.",
+    "unverifiedTitle": "Previous history transfer",
+    "unverifiedDescription": "The previous connection reported a completed transfer. Its saved-message total has not been verified.",
+    "declinedTitle": "History sharing declined",
+    "declinedDescription": "History sharing was declined in WhatsApp Business. This request cannot be repeated.",
+    "errorTitle": "History needs attention",
+    "errorDescription": "Some history could not be saved. Refresh status to check for updates. This does not send another request to Meta.",
+    "staleTitle": "History has not updated",
+    "staleDescription": "No recent history update is available. Refresh status to check again. The original request cannot be repeated.",
+    "savedCount": "{count, plural, one {# message available} other {# messages available}}",
+    "pendingCount": "{count, plural, one {# message pending} other {# messages pending}}",
+    "failedCount": "{count, plural, one {# message needs attention} other {# messages need attention}}",
+    "planSkippedCount": "{count, plural, one {# message not imported because of your plan} other {# messages not imported because of your plan}}",
+    "providerProgress": "WhatsApp transfer: {progress}%",
+    "refreshStatus": "Refresh status",
+    "statusUnavailable": "Status could not be refreshed. The last known result is shown.",
+    "onboardingRequired": "History import is available only during a new WhatsApp connection. Existing connections will not be imported again.",
+    "windowExpired": "The history request window for this connection has expired. The request cannot be started here.",
+    "navLabel": "WhatsApp history: {status}",
+    "manageHistory": "Manage chat history"
+  },
+  "CustomerBehavior": {
+    "title": "Customer behavior",
+    "journey": "Journey",
+    "beforeDue": "Before due date",
+    "delay": "Wait after event",
+    "unit": "Unit",
+    "minutes": "Minutes",
+    "hours": "Hours",
+    "days": "Days",
+    "segments": "Purchase and spending filters",
+    "minPurchases": "Minimum purchases",
+    "maxPurchases": "Maximum purchases",
+    "minDaysSincePurchase": "At least days since purchase",
+    "maxDaysSincePurchase": "At most days since purchase",
+    "minNetSpend": "Minimum net spend",
+    "maxNetSpend": "Maximum net spend",
+    "currency": "Spending currency",
+    "invalidConfig": "Check the ranges and select a currency for spending filters.",
+    "triggerHint": "Starts from newly recorded events. Connect an approved WhatsApp template first. To repeat for later events, select Every time the trigger matches in scenario settings. Requires marketing consent; a later purchase stops reminders.",
+    "stopsOnPurchase": "Stops after a later purchase",
+    "contactPolicy": "Contact limits across campaigns",
+    "policyHint": "Applies to this workspace’s WhatsApp marketing campaigns and automatic journeys. Unknown delivery outcomes still count.",
+    "intervalHours": "Hours between contacts",
+    "maxPerWeek": "Maximum per 7 days",
+    "savePolicy": "Save workspace limits",
+    "recordEvent": "Follow-up events",
+    "eventHint": "Record a real checkout or a known renewal/service date. Use the same reference when closing or updating it. Confirm payments with Record sale.",
+    "eventType": "Customer event",
+    "reference": "Order or service reference",
+    "dueDate": "Due date (your local time)",
+    "saveEvent": "Record event",
+    "eventSaved": "Event recorded. Active matching journeys will be scheduled shortly.",
+    "recentJourneys": "Recent journeys",
+    "empty": "No journeys yet. Configure a Customer behavior trigger in Scenarios, then record a matching event.",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "saving": "Saving…",
+    "error": "Could not save or load. Please retry.",
+    "presets": {
+      "abandoned_cart": "Abandoned cart",
+      "abandoned_checkout": "Abandoned checkout",
+      "purchase_completed": "Completed purchase",
+      "replenishment": "Replenishment reminder",
+      "second_purchase": "Second purchase",
+      "win_back": "Win-back",
+      "upcoming_renewal": "Upcoming renewal",
+      "overdue_service": "Overdue service"
+    },
+    "presetDescriptions": {
+      "abandoned_cart": "Starts after an identified shopper leaves items in a website cart without starting checkout.",
+      "abandoned_checkout": "Starts after the shopper begins checkout but does not complete the purchase."
+    },
+    "recoveryTemplateHint": "For an approved WhatsApp template, use cart.recovery_token in the numbered dynamic button value. Other values include cart.recovery_url, cart.total, cart.currency, cart.items and cart.item_count.",
+    "events": {
+      "checkout_started": "Checkout started",
+      "checkout_closed": "Checkout closed",
+      "renewal_scheduled": "Renewal scheduled",
+      "renewal_completed": "Renewal completed",
+      "service_scheduled": "Service scheduled",
+      "service_completed": "Service completed"
+    },
+    "status": {
+      "pending": "Scheduled",
+      "signaled": "Queued",
+      "contacted": "Contact attempted",
+      "cancelled": "Cancelled",
+      "skipped": "Stopped"
+    },
+    "reasons": {
+      "converted": "A later purchase stopped this journey.",
+      "event_superseded": "The checkout or due date changed.",
+      "marketing_consent_required": "Marketing consent is required.",
+      "marketing_opt_out": "The customer opted out of marketing.",
+      "contact_frequency_limit": "The workspace contact limit was reached.",
+      "scenario_changed": "The scenario was changed or paused.",
+      "another_scenario_active": "Another scenario is active.",
+      "manual_handoff_active": "A manager is handling this conversation.",
+      "purchase_segment_changed": "The purchase filters no longer match.",
+      "not_first_purchase": "This customer already has more than one purchase.",
+      "journey_expired": "The reminder expired.",
+      "unavailable": "This journey could not continue."
+    }
+  },
+  "Onboarding": {
+    "welcomeToast": "Connect WhatsApp to send your first campaign.",
+    "integrationSuccessToast": "Connected. Your channel is ready.",
+    "whatsappConnectedToast": "WhatsApp connected. Next: create your first message template.",
+    "createTemplateAction": "Create template"
+  },
+  "AppSidebar": {
+    "airiChat": "Airi chat",
+    "requests": "Customer chats",
+    "settings": "Settings",
+    "integrations": "Integrations",
+    "help": "Help",
+    "defaultUserName": "User",
+    "knowledgeBase": "Knowledge base",
+    "scenarios": "Scenarios",
+    "bulkCampaigns": "Bulk campaigns",
+    "limits": {
+      "exhaustedTitle": "No conversation limits left",
+      "remaining": "{remaining} of {limit} left",
+      "textAi": {
+        "loading": "Loading AI usage",
+        "unavailable": "AI usage is temporarily unavailable. Try again shortly.",
+        "remaining": "{remaining} of {limit} included text AI actions left",
+        "shared": "Shared across company workspaces for the lifetime of the company.",
+        "lifetime": "This allowance does not reset with renewals or new workspaces.",
+        "customerReady": "Your Google key will be used after the included allowance is used up.",
+        "customerActive": "Text AI now uses your Google key. Google bills your project.",
+        "exhausted": "Your included text AI allowance is used up. Connect your key to continue.",
+        "spendLimit": "Your company's included AI spending limit has been reached. Connect your key to continue using AI.",
+        "connect": "Connect Google AI"
+      },
+      "freePlan": "You are in a free plan.",
+      "freePlanUpgrade": "You are in a free plan: <link>upgrade</link>"
+    },
+    "messengers": {
+      "title": "WhatsApp Manager"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "dashboard": "Dashboard",
+      "llm": "LLM",
+      "performance": "Performance"
+    },
+    "widget": {
+      "title": "Web widget",
+      "analytics": "Analytics",
+      "branding": "Branding"
+    },
+    "onboarding": {
+      "label": "Setup",
+      "progress": "{percent}%",
+      "steps": {
+        "company_profile": {
+          "title": "Company profile"
+        },
+        "test_airi": {
+          "title": "Test Airi"
+        },
+        "connect_integration": {
+          "title": "Connect live channel"
+        },
+        "create_scenario": {
+          "title": "Activate a scenario"
+        },
+        "publish_knowledge": {
+          "title": "Publish knowledge"
+        },
+        "verify_answers": {
+          "title": "Verify answers"
+        }
+      }
+    },
+    "customers": "Leads",
+    "email": "Email",
+    "assets": "Assets"
+  },
+  "PanelError": {
+    "title": "This page couldn't load",
+    "description": "Something went wrong while loading this view.",
+    "hint": "Retry to continue. Your work in this workspace is still saved.",
+    "retry": "Retry"
+  },
+  "LoginPage": {
+    "productIntroLabel": "About airi.chat",
+    "productIntroTitle": "Keep the conversation going.",
+    "productIntroDescription": "Bring WhatsApp campaigns, customer replies, and follow-ups into one workspace.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "signUpErrorInvalidEmail": "Enter a valid email address.",
+    "signUpErrorWeakPassword": "Use a password with at least 6 characters.",
+    "signUpErrorRateLimited": "Too many attempts. Wait a few minutes, then try again.",
+    "signUpErrorSignupDisabled": "Account creation is currently unavailable. Please try again later.",
+    "signUpErrorUnknown": "We couldn't create your account right now. Try again in a moment.",
+    "googleSignInError": "We couldn't connect to Google. Try again or use email and password.",
+    "termsLink": "Terms of use",
+    "privacyLink": "Privacy policy",
+    "welcomeTitle": "Sign in to your account",
+    "welcomeDescription": "Use email and password, or continue with Google.",
+    "signInButton": "Sign In",
+    "or": "Or",
+    "signinTab": "Sign In",
+    "signupTab": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "signingIn": "Signing In...",
+    "createAccount": "Create Account",
+    "fillFormToStart": "Create an account with email and password.",
+    "creating": "Creating...",
+    "signUp": "Sign Up",
+    "signupPendingTitle": "Check your email",
+    "signupPendingDescription": "Open the link in your email to continue.",
+    "signupUnconfirmedDescription": "This email already has an account that is not confirmed yet, for example from an earlier invite. We sent it a new link.",
+    "signupRecentlySentDescription": "We sent an email to this address less than a minute ago. Open the link in it to continue.",
+    "emailPlaceholder": "m@example.com",
+    "passwordPlaceholder": "Enter a secure password",
+    "forgotPassword": "Forgot password?",
+    "wrongEmail": "Wrong email? Try again",
+    "checkInboxTitle": "Email sent",
+    "checkInboxHint": "Open the email link to finish setup and continue to the workspace.",
+    "unconfirmedAccountHint": "The password you entered was not saved. Open the link in the email to sign in and continue.",
+    "checkSpamHint": "No email yet? Check spam or resend it.",
+    "existingAccountHint": "Already have an account? Sign in with this email.",
+    "signInWithThisEmail": "Sign in with this email",
+    "resendVerificationEmail": "Resend verification email",
+    "resendingVerificationEmail": "Resending...",
+    "verificationEmailResent": "Email resent. Check your inbox.",
+    "failedToResendVerificationEmail": "Could not resend the email.",
+    "emailRecentlySent": "We sent an email to this address less than a minute ago. Check your inbox and spam folder.",
+    "sendAgainIn": "Send again in {seconds}s",
+    "alreadyHaveAccount": "Already have an account?",
+    "existingAccountTitle": "You already have an account",
+    "existingAccountDescription": "Sign in with your existing password to continue. Your email is filled in below.",
+    "passwordRequirements": "At least 6 characters",
+    "signUpWithGoogle": "Continue with Google",
+    "inAppBrowserGoogleTitle": "Open this page in your browser",
+    "inAppBrowserGoogleDescription": "Google sign-in is blocked inside in-app browsers such as Threads, Instagram, Facebook, Telegram, TikTok, and LinkedIn. Open this page in Chrome, Safari, or your default browser, then try again.",
+    "inviteTitle": "You're invited to join {workspace}",
+    "inviteSubtitle": "Already have an account? Sign in. New here? Choose Sign Up. Then confirm the invite to {workspace}.",
+    "inviteGenericSubtitle": "Already have an account? Sign in. New here? Choose Sign Up. Then confirm this workspace invite.",
+    "inviteSignInTitle": "Sign in to accept invite",
+    "inviteSignInDescription": "Use your airi.chat account email. After signing in, you will confirm the invite to {workspace}.",
+    "inviteSignUpTitle": "Create account to join",
+    "inviteSignUpDescription": "Create your airi.chat account. After email verification, you will confirm the invite to {workspace}.",
+    "inviteSignInButton": "Sign in and continue",
+    "inviteSignUpButton": "Create account and continue",
+    "inviteInvalidTitle": "This invite link can't be verified",
+    "inviteInvalidDescription": "Ask the workspace admin for a new invite link, or sign in without accepting this invite.",
+    "inviteSignInLinkHint": "No password? Email yourself a secure sign-in link and this invite will continue after sign-in.",
+    "sendInviteSignInLink": "Send sign-in link",
+    "sendingInviteSignInLink": "Sending...",
+    "inviteSignInLinkSent": "Sign-in link sent. Open it to accept the invite.",
+    "failedToSendInviteSignInLink": "Could not send the sign-in link.",
+    "inviteEmailRequired": "Enter your email above first.",
+    "signInErrorInvalidCredentials": "Incorrect email or password.",
+    "signInErrorRateLimited": "Too many sign-in attempts. Wait a minute, then try again.",
+    "signInErrorUnknown": "We couldn't sign you in right now. Try again in a moment.",
+    "signInRecoveryHint": "Check the email and password. Signed up with Google? Use “Continue with Google” below. Removed from your team's workspace? Ask your admin for a new invite.",
+    "resetPassword": "Reset password",
+    "signinUnconfirmedDescription": "This account's email isn't confirmed yet. Open the link we emailed you, or send a new one.",
+    "confirmEmailTitle": "Confirm your email",
+    "signInConnectionErrorTitle": "Sign-in didn't go through",
+    "signInConnectionErrorDescription": "We couldn't reach airi.chat. Check your internet connection or VPN, then try again.",
+    "signInPageErrorTitle": "The sign-in page hit a problem",
+    "signInPageErrorDescription": "Try again. If it keeps happening, reload the page.",
+    "tryAgain": "Try again",
+    "reloadPage": "Reload page"
+  },
+  "LandingPage": {
+    "cookieConsent": {
+      "description": "We use tracking cookies to understand what works and improve airi.chat.",
+      "decline": "Decline",
+      "accept": "Accept cookies"
+    },
+    "header": {
+      "openWorkspace": "Open workspace"
+    }
+  },
+  "SiteHeader": {
+    "toggleTheme": "Toggle theme",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme",
+    "systemTheme": "System settings",
+    "toggleSidebar": "Toggle sidebar",
+    "upgrade": "Upgrade",
+    "openAiriChat": "Open Airi chat"
+  },
+  "LanguageSwitcher": {
+    "changeLanguage": "Change language",
+    "english": "English",
+    "russian": "Русский",
+    "kazakh": "Қазақша"
+  },
+  "NavMain": {
+    "overview": "Overview"
+  },
+  "NavUser": {
+    "logout": "Logout",
+    "profile": "Profile",
+    "settings": "Settings",
+    "theme": "Theme",
+    "whatsNew": "What's new",
+    "copyWorkspaceId": "Copy workspace ID"
+  },
+  "AiContextManager": {
+    "title": "Context Tags",
+    "description": "Add tags that bias retrieval.",
+    "placeholder": "Add a tag (e.g., 'Enterprise renewals')...",
+    "salesGrowth": "Sales Growth",
+    "customerRetention": "Customer Retention",
+    "competitorAnalysis": "Competitor Analysis",
+    "productFeedback": "Product Feedback",
+    "serviceQuality": "Service Quality",
+    "saving": "Saving...",
+    "saveChanges": "Save tags",
+    "failedToSave": "Could not save AI context tags.",
+    "unknownError": "An unknown error occurred.",
+    "contextUpdated": "AI context tags updated.",
+    "infoText": "Use a small set of specific tags.",
+    "tagsCountOne": "1 tag configured",
+    "tagsCountOther": "{count} tags configured",
+    "unsavedChanges": "You have unsaved tag changes.",
+    "botSettings": {
+      "title": "Behavior",
+      "description": "Manage auto-reply, coach, guard, and advanced settings.",
+      "loading": "Loading bot settings...",
+      "loadFailed": "Failed to load Airi bot settings.",
+      "coverage": "Auto-reply is on in {enabled} of {total} chats.",
+      "enabledHint": "New chats start with auto-reply on.",
+      "disabledHint": "New chats start with auto-reply off.",
+      "enableButton": "Enable for all chats",
+      "enabledButton": "Enabled for all chats",
+      "enableSuccess": "Airi bot enabled for all chats.",
+      "enableFailed": "Failed to enable Airi bot for all chats.",
+      "disableButton": "Disable for all chats",
+      "disableSuccess": "Airi bot disabled for all chats.",
+      "disableFailed": "Failed to disable Airi bot for all chats.",
+      "scenarioTitle": "Scenarios",
+      "scenarioDescription": "Run scenario automation independently from general auto-replies.",
+      "scenarioCoverage": "Scenarios are on in {enabled} of {total} chats.",
+      "scenarioEnabledHint": "New chats can trigger scenarios.",
+      "scenarioDisabledHint": "New chats will not trigger scenarios.",
+      "scenarioEnableSuccess": "Scenarios enabled for all chats.",
+      "scenarioEnableFailed": "Failed to enable scenarios for all chats.",
+      "scenarioDisableSuccess": "Scenarios disabled for all chats.",
+      "scenarioDisableFailed": "Failed to disable scenarios for all chats.",
+      "coachTitle": "Coach",
+      "coachDescription": "Turn coach on or off for this workspace.",
+      "coachCoverage": "Coach enabled in {enabled} of {total} chats.",
+      "coachEnabledHint": "New chats start with coach on.",
+      "coachDisabledHint": "New chats start with coach off.",
+      "coachEnableSuccess": "Airi coach enabled for all chats.",
+      "coachEnableFailed": "Failed to enable Airi coach for all chats.",
+      "coachDisableSuccess": "Airi coach disabled for all chats.",
+      "coachDisableFailed": "Failed to disable Airi coach for all chats.",
+      "onboardingTitle": "Knowledge base ready",
+      "onboardingDescription": "You published your first article. Turn on auto-reply if you want Airi to use it in chats.",
+      "saveControlsFailed": "Could not save setting.",
+      "elevenlabsAgentIdLabel": "ElevenLabs Agent ID",
+      "elevenlabsAgentIdPlaceholder": "agent_xxxxxxxxxxxxxxxx",
+      "elevenlabsAgentIdHint": "Optional workspace agent ID.",
+      "retrievalModeLabel": "Retrieval mode",
+      "retrievalModeHint": "Adaptive uses recent context for short follow-ups. Last message uses only the latest message.",
+      "retrievalModeAdaptiveOption": "Adaptive (recommended)",
+      "retrievalModeLastMessageOption": "Last message only",
+      "languageBiasLabel": "Language bias",
+      "languageBiasHint": "Use this only if most chats use one language.",
+      "languageBiasNone": "No bias",
+      "languageBiasKazakh": "Prefer Kazakh",
+      "languageBiasRussian": "Prefer Russian",
+      "languageBiasUzbek": "Prefer Uzbek",
+      "historyToggleLabel": "Use recent chat history",
+      "historyToggleHint": "Adds recent messages to retrieval. May increase token usage.",
+      "kbLinksToggleLabel": "Send KB links",
+      "kbLinksToggleHint": "Also send public KB links in customer channels when used in replies.",
+      "autoSaveHint": "Saved automatically.",
+      "savingControls": "Saving setting...",
+      "controlsSaved": "Setting saved."
+    }
+  },
+  "OnboardingProductStep": {
+    "websitesLabel": "Your websites",
+    "websitesHelp": "We'll crawl these pages to learn about your product and build Airi's knowledge.",
+    "websiteInputLabel": "Website {number}",
+    "websiteInvalid": "Enter a valid public website, like https://example.com.",
+    "websitePlaceholder": "https://example.com",
+    "addWebsite": "Add another website",
+    "removeWebsite": "Remove website",
+    "removeWebsiteLabel": "Remove website {number}",
+    "instagramLabel": "Instagram",
+    "instagramConnected": "Connected",
+    "instagramInclude": "Include my Instagram bio and recent posts in Airi's knowledge.",
+    "trainingNeedsSource": "Add a website or select a connected channel. Training is optional, and you can connect sources later in Integrations.",
+    "trainingOptional": "Training is optional. You can continue and connect sources in Integrations.",
+    "trainingLoading": "Loading training status...",
+    "trainingLoadError": "We couldn't load training status.",
+    "tryAgain": "Try again",
+    "whatsappLabel": "WhatsApp",
+    "whatsappHelp": "Connect via Cloud API or Business App coexistence. Coexistence can import recent chat history to teach Airi.",
+    "whatsappConnected": "Connected",
+    "whatsappIncludeHistory": "Import recent WhatsApp chat history to teach Airi.",
+    "whatsappIncludeCloud": "Use this WhatsApp channel as a connected source for Airi.",
+    "whatsappHistoryRequested": "History requested. Messages will become available after WhatsApp transfers them and airi.chat saves them.",
+    "whatsappHistoryError": "WhatsApp history needs attention. Open Settings to check its status.",
+    "trainingProgressWhatsapp": "Importing WhatsApp history and preparing context…",
+    "testChatLocked": "Add a source and start training to test Airi",
+    "testChatLockedHelp": "Add a website, then click Start training before testing.",
+    "learningReadyTitle": "Airi has context now",
+    "learningReadyDescription": "Ask one real customer question below. The first useful answer is your setup activation.",
+    "trainingError": "We couldn't start training. Please try again.",
+    "trainingLimitError": "You've reached the website and Instagram source limit. Remove a source in Integrations, then try again.",
+    "trainingStart": "Start training Airi",
+    "trainingRestart": "Re-train Airi",
+    "trainingProgressTitle": "Indexing progress",
+    "trainingProgressPending": "Indexing your sources…",
+    "trainingBackgroundTitle": "Training continues in the background",
+    "trainingBackgroundDescription": "You can continue to Integrations and check progress here later.",
+    "checkAgain": "Check again",
+    "statusIndexed": "Indexed",
+    "statusFailed": "Failed",
+    "statusPending": "Indexing…",
+    "statusFailedNoContent": "No readable content was found.",
+    "statusFailedTimeout": "Indexing timed out.",
+    "statusFailedGeneric": "Indexing failed. Try again.",
+    "retrySource": "Retry {source}",
+    "testChatHeading": "Test what Airi learned",
+    "testChatHelp": "Ask Airi about your product to check it understood your context.",
+    "testChatTitle": "Test chat with Airi",
+    "openAiriChat": "Open Airi chat"
+  },
+  "AddCompanyForm": {
+    "registerCompany": "Register your company",
+    "lastStepDescription": "Create a workspace profile, teach Airi your product, then start by asking Airi a real question.",
+    "stepLabel": "Step {number}",
+    "requiredBadge": "Required",
+    "requiredStepTab": "Company profile",
+    "requiredStepTitle": "Create your workspace",
+    "requiredStepDescription": "Enter your company name to create your workspace.",
+    "continueToProductStep": "Continue",
+    "productStepTab": "Train Airi",
+    "productStepTitle": "Train Airi on your product",
+    "productStepDescription": "Add your website so Airi learns about your product, then test it live below. Already connected channels can be included automatically.",
+    "productBadge": "Recommended",
+    "companyName": "Company Name",
+    "companyNamePlaceholder": "e.g., \"LLC Flowers and Holidays\"",
+    "phoneNumber": "Phone number (optional)",
+    "phoneNumberPlaceholder": "+7 701 234 56 78",
+    "referralSource": "Where did you hear about us? (optional)",
+    "referralSourcePlaceholder": "Select a source",
+    "referralSourceGoogle": "Google Search",
+    "referralSourceLinkedIn": "LinkedIn",
+    "referralSourceInstagram": "Instagram",
+    "referralSourceFacebook": "Facebook",
+    "referralSourceTikTok": "TikTok",
+    "referralSourceYouTube": "YouTube",
+    "referralSourceReferral": "Friend or colleague",
+    "referralSourceEvent": "Event or conference",
+    "referralSourceProductHunt": "Product Hunt",
+    "referralSourceOther": "Other",
+    "referralSourceOtherLabel": "Tell us where",
+    "referralSourceOtherPlaceholder": "Podcast, community, partner, etc.",
+    "creating": "Creating...",
+    "registerCompanyButton": "Register Company",
+    "continueToIntegrations": "Continue to integrations",
+    "requiredStepLockedHint": "Your workspace is already created. You can edit these details later in Settings.",
+    "httpError": "HTTP error! status:",
+    "unknownError": "An unknown error occurred",
+    "privacyAgreement": "I agree to the <privacy>Privacy Policy</privacy> and <terms>Terms</terms>.",
+    "setupErrorTitle": "This page couldn't load",
+    "setupErrorDescription": "Something went wrong while loading company setup.",
+    "setupErrorHint": "Your progress may already be saved. Retry to continue.",
+    "setupErrorRetry": "Retry"
+  },
+  "Command": {
+    "commandPalette": "Command Palette",
+    "searchCommand": "Search for a command to run..."
+  },
+  "Dialog": {
+    "close": "Close"
+  },
+  "Sheet": {
+    "close": "Close"
+  },
+  "TagInput": {
+    "placeholder": "Add tag and press Enter...",
+    "recommendations": "Recommendations:",
+    "removeTag": "Remove {tag}"
+  },
+  "Sidebar": {
+    "mobileSidebarTitle": "Sidebar",
+    "mobileSidebarDescription": "Displays the mobile sidebar.",
+    "toggleSidebar": "Toggle Sidebar"
+  },
+  "FinishProfilePage": {
+    "title": "Profile name",
+    "description": "Please use your real name",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "John Doe",
+    "continueButton": "Continue"
+  },
+  "Auth": {
+    "completeInvite": {
+      "title": "Finish workspace setup",
+      "description": "Add your name and set an email password for future sign-ins.",
+      "fullNameLabel": "Full name",
+      "fullNamePlaceholder": "Aigerim Nurlanova",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Create a secure password",
+      "passwordHint": "Use this password only when signing in with email.",
+      "confirmPasswordLabel": "Confirm password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "strengthLabel": "Password strength: <value>{strength}</value>",
+      "strength": {
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      },
+      "submit": "Finish setup",
+      "submitting": "Finishing setup…",
+      "submitted": "Setup complete",
+      "legal": "By creating an account, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+      "validation": {
+        "nameTooShort": "Name must be at least 2 characters",
+        "nameTooLong": "Name is too long",
+        "nameInvalid": "Use letters, spaces, hyphens and apostrophes only",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "passwordTooLong": "Password is too long",
+        "passwordLowercase": "Add at least one lowercase letter",
+        "passwordUppercase": "Add at least one uppercase letter",
+        "passwordNumber": "Add at least one number",
+        "passwordMismatch": "Passwords don't match"
+      },
+      "toast": {
+        "successTitle": "Setup complete",
+        "redirecting": "Opening your workspace…",
+        "alreadySetUpTitle": "You are already set up",
+        "failedTitle": "Setup failed",
+        "failedFallback": "Try again in a moment."
+      }
+    },
+    "unauthorizedTitle": "Unauthorized",
+    "unauthorizedDescription": "You do not have access to this page.",
+    "authErrorTitle": "Authentication Error",
+    "unknownAuthError": "Unknown authentication error",
+    "goToLogin": "Go to Login",
+    "goBack": "Go Back",
+    "authCodeError": {
+      "descriptionPkce": "The verification context for this link was not available.",
+      "descriptionLinkInvalid": "Your authentication link is no longer valid.",
+      "descriptionGeneric": "Something went wrong during authentication.",
+      "showTechnicalDetails": "Show technical details",
+      "verificationSessionMismatch": "Verification Session Mismatch",
+      "verificationContextHint": "Verification links depend on the original signup/login context. Host changes, cleared cookies, different browsers/apps, or email-link prefetch can break this context.",
+      "linkAlreadyUsed": "This link has already been used.",
+      "linkExpired": "This link has expired.",
+      "linkInvalidOrExpired": "This link is invalid or has expired.",
+      "hintAlreadyUsed": "Try logging in or request a new verification email.",
+      "hintExpired": "Request a new verification email or try logging in if you already have an account.",
+      "magicLinkLabel": "Send a new sign-in link (Recommended)",
+      "magicLinkHint": "A sign-in link works in any browser and lets you complete signup or login when verification context is missing.",
+      "emailPlaceholder": "Enter your email",
+      "magicLinkSent": "Sign-in link sent. Check your email and click the link to complete authentication.",
+      "requestVerificationEmail": "Request a new verification email",
+      "verificationEmailSent": "Verification email sent! Check your inbox.",
+      "logIn": "Log In",
+      "tryRecovery": "Try Recovery",
+      "contactSupportHint": "If this problem persists, please contact support",
+      "tryAutomaticRecovery": "Try Automatic Recovery",
+      "invalidEmail": "Please enter a valid email address",
+      "failedToSendEmail": "Failed to send email. Please try again.",
+      "unexpectedError": "An unexpected error occurred. Please try again.",
+      "failedToSendMagicLink": "Failed to send sign-in link"
+    },
+    "callbackRecovery": {
+      "noSessionError": "No active session found. This usually happens when the verification link is opened from a different browser, app, domain, or after auth cookies were cleared.",
+      "redirecting": "Redirecting...",
+      "checkingAuth": "Checking authentication...",
+      "sessionFound": "Session found! Taking you to your dashboard.",
+      "pleaseWait": "Please wait while we verify your session.",
+      "verificationLinkIssue": "Verification Link Session Issue",
+      "authRecovery": "Authentication Recovery",
+      "pkceDescription": "We couldn't restore the verification context for this link. Request a new sign-in link to complete authentication.",
+      "genericDescription": "We couldn't automatically verify your session. Try one of the options below.",
+      "linkExpiredFallback": "The authentication link may have expired or been used already.",
+      "sendMagicLinkLabel": "Send a new sign-in link to your email",
+      "magicLinkHintShort": "A sign-in link works in any browser and lets you complete signup or login.",
+      "invalidEmail": "Please enter a valid email address",
+      "failedToSendMagicLink": "Failed to send sign-in link",
+      "unexpectedError": "An unexpected error occurred. Please try again.",
+      "magicLinkSent": "Sign-in link sent. Check your email and click the link to complete authentication.",
+      "emailPlaceholder": "Enter your email"
+    }
+  },
+  "EnhancedMarkdownEditor": {
+    "placeholder": "Write your article content in Markdown...",
+    "format": "Format",
+    "bold": "Bold",
+    "italic": "Italic",
+    "link": "Link",
+    "image": "Image",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "quote": "Quote",
+    "bulletList": "Bullet List",
+    "numberedList": "Numbered List",
+    "uploadImage": "Upload image",
+    "uploadingImage": "Uploading image...",
+    "importMarkdown": "Import Markdown",
+    "importingMarkdown": "Importing Markdown...",
+    "importMarkdownSuccess": "Markdown imported",
+    "code": "code",
+    "linkText": "link text",
+    "altText": "alt text",
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "alignJustify": "Justify",
+    "table": "Table",
+    "tableActions": "Table actions",
+    "insertTable": "Insert table",
+    "addRowBefore": "Add row before",
+    "addRowAfter": "Add row after",
+    "deleteRow": "Delete row",
+    "deleteRowShort": "Delete row",
+    "addColumnBefore": "Add column before",
+    "addColumnAfter": "Add column after",
+    "deleteColumn": "Delete column",
+    "deleteColumnShort": "Delete column",
+    "addAbove": "Add above",
+    "addBelow": "Add below",
+    "addLeft": "Add left",
+    "addRight": "Add right",
+    "toggleHeaderRow": "Toggle header row",
+    "toggleHeaderColumn": "Toggle header column",
+    "toggleHeaderCell": "Toggle header cell",
+    "mergeCells": "Merge cells",
+    "splitCell": "Split cell",
+    "deleteTable": "Delete table",
+    "linkDialogDescription": "Enter the URL and optionally customize the link text.",
+    "linkUrl": "URL",
+    "linkTextPlaceholder": "Display text",
+    "cancel": "Cancel",
+    "save": "Save",
+    "editorToolbar": "Text formatting toolbar",
+    "undo": "Undo",
+    "redo": "Redo",
+    "normalText": "Normal text",
+    "blockType": "Block type",
+    "blockTypeHint": "Choose paragraph or heading level. Keyboard: Ctrl/Cmd+Alt+0 for normal text; Ctrl/Cmd+Alt+1–3 for headings.",
+    "contextMenuLabel": "Insert block",
+    "draftTable": "Draft table",
+    "divider": "Divider",
+    "resetImageSize": "Reset",
+    "resizeImage": "Resize image",
+    "fontFamily": "Font",
+    "searchFonts": "Search fonts...",
+    "noFontsFound": "No fonts found",
+    "defaultFont": "Default font",
+    "gridLayout": "Grid layout",
+    "gridColumns": "{columns} columns",
+    "gridMode": "Grid mode",
+    "gridBorderSubtle": "Subtle border",
+    "gridBorderSolid": "Solid border",
+    "gridBorderDashed": "Dashed border",
+    "gridBorderNone": "No border",
+    "gridBorderColor": "Border color",
+    "gridBorderWidth": "{width}px border",
+    "editGridBorder": "Edit grid border",
+    "selectGrid": "Select whole grid",
+    "deleteGrid": "Delete grid",
+    "textColor": "Text color",
+    "highlightColor": "Highlight color",
+    "resetTextColor": "Reset text color",
+    "resetHighlightColor": "Reset highlight",
+    "customColor": "Custom color"
+  },
+  "ForgotPasswordDialog": {
+    "title": "Reset Password",
+    "description": "Enter your email address and we'll send you a link to reset your password.",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "sendResetLink": "Send Reset Link",
+    "sending": "Sending...",
+    "close": "Close",
+    "successMessage": "Password reset email sent! Check your inbox and spam folder.",
+    "errorMessage": "Failed to send reset email"
+  },
+  "LandingDemo": {
+    "header": {
+      "signIn": "Sign in",
+      "startFree": "Start free",
+      "bookDemo": "Book a demo",
+      "navigation": "Explore campaigns",
+      "openMenu": "Open menu",
+      "nav": {
+        "features": "Smart campaigns",
+        "videos": "Guides",
+        "integrations": "Channels",
+        "fit": "Is it for me?",
+        "about": "About",
+        "team": "Team"
+      },
+      "resources": "Menu",
+      "close": "Close",
+      "openResources": "Open menu",
+      "closeResources": "Close menu"
+    },
+    "about": {
+      "title": "About Us",
+      "caption": "Web Summit 2025 in Lisbon, in One Piece Chopper and Ace hats.",
+      "images": {
+        "heroAlt": "Airi.chat founders at Web Summit 2025",
+        "productAlt": "Airi.chat product dashboard"
+      },
+      "links": {
+        "linkedin": "LinkedIn"
+      },
+      "teamInfo": {
+        "title": "Team Information",
+        "intro": "Airi.chat is built by a small team working on official WhatsApp campaigns, AI replies and follow-ups. Key members:",
+        "aisulu": {
+          "nameRole": "Aisulu Kalshabekova (Co-Founder & CEO)",
+          "description": "Co-founder who leads customer success. She saw the problem at a large bank in Kazakhstan, where more than 50 analysts sorted complaints and opened tickets by hand."
+        },
+        "samat": {
+          "nameRole": "Samat Kalshabekov (Co-Founder & CTO)",
+          "description": "Co-founder responsible for product UX, developer experience and system reliability."
+        },
+        "pmf": "We are still early and work closely with our customers on the way to product-market fit."
+      },
+      "products": {
+        "title": "What Airi.chat does",
+        "intro": "Airi.chat helps businesses sell through WhatsApp. You send campaigns through the official WhatsApp Business Platform, answer customers yourself or with AI, and follow up with the people who replied. Templates, WhatsApp Flows, customer lists and sales analytics are built in, and Instagram, Telegram, email and web chat work in the same workspace.",
+        "problemsLabel": "Problems we solve:",
+        "problems": {
+          "overwhelmed": "WhatsApp campaigns go out from different tools, and replies don’t get a timely follow-up.",
+          "visibility": "Replies, opt-ins and purchase signals get lost between inboxes.",
+          "manualAnalysis": "Segmenting customers and reading replies by hand slows down the next campaign.",
+          "audienceCompanies": "Online stores, SaaS, fintech, education and service companies that talk to customers in WhatsApp.",
+          "audienceTeams": "Marketing and sales teams that send large WhatsApp campaigns and want automation with a person ready to step in."
+        },
+        "closing": "With Airi.chat, a campaign doesn’t end at the send. You see who replied, sort the audience by their answers and follow up with context."
+      },
+      "ourTeam": {
+        "title": "Our Team",
+        "join": "Join our team"
+      },
+      "faq": {
+        "what": {
+          "question": "What is Airi.chat?",
+          "answer": "Airi.chat is a platform for sending official WhatsApp campaigns and handling the replies. Your team answers customers with the help of AI and follows up with the people who responded."
+        },
+        "founders": {
+          "question": "Who founded Airi.chat?",
+          "answer": "Airi.chat was founded by Aisulu Kalshabekova (Co-Founder & CEO) and Samat Kalshabekov (Co-Founder & CTO)."
+        },
+        "problems": {
+          "question": "What problems does Airi.chat solve?",
+          "answer": "It replaces scattered campaign tools and risky unofficial sending services, and it keeps replies and purchase signals from getting lost after a campaign."
+        },
+        "audience": {
+          "question": "Who is Airi.chat for?",
+          "answer": "For marketing and sales teams at online stores, SaaS, fintech, education and service companies that send WhatsApp campaigns and need to handle the replies."
+        }
+      }
+    },
+    "hero": {
+      "officialTechProviders": "Meta Tech Provider",
+      "title": "Good campaigns start a",
+      "titleAccent": "conversation.",
+      "subtitle": "Run targeted WhatsApp campaigns, answer customer questions, and track the sales that follow.",
+      "startFree": "Start free",
+      "connectWaba": "Connect WABA",
+      "workEmail": "Work email",
+      "bookDemo": "Book a demo",
+      "invalidEmail": "Enter a valid work email",
+      "demoSuccess": "Thanks! We'll be in touch soon.",
+      "demoError": "Something went wrong. Please try again.",
+      "subtitleSecondary": "Segmented broadcasts, promos, and reminders across every chat."
+    },
+    "featureCards": {
+      "scrollUp": "Scroll up",
+      "scrollDown": "Scroll down",
+      "scrollHint": "Scroll to explore",
+      "label": "A campaign, continued.",
+      "example": "Example · Forma Home",
+      "pause": "Pause motion",
+      "play": "Resume motion",
+      "explore": "Explore all workflows",
+      "explorerTitle": "See where the conversation goes.",
+      "explorerDescription": "Pick a task and try the interactive example.",
+      "previous": "Previous workflow",
+      "next": "Next workflow",
+      "progress": "{current} of {total}",
+      "workflowLabel": "Choose a workflow",
+      "previewLabel": "Interactive example",
+      "imageAlt": "Cream and terracotta desk lamps on a shelf beside an oak tray",
+      "imageUnavailable": "Product image unavailable",
+      "learnMore": "Explore this workflow",
+      "reviewNote": "Example only. No messages are sent.",
+      "cards": {
+        "interactive": {
+          "badge": "Product discovery",
+          "title": "Products in WhatsApp.",
+          "subtitle": "Customers swipe through a carousel, pick a colour and reply.",
+          "detail": "Show products in a WhatsApp carousel, then use customer replies to help them choose."
+        },
+        "knowledge": {
+          "badge": "Contextual replies",
+          "title": "Answers from your sources.",
+          "subtitle": "AI answers from your product details and delivery terms.",
+          "detail": "Use your business sources and customer context for relevant replies with citations. Hand questions that need your team over to a person."
+        },
+        "followUp": {
+          "badge": "Follow-up",
+          "title": "Follow up at the right time.",
+          "subtitle": "Follow up with the answer a customer needs to decide.",
+          "detail": "Set waits and reply conditions in your scenario. Your team controls when and how the conversation continues."
+        },
+        "smartChat": {
+          "badge": "Campaigns",
+          "title": "Campaigns for your audience.",
+          "subtitle": "Pick the customers and check the text before it goes out.",
+          "detail": "Choose a customer segment and review the message before sending. This example targets people who asked about Terra vases but have not bought one. Buyers and unsubscribed contacts are excluded."
+        },
+        "meta": {
+          "badge": "WhatsApp quality",
+          "title": "Monitor template quality.",
+          "subtitle": "Spot quality changes before your next campaign.",
+          "detail": "Get an alert when Meta changes a template’s quality rating, so your team can check the text and the audience in time."
+        },
+        "ads": {
+          "badge": "From ads to replies",
+          "title": "From ads to WhatsApp.",
+          "subtitle": "A customer sees a product on Instagram and messages you.",
+          "detail": "Bring enquiries from Meta ads into WhatsApp. Use the conversation context to answer and let your team follow up."
+        },
+        "assets": {
+          "badge": "Campaign library",
+          "title": "Your image library.",
+          "subtitle": "Keep product photos in a shared library.",
+          "detail": "Upload images once and use them in any campaign. Your team won’t have to search for the same files again."
+        },
+        "voice": {
+          "badge": "Voice messages",
+          "title": "Turn text into voice.",
+          "subtitle": "Prepare voice messages that sound like your business.",
+          "detail": "Write a script and create speech for a voice message. Listen to the audio and review it before using it in a conversation."
+        },
+        "analytics": {
+          "badge": "Sales analytics",
+          "title": "Track your sales.",
+          "subtitle": "Recorded sales, refunds and conversation trends.",
+          "detail": "Track recorded sales and refunds in Sources. Compare conversation volume in Overview."
+        }
+      },
+      "previews": {
+        "common": {
+          "shop": "Forma Home",
+          "product": "Arc desk lamp",
+          "cream": "Cream",
+          "terracotta": "Terracotta",
+          "price": "18,000 ₸",
+          "customer": "Customer",
+          "size": "38 cm tall",
+          "businessAccount": "Business account",
+          "today": "Today",
+          "message": "Message",
+          "conversationLabel": "WhatsApp conversation with Forma Home"
+        },
+        "carousel": {
+          "question": "Does the Arc lamp come in two colours?",
+          "answer": "Yes. Which colour do you prefer?",
+          "choose": "Choose a colour",
+          "hint": "Browse the collection. Keep the conversation.",
+          "previous": "Previous product",
+          "next": "Next product"
+        },
+        "knowledge": {
+          "question": "Can I machine-wash the Lino throw?",
+          "answer": "Yes, on a delicate cycle at 30 °C. Lay it flat to dry.",
+          "citation": "Lino textile care guide",
+          "sourcesHeading": "From your business knowledge"
+        },
+        "reminders": {
+          "messageBody": "Would the Sora mirror dimensions help?",
+          "waitLabel": "Next day · No reply",
+          "followUpBody": "Sora is 60 × 90 cm. Will it fit your hallway wall?",
+          "reply": "Yes, that size works.",
+          "rule": "A useful detail. A conversation continued."
+        },
+        "smartChat": {
+          "title": "Ceramics with character",
+          "status": "Draft",
+          "prompt": "Prepare an offer for customers who asked about Terra vases.",
+          "answer": "The Terra vase is back in stock at 12,500 ₸. Would you like to see it styled in a room?",
+          "recipients": "Recipients",
+          "template": "WhatsApp template",
+          "approval": "Your approval comes before sending",
+          "audienceLabel": "Audience",
+          "audience": "Asked about Terra vases in the last 30 days",
+          "eligibility": "WhatsApp opt-in · no purchase yet",
+          "templateStatus": "Approved",
+          "showExclusions": "See who is excluded",
+          "hideExclusions": "Hide exclusions",
+          "purchased": "Already purchased",
+          "unsubscribed": "Unsubscribed"
+        },
+        "meta": {
+          "title": "Template quality changed",
+          "status": "Needs attention",
+          "body": "Review recent feedback before your next send.",
+          "action": "Review template",
+          "quality": "Quality monitoring",
+          "note": "An alert, so your team can decide."
+        },
+        "ads": {
+          "badge": "Forma Home",
+          "headline": "A place for everything.",
+          "cta": "Send WhatsApp message",
+          "lead": "Do the Mora baskets come as a set?",
+          "answer": "Yes, two baskets: 30 and 40 cm in diameter. Ideal for throws and cushions.",
+          "source": "From an Instagram ad",
+          "back": "Back to Instagram ad",
+          "sponsored": "Sponsored",
+          "caption": "Mora baskets in two sizes. Message us to choose yours.",
+          "like": "Like this example ad",
+          "save": "Save this example ad"
+        },
+        "assets": {
+          "title": "Objects for home",
+          "story": "Story",
+          "catalog": "Catalogue",
+          "ad": "Campaign",
+          "selected": "{placement} selected",
+          "hint": "Ceramics, baskets and soft textiles."
+        },
+        "voice": {
+          "title": "A note from your shop",
+          "scriptLabel": "Voice message script",
+          "script": "The Terra vase is back in stock. Height: 26 cm. Shall I send a photo?",
+          "note": "Write it. Give it your voice. Review before sending."
+        },
+        "analytics": {
+          "sample": "Demo store · Fictional data",
+          "periodLabel": "Report period",
+          "periods": {
+            "month": "Last 30 days",
+            "week": "Last 7 days"
+          },
+          "netRevenue": "Revenue after refunds",
+          "sales": "Confirmed sales",
+          "customers": "Paying customers",
+          "note": "From sales recorded by your team or payment system.",
+          "trend": {
+            "title": "Daily conversations",
+            "unit": "Conversations",
+            "current": "Current period",
+            "previous": "Previous period",
+            "axis": "Day of period · daily values",
+            "day": "Day {day}",
+            "summary": "Daily conversations: {current} this period and {previous} in the previous period.",
+            "source": "Dashboard → Overview"
+          },
+          "refunds": "Refunds",
+          "source": "Dashboard → Sources"
+        },
+        "products": {
+          "vase": {
+            "name": "Terra ceramic vase",
+            "price": "12,500 ₸"
+          },
+          "basket": {
+            "name": "Mora baskets",
+            "price": "22,000 ₸"
+          },
+          "textile": {
+            "name": "Lino cotton throw",
+            "price": "24,000 ₸"
+          },
+          "mirror": {
+            "name": "Sora wall mirror",
+            "price": "42,000 ₸"
+          }
+        }
+      },
+      "imageAlts": {
+        "instagram": "A terracotta desk lamp beside a notebook in a sunlit study corner",
+        "campaign": "A cream lamp lighting a bedside table against a blue wall",
+        "story": "Woven storage baskets on an oak bench against a blue wall",
+        "catalog": "A terracotta Arc desk lamp on a light studio background",
+        "display": "Oak trays, ceramic vases, baskets, and a cream lamp on a homeware shelf",
+        "vase": "Terracotta ceramic vase on a stone console in a sunlit room",
+        "textile": "Cotton throw and cushion on an olive armchair"
+      }
+    },
+    "sources": {
+      "title": "Start with WhatsApp, then add your other channels.",
+      "description": "Connect the channels your customers already use.",
+      "website": "Website chat"
+    },
+    "cta": {
+      "eyebrow": "Start with your next campaign",
+      "title": "Talk to your customers",
+      "titleAccent": "in airi.chat.",
+      "pricing": "Connect a channel, invite your team and set up your first campaign.",
+      "demo": "Prefer a walkthrough? Book a demo"
+    },
+    "footer": {
+      "ourTeam": "Our team",
+      "terms": "Terms",
+      "refunds": "Refunds",
+      "privacy": "Privacy",
+      "security": "Security",
+      "rights": "© 2026 Ais.ii TOO",
+      "tagline": "WhatsApp campaigns, customer chats and sales analytics.",
+      "navigation": "Company and policies",
+      "productNavigation": "Product",
+      "delivery": "Campaign delivery",
+      "metaAds": "Meta Ads MCP",
+      "mcp": "Airi.chat MCP",
+      "templates": "WhatsApp templates"
+    },
+    "faq": {
+      "eyebrow": "Questions about getting started",
+      "title": "Before you get started.",
+      "description": "About your WhatsApp number, AI replies and message charges.",
+      "items": {
+        "start": {
+          "question": "What do I need to get started?",
+          "answer": "Create a workspace, connect a channel, and add the business information your team uses to answer customers. For WhatsApp campaigns, connect your business account and prepare an approved template."
+        },
+        "number": {
+          "question": "Can I use my existing WhatsApp number?",
+          "answer": "You can connect an eligible WhatsApp Business number. Keeping the Business app alongside the platform depends on your account and Meta’s eligibility requirements. We can help you check before you connect."
+        },
+        "ai": {
+          "question": "Does AI handle every conversation?",
+          "answer": "You choose how AI is used. It can answer from your business knowledge or help prepare a campaign. Your team can take over conversations and review campaign drafts before sending."
+        },
+        "cost": {
+          "question": "Are WhatsApp message charges included?",
+          "answer": "Meta bills WhatsApp messages separately. airi.chat does not include those message fees."
+        },
+        "crm": {
+          "question": "Do I need a CRM to use airi.chat?",
+          "answer": "No. You can start with connected channels, customer conversations, campaigns, and business knowledge inside airi.chat. A CRM is not required for these workflows."
+        }
+      }
+    },
+    "revenueWorkflows": {
+      "eyebrow": "Five ways to sell more",
+      "title": "Turn customer conversations into sales.",
+      "demo": "See it in a demo",
+      "campaign": {
+        "label": "Campaigns",
+        "title": "Reach people already interested.",
+        "message": "Hi Alex! Meet the *Terra* vase: a simple way to refresh a calm corner.\nWould you style it on a shelf or a table?",
+        "template": "Meta-approved template",
+        "outcome": "More sales from your campaigns"
+      },
+      "consultation": {
+        "label": "AI and your team",
+        "title": "Help customers decide to buy.",
+        "source": "From an Instagram ad",
+        "question": "Will the large basket hold a throw?",
+        "answer": "Yes, it is 40 cm across. There is room for a throw and a couple of cushions.",
+        "sourceNote": "From the Mora product details",
+        "reply": "Perfect. I will take the set.",
+        "outcome": "More purchases from ad enquiries"
+      },
+      "recovery": {
+        "label": "Payment reminders",
+        "title": "Bring unfinished orders back.",
+        "pending": "Order awaiting payment",
+        "wait": "One hour later · No recorded payment",
+        "message": "Hi Alex! Still considering the *Sora* mirror?\nNeed help with the size, delivery or checkout? Choose what would help you decide.",
+        "confirmed": "Payment recorded",
+        "stop": "Next reminder cancelled",
+        "outcome": "Fewer unpaid orders"
+      },
+      "repeat": {
+        "label": "Repeat purchases",
+        "title": "Repeat purchase",
+        "previous": "Purchased 30 days ago",
+        "message": "Hi Alex! The *Mora* baskets pair neatly with your Lino throw.\nWould you like to compare the sizes or explore another room idea?",
+        "audience": "Customer opted in to offers",
+        "outcome": "More repeat purchases"
+      },
+      "qr": {
+        "label": "QR codes",
+        "title": "From your store to WhatsApp.",
+        "description": "A customer scans the code and sends a question. You reply with the right context.",
+        "sign": "Need a hand?",
+        "open": "Open the QR conversation example",
+        "alt": "airi.chat demonstration QR code",
+        "demoNote": "Example QR code. It links to this demonstration.",
+        "source": "QR code · Almaty shop window",
+        "sourceNote": "Enquiry source saved",
+        "question": "Hi! I saw the Terra vase in your window. How tall is it?",
+        "answer": "26 cm. We can set one aside for you in the store.",
+        "reply": "Thanks! I will come by after six today.",
+        "outcome": "More enquiries from physical locations"
+      }
+    },
+    "revenueReport": {
+      "monthly": {
+        "scope": "Meta Ads → conversations → sales",
+        "title": "Monthly attribution.",
+        "concept": "Report concept · Fictional data",
+        "current": "Period",
+        "previous": "Compare with",
+        "metric": "Metric",
+        "change": "Change",
+        "chart": "Revenue from ad conversations",
+        "unit": "thousand ₸",
+        "chartLabel": "Revenue from ad-sourced conversations, January to June 2026, after refunds, in KZT.",
+        "selection": "Comparing {current} with {previous}.",
+        "note": "Full calendar months. Only sales linked to ad-sourced conversations; revenue is net of refunds. Ad spend remains in USD.",
+        "metrics": {
+          "spend": "Ad spend · USD",
+          "conversations": "Ad conversations",
+          "sales": "Confirmed sales",
+          "netRevenue": "Net revenue · ₸"
+        },
+        "months": {
+          "jan": "January",
+          "feb": "February",
+          "mar": "March",
+          "apr": "April",
+          "may": "May",
+          "jun": "June"
+        },
+        "shortMonths": {
+          "jan": "Jan",
+          "feb": "Feb",
+          "mar": "Mar",
+          "apr": "Apr",
+          "may": "May",
+          "jun": "Jun"
+        }
+      },
+      "eyebrow": "Business analytics",
+      "title": "From ad spend to recorded sales.",
+      "description": "Examples from separate reports: Sources, Overview, Campaign analytics and Team.",
+      "details": {
+        "ads": {
+          "title": "Which ads start conversations?",
+          "source": "Dashboard → Sources · Meta Ads · USD",
+          "description": "Compare spend and cost per messaging conversation.",
+          "spend": "Ad spend",
+          "results": "Conversations",
+          "cost": "Cost per conversation",
+          "table": "Ad comparison · Meta-reported results",
+          "ad": "Ad",
+          "captured": "{count} ad-sourced conversations captured in airi.chat.",
+          "boundary": "Meta and airi.chat count conversations differently."
+        },
+        "campaign": {
+          "title": "What happens after sending?",
+          "description": "Terra vase · {count} accepted sends",
+          "totalAccepted": "Accepted",
+          "delivered": "Delivered",
+          "read": "Read",
+          "replied": "Replied",
+          "replyRate": "Reply rate: {rate} of accepted sends",
+          "cost": "≈ {value} per reply · USD",
+          "source": "Campaigns → Analytics"
+        },
+        "response": {
+          "title": "How long do customers wait?",
+          "description": "First response from a team member.",
+          "median": "Median wait",
+          "p90": "90% of replies within",
+          "scope": "Based on {count} measured first human replies. Excludes unanswered conversations; elapsed time.",
+          "duration": {
+            "missing": "—",
+            "lessThanMinute": "Less than a minute",
+            "minutes": "{count, plural, one {{value} min} other {{value} min}}",
+            "hours": "{count, plural, one {{value} hr} other {{value} hr}}",
+            "days": "{count, plural, one {{value} day} other {{value} days}}",
+            "noChange": "No change"
+          },
+          "source": "Dashboard → Overview / Team"
+        },
+        "demoNote": "Illustrative excerpts from separate product screens, with fictional data."
+      }
+    },
+    "templates": {
+      "seo": {
+        "title": "WhatsApp templates",
+        "description": "Browse 62 WhatsApp templates in English, Russian and Kazakh. Choose an example and get a demo on WhatsApp.",
+        "intro": "Choose an example and get it on WhatsApp.",
+        "detailTitle": "WhatsApp template example",
+        "detailHeading": "Try this template",
+        "customizeNote": "Fictional example. Adapt it for your business; WhatsApp approval is required.",
+        "relatedTitle": "Similar templates",
+        "languagesLabel": "Template languages"
+      },
+      "navigation": "Templates",
+      "landingCta": "I want this one",
+      "eyebrow": "WhatsApp template library",
+      "title": "WhatsApp templates",
+      "description": "Choose an example and get it on WhatsApp.",
+      "backHome": "Back to home",
+      "browseAll": "Browse all templates",
+      "search": "Search templates",
+      "searchPlaceholder": "Cart, booking, birthday…",
+      "filtersLabel": "Filter templates",
+      "useCase": "Use case",
+      "industry": "Industry",
+      "goal": "Goal",
+      "format": "Format",
+      "all": {
+        "useCase": "All use cases",
+        "industry": "All industries",
+        "goal": "All goals",
+        "format": "All formats"
+      },
+      "industries": {
+        "retail": "Retail & e-commerce",
+        "services": "Services",
+        "education": "Education",
+        "finance": "Finance"
+      },
+      "useCases": {
+        "follow-up": "Lead follow-ups",
+        "booking": "Bookings",
+        "service": "Service updates",
+        "commerce": "Product discovery",
+        "information": "Documents & onboarding",
+        "contacts": "Contacts & preferences",
+        "learning": "Learning",
+        "retention": "Customer retention"
+      },
+      "goals": {
+        "acquire": "Start a conversation",
+        "convert": "Complete a purchase",
+        "retain": "Bring customers back",
+        "inform": "Keep customers updated"
+      },
+      "formats": {
+        "text": "Text",
+        "image": "Image",
+        "carousel": "Carousel",
+        "flow": "WhatsApp Flow",
+        "document": "PDF",
+        "video": "Video",
+        "location": "Location pin"
+      },
+      "resultCount": "{count, plural, one {# template} other {# templates}}",
+      "resetFilters": "Clear filters",
+      "catalogLabel": "WhatsApp template examples",
+      "emptyTitle": "No matching templates",
+      "emptyDescription": "Try another search or clear filters.",
+      "getTemplate": "Send me this demo",
+      "viewTemplate": "Preview template",
+      "getTemplateLabel": "Get {title} on WhatsApp",
+      "viewTemplateLabel": "Preview {title}",
+      "ready": "Ready to send",
+      "comingSoon": "Coming soon",
+      "previewLabel": "WhatsApp message preview",
+      "mediaPlaceholder": "Your brand image goes here",
+      "carouselPrevious": "Previous product",
+      "carouselNext": "Next product",
+      "mediaUnavailable": "Preview unavailable",
+      "sampleNote": "Example message. Buttons and images in this preview are illustrative.",
+      "requestDescription": "Enter your details to get this demo on WhatsApp.",
+      "previewDescription": "Explore the message before trying it on WhatsApp.",
+      "checkingAvailability": "Checking demo availability…",
+      "availabilityUnavailable": "Demo availability is temporarily unavailable",
+      "comingSoonTitle": "Demo coming soon",
+      "comingSoonDescription": "You can explore this example now. Sending will be available once its WhatsApp template is ready.",
+      "name": "Your name",
+      "email": "Work email",
+      "phone": "WhatsApp number",
+      "phoneHint": "Include your country code, for example +7 700 123 45 67.",
+      "consent": "I agree to receive this demo and future product updates and offers from airi.chat on WhatsApp. I can unsubscribe at any time.",
+      "privacyPrefix": "Your details are handled under our",
+      "privacyLink": "Privacy Policy",
+      "submit": "Send me this demo",
+      "sending": "Sending request…",
+      "checkAgain": "Check again",
+      "acceptedTitle": "Your demo is queued",
+      "acceptedDescription": "Your request was accepted for delivery to your WhatsApp number. Delivery can take a little time.",
+      "done": "Done",
+      "processingTitle": "Your request is not confirmed yet",
+      "processingDescription": "Check your WhatsApp for the demo. You can safely check this same request again without sending another one.",
+      "restartRequest": "Start a new request",
+      "errors": {
+        "unavailable": "This demo cannot be sent right now. Try again later or continue browsing examples.",
+        "rate_limited": "Too many requests. Please try again later.",
+        "invalid_request": "Check your name, email and WhatsApp number, including the country code.",
+        "send_failed": "This demo was not sent. Start a new request to try again.",
+        "unknown": "We could not confirm the request. Please check again."
+      },
+      "catalog": {
+        "seasonal-offer": {
+          "title": "Product collection",
+          "description": "Introduce a product and ask how the customer would use it.",
+          "button": "Explore airi.chat",
+          "buttons": {
+            "0": "Explore airi.chat"
+          },
+          "demoPrefix": "*airi.chat demo: seasonal offer*\n_Fictional example_"
+        },
+        "abandoned-cart": {
+          "title": "Shopping help",
+          "description": "Offer help with size, delivery or checkout.",
+          "button": "Show options",
+          "buttons": {
+            "0": "Show options",
+            "1": "Ask a question"
+          },
+          "demoPrefix": "*airi.chat demo: abandoned cart*\n_Fictional example_"
+        },
+        "repeat-purchase": {
+          "description": "Suggest another product after a purchase.",
+          "button": "Explore airi.chat",
+          "buttons": {
+            "0": "Explore airi.chat"
+          },
+          "demoPrefix": "*airi.chat demo: repeat purchase*\n_Fictional example_"
+        },
+        "welcome": {
+          "title": "Welcome message",
+          "description": "Welcome a new customer and offer help.",
+          "body": "Hi Alex! Welcome to *airi.chat*.\nWhat would you like to improve first: customer replies or follow-ups? Pick a topic and start a conversation with our team.",
+          "button": "Show options",
+          "buttons": {
+            "0": "Show options",
+            "1": "Ask a question"
+          },
+          "demoPrefix": "*airi.chat demo: welcome*\n_Fictional example_"
+        },
+        "order-confirmation": {
+          "title": "Order confirmation",
+          "description": "Confirm an order and explain the next step.",
+          "body": "Hi Alex! Your sample order *#1042* is confirmed.\nWe would send the next update when it is ready. Need help with this example? Choose a reply below.",
+          "button": "Show options",
+          "buttons": {
+            "0": "Show options",
+            "1": "Ask a question"
+          },
+          "demoPrefix": "*airi.chat demo: order confirmation*\n_Fictional example_"
+        },
+        "shipping-update": {
+          "title": "Shipping update",
+          "description": "Share shipment status and estimated arrival.",
+          "body": "Good news, Alex! Sample order *#1042* is on its way.\nEstimated arrival: *Thursday*.\nWant help with a delivery question? Reply in this demo conversation.",
+          "button": "Explore airi.chat",
+          "buttons": {
+            "0": "Explore airi.chat"
+          },
+          "demoPrefix": "*airi.chat demo: shipping update*\n_Fictional example_"
+        },
+        "appointment-reminder": {
+          "title": "Appointment reminder",
+          "description": "Remind customers of an appointment and ask for confirmation.",
+          "body": "Hi Alex! Your sample appointment is *tomorrow at 14:00*.\nWould you keep this time or ask to reschedule? Choose a reply below to try the conversation.",
+          "button": "Confirm demo time",
+          "buttons": {
+            "0": "Confirm demo time",
+            "1": "Try rescheduling"
+          },
+          "demoPrefix": "*airi.chat demo: appointment reminder*\n_Fictional example_"
+        },
+        "course-enrollment": {
+          "title": "Course enrollment",
+          "description": "Preview course enrollment in a WhatsApp Flow.",
+          "body": "Hi Alex! Ready to explore *WhatsApp automation*?\nOpen the short form, choose a sample course and try completing it inside WhatsApp. This demo does not enroll you.",
+          "button": "Try demo form",
+          "buttons": {
+            "0": "Try demo form"
+          },
+          "demoPrefix": "*airi.chat demo: course enrollment*\n_Fictional example_"
+        },
+        "payment-reminder": {
+          "title": "Payment reminder",
+          "description": "Remind customers about an invoice and due date.",
+          "body": "Hi Alex. Sample invoice *#204* is due on *Friday*.\nAlready paid, or have a question? Choose a reply below to try a payment follow-up. No payment is requested by this demo.",
+          "button": "Already paid",
+          "buttons": {
+            "0": "Already paid",
+            "1": "Invoice question"
+          },
+          "demoPrefix": "*airi.chat demo: payment reminder*\n_Fictional example_"
+        },
+        "feedback": {
+          "title": "Customer feedback",
+          "description": "Ask about a recent customer experience.",
+          "body": "Hi Alex! How was your sample visit to *our showroom*?\nChoose a reply and tell us what worked well or what could be better. One quick answer can start a useful conversation.",
+          "button": "It went well",
+          "buttons": {
+            "0": "It went well",
+            "1": "Could be better"
+          },
+          "demoPrefix": "*airi.chat demo: feedback*\n_Fictional example_"
+        },
+        "back-in-stock": {
+          "title": "Back in stock",
+          "description": "Show restocked products in a carousel.",
+          "body": "Hi Alex! Your sample favorites are back: *Terra, Mora and Lino*.\nSwipe through the collection. Which one would you choose for your room?",
+          "button": "Browse the collection",
+          "buttons": {
+            "0": "Explore airi.chat"
+          },
+          "demoPrefix": "*airi.chat demo: back in stock*\n_Fictional example_",
+          "cards": [
+            {
+              "body": "*Terra vase · demo product*"
+            },
+            {
+              "body": "*Mora baskets · demo products*"
+            },
+            {
+              "body": "*Lino throw · demo product*"
+            }
+          ]
+        },
+        "birthday-offer": {
+          "title": "Birthday offer",
+          "description": "Send a birthday greeting and offer.",
+          "body": "Happy birthday, Alex! 🎉\nHere is a fictional birthday treat: use *BIRTHDAY* in this sample shopping journey.\nWould you pick a gift for yourself or explore a home idea?",
+          "button": "Explore airi.chat",
+          "buttons": {
+            "0": "Explore airi.chat"
+          },
+          "demoPrefix": "*airi.chat demo: birthday offer*\n_Fictional example_"
+        },
+        "enquiry-follow-up": {
+          "title": "Enquiry follow-up",
+          "description": "Follow up on an enquiry with a question.",
+          "body": "*airi.chat demo · fictional example*\n\nHi Alex — still exploring a customer messaging setup?\n\nA short conversation can help you compare the next steps. What would be most useful: a price overview or a walkthrough?\n\n_Try a sample reply below; no consultation is scheduled._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Price overview", "Show me how"]
+        },
+        "discovery-recap": {
+          "title": "Call recap",
+          "description": "Summarize the priorities discussed on a call.",
+          "body": "*airi.chat demo · fictional example*\n\n*Your sample discovery recap*\n\nHi Alex, here are the priorities we discussed:\n• Answer new enquiries consistently\n• Keep appointment changes in one conversation\n• Review results each week\n\n*Next step:* compare a simple pilot with your current process.\n\n_This example does not record a real meeting._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Looks right", "Needs a change"]
+        },
+        "quote-ready": {
+          "title": "Quote",
+          "description": "Send a price summary and PDF proposal.",
+          "body": "*airi.chat demo · fictional example*\n\n*Your sample quote is ready*\n\nReference: Q-204\nScope: home styling consultation and product shortlist\nIllustrative total: *180 USD*\n\nOpen the attached PDF to see what is included and which questions to ask before deciding.\n\n_This fictional proposal is not an offer, invoice or payment request._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "quote-question": {
+          "title": "Quote follow-up",
+          "description": "Ask a question about a quote.",
+          "body": "*airi.chat demo · fictional example*\n\nHi Alex — one quick question about sample quote *Q-204*.\n\nWould a clearer scope or a different timing option help you decide?\n\n_Tap a sample reply to try the interaction; the quote is fictional._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Clarify the scope", "Discuss timing"]
+        },
+        "proposal-comparison": {
+          "title": "Proposal comparison",
+          "description": "Compare two options and their scope.",
+          "body": "*airi.chat demo · fictional example*\n\n*Choose a starting point*\n\n*Option A · Focused pilot*\nOne customer journey, a small team and a review after two weeks.\n\n*Option B · Broader rollout*\nThree customer journeys, shared guidelines and a monthly review.\n\nWhich approach feels closer to your needs?\n\n_These are fictional options, not a purchase or service commitment._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Focused pilot", "Broader rollout"]
+        },
+        "decision-check-in": {
+          "title": "Decision follow-up",
+          "description": "Ask whether a lead wants to continue or pause.",
+          "body": "*airi.chat demo · fictional example*\n\nHi Alex, is your messaging pilot still on your shortlist?\n\nIf the timing has changed, that is fine. You can explore an example now or leave the conversation for later.\n\n_This is a sample follow-up, with no real project attached._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Keep exploring", "Maybe later"]
+        },
+        "showroom-visit-follow-up": {
+          "title": "Showroom follow-up",
+          "description": "Follow up on a product after a showroom visit.",
+          "body": "*airi.chat demo · fictional example*\n\n*A detail from your sample showroom visit*\n\nHi Alex, the *Terra vase* works well as a single focal point on a quiet shelf.\n\nBefore choosing, compare the shelf depth, the vase height and the natural light in your room.\n\n_The visit and product interest are fictional. No item is reserved._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "home-service-quote": {
+          "title": "Service quote",
+          "description": "Collect project details in a quote Flow.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try a home service estimate*\n\nChoose a sample service, job size and fictional service area. Review optional extras and timing before completing the demo.\n\n_No address, phone number or payment is requested. No quote or service visit is created._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try estimate"]
+        },
+        "appointment-booking": {
+          "title": "Appointment booking",
+          "description": "Preview booking an appointment in WhatsApp.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try an appointment booking*\n\nPick a sample service, choose a date and time, then review the details together.\n\n_This airi.chat Flow is a fictional booking exercise. It does not reserve a slot or collect contact details._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try booking"]
+        },
+        "restaurant-table": {
+          "title": "Table booking",
+          "description": "Choose a party size and seating preferences.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try a table reservation*\n\nChoose a sample date, party size and seating preference. The review step makes the choices easy to check.\n\n_No restaurant table is booked, and no personal details are requested._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Choose a table"]
+        },
+        "travel-date-range": {
+          "title": "Travel planning",
+          "description": "Choose travel dates and trip preferences.",
+          "body": "*airi.chat demo · fictional example*\n\n*A little trip planning, inside WhatsApp*\n\nChoose sample travel dates, a room preference and a few extras, then review the plan.\n\n_This is a fictional itinerary exercise. No tickets, rooms or travel services are reserved._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Plan a demo trip"]
+        },
+        "event-registration": {
+          "title": "Event registration",
+          "description": "Choose an event session and review the details.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try an event registration*\n\nChoose a sample session and participation preferences, then complete the short review.\n\n_This demo does not issue a ticket, register an attendee or request personal details._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try registration"]
+        },
+        "appointment-rescheduled": {
+          "title": "Appointment change",
+          "description": "Share a new appointment time.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample appointment updated*\n\nReference: DEMO-A-318\nPrevious time: 14 Oct 2026, 14:30 UTC\n*New time: 15 Oct 2026, 14:30 UTC*\n\nPlease check the difference before planning your day.\n\n_This is a fictional schedule change; no real appointment has been modified._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Time looks good", "Need another time"]
+        },
+        "visit-preparation": {
+          "title": "Visit checklist",
+          "description": "Send a checklist before a service visit.",
+          "body": "*airi.chat demo · fictional example*\n\n*Before your sample consultation*\n\nFor a room styling consultation, a little preparation helps:\n• Note your three main questions\n• Bring any relevant reference photos\n• Check the appointment time and travel plan\n\n_This checklist illustrates a reminder. No visit is booked._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "delivery-preferences": {
+          "title": "Delivery preferences",
+          "description": "Choose delivery preferences in a WhatsApp Flow.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try choosing delivery preferences*\n\nExplore sample collection or delivery choices, a fictional location and a time window, then review the selection.\n\n_This demo does not change a shipment or collect an address. Please use only the provided sample choices._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Choose preferences"]
+        },
+        "return-request": {
+          "title": "Return request",
+          "description": "Choose a return reason and review the options.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try a return request*\n\nUse a sample reference, choose a return reason and explore a resolution. Review the fictional handoff options before completing the demo.\n\n_No order is changed, collection arranged or refund requested._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try a return"]
+        },
+        "pickup-ready": {
+          "title": "Pickup location",
+          "description": "Share pickup details and a location pin.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample pickup message with a map pin*\n\nOrder DEMO-O-426 is marked ready in this fictional example.\n\nThe pin shows the *Eiffel Tower in Paris* as a public-landmark demonstration point. It is *not an airi.chat address or a real collection point*.\n\n_Do not travel there to collect an order. Open the pin to explore the location format._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "repair-progress": {
+          "title": "Repair update",
+          "description": "Share repair status and the next step.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample repair update*\n\nCase: DEMO-R-182\nItem: a desk lamp\n*Stage:* inspection complete\n*Next:* review the proposed repair steps\n\nThe example keeps the status readable without suggesting work is already finished.\n\n_No device or real repair case is attached._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Show next steps", "Have a question"]
+        },
+        "service-completed": {
+          "title": "Service completion",
+          "description": "Summarize completed work and the next step.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample service complete*\n\nReference: S-1042\nWork shown in this example:\n• Checked the agreed scope\n• Recorded the outcome\n• Prepared a short handover checklist\n\nKeep the summary somewhere easy to find before the next visit.\n\n_This fictional message does not confirm real work._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "refund-status": {
+          "title": "Refund status",
+          "description": "Show a sample refund stage and amount.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample refund status*\n\nReference: DEMO-RF-091\nIllustrative amount: *24 USD*\nStage: review completed; processing is the next step in this example.\n\nA real business would confirm its own payment status before sending this message.\n\n_No refund has been requested, approved or paid._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "subscription-renewal": {
+          "title": "Subscription renewal",
+          "description": "Remind a subscriber to review their plan before renewal.",
+          "body": "*airi.chat demo · fictional example*\n\n*Review a sample renewal*\n\nPlan: Studio monthly\nIllustrative renewal date: 31 Oct 2026\n\nBefore the next cycle, check whether the plan still fits your needs and which features you actually use.\n\n_This fictional reminder does not renew a subscription or request payment._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Review the plan", "Consider a change"]
+        },
+        "service-summary": {
+          "title": "Service summary",
+          "description": "Send completed work and next steps in a PDF.",
+          "body": "*airi.chat demo · fictional example*\n\n*Your sample service summary*\n\nReference: S-1042\nThe attached PDF shows a concise care handover: what was completed, helpful recommendations and a follow-up plan.\n\n_This fictional document is not proof of work, an invoice or a warranty._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "product-finder": {
+          "title": "Product finder",
+          "description": "Choose preferences to see a sample product recommendation.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try a product finder*\n\nChoose how you want to use an item, a sample budget and useful features. Review a suggested direction at the end.\n\n_This demo does not check live stock or place an order._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Find a sample match"]
+        },
+        "product-comparison": {
+          "title": "Product comparison",
+          "description": "Compare three products in a carousel.",
+          "body": "*airi.chat demo · fictional example*\n\n*A clearer product comparison*\n\nSwipe through three fictional homeware options. Each card focuses on a different use, so the choice starts with what your room needs.\n\n_Images are illustrative. Dimensions, stock and prices are not a live offer._\n\nTo unsubscribe: samat@airi.chat",
+          "buttons": [],
+          "cards": [
+            {
+              "body": "*Terra vase*\nA sculptural focal point for a shelf or side table.\n_Best for: one simple statement._",
+              "buttons": ["Explore airi.chat"]
+            },
+            {
+              "body": "*Mora baskets*\nWoven storage for everyday items.\n_Best for: texture with a practical purpose._",
+              "buttons": ["Explore airi.chat"]
+            },
+            {
+              "body": "*Lino throw*\nA soft layer for a sofa or reading corner.\n_Best for: an easy change in mood._",
+              "buttons": ["Explore airi.chat"]
+            }
+          ]
+        },
+        "room-styling": {
+          "title": "Room ideas",
+          "description": "Show matching items in a carousel.",
+          "body": "*airi.chat demo · fictional example*\n\n*Three layers for a calmer room*\n\nStart with a focal point, add a useful texture, then finish with a soft layer. Swipe to see a fictional styling combination.\n\n_This is an illustrative room idea, not a bundle price or a product reservation._\n\nTo unsubscribe: samat@airi.chat",
+          "buttons": [],
+          "cards": [
+            {
+              "body": "*1 · Add a focal point*\nGive a vase a little breathing room so its shape stands out.",
+              "buttons": ["Explore airi.chat"]
+            },
+            {
+              "body": "*2 · Add useful texture*\nA woven basket can keep small everyday objects together.",
+              "buttons": ["Explore airi.chat"]
+            },
+            {
+              "body": "*3 · Add a soft finish*\nFold a throw where it adds a gentle change of texture.",
+              "buttons": ["Explore airi.chat"]
+            }
+          ]
+        },
+        "product-care": {
+          "title": "Product care",
+          "description": "Send product care tips in a video.",
+          "body": "*airi.chat demo · fictional example*\n\n*A little care goes a long way*\n\nWatch three illustrative reminders for the Terra vase: use a soft damp cloth, dry gently and avoid abrasive pads.\n\n_The clip is a fictional product demo. Follow the instructions supplied with your actual item._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "bundle-idea": {
+          "title": "Product pairing",
+          "description": "Show how two products work together.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample pairing for everyday use*\n\nThe *Mora basket* can hold a throw beside a sofa, keeping both close at hand.\n\nThink about the space you have and what you reach for each day before adding anything new.\n\n_This is a fictional styling suggestion, with no bundle price or checkout._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "sizing-guide": {
+          "title": "Size guide",
+          "description": "Show product dimensions beside an image.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample basket sizing guide*\n\nSmall: *24 × 18 cm*\nLarge: *32 × 24 cm*\n\nMeasure your shelf opening and leave room to lift the basket out comfortably.\n\n_These dimensions are fictional examples, not specifications for a product on sale._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "gift-selection": {
+          "title": "Gift selection",
+          "description": "Ask a question to help choose a gift.",
+          "body": "*airi.chat demo · fictional example*\n\n*A thoughtful gift starts with one question*\n\nHi Alex — is this sample gift for a home lover, a host or someone who enjoys a quiet moment?\n\nA useful preference can make the choice feel more personal.\n\n_The gift and recipient are fictional. Reply buttons demonstrate a choice only._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["For a home lover", "For a host", "A quiet moment"]
+        },
+        "onboarding-guide": {
+          "title": "Getting started",
+          "description": "Send a PDF guide with setup steps.",
+          "body": "*airi.chat demo · fictional example*\n\n*Start with a simple guide*\n\nHi Alex, the attached sample guide walks through connecting a business channel, preparing templates, designing a customer journey and testing before launch.\n\nKeep it nearby as an example of a helpful onboarding document.\n\n_No account, integration or service is activated by this demo._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "event-agenda": {
+          "title": "Event agenda",
+          "description": "Send an event schedule as a document.",
+          "body": "*airi.chat demo · fictional example*\n\n*Your sample event agenda*\n\nEvent: Customer conversations workshop\nIllustrative schedule: 10:00–11:00\n\nThe PDF brings the session order and key themes into one easy-to-save page.\n\n_This is a fictional event. The document is not a ticket or registration confirmation._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "first-week-checklist": {
+          "title": "First-week checklist",
+          "description": "Share tasks for a learner’s first week.",
+          "body": "*airi.chat demo · fictional example*\n\n*Your sample first-week checklist*\n\nFor Customer conversations basics, start with three small steps:\n☐ Watch the introductory lesson\n☐ Try one short exercise\n☐ Write down one question to revisit\n\nProgress is easier to see when the first week has a clear shape.\n\n_This fictional checklist does not enroll you or track your learning._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try the exercise", "Review the lesson"]
+        },
+        "account-setup-checklist": {
+          "title": "Messaging pilot",
+          "description": "Plan a customer journey, content and result to review.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample setup checklist*\n\nBefore launching a messaging pilot:\n☐ Choose one customer journey\n☐ Agree who owns replies\n☐ Prepare the sample message content\n☐ Decide what a useful result looks like\n\nStart small enough to review the outcome.\n\n_This example does not change account settings or connect a channel._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "subscription-change-summary": {
+          "title": "Plan change",
+          "description": "Show the old and new plan details.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample plan change summary*\n\nPrevious plan: Studio monthly\nNew plan: *Studio annual*\nIllustrative effective date: 1 Nov 2026\n\nA real service would confirm the billing terms separately.\n\n_No plan, charge or subscription has been changed by this demo._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Summary is clear", "Review the details"]
+        },
+        "privacy-request-acknowledgement": {
+          "title": "Privacy request",
+          "description": "Acknowledge a privacy enquiry and explain the next step.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample privacy enquiry acknowledgement*\n\nReference: DEMO-PR-014\n\nThis example shows the information a business might share after receiving an enquiry: a reference number, the review stage and a clear contact path.\n\n_This demo has not created a privacy request, verified identity or processed personal data._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "contact-airi": {
+          "title": "Contact options",
+          "description": "Choose how to contact airi.chat in a Flow.",
+          "body": "*airi.chat demo · fictional example*\n\n*Get in touch with airi.chat*\n\nExplore a short contact preference demo, then choose how you would like to reach us yourself.\n\n*WhatsApp / phone:* +7 708 260 93 46\n*Email:* samat@airi.chat\n\n_The Flow does not book a call or request a callback. It collects no personal contact details._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore contact options"]
+        },
+        "preference-center": {
+          "title": "Message preferences",
+          "description": "Choose message topics and preferences.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try a message preference center*\n\nChoose the sample topics and message frequency you prefer, then review the selection.\n\n_This fictional Flow does not change your real subscriptions or marketing consent. For actual unsubscribe requests, use the email below._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try preferences"]
+        },
+        "feedback-survey": {
+          "title": "Feedback survey",
+          "description": "Choose a rating and feedback topics in a Flow.",
+          "body": "*airi.chat demo · fictional example*\n\n*Try a short feedback survey*\n\nChoose a sample rating and the areas you would like to comment on. Review your choices before completing the demo.\n\n_This is a fictional feedback exercise, not a review of a real business visit. Please do not enter personal information._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try the survey"]
+        },
+        "company-contact": {
+          "title": "Company contacts",
+          "description": "Share airi.chat’s phone and email with a call button.",
+          "body": "*airi.chat demo · fictional example*\n\n*Reach airi.chat directly*\n\nQuestions about customer conversations on WhatsApp?\n\n*Phone / WhatsApp:* +7 708 260 93 46\n*Email:* samat@airi.chat\n*Website:* https://www.airi.chat/\n\nThe call button opens your phone's dialler for the real company number. The contact details are real; this message demonstrates how to share them.",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Call airi.chat"]
+        },
+        "branch-directory": {
+          "title": "Branch location",
+          "description": "Show a sample branch with a location pin.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample branch directory message*\n\nOpen the pin to explore the *Sydney Opera House* as a public-landmark location example.\n\nThis is *not an airi.chat office, partner branch or a service location*. The name and address help demonstrate how a real branch pin would appear.\n\n_No appointment, ticket or business visit is arranged._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "service-hours": {
+          "title": "Service hours",
+          "description": "Show a sample service schedule.",
+          "body": "*airi.chat demo · fictional example*\n\n*Sample service hours*\n\nMonday–Friday: *09:00–18:00*\nSaturday: *10:00–14:00*\nSunday: closed\n\nA real business can use a compact message like this to set expectations before someone visits.\n\n_These are fictional shop hours, not airi.chat's opening or support hours._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "human-handoff": {
+          "title": "Team handoff",
+          "description": "Explain when a team member takes over the conversation.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample handoff message*\n\nHi Alex, this is how a messaging assistant could explain the next step:\n\n“Your question needs a colleague's attention. We will include the conversation context so you do not have to repeat it.”\n\n_This example does not assign your conversation or notify a colleague. Reply buttons are illustrative only._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Handoff is clear", "Have another question"]
+        },
+        "learning-path": {
+          "title": "Learning path",
+          "description": "Choose learning goals, experience and topics.",
+          "body": "*airi.chat demo · fictional example*\n\n*Find a sample learning direction*\n\nChoose your goal, your current experience and the topics that interest you. Review a learning path that brings those choices together.\n\n_This fictional Flow does not enroll you, assess your skills or collect personal details._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Find a learning path"]
+        },
+        "lesson-recap": {
+          "title": "Lesson recap",
+          "description": "Summarize the main ideas from a lesson.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample lesson recap · Clear customer replies*\n\nThree ideas to keep:\n• Start with the customer's actual question\n• Make the next step easy to understand\n• Keep a human owner for complex cases\n\n*Try this:* rewrite one long reply as two short, clear sentences.\n\n_This message illustrates learning support; no real course progress is recorded._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Try the exercise", "Review key ideas"]
+        },
+        "practice-challenge": {
+          "title": "Practice task",
+          "description": "Suggest a five-minute task to practice one idea.",
+          "body": "*airi.chat demo · fictional example*\n\n*A small practice challenge*\n\nYou have five minutes. Turn this sample reply into a clearer next step:\n\n“We received your message and will take the relevant actions in accordance with our process.”\n\nAim for one useful action and one clear expectation.\n\n_This is a fictional exercise. Reply buttons do not submit graded work._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Challenge accepted", "Show another example"]
+        },
+        "study-plan": {
+          "title": "Weekly study plan",
+          "description": "Share study tasks spread across the week.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample weekly plan · Clear customer conversations*\n\n*Monday:* read one short example\n*Wednesday:* rewrite one reply in your own words\n*Friday:* compare your first and latest attempts\n\nKeep each session to about 15 minutes and focus on one improvement.\n\n_This fictional plan does not create reminders or enroll you in a course._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "webinar-follow-up": {
+          "title": "Webinar follow-up",
+          "description": "Suggest a next step after a webinar.",
+          "body": "*airi.chat demo · fictional example*\n\n*One takeaway from a sample webinar*\n\nSession: Better customer conversations\n\nBefore automating a conversation, write down:\n1. The customer's question\n2. The useful next step\n3. When a person should take over\n\nThat small outline is a practical place to start.\n\n_The webinar is fictional; this message does not provide a recording or register you for another event._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Useful takeaway", "Explore another idea"]
+        },
+        "loyalty-milestone": {
+          "title": "Loyalty milestone",
+          "description": "Recognize a customer’s continued interest.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample customer milestone*\n\nHi Alex, this example marks *5 thoughtful visits* to a fictional homeware store.\n\nA warm thank-you can make a milestone feel personal without turning every message into an offer.\n\n_No points, voucher, purchase history or reward has been created._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        },
+        "care-check-in": {
+          "title": "Care follow-up",
+          "description": "Ask about product care after a purchase.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample care check-in*\n\nHi Alex, have you found a useful spot for the *Mora basket*?\n\nKeep woven storage away from damp areas and check the maker's instructions before cleaning.\n\n_This is a fictional follow-up. Reply buttons demonstrate a response and do not create a support case._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Care tips help", "Have a care question"]
+        },
+        "community-invitation": {
+          "title": "Community invitation",
+          "description": "Invite customers to a sample community session.",
+          "body": "*airi.chat demo · fictional example*\n\n*A sample invitation · A calmer corner*\n\nBring one small styling question and explore how a vase, a woven basket and a soft throw can change a reading corner.\n\nThe idea is to share practical inspiration, with no purchase required.\n\n_This fictional session has no scheduled date, ticket or registration. The button opens airi.chat._",
+          "footer": "To unsubscribe: samat@airi.chat",
+          "buttons": ["Explore airi.chat"]
+        }
+      },
+      "unsubscribe": "To unsubscribe: samat@airi.chat"
+    }
+  },
+  "Pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "previousAria": "Go to previous page",
+    "nextAria": "Go to next page",
+    "morePages": "More pages"
+  },
+  "SetWebhookPage": {
+    "title": "Legacy Setup Retired",
+    "description": "This legacy setup has been retired. Please configure Telegram webhooks directly in your workspace settings under Integrations.",
+    "setWebhook": "Go to Workspace Settings"
+  },
+  "MergeAssetsPage": {
+    "metadataTitle": "Merge workspaces",
+    "metadataDescription": "Attach existing workspace access to your current sign-in.",
+    "brand": "airi.chat",
+    "title": "Merge your workspaces?",
+    "description": "We found existing workspace access for {email}. You can attach it to this sign-in before continuing.",
+    "workspaceSummary": "{workspaceCount, plural, one {# workspace} other {# workspaces}} from {legacyAccountCount, plural, one {# previous sign-in} other {# previous sign-ins}}",
+    "moreCandidates": "+{count} more",
+    "mergeAndContinue": "Merge and continue",
+    "continueWithoutMerging": "Continue without merging",
+    "mergeError": "We could not merge those workspaces. Please try again.",
+    "skipError": "We could not save your choice. Please try again.",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager"
+    }
+  },
+  "AiriMetaAds": {
+    "skill": {
+      "description": {
+        "missingSource": "Connect Meta Ads, then enable Ads MCP to use @meta",
+        "accountNotEnabled": "Meta has not enabled AI ad tools for this account yet. Check availability later.",
+        "checking": "Checking Meta Ads access before @meta becomes available",
+        "selectAccount": "Choose an accessible ad account in Integrations",
+        "checkAgain": "Check Meta Ads access again in Integrations",
+        "verify": "Verify the Meta Ads connection in Integrations",
+        "reconnect": "Reconnect Meta Ads access to use @meta",
+        "connect": "Enable and verify Meta Ads AI access in Integrations",
+        "retry": "Live Meta Ads access will be checked before running",
+        "management": "Live Meta Ads reporting and confirmed campaign changes",
+        "reporting": "Live Meta Ads reporting; changes require management access"
+      },
+      "recovery": {
+        "connect": "Connect Meta Ads for @meta",
+        "authorize": "Enable AI ad management for @meta",
+        "reconnect": "Reconnect Meta Ads for @meta",
+        "settings": "Check Meta Ads connection",
+        "rollout": "Check Meta Ads availability"
+      }
+    },
+    "starter": {
+      "title": "Meta Ads (@meta)",
+      "reporting": "Read live ad accounts and performance. Campaign changes require management access.",
+      "management": "Read live performance and prepare campaign changes for your review.",
+      "recheck": "Airi will verify Meta Ads access before reading accounts or performance.",
+      "prompt": "@meta List my ad accounts and summarize top spend last 30 days.",
+      "plan": {
+        "title": "Plan Meta Ads angle",
+        "description": "Turn customer signals into audience, creative, and campaign structure.",
+        "prompt": "Use my workspace context to plan Meta Ads audience, creative angles, and campaign structure."
+      }
+    },
+    "common": {
+      "cancel": "Cancel",
+      "notProvided": "Not provided",
+      "notChanged": "Not changed",
+      "none": "None",
+      "technical": "Technical details"
+    },
+    "review": {
+      "title": "Review Meta Ads changes",
+      "description": "Check the account and requested changes before confirming. Airi will run only this reviewed action.",
+      "states": {
+        "ready": "Ready",
+        "submitting": "Submitting",
+        "stale": "Expired",
+        "mismatched": "Mismatch"
+      },
+      "staleError": "This action is no longer current. Ask Airi to prepare a new action.",
+      "mismatchError": "The action does not match the reviewed transaction. Ask Airi to prepare it again.",
+      "error": "The change could not be confirmed. Check the technical details or prepare a new action.",
+      "summary": "Requested change",
+      "target": "Ad account",
+      "operation": "Operation",
+      "entities": "Affected objects",
+      "entityAction": "Action: {action}",
+      "entityStatus": "Status: {status}",
+      "requestedStatus": "Requested status",
+      "currencyTimezone": "Currency / timezone",
+      "business": "Business",
+      "money": "Money",
+      "moneyRaw": "Exact value sent to Meta",
+      "moneyCurrency": "Ad account currency",
+      "moneyUnits": "Units are not verified. This is Meta's exact input value, not a confirmed amount in {currency}. Check the field's units in Meta before approving.",
+      "schedule": "Schedule",
+      "values": "Values",
+      "targeting": "Audience targeting",
+      "creativeAssets": "Creative assets",
+      "logicalAssets": "Selected assets",
+      "uploadUrls": "Upload links",
+      "uploadHelp": "Temporary upload links are generated when the approved action runs.",
+      "warnings": "Review notes",
+      "unmapped": "Other input fields",
+      "user": "Meta user",
+      "sourceConnection": "Source / connection",
+      "tool": "Meta tool",
+      "accounts": "Account IDs",
+      "businesses": "Business IDs",
+      "json": "Exact action input",
+      "shortDigest": "Short digest",
+      "fullDigest": "Full digest",
+      "errorDetails": "Error details",
+      "confirm": "Confirm and run",
+      "submitting": "Submitting…"
+    },
+    "reconciliation": {
+      "title": "Record reviewed Meta Ads outcome",
+      "description": "Record what you verified in Meta Ads Manager. This does not run the action again.",
+      "currentOutcome": "Current result: {status}",
+      "statuses": {
+        "executing": "Waiting for Meta",
+        "outcome_unknown": "Unknown",
+        "succeeded": "Completed",
+        "not_executed": "Not executed"
+      },
+      "outcome": "Reviewed outcome",
+      "completed": "Completed",
+      "notExecuted": "Not executed",
+      "note": "Evidence note",
+      "notePlaceholder": "Describe what you checked in Meta Ads Manager and what happened.",
+      "noteHelp": "Required · {count}/500 characters",
+      "noteRequired": "Add an evidence note before recording the outcome.",
+      "identifiersRequired": "Complete both fields for each provider identifier.",
+      "identifiers": "Verified Meta object IDs (optional)",
+      "addId": "Add ID",
+      "idsHelp": "Add IDs only for Meta objects you directly verified.",
+      "identifierKind": "Object {index} type",
+      "identifierId": "Object {index} ID",
+      "removeIdentifier": "Remove object {index}",
+      "kind": "Object type",
+      "id": "ID",
+      "record": "Record outcome",
+      "recording": "Recording…"
+    },
+    "actions": {
+      "review": "Review changes",
+      "submitting": "Submitting…",
+      "legacy": "This action has expired. Ask Airi to prepare a new one.",
+      "regenerate": "Prepare again",
+      "missing": "The reviewed action is missing. Ask Airi to prepare it again.",
+      "mismatch": "The action and reviewed transaction do not match. Ask Airi to prepare it again.",
+      "outcome": "Review Meta Ads outcome",
+      "unknown": "The outcome is unknown. Check Meta Ads Manager before recording what happened.",
+      "stranded": "This action appears interrupted. Check Meta Ads Manager before recording what happened.",
+      "waiting": "Airi is waiting for Meta's result. If it remains unresolved, check Meta Ads Manager after five minutes.",
+      "record": "Record reviewed outcome",
+      "recording": "Recording…"
+    },
+    "errors": {
+      "confirm": "Failed to confirm the Meta Ads change",
+      "regenerate": "Prepare a new action before continuing.",
+      "refresh": "The Meta Ads outcome was saved, but the chat could not refresh. Reopen the chat to load the result.",
+      "record": "Failed to record the reviewed Meta Ads outcome"
+    }
+  },
+  "AiriChat": {
+    "pendingPatchNewTemplateTitle": "Airi drafted a new template. The open template stays as it is.",
+    "pendingPatchNewFlowTitle": "Airi drafted a new flow. The open flow stays as it is.",
+    "pendingPatchOtherTitle": "Airi updated another draft in this chat.",
+    "pendingPatchOpenNew": "Open as new draft",
+    "pendingPatchOpenOther": "Open that draft",
+    "pendingPatchResolveConflict": "Choose a version above first, so your edits are not lost.",
+    "messagesLoadFailed": "This chat's messages did not load.",
+    "openDraftFailed": "Could not open the draft. Try again.",
+    "previewLoadFailed": "The preview could not load.",
+    "retry": "Retry",
+    "stopAnswer": "Stop answer",
+    "stoppingAnswer": "Stopping the answer",
+    "stopFailed": "Could not stop the answer. Try again.",
+    "answerStopped": "Stopped",
+    "runActive": "Airi is still answering in this chat. Wait for the answer or stop it.",
+    "loadEarlier": "Load earlier messages",
+    "loadingEarlier": "Loading earlier messages",
+    "loadEarlierFailed": "Earlier messages did not load. Try again.",
+    "emptyTitle": "What should we work on?",
+    "emptyDescription": "Ask about campaigns, WhatsApp, knowledge, or customer chats.",
+    "suggestedActionsLabel": "Suggested Airi actions",
+    "tryAiriFor": "Try Airi for...",
+    "recentChats": "Recent chats",
+    "recentChatsLabel": "Recent Airi chats",
+    "viewAll": "View all",
+    "toolsTitle": "Airi tools",
+    "toggleSidePanel": "Toggle side panel",
+    "suggestedActions": "Suggested actions",
+    "chatSection": "Chat",
+    "chatActionsLabel": "Airi chat actions",
+    "newAiriChat": "New Airi chat",
+    "loadingMessages": "Loading messages",
+    "newThread": "New thread",
+    "campaign": {
+      "label": "Campaign package",
+      "savedPlan": "Saved work plan - rev {revision} - {status, select, draft {draft} submitted {submitted} published {published} failed {failed} archived {archived} other {{status}}}",
+      "blocked": "{count} blocked",
+      "ready": "Ready",
+      "goal": "Goal",
+      "audience": "Audience",
+      "angle": "Angle",
+      "toolsReady": "{count, plural, one {# tool ready} other {# tools ready}}",
+      "connectTool": "Connect tool",
+      "open": "Open",
+      "nextAction": "Next action",
+      "openInAiriCreate": "Open in Airi Create",
+      "openBulkDraft": "Open bulk campaign draft",
+      "openAssetDrafts": "Open creative asset drafts",
+      "stepStatus": {
+        "ready": "Ready",
+        "approval_required": "Needs approval",
+        "blocked": "Blocked",
+        "needs_input": "Needs input"
+      }
+    },
+    "start": {
+      "metricLabels": {
+        "chats": "{count, plural, one {chat} other {chats}}",
+        "items": "{count, plural, one {item} other {items}}",
+        "replies": "{count, plural, one {reply} other {replies}}",
+        "channels": "{count, plural, one {channel} other {channels}}",
+        "tools": "{count, plural, one {tool} other {tools}}",
+        "sources": "{count, plural, one {source} other {sources}}"
+      },
+      "cards": {
+        "canva-whatsapp-campaign": {
+          "title": "Canva WhatsApp campaign",
+          "description": "Plan Canva creative and a WhatsApp template for a bulk send.",
+          "prompt": "Use Canva and WhatsApp together: plan a bulk campaign with a compliant WhatsApp template, audience angle, and Canva creative brief.",
+          "eyebrow": "Canva + WhatsApp",
+          "compactTitle": "Create Canva campaign"
+        },
+        "click-to-whatsapp-funnel": {
+          "title": "Click-to-WhatsApp funnel",
+          "description": "Draft ad angles, WhatsApp entry message, and follow-up steps.",
+          "prompt": "Plan a click-to-WhatsApp funnel using Meta Ads and WhatsApp: audience, creative angle, opening template, and follow-up scenario.",
+          "eyebrow": "Ads + WhatsApp",
+          "compactTitle": "Build WhatsApp funnel"
+        },
+        "avatar-whatsapp-campaign": {
+          "title": "Avatar video campaign",
+          "description": "Write a short avatar video script and a WhatsApp distribution plan.",
+          "prompt": "Plan a short Wan talking-avatar video campaign for WhatsApp. Include portrait brief, script under 15s, offer angle, and template copy.",
+          "eyebrow": "Wan Avatar + WhatsApp",
+          "compactTitle": "Plan avatar campaign"
+        },
+        "meta-ads-creative-pack": {
+          "title": "Meta Ads creative pack",
+          "description": "Turn connected creative tools into ad concepts and asset briefs.",
+          "prompt": "Create a Meta Ads creative pack using my connected creative tools. Include hooks, formats, asset briefs, and a testing plan.",
+          "eyebrow": "Ads + Creative",
+          "compactTitle": "Draft Meta Ads pack"
+        },
+        "website-lead-whatsapp-nurture": {
+          "title": "Website lead nurture",
+          "description": "Use web leads to draft WhatsApp qualification and reminder steps.",
+          "prompt": "Use website chat context and WhatsApp to design a lead nurture flow with qualification questions, reminders, and conversion messages.",
+          "eyebrow": "Website + WhatsApp",
+          "compactTitle": "Nurture website leads"
+        },
+        "email-whatsapp-reactivation": {
+          "title": "Email + WhatsApp reactivation",
+          "description": "Coordinate email and WhatsApp messages without repeating copy.",
+          "prompt": "Plan a multichannel reactivation campaign using email and WhatsApp. Include sequence, message copy, and safeguards against spammy repetition.",
+          "eyebrow": "Email + WhatsApp",
+          "compactTitle": "Reactivate with WhatsApp"
+        },
+        "instagram-canva-content": {
+          "title": "Instagram-to-Canva content",
+          "description": "Turn Instagram signals into Canva post and story concepts.",
+          "prompt": "Use Instagram context and Canva to plan engagement content. Give me post, story, and campaign design briefs grounded in customer signals.",
+          "eyebrow": "Instagram + Canva",
+          "compactTitle": "Create Instagram content"
+        },
+        "instagram-meta-ads-angle": {
+          "title": "Instagram ad angles",
+          "description": "Mine Instagram context for Meta Ads hooks and audience tests.",
+          "prompt": "Use Instagram context to propose Meta Ads hooks, audiences, objections, and first tests for this workspace.",
+          "eyebrow": "Instagram + Ads",
+          "compactTitle": "Find Instagram ad angles"
+        },
+        "canva-higgsfield-visual-pipeline": {
+          "title": "Visual content pipeline",
+          "description": "Combine generated visuals with Canva layouts and campaign copy.",
+          "prompt": "Plan a visual content pipeline using Higgsfield and Canva. Include creative prompts, layout briefs, and where each asset should be used.",
+          "eyebrow": "Higgsfield + Canva",
+          "compactTitle": "Build visual pipeline"
+        },
+        "higgsfield-whatsapp-media": {
+          "title": "WhatsApp media template",
+          "description": "Plan media creative and copy for a WhatsApp campaign template.",
+          "prompt": "Use Higgsfield and WhatsApp together: plan a media template campaign with visual prompts, body copy, buttons, and submission-safe notes.",
+          "eyebrow": "Higgsfield + WhatsApp",
+          "compactTitle": "Create media template"
+        },
+        "avatar-voice-video": {
+          "title": "Talking avatar script",
+          "description": "Shape avatar delivery, voice direction, and short-video script.",
+          "prompt": "Draft a Wan talking-avatar concept using ElevenLabs voice: portrait brief, script under 15s, voice direction, and how to generate it in Assets.",
+          "eyebrow": "Wan Avatar + Voice",
+          "compactTitle": "Draft avatar script"
+        },
+        "voice-whatsapp-follow-up": {
+          "title": "Voice-led follow-up",
+          "description": "Draft a voice concept and WhatsApp follow-up sequence around it.",
+          "prompt": "Plan a voice-led customer follow-up using ElevenLabs and WhatsApp. Include script, WhatsApp copy, and where the audio should be used.",
+          "eyebrow": "Voice + WhatsApp",
+          "compactTitle": "Plan voice follow-up"
+        },
+        "booking-reminder-flow": {
+          "title": "Booking reminder flow",
+          "description": "Create reminders and follow-ups around scheduled appointments.",
+          "prompt": "Create an executable booking reminder and no-show recovery workflow using calendar context, recent customer messages, and connected messaging channels.",
+          "eyebrow": "Calendar + Messaging",
+          "compactTitle": "Build booking reminders"
+        },
+        "manager-capacity-triage": {
+          "title": "Manager triage workflow",
+          "description": "Automate urgent replies, handoffs, and no-reply recovery for small teams.",
+          "prompt": "Create an executable WhatsApp triage and follow-up workflow for a small team that cannot answer every customer message immediately. Use recent customer messages to identify urgent intent, booking/help-needed branches, manager handoff rules, and no-reply recovery. Keep sending and publishing behind review.",
+          "eyebrow": "Support automation",
+          "compactTitle": "Build manager triage"
+        },
+        "cross-channel-whatsapp-follow-up": {
+          "title": "Cross-channel follow-up",
+          "description": "Turn social or chat interest into a WhatsApp next-step sequence.",
+          "prompt": "Use connected social/chat channels and WhatsApp to design a cross-channel follow-up scenario for interested customers.",
+          "eyebrow": "Channels + WhatsApp",
+          "compactTitle": "Build cross-channel follow-up"
+        },
+        "conversation-data": {
+          "title": "Customer chats ready",
+          "description": "Ask Airi to find repeated questions, intent, or campaign ideas.",
+          "prompt": "Use my customer conversations to identify repeated questions, purchase signals, and support gaps we should act on first.",
+          "eyebrow": "Workspace data",
+          "compactTitle": "Analyze customer chats"
+        },
+        "knowledge-data": {
+          "title": "Knowledge connected",
+          "description": "Ground answers in existing docs, URLs, snippets, and policies.",
+          "prompt": "Review my connected knowledge and tell me what content is missing for better customer answers.",
+          "eyebrow": "Workspace data",
+          "compactTitle": "Find missing knowledge"
+        },
+        "reply-data": {
+          "title": "Replies to improve",
+          "description": "Turn saved replies into stronger support and marketing responses.",
+          "prompt": "Review my quick replies and suggest better versions for conversion and support quality.",
+          "eyebrow": "Workspace data",
+          "compactTitle": "Improve saved replies"
+        },
+        "customer-channels": {
+          "title": "Customer channels connected",
+          "description": "Rank opportunities from demand, objections, and follow-ups.",
+          "prompt": "Scan my connected customer channels and create a ranked opportunity plan with support priorities, customer intent, growth signals, evidence, and the next Airi actions to create.",
+          "eyebrow": "Company context",
+          "compactTitle": "Find channel opportunities"
+        },
+        "creative-stack": {
+          "title": "Creative stack connected",
+          "description": "Plan images, videos, voice, and design briefs from company context.",
+          "prompt": "Use my connected creative tools and workspace context to plan an engagement content package.",
+          "eyebrow": "Creative",
+          "compactTitle": "Plan creative package"
+        },
+        "connected-sources": {
+          "title": "Channels connected",
+          "description": "Use connected company tools as context for planning next actions.",
+          "prompt": "What can Airi do with my connected channels and tools in this workspace?",
+          "eyebrow": "Setup",
+          "compactTitle": "Plan with connected tools"
+        },
+        "saved-chats": {
+          "title": "Previous Airi work",
+          "description": "Continue from prior strategy, template, or campaign chats.",
+          "prompt": "Summarize my previous Airi chats and suggest the next useful action.",
+          "eyebrow": "History",
+          "compactTitle": "Continue previous work"
+        },
+        "whatsapp-template": {
+          "title": "Create WhatsApp template",
+          "description": "Draft a compliant template and open it in the builder.",
+          "prompt": "Create a WhatsApp template using my workspace context. Keep it ready for builder review before submission.",
+          "eyebrow": "WhatsApp",
+          "compactTitle": "Create WhatsApp template"
+        },
+        "follow-up-scenario": {
+          "title": "Build follow-up scenario",
+          "description": "Create a follow-up flow for leads, missed replies, or churn risk.",
+          "prompt": "Design a WhatsApp follow-up scenario for customers who showed interest but did not convert.",
+          "eyebrow": "Scenario",
+          "compactTitle": "Build follow-up scenario"
+        },
+        "bulk-campaign": {
+          "title": "Plan engagement campaign",
+          "description": "Build the audience, message angle, content, and send plan from context.",
+          "prompt": "Plan an engagement campaign using the context and tools available in this workspace.",
+          "eyebrow": "Campaign",
+          "compactTitle": "Plan bulk campaign"
+        },
+        "meta-ads-mcp": {
+          "eyebrow": "Ads MCP",
+          "compactTitle": "Use @meta Ads MCP"
+        },
+        "meta-ads-plan": {
+          "eyebrow": "Ads"
+        },
+        "avatar-video": {
+          "title": "Create avatar video",
+          "description": "Draft a short talking-avatar script for Assets (image + script/audio).",
+          "prompt": "Help me create a short Wan talking-avatar video for our next customer campaign. Include portrait guidance and a script under 15 seconds.",
+          "eyebrow": "Wan Avatar",
+          "compactTitle": "Create avatar video"
+        },
+        "creative-content": {
+          "title": "Generate content plan",
+          "description": "Create briefs for designs, visuals, voice, and short-form assets.",
+          "prompt": "Create a context-aware engagement content plan for my connected creative tools.",
+          "eyebrow": "Creative"
+        },
+        "support-gaps": {
+          "title": "Find support gaps",
+          "description": "Review available customer and knowledge context before suggesting fixes.",
+          "prompt": "Analyze available customer and knowledge context. What support gaps should we fix first?",
+          "eyebrow": "Support"
+        },
+        "product-capabilities": {
+          "title": "What can Airi do?",
+          "description": "Get a grounded answer about available Airi actions in this workspace.",
+          "prompt": "What can Airi do in this workspace, and what should I connect next?",
+          "eyebrow": "Capabilities",
+          "compactTitle": "See what Airi can do"
+        },
+        "connect-context": {
+          "title": "Plan workspace setup",
+          "description": "Identify which channels, knowledge, and creative tools matter first.",
+          "prompt": "Help me decide what to connect first so Airi can produce useful marketing actions.",
+          "eyebrow": "Setup"
+        }
+      }
+    },
+    "closeSidebar": "Close Airi sidebar",
+    "pinChat": "Pin chat",
+    "unpinChat": "Unpin chat",
+    "archiveChat": "Archive chat",
+    "chatActions": "Chat actions",
+    "moreChatActions": "More chat actions",
+    "conversationLabel": "Airi conversation",
+    "scrollToLatest": "Scroll to latest message",
+    "askAiri": "Ask Airi",
+    "backToStart": "Back to Airi start",
+    "newChat": "New chat",
+    "loadingChats": "Loading chats",
+    "noChatsYet": "No chats yet.",
+    "searchChats": "Search chats",
+    "startChat": "Chat",
+    "backToChats": "Back to chats",
+    "workspaceAssistant": "Workspace assistant",
+    "chatCount": "{count, plural, one {# chat} other {# chats}}",
+    "composer": {
+      "openTools": "Open message tools",
+      "attachFile": "Attach photo/doc",
+      "chooseCreativeAsset": "Choose creative asset",
+      "addSources": "Add sources",
+      "sendMessage": "Send message",
+      "backToSources": "Back to sources",
+      "chooseFromChats": "Choose from chats",
+      "addSourcesAndSkills": "Add sources and skills",
+      "pickerLabel": "Skills, sources and chats",
+      "loadingSources": "Loading sources",
+      "alreadySelected": "Already selected",
+      "noChatsFound": "No chats found.",
+      "noSourcesFound": "No sources found.",
+      "sourcesFailed": "Failed to load sources",
+      "chatsFailed": "Failed to load chats"
+    }
+  },
+  "AiriChatProgress": {
+    "working": "Working on your request",
+    "preparing": "Preparing your answer",
+    "understanding": "Understanding your request",
+    "context": "Reviewing relevant information",
+    "writing": "Writing your answer",
+    "template": "Drafting your WhatsApp template",
+    "flow": "Preparing your WhatsApp flow",
+    "image": "Preparing your image",
+    "opportunities": "Reviewing opportunities",
+    "campaign": "Preparing your campaign",
+    "ads": "Reviewing your ads",
+    "saving": "Saving your answer",
+    "ready": "Answer ready",
+    "partial": "Partial results ready",
+    "stopped": "Request stopped",
+    "error": "Could not complete the request",
+    "details": "Activity details",
+    "running": "In progress",
+    "complete": "Completed",
+    "failed": "Unsuccessful"
+  },
+  "Select": {
+    "scrollUp": "Scroll up",
+    "scrollDown": "Scroll down"
+  },
+  "AppUpdateBanner": {
+    "updateReady": "Update ready",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "dismiss": "Dismiss update notice"
+  }
+}

@@ -1,0 +1,1727 @@
+{
+  "IntegrationsSettingsPage": {
+    "loading": "Loading integrations",
+    "loadError": "Could not load integrations",
+    "retry": "Refresh",
+    "title": "Integrations",
+    "description": "Connect channels and tools that send messages, availability, assets, and ads data into this workspace.",
+    "emailAddressesTitle": "Provisioned Email Addresses",
+    "emailCopied": "Email address copied to clipboard",
+    "emailCopyFailed": "Failed to copy email address",
+    "copy": "Copy",
+    "createdOn": "Created {date}"
+  },
+  "IntegrationRegistry": {
+    "categories": {
+      "channel": "Messaging Channels",
+      "team": "Team & Email",
+      "creative": "Creative Assets",
+      "widget": "Web Widget"
+    },
+    "telegram": {
+      "name": "Telegram",
+      "description": "Connect a bot for regular chats and Telegram Business."
+    },
+    "whatsapp": {
+      "name": "WhatsApp",
+      "description": "Connect WhatsApp Business API and route messages into Airi."
+    },
+    "instagram": {
+      "name": "Instagram",
+      "description": "Connect Instagram messaging through Meta."
+    },
+    "email": {
+      "name": "Postmark Email",
+      "description": "Create and manage workspace email addresses through Postmark."
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Connect availability signals for scheduling recommendations."
+    },
+    "google_ai": {
+      "name": "Google AI (Gemini)",
+      "description": "Connect your Google AI API key for workspace AI capabilities."
+    },
+    "canva": {
+      "name": "Canva",
+      "description": "Connect Canva brand templates for AI scenario generation."
+    },
+    "meta_ads": {
+      "name": "Meta Ads",
+      "description": "Use campaigns in scenarios, view reports, and manage ads with Airi."
+    },
+    "higgsfield": {
+      "name": "Higgsfield",
+      "description": "Connect your Higgsfield API credentials for image and video generation."
+    },
+    "elevenlabs": {
+      "name": "ElevenLabs",
+      "description": "Connect your ElevenLabs API key for voiceovers, sound effects, transcripts, subtitles, and dubbing."
+    },
+    "web_widget": {
+      "name": "Web Widget",
+      "description": "Embed the Airi chat widget on your site."
+    },
+    "workInProgress": "Work in progress",
+    "status": {
+      "connected": "Connected",
+      "disconnected": "Not connected",
+      "pending_dns": "DNS pending"
+    }
+  },
+  "IntegrationModal": {
+    "notFound": "Integration not found.",
+    "errors": {
+      "oauth_failed": {
+        "title": "WhatsApp connection failed",
+        "message": "Authorization failed or was cancelled.",
+        "action": "This usually means the Meta app is still in development mode. Ask support to add you as a test user or wait until the app is approved for production."
+      },
+      "no_business_found": {
+        "title": "No Meta Business account",
+        "message": "No Meta Business account was found. Create one first.",
+        "action": "Open business.facebook.com and create a Business account."
+      },
+      "business_fetch_failed": {
+        "title": "Access denied",
+        "message": "We could not access the Meta Business account. Check your permissions.",
+        "action": "Make sure you have admin access to the Meta Business account."
+      },
+      "no_waba_found": {
+        "title": "No WhatsApp Business account",
+        "message": "No WhatsApp Business account was found in your Meta Business Manager.",
+        "action": "Create a WhatsApp Business account in Meta Business Manager first."
+      },
+      "missing_phone": {
+        "title": "No phone number",
+        "message": "No phone number was found in your WhatsApp Business account.",
+        "action": "Add a phone number to your WhatsApp Business account."
+      },
+      "waba_fetch_failed": {
+        "title": "Access error",
+        "message": "We could not access the WhatsApp Business account. Try again."
+      },
+      "whatsapp_number_not_eligible": {
+        "title": "Number is not eligible yet",
+        "message": "Meta says this number cannot join WhatsApp Business Platform yet.",
+        "action": "Open the WhatsApp Business app, complete the required setup or activity there, then retry when Meta allows the number. Meta may show #3441045 until then."
+      },
+      "signup_incomplete": {
+        "title": "Meta sign-in didn't finish",
+        "message": "Start WhatsApp setup again and complete every step in the Meta window."
+      },
+      "signup_not_confirmed": {
+        "title": "Meta sign-in couldn't be confirmed",
+        "message": "We couldn't confirm your Meta sign-in. Start WhatsApp setup again, and contact support if it keeps happening."
+      },
+      "access_revoked": {
+        "title": "Meta access was removed",
+        "message": "airi.chat's access to this WhatsApp account was removed in Meta Business settings. Connect WhatsApp again to restore it."
+      },
+      "permissions_error": {
+        "title": "Meta permissions missing",
+        "message": "Start WhatsApp setup again and allow every permission Meta asks for."
+      },
+      "business_verification_required": {
+        "title": "Business verification required",
+        "message": "Meta needs your business to be verified first. Complete verification in Meta Business settings, then connect again."
+      },
+      "phone_already_connected": {
+        "title": "Number already connected",
+        "message": "This WhatsApp number is connected to another workspace. Disconnect it there, or choose a different number."
+      },
+      "channel_limit": {
+        "title": "Your plan doesn't allow this connection",
+        "message": "Your plan or trial doesn't allow connecting another channel right now. Review your plan, or disconnect a channel you no longer use, then try again."
+      },
+      "flow_rebind_blocked": {
+        "title": "Couldn't update this number",
+        "message": "Try again in a moment. If this workspace's number is used by a scenario-managed Flow, it can't move to another WhatsApp Business account until that Flow is removed."
+      },
+      "connection_check_needed": {
+        "title": "New Meta access not confirmed",
+        "message": "We kept your existing WhatsApp connection. If messages stop arriving, start WhatsApp setup again."
+      },
+      "legacy_oauth_removed": {
+        "title": "This setup link no longer works",
+        "message": "Use the WhatsApp setup on this page to connect."
+      },
+      "connection_error": {
+        "title": "Connection error",
+        "message": "Something went wrong while connecting WhatsApp. Try again, and contact support if it keeps happening."
+      }
+    }
+  },
+  "GoogleCalendarIntegration": {
+    "disconnectedTitle": "Google Calendar is not connected",
+    "disconnectedDescription": "Authorize Google Calendar with free/busy access so Airi can recommend Calendar when customers ask to book calls, demos, or appointments.",
+    "connectedTitle": "Google Calendar is connected",
+    "connectedDescription": "This workspace can use Calendar availability signals for scheduling recommendations. V1 does not create events or read event details.",
+    "connectedBadge": "Connected",
+    "connect": "Connect Google Calendar",
+    "reconnect": "Reconnect Google Calendar",
+    "disconnect": "Disconnect",
+    "accountLabel": "Account",
+    "calendarLabel": "Calendar",
+    "scopeLabel": "Scope",
+    "connectedAtLabel": "Connected",
+    "toast": {
+      "disconnected": "Google Calendar disconnected.",
+      "disconnectFailed": "Failed to disconnect Google Calendar."
+    },
+    "errors": {
+      "oauth_failed": {
+        "title": "Google Calendar authorization failed",
+        "message": "The Google authorization state expired or was cancelled. Start the connection again from this page."
+      },
+      "unauthorized": {
+        "title": "Sign in required",
+        "message": "Sign in to Airi and start the Google Calendar connection again."
+      },
+      "forbidden": {
+        "title": "Workspace access denied",
+        "message": "Your user does not have access to this workspace."
+      },
+      "token_exchange_failed": {
+        "title": "Google Calendar token exchange failed",
+        "message": "Google did not accept the authorization code. Check the client secret and redirect URI, then reconnect."
+      },
+      "workspace_missing": {
+        "title": "Workspace company missing",
+        "message": "Airi could not resolve the workspace company needed to save this Google Calendar source."
+      },
+      "save_failed": {
+        "title": "Google Calendar source save failed",
+        "message": "Google Calendar connected, but Airi could not save the source. Try reconnecting."
+      },
+      "connection_error": {
+        "title": "Google Calendar connection error",
+        "message": "Could not complete the Google Calendar connection."
+      }
+    }
+  },
+  "CanvaIntegration": {
+    "disconnectedTitle": "Canva is not connected",
+    "disconnectedDescription": "Authorize Canva with brand template access. We use template metadata as inspiration only and do not create designs automatically.",
+    "connectedTitle": "Canva is connected",
+    "connectedDescription": "Brand templates are available for the AI scenario generator template-picking step.",
+    "connect": "Connect Canva",
+    "reconnect": "Reconnect Canva",
+    "connectedBadge": "Connected",
+    "scopeLabel": "Scope",
+    "connectedAtLabel": "Connected",
+    "errors": {
+      "oauth_failed": {
+        "title": "Canva authorization failed",
+        "message": "The Canva authorization state expired or was cancelled. Start the connection again from this page."
+      },
+      "unauthorized": {
+        "title": "Sign in required",
+        "message": "Sign in to Airi and start the Canva connection again."
+      },
+      "forbidden": {
+        "title": "Workspace access denied",
+        "message": "Your user does not have access to this workspace."
+      },
+      "token_exchange_failed": {
+        "title": "Canva token exchange failed",
+        "message": "Canva did not accept the authorization code. Check the client secret and redirect URI, then reconnect."
+      },
+      "workspace_missing": {
+        "title": "Workspace company missing",
+        "message": "Airi could not resolve the workspace company needed to save this Canva source."
+      },
+      "save_failed": {
+        "title": "Canva source save failed",
+        "message": "Canva connected, but Airi could not save the source. Try reconnecting."
+      },
+      "connection_error": {
+        "title": "Canva connection error",
+        "message": "Could not complete the Canva connection."
+      }
+    }
+  },
+  "MetaAdsIntegration": {
+    "attentionTitle": "Meta Ads needs attention",
+    "attentionDescription": "Review account access to keep campaign triggers and reporting available.",
+    "attentionBadge": "Needs attention",
+    "accountDiscoveryFailed": "Ad accounts could not be loaded.",
+    "accountDiscoveryEmpty": "Meta did not return any ad accounts.",
+    "accountDiscoveryAction": "Choose Manage access and select the ad accounts you want to use. Make sure your Meta account has access to them.",
+    "disconnectedTitle": "Meta Ads is not connected",
+    "disconnectedDescription": "Connect your ad accounts to use campaigns in scenarios and see which ads bring conversations.",
+    "connectedTitle": "Meta Ads is connected",
+    "connectedDescription": "Manage the ad accounts and features available to this workspace.",
+    "connectedBadge": "Connected",
+    "connect": "Connect Meta Ads",
+    "reconnect": "Reconnect Meta Ads",
+    "selectedAccountLabel": "Selected account",
+    "accountsLabel": "Ad accounts",
+    "userLabel": "Meta user",
+    "scopeLabel": "Scope",
+    "connectedAtLabel": "Connected",
+    "noAccounts": "No ad accounts returned",
+    "mcp": {
+      "title": "Ads MCP readiness",
+      "badges": {
+        "ready": "Ready",
+        "readOnly": "Read-only",
+        "checking": "Checking",
+        "needsAttention": "Needs attention",
+        "notConnected": "Not connected"
+      },
+      "states": {
+        "notConnected": {
+          "title": "Ads MCP is not connected",
+          "description": "Connect Ads MCP to use live Meta Ads reporting in @meta."
+        },
+        "checking": {
+          "title": "Checking Ads MCP",
+          "description": "Airi is verifying identity, permissions, ad-account access, and the provider tool catalog."
+        },
+        "expired": {
+          "title": "Authorization expired",
+          "description": "Reconnect Ads MCP before using live reporting or campaign changes."
+        },
+        "expiryUnknown": {
+          "title": "Token expiry is unknown",
+          "description": "Fresh provider evidence allows reporting only. Reconnect to confirm full access."
+        },
+        "missingScopes": {
+          "title": "Required permissions are missing",
+          "description": "Reconnect and grant the listed permissions before using @meta."
+        },
+        "scopeUnverified": {
+          "title": "Permissions are not verified",
+          "description": "Fresh provider evidence allows reporting only. Reconnect to verify permissions."
+        },
+        "identityUnverified": {
+          "title": "Meta identity is not verified",
+          "description": "Check again to verify a legacy connection, or reconnect if verification fails."
+        },
+        "assetUnavailable": {
+          "title": "Selected ad account is unavailable",
+          "description": "Choose an account accessible to both the Graph connection and Ads MCP."
+        },
+        "providerUnauthorized": {
+          "title": "Provider authorization failed",
+          "description": "The saved connection is present, but Meta rejected it. Reconnect Ads MCP."
+        },
+        "providerUnavailable": {
+          "title": "Provider is temporarily unavailable",
+          "description": "The saved connection is still present. Check again when Meta is reachable."
+        },
+        "invalidCatalog": {
+          "title": "Provider tool catalog is incompatible",
+          "description": "Airi kept this connection read-disabled because the provider contract could not be verified."
+        },
+        "stale": {
+          "title": "Readiness evidence is stale",
+          "description": "Check again to refresh identity, account, permission, and tool evidence."
+        },
+        "ready": {
+          "title": "Ads MCP is ready",
+          "description": "@meta can run live reporting and propose campaign changes that require your confirmation."
+        },
+        "readOnly": {
+          "title": "Ads MCP is ready for reporting only",
+          "description": "Airi can analyze ads. Management permission is required to propose and apply campaign changes."
+        },
+        "accountNotEnabled": {
+          "title": "Meta has not enabled AI ad tools for this account",
+          "description": "Meta is gradually enabling AI ad tools across ad accounts. This account is not enabled yet."
+        }
+      },
+      "actions": {
+        "connect": "Connect Ads MCP",
+        "reconnect": "Reconnect Ads MCP",
+        "checkAgain": "Check again",
+        "checking": "Checking...",
+        "selectAccount": "Select an accessible account",
+        "selecting": "Selecting..."
+      },
+      "accountRecovery": {
+        "title": "Choose an accessible ad account",
+        "description": "Only accounts returned by the Graph connection and confirmed accessible through Ads MCP are shown.",
+        "noAccounts": "No safely matching account is available. Reconnect Ads MCP or refresh the Meta Ads connection."
+      },
+      "details": {
+        "user": "MCP Meta user",
+        "account": "MCP ad account",
+        "business": "Business",
+        "currency": "Currency",
+        "timezone": "Timezone",
+        "expiresAt": "Authorization expires",
+        "grantedScopes": "Granted permissions",
+        "missingScopes": "Missing permissions",
+        "toolCount": "Verified tools",
+        "protocol": "Protocol",
+        "protocolCompatibility": "Meta connected using a supported protocol version. No action is needed.",
+        "server": "Provider server",
+        "lastChecked": "Last checked",
+        "notChecked": "Not checked",
+        "warnings": "Readiness warnings"
+      },
+      "warnings": {
+        "accountInventoryTruncated": "The account inventory was bounded; the selected account was verified directly.",
+        "expiryUnknown": "Meta did not provide a verifiable token expiry.",
+        "graphUserMismatch": "The Graph and MCP user identities differ; selected-account access was verified.",
+        "resourceMetadataUnavailable": "Protected-resource metadata could not be verified.",
+        "providerCapabilityDrift": "The provider capability contract changed since the previous check.",
+        "providerProtocolFallback": "The provider required the supported legacy protocol fallback.",
+        "providerTeardownFailed": "The provider session could not be cleanly terminated after verification.",
+        "scopeContractAdded": "The provider advertised an additional permission requirement.",
+        "scopeContractRemoved": "A canonical permission is absent from the provider contract.",
+        "scopeChallengeAdded": "The provider requested an additional permission during verification.",
+        "scopeUnverified": "The granted permission list was not authoritative.",
+        "selectedAccountDirectOnly": "The selected account was verified directly outside the bounded inventory.",
+        "accountNotEnabled": "Meta is gradually enabling AI ad tools across ad accounts. This account is not enabled yet."
+      },
+      "sessionLoadFailed": "Could not refresh readiness. The last safe state is shown.",
+      "toast": {
+        "ready": "AI ad management is ready.",
+        "readOnly": "Airi can analyze your ads. Management access is needed to make changes.",
+        "connectedNeedsAction": "Access saved. Check the connection to finish enabling AI ad management.",
+        "connectFailed": "Could not enable AI ad management.",
+        "checked": "Ads MCP readiness checked.",
+        "checkFailed": "Could not check Ads MCP readiness.",
+        "accountSelected": "Ads MCP ad account selected.",
+        "accountSelectFailed": "Could not select that Ads MCP ad account."
+      }
+    },
+    "errors": {
+      "oauth_failed": {
+        "title": "Meta Ads authorization failed",
+        "message": "The Meta authorization state expired or was cancelled. Start the connection again from this page."
+      },
+      "mcp_oauth_failed": {
+        "title": "AI ad access could not be updated",
+        "message": "Try enabling AI ad management again and complete the steps in Meta."
+      },
+      "server_not_configured": {
+        "title": "Meta Ads integration is not configured",
+        "message": "This connection is temporarily unavailable. Please contact support."
+      },
+      "unauthorized": {
+        "title": "Sign in required",
+        "message": "Sign in to Airi and start the Meta Ads connection again."
+      },
+      "forbidden": {
+        "title": "Workspace access denied",
+        "message": "Your user does not have access to this workspace."
+      },
+      "token_exchange_failed": {
+        "title": "Meta Ads connection could not be completed",
+        "message": "Start the connection again and complete the steps in Meta."
+      },
+      "mcp_token_exchange_failed": {
+        "title": "AI ad access could not be updated",
+        "message": "Try enabling AI ad management again and complete the steps in Meta."
+      },
+      "ad_accounts_failed": {
+        "title": "Ad accounts could not be loaded",
+        "message": "Choose Manage access and allow access to your ad accounts."
+      },
+      "workspace_missing": {
+        "title": "Workspace company missing",
+        "message": "Airi could not resolve the workspace company needed to save this Meta Ads source."
+      },
+      "save_failed": {
+        "title": "Meta Ads connection could not be saved",
+        "message": "Your access was approved, but we could not finish saving the connection. Please try again."
+      },
+      "mcp_save_failed": {
+        "title": "Meta Ads connection could not be saved",
+        "message": "Your access was approved, but we could not finish saving the connection. Please try again."
+      },
+      "mcp_source_missing": {
+        "title": "Connect Meta Ads first",
+        "message": "Connect your ad accounts to enable AI ad management."
+      },
+      "connection_error": {
+        "title": "Meta Ads connection error",
+        "message": "Could not complete the Meta Ads connection."
+      },
+      "ads_permissions_missing": {
+        "title": "Meta Ads access was not granted",
+        "message": "Meta did not grant permission to read ads. Reconnect and allow access to your ad accounts. If this repeats, contact support to check the Meta Ads login configuration."
+      },
+      "token_verification_failed": {
+        "title": "Meta Ads authorization could not be verified",
+        "message": "We could not verify the authorization returned by Meta. Reconnect Meta Ads to try again. Your previous connection has been kept."
+      },
+      "ad_accounts_unavailable": {
+        "title": "Ad accounts could not be loaded",
+        "message": "Meta Ads authorization succeeded, but account access could not be verified. Try connecting again. Your previous connection has been kept."
+      },
+      "no_ad_accounts": {
+        "title": "No ad accounts are available",
+        "message": "Meta did not return any ad accounts. Reconnect, select the accounts you want to use, and confirm that your Meta user can access them."
+      }
+    },
+    "experience": {
+      "manageAccess": "Manage access",
+      "available": "Available",
+      "notConnected": "Not connected",
+      "reportingConnected": "Meta Ads connected. Campaign triggers and reporting are available.",
+      "connectionFailed": "We couldn’t update Meta Ads access. Try again or check your access in Meta.",
+      "checking": "Checking…",
+      "checkAgain": "Check again",
+      "checkAi": "Check AI access",
+      "checked": "Connection checked.",
+      "checkFailed": "We couldn’t check the connection. Try again.",
+      "selecting": "Updating the selected account…",
+      "accountSelected": "Ad account selected.",
+      "accountSelectFailed": "We couldn’t change the account. Your previous selection is unchanged.",
+      "accountHelp": "Airi uses this account. Scenario campaign lists include your connected ad accounts.",
+      "accountUnavailable": "Your selected account is no longer available. Choose another account or update access.",
+      "details": "Connection details",
+      "noExpiry": "Does not expire",
+      "reporting": {
+        "title": "Campaign triggers and reporting",
+        "description": "Choose campaigns in scenarios and understand which ads bring conversations.",
+        "accessNeeded": "Access needs to be updated",
+        "accessNeededDescription": "Choose Manage access to restore campaign reporting and choose your ad accounts."
+      },
+      "ai": {
+        "title": "AI ad management",
+        "enable": "Enable AI ad management",
+        "manage": "Update AI access",
+        "checking": {
+          "label": "Checking",
+          "description": "Checking which ad features Airi can use."
+        },
+        "ready": {
+          "label": "Enabled",
+          "description": "Ask Airi to analyze performance and prepare campaign changes for your approval."
+        },
+        "readOnly": {
+          "label": "Reporting only",
+          "description": "Airi can analyze your ads. Enable management to review and approve campaign changes in chat."
+        },
+        "optional": {
+          "label": "Optional",
+          "description": "Let Airi analyze ads and prepare changes in chat. You approve changes before they are applied."
+        },
+        "reconnect": {
+          "label": "Access needed",
+          "description": "Update access to let Airi use your ad accounts. Campaign reporting has its own status above."
+        },
+        "unavailable": {
+          "label": "Check access",
+          "description": "Check the connection to see which AI ad features are available. Your campaign access is shown above."
+        },
+        "accountNotEnabled": {
+          "label": "Not yet available",
+          "description": "Meta has not enabled AI ad tools for this account yet. Campaign triggers and reporting remain available through the Meta Ads integration.",
+          "reportingUnavailableDescription": "Meta has not enabled AI ad tools for this account yet. Campaign reporting has its own access status above."
+        }
+      },
+      "chooseAccount": "Access updated. Choose an ad account to finish setup.",
+      "accountsAvailable": "Available ad accounts: {count}"
+    }
+  },
+  "GoogleAIIntegration": {
+    "connectedTitle": "Google AI is connected",
+    "disconnectedTitle": "Connect Google AI",
+    "connectedBadge": "Key verified",
+    "description": "Save a Google AI Studio API key for this workspace. The key stays on the server and is encrypted at rest.",
+    "keyLabel": "Saved key",
+    "keySaved": "Key saved",
+    "validatedAtLabel": "Last verified",
+    "capabilitiesDescription": "Pro includes 500 AI actions in total across company workspaces. The allowance does not reset. Your Google key is used for text after that allowance is used up. Supported image and video generation always requires your own key.",
+    "billingDescription": "Google bills usage made with your key to your Google project. If your key fails, generation stops until the connection is fixed.",
+    "apiKeyLabel": "API key",
+    "apiKeyPlaceholder": "Paste your Google AI API key",
+    "keyHelp": "The key is checked with Google before saving. A replacement keeps the existing connection until verification succeeds.",
+    "connectButton": "Verify and connect",
+    "replaceButton": "Replace key",
+    "validating": "Verifying key…",
+    "studioLink": "Open Google AI Studio",
+    "saved": "Google AI connected. Your key is saved securely.",
+    "disconnected": "Google AI disconnected from this workspace.",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect Google AI?",
+    "disconnectDescription": "Features using this workspace connection will lose access to Google AI. This removes the saved key from airi.chat; it does not revoke the key in Google AI Studio.",
+    "cancel": "Cancel",
+    "errors": {
+      "invalidKey": "Enter a valid Google AI API key.",
+      "accessDenied": "Google denied access. Check the key restrictions and whether the Gemini API is enabled for its project.",
+      "rateLimited": "Google is limiting requests. Wait a moment and try again.",
+      "unavailable": "Google AI is unavailable. Try again shortly.",
+      "unauthorized": "Sign in again to manage this connection.",
+      "forbidden": "You do not have access to manage this workspace connection.",
+      "saveFailed": "We could not save the key securely. Please try again or contact support.",
+      "deleteFailed": "We could not disconnect Google AI. Please try again.",
+      "failed": "The connection could not be updated. Please try again.",
+      "refreshFailed": "The change was saved, but the connection list could not refresh. Reload this page.",
+      "connectionChanged": "This connection changed while the key was being checked. Refresh and try again."
+    }
+  },
+  "HiggsfieldIntegration": {
+    "disconnectedTitle": "Connect Higgsfield API",
+    "disconnectedDescription": "Use your own Higgsfield API key and secret for workspace image and video generation.",
+    "connectedTitle": "Higgsfield is connected",
+    "connectedDescription": "This workspace has Higgsfield API credentials stored as a source.",
+    "connectedBadge": "Connected",
+    "keyLabel": "API key",
+    "connectedAtLabel": "Connected",
+    "formTitle": "API credentials",
+    "replaceTitle": "Replace API credentials",
+    "formDescription": "Paste the API key and secret from Higgsfield. Secrets are stored server-side and are not shown again.",
+    "apiKeyLabel": "API key",
+    "apiSecretLabel": "API secret",
+    "apiKeyPlaceholder": "HIGGSFIELD_API_KEY",
+    "apiSecretPlaceholder": "HIGGSFIELD_API_SECRET",
+    "connectButton": "Connect Higgsfield",
+    "replaceButton": "Update credentials",
+    "toast": {
+      "missingCredentials": "Enter both Higgsfield API key and API secret.",
+      "saved": "Higgsfield source saved.",
+      "failed": "Failed to save Higgsfield source."
+    }
+  },
+  "ElevenLabsIntegration": {
+    "disconnectedTitle": "Connect ElevenLabs API",
+    "disconnectedDescription": "Use your own ElevenLabs API key for workspace voiceovers, sound effects, transcripts, subtitles, and dubbing.",
+    "connectedTitle": "ElevenLabs is connected",
+    "connectedDescription": "This workspace has ElevenLabs API credentials stored as a source.",
+    "connectedBadge": "Connected",
+    "keyLabel": "API key",
+    "voiceLabel": "Default voice",
+    "connectedAtLabel": "Connected",
+    "formTitle": "API credentials",
+    "replaceTitle": "Replace API credentials",
+    "formDescription": "Paste the API key from ElevenLabs. Optionally set a default voice ID for voiceovers.",
+    "apiKeyLabel": "API key",
+    "voiceIdLabel": "Default voice ID",
+    "apiKeyPlaceholder": "ELEVENLABS_API_KEY",
+    "voiceIdPlaceholder": "Optional voice_id",
+    "connectButton": "Connect ElevenLabs",
+    "replaceButton": "Update credentials",
+    "toast": {
+      "missingCredentials": "Enter an ElevenLabs API key.",
+      "saved": "ElevenLabs source saved.",
+      "failed": "Failed to save ElevenLabs source."
+    }
+  },
+  "IntegrationDetails": {
+    "back": "Back",
+    "emptyTitle": "Select an integration",
+    "emptyDescription": "Choose a channel on the left to manage its connection and keep the setup steps in the same page.",
+    "notFound": "Integration not found.",
+    "guides": {
+      "telegram": {
+        "badge": "Setup guide",
+        "title": "Telegram setup",
+        "description": "Bot token, chat linking and Telegram Business setup on one page.",
+        "primaryAction": "Open BotFather",
+        "secondaryAction": "Open customer chats",
+        "tipsTitle": "What to verify",
+        "steps": [
+          {
+            "title": "Create or choose a bot",
+            "description": "Open @BotFather, create a bot or reuse an existing one, and copy the token."
+          },
+          {
+            "title": "Paste the token here and validate it",
+            "description": "Save the token after validation so Airi can register the webhook automatically."
+          },
+          {
+            "title": "Link a private or group chat",
+            "description": "Use the generated deep link or send /start with the source key to attach the chat to this workspace."
+          },
+          {
+            "title": "Optionally enable Telegram Business",
+            "description": "Add the same bot in Telegram Business settings and enable reply permissions so business chats arrive in the same integration."
+          }
+        ],
+        "tips": [
+          "If the webhook is inactive, refresh the status and register it again from this page.",
+          "If group messages are missing, disable privacy mode for the bot in BotFather.",
+          "Run /status in the bot chat after linking to confirm the workspace mapping."
+        ]
+      },
+      "whatsapp": {
+        "badge": "Setup guide",
+        "title": "WhatsApp setup",
+        "description": "Choose the connection method here and finish the Meta steps without leaving the integrations page.",
+        "primaryAction": "Open Meta Business",
+        "secondaryAction": "Open customer chats",
+        "tipsTitle": "What to verify",
+        "steps": [
+          {
+            "title": "Prepare the Meta business account",
+            "description": "Sign in with the Meta account that manages your business. Meta can create the WhatsApp Business account and add the phone number during signup."
+          },
+          {
+            "title": "Choose Cloud API or the Business app",
+            "description": "Cloud API is the default for new numbers. Choose the Business app to keep using the WhatsApp Business app on your phone."
+          },
+          {
+            "title": "Finish Meta permissions and number selection",
+            "description": "Approve the requested access, pick the right business account, and confirm the phone number that should connect to Airi."
+          },
+          {
+            "title": "Test the connection in Customer chats",
+            "description": "Send a message to the connected number and check that the conversation appears in Customer chats."
+          }
+        ],
+        "tips": [
+          "Reconnect from this page if the token is close to expiration or already expired.",
+          "If Meta says the business account or phone number is missing, finish that setup in Meta Business Manager first.",
+          "Choose the Business app option only for a number that already runs on the WhatsApp Business app."
+        ],
+        "nextSteps": {
+          "title": "Next steps",
+          "description": "Use the connected mode below. Open status only when you need Meta's live checks.",
+          "modes": {
+            "coexistence": {
+              "label": "Coexistence with Business app",
+              "title": "The WhatsApp Business mobile app stays with you",
+              "description": "New chats are synchronized automatically.",
+              "steps": [
+                {
+                  "title": "Chat history for the last 6 months",
+                  "description": "History will load automatically if you selected this option during the Meta connection."
+                }
+              ],
+              "limitationsTitle": "Not available in Coexistence. To get access to them, reconnect to Cloud API above, but you will lose access to the mobile app.",
+              "limitations": [
+                "Group chats",
+                "Voice/video",
+                "Catalogs",
+                "Statuses"
+              ]
+            },
+            "cloud_api": {
+              "label": "Full Cloud API",
+              "title": "Manage the number from airi.chat",
+              "description": "The number works via Meta Cloud API for automation, templates, and scale.",
+              "steps": [
+                {
+                  "title": "Check number readiness",
+                  "description": "The status below must show a confirmed number, approved name, and ready webhooks."
+                },
+                {
+                  "title": "Send a live test",
+                  "description": "Message the number and check that the chat appears in Customer chats."
+                },
+                {
+                  "title": "Enable additional features separately",
+                  "description": "Catalogs, marketing messages, and calls are configured separately."
+                }
+              ],
+              "limitationsTitle": "Important",
+              "limitations": [
+                "WhatsApp Business app is not used for replies"
+              ]
+            }
+          },
+          "status": {
+            "trigger": "Your business current status",
+            "loading": "Fetching Meta status...",
+            "error": "Could not load Meta status.",
+            "refresh": "Refresh",
+            "unknown": "Unknown",
+            "yes": "Yes",
+            "no": "No",
+            "webhookReady": "Ready",
+            "webhookMissing": "Missing {count}",
+            "fields": {
+              "phone": "Phone",
+              "verifiedName": "Verified name",
+              "displayName": "Display name",
+              "phoneRegistration": "Phone registration",
+              "twoStepPin": "2-step PIN",
+              "quality": "Quality",
+              "messagingLimit": "Messaging limit",
+              "accountReview": "Account review",
+              "businessVerification": "Business verification",
+              "webhooks": "Webhooks"
+            }
+          }
+        }
+      },
+      "instagram": {
+        "badge": "Setup guide",
+        "title": "Instagram setup",
+        "description": "Keep the account connection flow and the setup steps inside the integration details instead of jumping out to a separate guide.",
+        "primaryAction": "Open Meta docs",
+        "secondaryAction": "Open customer chats",
+        "tipsTitle": "What to verify",
+        "steps": [
+          {
+            "title": "Use a professional Instagram account",
+            "description": "Make sure the account is Business or Creator and connected to the correct Facebook page in Meta."
+          },
+          {
+            "title": "Choose the right login path",
+            "description": "Use Facebook Login for Instagram when the account is already managed through Meta. Use direct Instagram login only when that flow matches your app setup."
+          },
+          {
+            "title": "Grant messaging permissions",
+            "description": "Complete the Meta consent flow and confirm the account returns the messaging and publish scopes your workspace needs."
+          },
+          {
+            "title": "Verify messages and profile snapshot",
+            "description": "After connection, confirm the business profile details load here and that inbound messages arrive in Customer chats."
+          }
+        ],
+        "tips": [
+          "If the token is close to expiry, reconnect from this page before the account loses access.",
+          "If publish permissions are missing, reconnect with the correct Meta scopes instead of patching the account manually.",
+          "Keep the Instagram account linked to the right Facebook page, otherwise the API can connect successfully but still miss messaging features."
+        ]
+      }
+    }
+  },
+  "WhatsAppConversionsSettings": {
+    "title": "Sales and Meta feedback",
+    "description": "Connect your payment or order system to record paid sales and refunds. Confirmed outcomes can be sent to Meta for WhatsApp ad reporting.",
+    "metaTitle": "Meta sales feedback",
+    "metaDescription": "Uses this WhatsApp connection. Enabling creates or connects its Meta dataset.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "enableMeta": "Enable Meta feedback",
+    "disableMeta": "Disable Meta feedback",
+    "dataset": "Dataset",
+    "webhookTitle": "Automatic sales webhook",
+    "webhookDescription": "Your payment or order system can send signed purchase and refund events. Chat messages and receipts still need confirmation.",
+    "createSecret": "Create webhook secret",
+    "rotateSecret": "Replace webhook secret",
+    "rotateWarning": "Replacing the secret immediately invalidates the previous one. Update your payment or order system.",
+    "disableWebhook": "Disable webhook",
+    "webhookUrl": "Webhook URL",
+    "webhookSecret": "Webhook secret",
+    "secretOnce": "Copy this secret now. It will not be shown again.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy. Select the value and copy it manually.",
+    "loading": "Loading sales settings…",
+    "loadFailed": "Could not load sales settings.",
+    "saveFailed": "Could not save sales settings. Try again.",
+    "metaSetupFailed": "Meta setup failed. Reconnect WhatsApp with whatsapp_business_management and whatsapp_business_manage_events access, then try again. The Meta app may need Advanced Access.",
+    "sourceChanged": "This WhatsApp connection changed. Reload settings and try again.",
+    "reconnectRequired": "Reconnect WhatsApp before enabling Meta sales feedback.",
+    "retry": "Retry"
+  },
+  "WhatsAppIntegration": {
+    "whatsAppNotConnected": "Choose how this business should appear on WhatsApp.",
+    "whatsAppConnected": "Connected",
+    "connectedSummaryLabel": "WhatsApp connection summary",
+    "reconnectWhatsapp": "Reconnect WhatsApp",
+    "whatsAppReconnectTitle": "Restore your WhatsApp connection",
+    "whatsAppReconnectPrompt": "Confirm access to WhatsApp to restore the connection.",
+    "connectionManaged": "Connection managed automatically",
+    "repairToggle": "Repair connection",
+    "repairHide": "Done",
+    "repairTitle": "Reconnect without deleting data",
+    "repairDescription": "Refresh Meta access for this source. Conversations, contacts, and history stay intact.",
+    "repairCloudDescription": "Use Full Cloud API to refresh permissions, billing, catalog access, or the selected phone.",
+    "existingInventory": {
+      "title": "Use another number from this company",
+      "description": "If this Meta business portfolio is already connected in another workspace, choose an unlinked phone number for this workspace.",
+      "button": "Choose existing number"
+    },
+    "coexistenceReconnect": {
+      "title": "Reconnect from WhatsApp Business app",
+      "description": "Cloud API is paused after a device change or app re-registration. Finish WhatsApp Business app setup and keep airi.chat selected.",
+      "stepRegister": "Open WhatsApp Business app and complete phone registration.",
+      "stepKeepSelected": "Keep airi.chat checked in the Business Platform list.",
+      "stepWait": "Wait a few minutes for Meta to reconnect Cloud API automatically.",
+      "checkStatus": "Check status"
+    },
+    "summary": {
+      "quality": "Quality {quality}",
+      "phone": "{phone}",
+      "catalog": "Catalog access",
+      "marketingReady": "Campaigns ready"
+    },
+    "docs": {
+      "label": "Docs",
+      "title": "Meta documentation",
+      "description": "Open the relevant Meta guides in a new tab.",
+      "cloudApi": "Cloud API",
+      "cloudApiDescription": "Messaging, phone numbers, and platform basics.",
+      "coexistence": "Business app coexistence",
+      "coexistenceDescription": "Use the WhatsApp Business app and Cloud API together.",
+      "coexistenceReconnect": "Reconnect offboarded coexistence",
+      "coexistenceReconnectDescription": "Meta's automatic reconnect flow for device changes.",
+      "embeddedSignup": "Embedded Signup",
+      "embeddedSignupDescription": "How businesses grant your app access.",
+      "catalog": "Catalogs",
+      "catalogDescription": "Product catalogs and commerce messaging.",
+      "marketing": "Marketing Messages",
+      "marketingDescription": "Meta onboarding and Marketing Messages API."
+    },
+    "tabs": {
+      "qr": "Business app",
+      "embedded": "Cloud API"
+    },
+    "branching": {
+      "question": "WhatsApp connection type",
+      "helper": "Both options use Meta Embedded Signup. Pick the one that matches how the business wants to operate.",
+      "recommended": "Recommended",
+      "labels": {
+        "bestFor": "Best for",
+        "identity": "WhatsApp identity",
+        "afterSetup": "After setup"
+      },
+      "optionYes": {
+        "title": "Business app",
+        "description": "Connect an existing WhatsApp Business app number and keep the mobile app active.",
+        "bestFor": "Teams already replying from the WhatsApp Business app.",
+        "identity": "Uses the existing app number.",
+        "afterSetup": "Chats sync here while the mobile app remains available; some Cloud API features stay limited."
+      },
+      "optionNo": {
+        "title": "Cloud API",
+        "description": "Create a Cloud API identity without using the WhatsApp Business app.",
+        "bestFor": "Automation, campaigns, templates, and future advanced setup.",
+        "identity": "Meta can generate a message-only virtual number (not for calls or SMS), or the business can add its own number.",
+        "afterSetup": "Messages are handled from airi.chat and Meta tools; the WhatsApp Business app is not used for this identity."
+      }
+    },
+    "cloudApi": {
+      "title": "Meta will ask for the WhatsApp identity",
+      "button": "Continue",
+      "footer": "In Meta Embedded Signup, choose \"Use display name only\" for a Meta-generated virtual number, or \"Add a number\" to verify a business-owned number."
+    },
+    "accessVerify": {
+      "blockedTitle": "App Review blocks Embedded Signup",
+      "blockedBody": "Your Meta App needs Advanced Access for whatsapp_business_management.",
+      "checking": "Checking Meta app readiness...",
+      "ready": "Meta app access is ready for Embedded Signup.",
+      "checkFailed": "Access verification check failed.",
+      "guidanceTitle": "Before you connect"
+    },
+    "capacity": {
+      "title": "Your plan can't connect WhatsApp yet",
+      "reasons": {
+        "trial_expired": "Your free trial has ended. Choose a plan to connect WhatsApp.",
+        "whatsapp_number_limit": "All WhatsApp numbers on your plan ({limit}) are already connected in your company. Upgrade to connect another one.",
+        "integration_connection_limit": "Your plan allows one WhatsApp connection, and it is already in use. Upgrade to add another.",
+        "channel_limit": "Your plan's channel limit is reached. Upgrade to add WhatsApp."
+      },
+      "upgrade": "See plans",
+      "featureLabel": "WhatsApp connection"
+    },
+    "nextStep": {
+      "title": "Next: send your first campaign",
+      "description": "Create a message template. Meta usually reviews it within minutes, sometimes up to 24 hours. Then send it from Bulk campaigns.",
+      "createTemplate": "Create a message template",
+      "openBulk": "Open Bulk campaigns"
+    }
+  },
+  "EmbeddedSignupWithQR": {
+    "title": "Connect Business app number",
+    "description": "Use this when the business already has a WhatsApp Business app number and wants chats mirrored into airi.chat.",
+    "button": {
+      "start": "Continue",
+      "hint": "Tick the box below to continue."
+    },
+    "eligibility": {
+      "confirmTitle": "WhatsApp Business app number (not Messenger, not already on Cloud API).",
+      "confirmDescription": "It is not a regular WhatsApp Messenger number and is not already connected to Cloud API through another provider."
+    },
+    "instructions": {
+      "warning": "If Meta shows only \"Add a number\", go back and choose the WhatsApp Business app / QR option at the start of the flow.",
+      "eligibilityWarning": "If Meta shows #3441045, this number is not eligible for WhatsApp Business Platform yet. Open the WhatsApp Business app, complete the required setup or activity there, then retry when Meta allows the number."
+    },
+    "features": {
+      "businessPrefill": "Business details are prefilled when available."
+    },
+    "requirements": {
+      "existingUsers": "Existing app number",
+      "note": "Feature limits",
+      "noteDescription": "Coexistence keeps the mobile app active, but some Cloud API features remain limited."
+    }
+  },
+  "EmbeddedSignupButton": {
+    "failure": {
+      "errorTitle": "Meta stopped the WhatsApp connection",
+      "errorDescription": "Meta reported: {message} Nothing was connected. Fix this in Meta, then try again.",
+      "errorDescriptionGeneric": "Meta reported an error. Nothing was connected. Try again, and contact support if it happens again.",
+      "cancelledTitle": "WhatsApp connection was cancelled",
+      "cancelledDescription": "Nothing was connected. Start again and finish every step in the Meta window.",
+      "finishedWithoutCodeTitle": "WhatsApp connection did not reach airi.chat",
+      "finishedWithoutCodeDescription": "Meta finished the setup but did not send airi.chat access, so nothing is connected here yet. Start again and choose the same number. Contact support if it happens again.",
+      "closedTitle": "WhatsApp connection did not finish",
+      "closedDescription": "Meta closed without connecting a number. Start again and keep the Meta window open until it finishes. If no Meta window appeared, allow pop-ups for this site."
+    },
+    "defaultLabel": "Connect WhatsApp",
+    "sdkLoading": "Meta's signup is still loading. Try again in a moment.",
+    "launchErrors": {
+      "configNotFound": "Meta couldn't open the {flow} signup. Try again later or contact support.",
+      "sdkNotReady": "Meta's signup couldn't load. Check your connection or turn off content blockers, then try again.",
+      "generic": "Couldn't open the {flow} signup. Try again.",
+      "configMissing": "WhatsApp signup isn't set up on this site yet. Contact support."
+    },
+    "flowLabels": {
+      "cloud_api": "Cloud API",
+      "coexistence": "WhatsApp Business app"
+    }
+  },
+  "WhatsAppIntegrationForm": {
+    "connectWhatsapp": "Connect WhatsApp",
+    "description": "Enter your credentials from Meta Business Suite to connect the channel.",
+    "phoneNumberId": "Phone Number ID",
+    "wabaId": "WhatsApp Business Account ID",
+    "accessToken": "Permanent Access Token",
+    "saving": "Saving...",
+    "saveAndConnect": "Save and Connect",
+    "integrationSuccess": "WhatsApp integration added",
+    "failedToSaveCredentials": "Failed to save credentials",
+    "setupStatusLabel": "WhatsApp setup status",
+    "accountHealthTitle": "Meta account health",
+    "accountHealthDescription": "Shows whether Meta can currently send and receive for this number (billing, policy, webhooks, access).",
+    "accountHealthCheck": "Refresh status",
+    "accountHealthChecking": "Refreshing...",
+    "accountHealthCheckSuccess": "Meta status refreshed.",
+    "accountHealthCheckDeferred": "A recent Meta status is still being used. Try again shortly.",
+    "accountHealthCheckRateLimited": "Meta is rate-limiting status checks. Showing the last known status.",
+    "accountHealthCheckFailed": "Failed to refresh Meta status",
+    "accountHealthOpenMeta": "Open Meta",
+    "accountHealthStatusHealthy": "Usable",
+    "accountHealthStatusWarning": "Needs attention",
+    "accountHealthStatusReconnecting": "Reconnecting",
+    "accountHealthStatusDisconnected": "Disconnected",
+    "accountHealthStatusRestricted": "Restricted",
+    "accountHealthStatusDisabled": "Disabled",
+    "accountHealthStatusPaymentRequired": "Payment required",
+    "accountHealthStatusInaccessible": "Phone inaccessible",
+    "accountHealthStatusUnknown": "Status unknown",
+    "historyTitle": "Chat history",
+    "historyUnavailable": "Only WhatsApp Business app coexistence numbers can import history.",
+    "historyConnect": "Connect history",
+    "historyConnecting": "Connecting...",
+    "historyConnected": "History requested",
+    "historyRequested": "WhatsApp history sync requested.",
+    "historyIdle": "Not requested",
+    "historyStaleShort": "No history received",
+    "historyLoading": "Checking status...",
+    "historyProgress": "Import in progress: {progress}%",
+    "historyProgressAria": "History import progress {progress}%",
+    "historyCompleted": "History imported",
+    "historyRetry": "Try again",
+    "historyDeclinedButton": "Sharing declined",
+    "historyFailedButton": "Import failed",
+    "historyFailed": "Failed to request WhatsApp history sync",
+    "phoneRegistrationTitle": "Register Cloud API number",
+    "phoneRegistrationManualTitle": "Finish setup in Meta",
+    "phoneRegistrationStatus": "{status}",
+    "phoneRegistrationStatusReady": "Ready",
+    "phoneRegistrationStatusPinRequired": "PIN required",
+    "phoneRegistrationStatusManual": "Finish in Meta",
+    "phoneRegistrationStatusNeedsAttention": "Needs attention",
+    "phoneRegistrationStatusUnknown": "Status unknown",
+    "phoneRegistrationPinLabel": "6-digit PIN",
+    "phoneRegistrationAction": "Register phone number",
+    "phoneRegistrationOpenMeta": "Open Meta settings",
+    "phoneRegistrationRegistering": "Registering...",
+    "phoneRegistrationSuccess": "Phone registration completed.",
+    "phoneRegistrationFailed": "Failed to register phone number",
+    "phoneRegistrationPinInvalid": "Enter a valid 6-digit PIN.",
+    "voicemailTitle": "Voicemail announcement",
+    "voicemailStatusEnabled": "Enabled",
+    "voicemailStatusUploaded": "Media ready",
+    "voicemailStatusMissing": "No announcement",
+    "voicemailDescription": "Upload an OGG/Opus audio file for WhatsApp Calling voicemail.",
+    "voicemailFileLabel": "Voicemail announcement file",
+    "voicemailChooseFile": "Choose OGG file",
+    "voicemailUploadAction": "Upload announcement",
+    "voicemailUploading": "Uploading...",
+    "voicemailUploadSuccess": "Voicemail announcement uploaded and applied.",
+    "voicemailUploadSaved": "Voicemail announcement uploaded. Calling defaults still need attention.",
+    "voicemailUploadFailed": "Failed to upload voicemail announcement",
+    "voicemailFileRequired": "Choose an OGG voicemail announcement first.",
+    "voicemailFileTypeInvalid": "Use an audio/ogg .ogg file encoded with OPUS.",
+    "webhookTitle": "Meta webhooks",
+    "webhookDescription": "Required Meta webhook fields are missing. Messages, calls, and history can lag until Meta activates them.",
+    "webhookMissingFields": "Missing: {fields}",
+    "webhookRecheck": "Recheck setup",
+    "webhookRechecking": "Checking...",
+    "webhookRecheckSuccess": "Meta webhook setup rechecked.",
+    "webhookRecheckFailed": "Failed to recheck Meta webhook setup",
+    "lifecycleTitle": "Meta status",
+    "lifecycleDescription": "Latest account events from Meta.",
+    "lifecycleStatus": "{events}",
+    "marketingMessagesTitle": "Marketing campaigns",
+    "marketingMessagesDescription": "Finish Marketing Messages setup in Meta so bulk campaigns use Meta’s marketing delivery path.",
+    "marketingMessagesReadyDescription": "Marketing campaign sends use Meta Marketing Messages for this number.",
+    "marketingMessagesAction": "Open WhatsApp Manager",
+    "marketingMessagesStatusReady": "Ready for campaigns",
+    "marketingMessagesStatusNotReady": "Not set up",
+    "marketingMessagesStatusUnknown": "Not checked yet",
+    "marketingMessagesCheckStatus": "Refresh status",
+    "marketingMessagesChecking": "Refreshing...",
+    "marketingMessagesCheckSuccess": "Marketing campaign status saved.",
+    "marketingMessagesCheckFailed": "Failed to refresh marketing campaign status",
+    "marketingMessagesAdvanced": "Advanced billing options",
+    "marketingMessagesMaxPriceStatus": "Agreement: {status}",
+    "marketingMessagesMaxPriceHint": "Optional Meta max-price agreement for Business Manager billing.",
+    "marketingMessagesSignerNameLabel": "Signer name",
+    "marketingMessagesSignerNamePlaceholder": "Jane Doe",
+    "marketingMessagesSignerEmailLabel": "Signer email",
+    "marketingMessagesSignerEmailPlaceholder": "admin@example.com",
+    "marketingMessagesEnrollMaxPrice": "Send max-price agreement",
+    "marketingMessagesEnrollingMaxPrice": "Sending...",
+    "marketingMessagesEnrollMaxPriceSuccess": "Agreement email sent",
+    "marketingMessagesEnrollMaxPriceFailed": "Failed to send max-price agreement",
+    "marketingMessagesEnrollMaxPriceMissingBusiness": "Business ID is missing. Reconnect WhatsApp to enroll.",
+    "manualUpdate": "Update token",
+    "cancelUpdate": "Cancel",
+    "newTokenRequired": "Paste a new access token first.",
+    "failedToUpdateToken": "Failed to update token",
+    "tokenUpdatedSuccess": "WhatsApp token updated.",
+    "manualUpdateTitle": "Manual token update",
+    "manualUpdateDescription": "Paste a fresh permanent access token if Meta token refresh failed.",
+    "newAccessToken": "New access token",
+    "pasteNewToken": "Paste the new permanent access token",
+    "saveToken": "Save token"
+  },
+  "WABASelection": {
+    "title": "Select WhatsApp number",
+    "description": "Choose the phone number that should route messages into this workspace.",
+    "noWabas": "No WhatsApp Business accounts found. Create one in Meta Business Manager first.",
+    "accountType": {
+      "owned": "Owned",
+      "client": "Client"
+    },
+    "qualityRating": "Quality {rating}",
+    "connectedHere": "Connected here",
+    "connectedElsewhere": "Connected to {workspace}",
+    "anotherWorkspace": "another workspace",
+    "connect": "Connect number",
+    "connecting": "Connecting...",
+    "validation": {
+      "selectWabaAndPhone": "Select a WhatsApp Business account and phone number",
+      "phoneAlreadyConnected": "This number is already connected to {workspace}."
+    },
+    "toast": {
+      "connectSuccess": "WhatsApp number connected.",
+      "connectFailed": "Failed to connect WhatsApp account"
+    },
+    "fetchFailed": "Failed to fetch WhatsApp accounts",
+    "loadFailed": "Failed to load WhatsApp accounts",
+    "saveFailed": "Failed to save WhatsApp connection",
+    "completeFailed": "Failed to complete connection",
+    "accountTypeLabel": "{type} account",
+    "noPhones": "No phone numbers found for this account",
+    "selected": "Selected: {phone}",
+    "cancel": "Cancel",
+    "createAccount": "Create WhatsApp Business account",
+    "metaBusiness": "Meta Business",
+    "searchPlaceholder": "Search WABA, business, or phone",
+    "errorTitle": "Could not load accounts",
+    "reauthorizationTitle": "Meta connection required first",
+    "reauthorizationDescription": "Connect WhatsApp with Meta Embedded Signup before choosing another company number.",
+    "reauthorizationAction": "Back to WhatsApp setup",
+    "emptyTitle": "No accounts found",
+    "noSearchResults": "No matching numbers",
+    "selectionHint": "Select a phone number to continue",
+    "verified": "Verified",
+    "backToWhatsApp": "Back to WhatsApp",
+    "sessionExpiredTitle": "Selection session expired",
+    "sessionExpiredDescription": "Start Embedded Signup again to refresh the Meta access token and choose a number.",
+    "connectErrors": {
+      "channelLimitTitle": "Your plan can't add this number",
+      "channelLimitDescription": "Your plan has no room for another WhatsApp number or channel. Disconnect a channel or upgrade your plan, then try again.",
+      "trialExpiredDescription": "Your trial has ended. Review your plan to connect WhatsApp.",
+      "viewPlan": "View plan",
+      "flowRebindBlocked": "This workspace's WhatsApp number is used by a scenario-managed Flow, so it can't move to another WhatsApp Business account. Choose a number from the current account, remove that Flow first, or try again in a moment."
+    }
+  },
+  "EmailIntegration": {
+    "title": "Connect Email",
+    "description": "Provision a hosted address on airi.chat",
+    "requestedLocalPart": "Requested local part (optional)",
+    "requestedLocalPartPlaceholder": "e.g. acme",
+    "provisioning": "Provisioning...",
+    "provisionAddress": "Provision address",
+    "provisioned": "Provisioned: {address}",
+    "providerTitle": "Company email",
+    "providerDescriptionPlatform": "Send product emails from your own address.",
+    "readOnlyHint": "You can view email setup, but only workspace admins can change it.",
+    "statusConnected": "Email is ready",
+    "statusPendingDns": "Add domain records",
+    "statusError": "Setup needs attention",
+    "statusDisconnected": "Not set up",
+    "statusSettingUp": "Setting up",
+    "statusChecking": "Checking",
+    "connectWithPostmark": "Set up email",
+    "verifyDnsNow": "Check again",
+    "verifyingDns": "Verifying...",
+    "platformSetupSuccess": "Email setup started",
+    "dnsVerifySuccess": "Email status checked",
+    "postmarkServerToken": "Postmark server token",
+    "postmarkServerTokenPlaceholder": "pm_...",
+    "tokenRequiredHint": "Required for manual setup.",
+    "tokenUpdateHint": "Leave empty to keep the current token.",
+    "defaultFromAddress": "Sender email",
+    "defaultFromAddressPlaceholder": "hello@yourcompany.com",
+    "valueCopied": "Value copied",
+    "lastCheckedAt": "Last checked",
+    "pendingDnsDescription": "Add these records at your domain host, then check again.",
+    "readyDescription": "Email is ready.",
+    "errorDescription": "We could not finish setup. Try again.",
+    "checkingDescription": "Checking your domain now.",
+    "settingUpDescription": "Setting up your email.",
+    "dnsRecordType": "Type",
+    "dnsRecordName": "Name",
+    "dnsRecordValue": "Value",
+    "dnsTxtRecord": "TXT",
+    "dnsCnameRecord": "CNAME",
+    "advancedSetupTitle": "Advanced setup",
+    "saveSender": "Save sender",
+    "advancedDescription": "Use this only if your team manages Postmark manually.",
+    "copy": "Copy",
+    "copyFailed": "Failed to copy",
+    "saveProvider": "Save provider",
+    "providerSaving": "Saving...",
+    "providerSaved": "Provider settings saved",
+    "error": {
+      "provisionFailed": "Failed to provision email address",
+      "providerSaveFailed": "Failed to save email provider settings"
+    }
+  },
+  "TelegramIntegration": {
+    "aiReactions": {
+      "title": "AI message reactions",
+      "description": "Show reactions while AI processes, replies, or hands off a Telegram message. Only used when AI is enabled for the chat.",
+      "saving": "Saving…",
+      "saved": "AI message reactions saved",
+      "saveFailed": "Could not save AI message reactions. Try again."
+    },
+    "botConfiguration": {
+      "title": "Bot Configuration",
+      "description": "Configure your Telegram bot token to enable messaging",
+      "createBot": {
+        "title": "Step 1: Create Your Bot",
+        "step1": "1. Open Telegram and message @BotFather",
+        "openBotFather": "Open @BotFather",
+        "step2": "2. Send the command: /newbot",
+        "step3": "3. Follow the prompts:",
+        "step3Item1": "Set a name for your bot",
+        "step3Item2": "Set a username (must end in \"bot\")",
+        "step3Item3": "Copy the bot token provided",
+        "step4": "4. Paste the token below"
+      },
+      "tokenLabel": "Bot Token",
+      "tokenPlaceholder": "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz",
+      "validateButton": "Validate",
+      "validationError": {
+        "title": "Validation Error"
+      },
+      "tokenValid": {
+        "title": "Token Valid",
+        "description": "Bot: @{username} ({firstName})"
+      },
+      "defaultBotName": "Bot",
+      "usernameNotFound": "not found",
+      "saveButton": "Save Bot Token",
+      "saving": "Saving...",
+      "replaceTokenHint": "The saved token is encrypted and never shown. Paste a new token to replace it.",
+      "alreadyConnected": {
+        "title": "Bot already connected",
+        "description": "This bot is already linked to your workspace as @{username}."
+      }
+    },
+    "webhookStatus": {
+      "label": "Webhook Status",
+      "refresh": "Refresh",
+      "checking": "Checking webhook status...",
+      "active": {
+        "title": "Webhook Active",
+        "pendingUpdates": "pending updates",
+        "pendingUpdate": "pending update"
+      },
+      "notConfigured": {
+        "title": "Webhook Not Configured",
+        "description": "Webhook is not registered. Click below to register it.",
+        "button": "Register Webhook"
+      }
+    },
+    "chatLinking": {
+      "title": "Workspace Bot",
+      "description": "One Telegram bot for this workspace. airi.chat manages its webhook and message routing.",
+      "privateChat": {
+        "title": "Bot link",
+        "description": "Open this workspace bot in Telegram.",
+        "copySuccess": "Link copied"
+      },
+      "groupChat": {
+        "title": "Add bot to a group",
+        "autoDetect": "Add @{username} to a group. Incoming messages route to this workspace."
+      }
+    },
+    "errors": {
+      "tokenRequired": "Bot token is required",
+      "invalidToken": "Invalid bot token"
+    },
+    "toast": {
+      "enterToken": "Please enter a bot token",
+      "validateFirst": "Please validate the token first",
+      "sourceNotFound": "Source not found",
+      "tokenSaved": "Bot token saved",
+      "saveFailed": "Failed to save bot token",
+      "webhookRegistered": "Webhook registered",
+      "webhookRegisterFailed": "Failed to register webhook"
+    }
+  },
+  "InstagramIntegration": {
+    "instagramNotConnected": "Instagram not connected",
+    "connectInstagram": "Connect Instagram",
+    "connectViaFacebook": "Connect via Facebook",
+    "connectionMethodHint": "For Tech Provider/coexistence setups, use Facebook login.",
+    "instagramConnected": "Instagram connected",
+    "instagramReconnectTitle": "Instagram Token Expiring Soon",
+    "instagramExpiresIn": "Your Instagram token expires in {days} days",
+    "instagramExpired": "Your Instagram token has expired",
+    "instagramReconnectPrompt": "Reconnect to continue receiving messages.",
+    "reconnectInstagram": "Reconnect Instagram",
+    "reconnectViaFacebook": "Reconnect via Facebook",
+    "accountId": "Account ID:",
+    "scopedId": "Scoped ID:",
+    "pageId": "Page ID:",
+    "connectionMethod": "Connection method",
+    "connectionMethodFacebook": "Facebook Business Login",
+    "connectionMethodInstagram": "Instagram Login",
+    "tokenExpiresIn": "Token expires in {days} days",
+    "businessProfile": "Business profile",
+    "displayName": "Display name:",
+    "accountType": "Account type",
+    "category": "Category",
+    "website": "Website:",
+    "bio": "Bio:",
+    "followers": "Followers",
+    "following": "Following",
+    "posts": "Posts",
+    "verified": "Verified",
+    "profilePending": "Profile details will appear after the first successful account metadata sync.",
+    "technicalDetails": "Technical details",
+    "status": "Status:",
+    "statusConnected": "Connected",
+    "publish": {
+      "title": "Publish Post/Reel (Review Demo)",
+      "description": "Use this tester to publish an Instagram image or video and prove content publishing permission during Meta review.",
+      "permissionLabel": "Required publish permission:",
+      "permissionOk": "granted",
+      "permissionMissing": "missing",
+      "permissionUnknown": "not yet verified",
+      "permissionHint": "Reconnect Instagram and grant {permission} to enable publishing.",
+      "mediaTypeLabel": "Media type",
+      "image": "Image",
+      "video": "Video",
+      "mediaUrlLabel": "Public media URL",
+      "mediaUrlPlaceholder": "https://example.com/demo-video.mp4",
+      "captionLabel": "Caption (optional)",
+      "captionPlaceholder": "Demo post from Airi app review flow",
+      "publish": "Publish",
+      "publishing": "Publishing...",
+      "success": "Media published",
+      "failed": "Failed to publish media",
+      "validationUrl": "Media URL is required",
+      "resultMediaId": "Published media ID:",
+      "resultPermalink": "Permalink:"
+    },
+    "errors": {
+      "invalid_state": {
+        "title": "Instagram authorization expired",
+        "message": "Instagram authorization state is invalid or expired. Reconnect and complete all steps in one session."
+      },
+      "oauth_failed": {
+        "title": "Instagram connection cancelled",
+        "message": "Instagram authorization was cancelled or denied.",
+        "messageWithDetails": "Instagram authorization failed: {details}"
+      },
+      "no_instagram_account": {
+        "title": "Instagram account not found",
+        "message": "No eligible Instagram account was returned by Meta. Use a professional account with messaging access enabled."
+      },
+      "token_exchange_failed": {
+        "title": "Instagram token exchange failed",
+        "message": "Could not complete token exchange with Instagram.",
+        "messageWithDetails": "Could not complete token exchange: {details}"
+      },
+      "save_failed": {
+        "title": "Instagram save failed",
+        "message": "Instagram credentials could not be stored. Try reconnecting again."
+      },
+      "missing_access_token": {
+        "title": "Instagram access token missing",
+        "message": "Facebook did not return an access token. Try reconnecting and complete the flow in one session."
+      },
+      "facebook_login_failed": {
+        "title": "Facebook login for Instagram failed",
+        "message": "Could not complete Facebook login for Instagram.",
+        "messageWithDetails": "Could not complete Facebook login: {details}"
+      },
+      "server_not_configured": {
+        "title": "Instagram integration is not configured",
+        "message": "Instagram app credentials are not configured on the server.",
+        "messageWithDetails": "Missing server configuration: {details}"
+      },
+      "connection_error": {
+        "title": "Instagram connection error",
+        "message": "Something went wrong while connecting Instagram. Try again, and contact support if it keeps happening.",
+        "messageWithDetails": "Instagram connection error: {details}"
+      }
+    },
+    "warnings": {
+      "webhook_subscription_failed": {
+        "title": "Instagram connected, but webhook is not subscribed",
+        "message": "The account is connected, but incoming Instagram DMs will not arrive until webhook subscription succeeds.",
+        "action": "Check Instagram webhook settings in Meta App Dashboard and reconnect Instagram."
+      },
+      "generic": {
+        "title": "Integration warning",
+        "message": "{details}"
+      }
+    }
+  },
+  "WebWidgetIntegration": {
+    "title": "Web Widget",
+    "description": "Create a chat widget to embed on your website. The widget includes real-time messaging, Airi AI support, and customizable themes.",
+    "creatingWidget": "Creating your chat widget...",
+    "settingUpWidget": "Setting up widget configuration...",
+    "createWidget": "Create Widget",
+    "active": "Active",
+    "inactive": "Inactive",
+    "saving": "Saving...",
+    "error": "Error",
+    "failedToCreateWidget": "Failed to create widget",
+    "clientKey": "Client Key",
+    "allowedDomains": "Allowed Domains",
+    "allowedDomainsPlaceholder": "example.com, *.example.com, localhost:*",
+    "saveChanges": "Save Changes",
+    "regenerateKeys": "Regenerate Keys",
+    "regenerateKeysConfirm": "This will invalidate your current embed code. Continue?",
+    "keysRegenerated": "Keys regenerated! Update your embed code.",
+    "settingsSaved": "Settings saved",
+    "widgetCreated": "Widget created",
+    "quickStart": {
+      "title": "Start embedding in 2 minutes",
+      "readyTitle": "Widget is ready to embed",
+      "description": "Use this script on your website, then style the widget from Branding.",
+      "step1": "Copy the embed script.",
+      "step2": "Paste it before the closing </body> tag on your website.",
+      "step3": "Open Branding to customize colors, texts, and widget layout.",
+      "copyScript": "Copy script",
+      "openBranding": "Open Branding",
+      "noReembedNeeded": "Branding and customization changes are loaded dynamically. Re-embedding the script is not required."
+    },
+    "failedToSaveSettings": "Failed to save settings",
+    "failedToRegenerateKeys": "Failed to regenerate keys",
+    "copiedToClipboard": "Copied to clipboard",
+    "tabs": {
+      "installation": "Installation",
+      "configuration": "Configuration"
+    },
+    "installation": {
+      "title": "Installation Guide",
+      "description": "Embed the widget on your site using one of the methods below",
+      "copy": "Copy Code",
+      "includesTitle": "What's included in the script:",
+      "features": {
+        "realtime": "Real-time messaging backend",
+        "autoReply": "Automatic AI replies",
+        "responsive": "Responsive chat interface",
+        "universal": "Universal framework compatibility"
+      }
+    },
+    "privacy": {
+      "title": "Data Collection & Privacy",
+      "description": "We collect basic usage metrics to provide analytics. Your data is isolated and secure."
+    },
+    "commerce": {
+      "title": "Cart recovery",
+      "description": "Track website carts and let shoppers continue them through a user-initiated WhatsApp handoff.",
+      "enabled": "Enable cart recovery",
+      "loading": "Loading commerce settings…",
+      "loadFailed": "Commerce settings could not be loaded.",
+      "retry": "Retry",
+      "save": "Save commerce settings",
+      "saved": "Commerce settings saved.",
+      "saveFailed": "Commerce settings could not be saved. Try again.",
+      "rotateFailed": "The signing secret could not be created. Try again.",
+      "copyFailed": "Could not copy to the clipboard.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "whatsappRequired": "Connect a WhatsApp source before enabling cart recovery.",
+      "whatsappSource": "WhatsApp source",
+      "selectWhatsAppSource": "Select a WhatsApp source",
+      "whatsappHint": "Shoppers send the prefilled consent message to this account themselves.",
+      "shopifyDomain": "Shopify shop domain",
+      "shopifyDomainHint": "Use the canonical store.myshopify.com domain.",
+      "shopifySecret": "Shopify webhook signing secret",
+      "shopifySecretPlaceholder": "Paste the Shopify app client secret",
+      "shopifySecretHint": "Used only to verify native Shopify webhook signatures. Leave blank to keep the current secret.",
+      "secretConfigured": "Secret configured. Leave blank to keep it.",
+      "createSecret": "Create signing secret",
+      "rotateSecret": "Replace signing secret",
+      "webhookSecret": "Webhook signing secret",
+      "secretOnce": "Copy this secret now. It is shown only once and is required to sign generic webhook requests.",
+      "webhookTitle": "Server webhooks",
+      "webhookDescription": "Use the URL for your store. Generic requests require the signing secret; Shopify uses native HMAC; Tilda uses its credential-bearing URL.",
+      "genericWebhook": "Generic webhook URL",
+      "shopifyWebhook": "Shopify webhook URL",
+      "tildaWebhook": "Tilda webhook URL",
+      "tildaSecretHint": "This URL contains a credential. Keep it private and paste the full URL into Tilda.",
+      "trackingTitle": "Browser event examples",
+      "trackingDescription": "Send full cart snapshots with stable cart and item IDs. An empty items array closes cart recovery.",
+      "templateVariablesTitle": "Recovery template values",
+      "templateVariablesHint": "Use the token with the approved dynamic button URL. Full recovery URLs and safe cart summary values are also available to scenario templates.",
+      "snippets": {
+        "javascript": "JavaScript / CMS",
+        "gtm": "Google Tag Manager",
+        "shopify": "Shopify theme and customer pixel",
+        "tilda": "Tilda cart hook"
+      },
+      "lastEvent": "Last event: {date}",
+      "unknownTime": "Unknown time",
+      "recentCarts": "Recent carts",
+      "noRecentCarts": "No cart events received yet.",
+      "linked": "WhatsApp linked",
+      "notLinked": "Not linked",
+      "status": {
+        "disabled": "Disabled",
+        "waiting": "Waiting for first event",
+        "receiving": "Receiving events"
+      },
+      "cartStatus": {
+        "active": "Active",
+        "cart": "Cart active",
+        "checkout": "Checkout active",
+        "checkout_started": "Checkout started",
+        "closed": "Closed",
+        "completed": "Completed",
+        "ordered": "Order placed",
+        "paid": "Paid",
+        "purchase_reported": "Purchase reported",
+        "suppressed": "Suppressed",
+        "expired": "Expired"
+      }
+    }
+  },
+  "TelegramWebhook": {
+    "invalidSourceOrConfiguration": "❌ The source key is invalid or this source is not configured. Please check your key and try again.",
+    "linkSuccessBusiness": "✅ Telegram linked to \"{companyName}\". Business mode is now connected for this bot.",
+    "linkSuccessStandard": "✅ This chat is linked to \"{companyName}\". Airi will analyze new messages from now on.",
+    "businessLinkSuccess": "✅ Telegram Business mode linked for \"{companyName}\".",
+    "businessLinkWarningReplyDisabled": "⚠️ Reply permission is disabled. Enable \"Can reply to messages\" in Telegram → Settings → Business → Chatbots, otherwise Airi cannot auto-reply.",
+    "businessLinkReady": "Airi is ready to reply to your customers.",
+    "businessLinkErrorTitle": "❌ Couldn’t link the Telegram Business connection.",
+    "businessLinkErrorInvalidSource": "Source key is invalid or not found.\n\nIt should look like:\n06793a79-9ad8-483c-b4f5-b7d708a0af41\n\nFind it in: Airi.chat Dashboard → Settings → Integrations → Telegram",
+    "businessLinkErrorNoWorkspace": "Source exists, but no workspace is attached.\n\nPlease contact support or create a new source in your dashboard.",
+    "businessLinkErrorGeneric": "Please check that:\n• the source key is correct (36 lowercase characters)\n• you run the command in a private chat with the bot\n• the source exists in your airi.chat dashboard\n\nIf the problem continues, contact support.",
+    "statusNoConnection": "❌ No Telegram Business connection found.\n\nSetup steps:\n1. Add bot in Telegram → Settings → Business → Chatbots\n2. Enable \"Can reply to messages\"\n3. Run /start <source-key> in this chat",
+    "statusConnectedDateUnknown": "Unknown",
+    "statusWorkspaceLinked": "Linked",
+    "statusWorkspaceNotLinked": "Not linked (run /start <source-key>)",
+    "statusCanReplyYes": "Yes",
+    "statusCanReplyNo": "No (enable in Telegram settings)",
+    "statusEnabledYes": "Yes",
+    "statusEnabledNo": "No",
+    "statusTemplate": "Connection status\n\n{workspaceEmoji} Workspace: {workspaceStatus}\n{replyEmoji} Can reply: {canReplyStatus}\n{enabledEmoji} Enabled: {enabledStatus}\n\nConnected: {connectedDate}",
+    "helpGreeting": "Hi, I’m Airi’s Telegram assistant.",
+    "helpBusinessMode": "Telegram Business:\n/status - Check the connection status"
+  },
+  "WhatsAppFlows": {
+    "title": "WhatsApp Flows",
+    "description": "Build, edit, publish and test forms that customers complete inside WhatsApp.",
+    "sourceLabel": "WhatsApp account",
+    "sourcePlaceholder": "Select a WhatsApp account",
+    "refresh": "Refresh",
+    "createFlow": "Create flow",
+    "openMetaManager": "Open Meta Flows Manager",
+    "readDocs": "Read Flows docs",
+    "setupHint": "Save a draft, preview it, then publish when it is ready.",
+    "gallery": {
+      "library": "Flow library",
+      "loadMore": "Show {count} more",
+      "providerUnavailable": "This Flow is unavailable from Meta.",
+      "loading": "Loading preview…",
+      "loadFailed": "Preview could not be loaded.",
+      "retry": "Retry",
+      "screens": "Flow screens",
+      "screen": "Screen {number}",
+      "screenCount": "{count, plural, one {# screen} other {# screens}}",
+      "required": "Required",
+      "moreFields": "{count, plural, one {# more field} other {# more fields}}",
+      "moreOptions": "{count, plural, one {# more option} other {# more options}}",
+      "advancedTitle": "Advanced Flow",
+      "advancedDescription": "Open the JSON editor or Meta preview to see the full Flow.",
+      "emptyTitle": "No screens yet",
+      "emptyDescription": "Form content has not been added."
+    },
+    "loading": "Loading flows...",
+    "noFlowsTitle": "No flows found yet",
+    "noFlowsDescription": "Create your first flow to start collecting structured replies directly in WhatsApp.",
+    "stats": {
+      "total": "Total: {count}",
+      "published": "Published: {count}"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "deprecated": "Deprecated",
+      "missing": "Missing",
+      "unknown": "Unknown",
+      "blocked": "Blocked",
+      "throttled": "Throttled"
+    },
+    "table": {
+      "columns": {
+        "name": "Flow",
+        "status": "Status",
+        "categories": "Categories",
+        "validation": "Validation",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "noCategory": "-",
+      "noIssues": "No issues",
+      "validationIssues": "{count} issue(s)",
+      "managedArtifact": "Scenario-managed Flow",
+      "providerStatusUnverified": "Provider status must be refreshed before cleanup",
+      "validationUnknown": "JSON not validated"
+    },
+    "actions": {
+      "sendTest": "Send test",
+      "publish": "Publish",
+      "deprecate": "Deprecate",
+      "preview": "Meta preview",
+      "deleteDraft": "Delete draft",
+      "resolveManaged": "Resolve managed artifact",
+      "edit": "Edit",
+      "view": "View",
+      "copy": "Create editable copy",
+      "more": "More actions for {name}",
+      "openScenario": "Open scenario"
+    },
+    "dialogs": {
+      "create": {
+        "title": "Create WhatsApp Flow",
+        "description": "Create a new flow in your selected WhatsApp Business Account.",
+        "nameLabel": "Flow name",
+        "categoriesLabel": "Categories",
+        "categoriesPlaceholder": "e.g. OTHER,SURVEY,LEAD_GENERATION",
+        "cloneLabel": "Clone flow ID (optional)",
+        "clonePlaceholder": "Existing flow ID to clone",
+        "cancel": "Cancel",
+        "submit": "Create flow",
+        "submitting": "Creating...",
+        "copyName": "{name} (copy)",
+        "copyTitle": "Create an editable copy",
+        "copyDescription": "Create a new draft. Messages and templates using the original Flow keep their current version.",
+        "advanced": "Source Flow ID"
+      },
+      "send": {
+        "title": "Send Flow Test Message",
+        "description": "Send a test message for flow: {flowName}",
+        "requirements": "First send a WhatsApp message from the recipient's phone to your business number. Send this test within 24 hours and open it in WhatsApp on Android or iPhone; WhatsApp Web does not support Flows.",
+        "recipientLabel": "Recipient phone",
+        "flowTokenLabel": "Flow token",
+        "generateToken": "Generate",
+        "bodyLabel": "Body text (optional)",
+        "ctaLabel": "CTA label (optional)",
+        "actionTypeLabel": "Action type",
+        "payloadLabel": "Action payload JSON (optional)",
+        "payloadPlaceholder": "{\"screen\":\"START\"}",
+        "cancel": "Cancel",
+        "submit": "Send test",
+        "submitting": "Sending...",
+        "navigate": "navigate",
+        "dataExchange": "data_exchange"
+      }
+    },
+    "alerts": {
+      "loadFailed": "Failed to load flows",
+      "createSuccess": "Flow created",
+      "createFailed": "Failed to create flow",
+      "actionSuccess": "Flow updated",
+      "actionFailed": "Failed to update flow",
+      "deprecateConfirm": "Deprecate this Flow? Previously sent messages that use it will stop opening. This cannot be undone.",
+      "resolveManagedConfirm": "Resolve this retired managed Flow artifact against Meta's current state? This only proceeds after the provider result is confirmed.",
+      "deleteConfirm": "Delete this draft flow?",
+      "deleteSuccess": "Flow deleted",
+      "deleteFailed": "Failed to delete flow",
+      "previewUnavailable": "Meta preview URL is not available for this Flow",
+      "previewFailed": "Failed to fetch Meta preview",
+      "sendSuccess": "Flow message sent",
+      "sendFailed": "Failed to send flow message",
+      "invalidPayloadJson": "Payload must be valid JSON object",
+      "credentialsMissing": "Connect WhatsApp to manage flows in this workspace.",
+      "connectWhatsApp": "Connect WhatsApp",
+      "phoneMissing": "Register a WhatsApp phone number to send test flow messages.",
+      "phoneMissingTooltip": "Register a WhatsApp phone number to send flow tests.",
+      "credentialsMissingTooltip": "Connect WhatsApp to create and manage flows.",
+      "sourceRequired": "Select the WhatsApp account whose Flows you want to manage.",
+      "openBadgeChecklist": "Open phone checklist"
+    },
+    "searchLabel": "Search Flows",
+    "searchPlaceholder": "Search by name or ID",
+    "statusFilterLabel": "Flow status",
+    "allStatuses": "All statuses",
+    "noMatchesTitle": "No matching Flows",
+    "noMatchesDescription": "Try another search or status filter.",
+    "categories": {
+      "SIGN_UP": "Sign up",
+      "SIGN_IN": "Sign in",
+      "APPOINTMENT_BOOKING": "Appointment booking",
+      "LEAD_GENERATION": "Lead generation",
+      "CONTACT_US": "Contact us",
+      "CUSTOMER_SUPPORT": "Customer support",
+      "SURVEY": "Survey",
+      "OTHER": "Other"
+    },
+    "editor": {
+      "advanced": "Advanced",
+      "settings": "Flow settings",
+      "title": "Flow editor",
+      "description": "Edit screens visually or work with the complete Flow JSON.",
+      "loading": "Loading Flow…",
+      "loadFailed": "Could not load this Flow.",
+      "retry": "Try again",
+      "visual": "Visual",
+      "json": "JSON",
+      "visualUnavailable": "This Flow uses features outside the visual editor. Edit the full JSON here; all properties are preserved.",
+      "endpointJsonOnly": "This Flow uses a data endpoint. Edit its JSON while keeping the existing endpoint and routing configuration.",
+      "emptyTitle": "Start your Flow",
+      "emptyDescription": "Choose a form template or import a Flow JSON file.",
+      "import": "Import JSON",
+      "export": "Export JSON",
+      "format": "Format JSON",
+      "sourceLabel": "Flow JSON",
+      "submitLabel": "Submit button label",
+      "save": "Save draft",
+      "saving": "Saving…",
+      "saved": "Draft saved",
+      "unsaved": "Unsaved changes",
+      "publish": "Publish",
+      "publishing": "Publishing…",
+      "published": "Flow published",
+      "close": "Close",
+      "discardConfirm": "Discard unsaved changes to this Flow?",
+      "saveFailed": "Could not save the draft.",
+      "publishFailed": "Could not publish this Flow.",
+      "invalidJson": "Enter a valid JSON object.",
+      "validationTitle": "Validation issues",
+      "preview": "WhatsApp preview",
+      "previewUnavailable": "A local preview is unavailable for this Flow. Use Meta preview after saving.",
+      "readOnly": "This published version is shown for reference. Create an editable copy to make changes.",
+      "managedReadOnly": "This Flow belongs to a scenario release. Open its scenario to edit and publish changes.",
+      "categoriesRequired": "Select at least one category.",
+      "importFailed": "Could not import this JSON file.",
+      "tooLarge": "This JSON file is too large.",
+      "screenCount": "{count} screen(s)",
+      "savedBeforePreview": "Save draft changes before opening the Meta preview.",
+      "fieldKey": "Field key",
+      "helperText": "Helper text",
+      "publishNeedsSave": "Save the draft first, then publish the Flow.",
+      "publishNeedsValidation": "Resolve validation issues and save the draft before publishing."
+    }
+  }
+}

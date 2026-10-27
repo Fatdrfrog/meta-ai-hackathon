@@ -1,0 +1,26 @@
+{
+  "name": "@icecore/shared",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "node -e \"const fs=require('node:fs');fs.rmSync('dist-test',{recursive:true,force:true})\" && tsc -p tsconfig.test.json && node -e \"const fs=require('node:fs');fs.writeFileSync('dist-test/package.json',JSON.stringify({type:'commonjs'}))\" && node --test \"dist-test/**/*.test.js\" && node -e \"require('node:fs').rmSync('dist-test',{recursive:true,force:true})\""
+  },
+  "exports": {
+    "./types/*": "./src/types/*.ts",
+    "./utils/*": "./src/utils/*.ts",
+    "./constants/*": "./src/constants/*.ts",
+    "./lib/*": "./src/lib/*.ts"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "7.21.0",
+    "@upstash/ratelimit": "^2.0.6",
+    "@upstash/redis": "^1.39.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "typescript": "^5.9.2"
+  }
+}

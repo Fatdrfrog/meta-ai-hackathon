@@ -1,0 +1,1888 @@
+{
+  "DashboardPage": {
+    "header": {
+      "title": "Панель аналитики",
+      "description": "Обзор обращений в поддержку и основных тенденций."
+    },
+    "filters": {
+      "allChannels": "Все каналы",
+      "allCategories": "Все категории",
+      "allLabels": "Все метки",
+      "allManagers": "Все менеджеры",
+      "label": "Фильтры",
+      "channelCount": "{count, plural, one {# канал} few {# канала} many {# каналов} other {# канала}}",
+      "categoryCount": "{count, plural, one {# категория} few {# категории} many {# категорий} other {# категории}}",
+      "labelCount": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}",
+      "managerCount": "{count, plural, one {# менеджер} few {# менеджера} many {# менеджеров} other {# менеджера}}",
+      "channels": "Каналы",
+      "noChannels": "Нет каналов",
+      "categories": "Категории",
+      "noCategories": "Нет категорий",
+      "internalLabels": "Внутренние метки",
+      "noInternalLabels": "Нет внутренних меток",
+      "managers": "Менеджеры",
+      "noManagers": "Нет менеджеров",
+      "sheetTitle": "Фильтры аналитики",
+      "sheetDescription": "Эти фильтры применяются ко всем разделам дашборда и обоим периодам.",
+      "apply": "Применить фильтры",
+      "clearSelection": "Сбросить выбор"
+    },
+    "presets": {
+      "label": "Наборы фильтров",
+      "empty": "Нет сохранённых наборов",
+      "delete": "Удалить: {name}",
+      "save": "Сохранить текущие фильтры",
+      "saveTitle": "Сохранить набор фильтров",
+      "saveDescription": "Сохраните текущий выбор, чтобы использовать его позже.",
+      "nameLabel": "Название набора",
+      "namePlaceholder": "Например, Руководители поддержки",
+      "cancel": "Отмена",
+      "confirmSave": "Сохранить набор",
+      "apply": "Применить {name}",
+      "deleteAria": "Удалить {name}",
+      "deleteTitle": "Удалить набор фильтров?",
+      "deleteDescription": "Набор {name} будет удалён без возможности восстановления.",
+      "deleteCancel": "Оставить набор",
+      "deleteConfirm": "Удалить набор",
+      "deleteAction": "Удалить"
+    },
+    "actions": {
+      "export": "Экспорт"
+    },
+    "export": {
+      "all": "ВСЕ",
+      "filters": "Фильтры",
+      "comparisonPeriods": "Периоды сравнения",
+      "categoryComparisons": "Сравнение категорий",
+      "dailyCountsOverall": "Динамика по дням (все данные)",
+      "messageActivityByHour": "Активность сообщений по часам",
+      "topCategoriesVisible": "Популярные категории (видимые)",
+      "categoriesByChannelVisible": "Категории по каналам (видимые)",
+      "statsOverall": "Показатели (все данные)",
+      "advertisement": "Реклама",
+      "metaAdsManagerDaily": "Meta Ads Manager по дням",
+      "metaAdsManagerTopAds": "Лучшие объявления Meta Ads Manager",
+      "advertisementSources": "Источники рекламы",
+      "internalLabels": "Внутренние метки",
+      "managers": "Менеджеры",
+      "internalLabelBreakdown": "Разбивка по внутренним меткам",
+      "metaAdsCurrencies": "Расходы Meta по валютам",
+      "metaAdsAccounts": "Метрики аккаунтов Meta",
+      "conversionFeedback": "Обратная связь о результатах в Meta",
+      "conversionFeedbackReasons": "Причины статусов доставки"
+    },
+    "advertisement": {
+      "title": "Реклама Meta",
+      "description": "Результаты Ads Manager и обращения из рекомендаций WhatsApp, зафиксированные Airi.",
+      "sourceTypes": {
+        "metaAds": "Реклама Meta",
+        "instagramPosts": "Публикации Instagram",
+        "unknown": "Неизвестный источник"
+      },
+      "sourceTypeCount": "{type}: {count}",
+      "tiles": {
+        "metaResults": "Результаты Meta",
+        "spend": "Расходы",
+        "costPerResult": "Цена за результат",
+        "airiCaptured": "Зафиксировано Airi",
+        "capturedStarts": "Зафиксированные обращения",
+        "responded": "С ответом",
+        "closed": "Закрыто",
+        "trackedSources": "Отслеживаемые источники"
+      },
+      "selectedAdAccount": "Выбранный рекламный аккаунт",
+      "spendScope": "Все объявления аккаунта · {account}",
+      "uniqueSources": "{count, plural, one {# уникальный источник} few {# уникальных источника} many {# уникальных источников} other {# уникального источника}}",
+      "ofMetaResults": "{percent} от результатов Meta",
+      "responseRate": "{percent} ответов",
+      "closeRate": "{percent} закрыто",
+      "topSourcesShown": "Основные источники показаны ниже",
+      "captureGap": "{count, plural, one {{countValue} результат Meta не стал обращением из рекомендации, зафиксированным Airi за этот период.} few {{countValue} результата Meta не стали обращениями из рекомендаций, зафиксированными Airi за этот период.} many {{countValue} результатов Meta не стали обращениями из рекомендаций, зафиксированными Airi за этот период.} other {{countValue} результата Meta не стали обращениями из рекомендаций, зафиксированными Airi за этот период.}}",
+      "metaByDay": {
+        "title": "Результаты Meta по дням",
+        "description": "Результаты переписок и расходы Ads Manager."
+      },
+      "dateRange": "{start} – {end}",
+      "capturedByDay": {
+        "title": "Обращения, зафиксированные Airi",
+        "description": "Обращения из рекламы Meta по дням."
+      },
+      "dayCount": "{count, plural, one {# день} few {# дня} many {# дней} other {# дня}}",
+      "metaResultTooltip": "{date}: {count}, {spend}",
+      "capturedStartTooltip": "{date}: {count}",
+      "topAds": {
+        "ad": "Реклама Meta",
+        "results": "Результаты",
+        "spend": "Расходы",
+        "costPerResult": "Цена за результат"
+      },
+      "sources": {
+        "source": "Источник Airi",
+        "starts": "Обращения",
+        "responded": "С ответом",
+        "closed": "Закрыто",
+        "latest": "Последнее",
+        "empty": "Нет разбивки по источникам за этот период."
+      },
+      "sourceId": "ID источника: {id}",
+      "openSource": "Открыть источник рекламы",
+      "sales": {
+        "unknownCurrency": "Валюта не указана",
+        "title": "Учтённые продажи",
+        "scope": "Все продажи рабочего пространства за выбранные даты. Фильтры канала, категории, метки и менеджера не применяются.",
+        "customerScope": "«Известные покупатели» считает связанные профили клиентов, «Диалоги с оплатой» считает чаты с учтённой продажей. Один покупатель может попасть в несколько рекламных групп.",
+        "currencyGroup": "Продажи в {currency}",
+        "adColumn": "Объявление / кампания",
+        "ad": "Объявление: {id}",
+        "unattributed": "Без атрибуции",
+        "payingCustomers": "Известные покупатели",
+        "paidConversations": "Диалоги с оплатой",
+        "sales": "Продажи",
+        "refunds": "Возвраты",
+        "gross": "Выручка",
+        "refunded": "Сумма возвратов",
+        "net": "Выручка за вычетом возвратов",
+        "empty": "За выбранные даты нет учтённых продаж или возвратов.",
+        "error": "Не удалось загрузить продажи. Обновите панель и попробуйте снова.",
+        "dateRangeError": "Для просмотра продаж выберите период не более 366 дней.",
+        "truncated": "Показаны первые 200 групп объявлений и валют. Выберите более короткий период для подробного отчёта.",
+        "recent": "Последние отправки в Meta ({count})",
+        "deliveryScope": "Получение события Meta не подтверждает рекламную атрибуцию. События без подходящего рекламного диалога WhatsApp остаются в отчёте о продажах.",
+        "unknownHelp": "Перед повторной отправкой проверьте эти события в Meta Events Manager. Доставка не подтверждена; автоматические повторы отключены.",
+        "sale": "Продажа",
+        "refund": "Возврат",
+        "testCode": "Тестовый код",
+        "preparationFailed": "Не удалось отправить",
+        "statuses": {
+          "pending": "Ожидает отправки",
+          "queued": "В очереди",
+          "delivery_unknown": "Доставка неизвестна",
+          "sent": "Получено Meta",
+          "rejected": "Отклонено Meta",
+          "not_eligible": "Не подлежит отправке"
+        }
+      },
+      "filterScope": "Выбранные даты. Фильтры обращений влияют на учтённые чаты; результаты и расходы Meta не фильтруются.",
+      "diagnostics": {
+        "allMessaging": "Результаты Meta включают все направления сообщений; это не число WhatsApp-чатов в airi.chat.",
+        "reportTime": "Результаты по дате конверсии; атрибуция из настроек группы объявлений.",
+        "fetchedAt": "Обновлено {date}",
+        "partial": "Отчёт неполный. Оценка эффективности недоступна.",
+        "coverage": "Результаты есть в {reported} строках; отсутствуют в {missing}.",
+        "spendCoverage": "Расходы есть в {reported} строках; отсутствуют в {missing}.",
+        "currency": "Валюта",
+        "unknownCurrency": "Неизвестная валюта",
+        "impressions": "Показы",
+        "linkClicks": "Клики по ссылке",
+        "ctr": "CTR ссылки",
+        "cpc": "CPC ссылки",
+        "account": "Аккаунт",
+        "reach": "Охват",
+        "frequency": "Частота",
+        "timeZone": "Часовой пояс",
+        "currencyBreakdown": "Расходы по валютам",
+        "accountSummary": "Итоги аккаунтов за выбранные даты. Охват и частота не суммируются по объявлениям или дням.",
+        "warnings": {
+          "sources_truncated": "Достигнут лимит источников",
+          "accounts_truncated": "Достигнут лимит аккаунтов",
+          "credentials_unavailable": "Учётные данные недоступны",
+          "accounts_unavailable": "Аккаунты недоступны",
+          "insights_unavailable": "Insights недоступны",
+          "account_summary_unavailable": "Итоги аккаунта недоступны",
+          "rows_truncated": "Достигнут лимит строк",
+          "invalid_paging": "Пагинация провайдера неполная",
+          "currency_unavailable": "Валюта недоступна",
+          "timezone_scope": "Часовые пояса аккаунтов отличаются от отчёта",
+          "results_not_reported": "Выбранный результат не сообщён",
+          "multiple_currencies": "Валюты учитываются раздельно",
+          "ads_truncated": "Таблица объявлений неполная",
+          "spend_not_reported": "Расходы не сообщены",
+          "report_timeout": "Истекло время отчёта провайдера",
+          "sources_unavailable": "Список источников недоступен"
+        },
+        "currentDestination": "Текущее назначение: {destination}",
+        "destinationWhatsApp": "WhatsApp",
+        "destinationOther": "Другое или несколько назначений",
+        "destinationUnknown": "Не проверено",
+        "destinationUpdatedAt": "Группа объявлений обновлена {date}",
+        "currentDestinationHelp": "Данные назначения описывают текущую настройку группы объявлений. Время последнего изменения используется для осторожной проверки выбранного периода."
+      },
+      "feedback": {
+        "title": "Обратная связь о результатах в Meta",
+        "scope": "Продажи и возвраты за этот период; фильтры чатов не меняют доставку обратной связи. Принятие не означает атрибуцию выручки.",
+        "recorded": "Записано",
+        "eligible": "Подходят для отправки",
+        "pending": "Ожидают",
+        "accepted": "Приняты Meta",
+        "rejected": "Отклонены",
+        "unknown": "Доставка неизвестна",
+        "ineligible": "Не подходят",
+        "oldestPending": "Самая ранняя ожидающая: {date}",
+        "unknownHelp": "Неизвестная доставка не повторяется автоматически; принятие Meta не доказывает атрибуцию рекламы.",
+        "empty": "Нет записанных результатов за период",
+        "unavailable": "Обратная связь недоступна",
+        "reasonsTitle": "Причины статусов доставки",
+        "status": "Статус",
+        "reason": "Причина",
+        "count": "Количество",
+        "truncated": "Разбивка причин неполная.",
+        "reasons": {
+          "missing_attributable_click": "Нет клика для атрибуции",
+          "transaction_id_missing": "Нет ID транзакции",
+          "feedback_not_enabled": "Обратная связь не включена",
+          "whatsapp_source_unavailable": "Источник WhatsApp недоступен",
+          "whatsapp_account_changed": "Аккаунт WhatsApp изменился",
+          "delivery_destination_changed": "Получатель доставки изменился",
+          "event_too_old": "Событие слишком старое",
+          "pre_dispatch_failure": "Ошибка до отправки",
+          "dispatch_started": "Отправка началась",
+          "original_purchase_not_sent": "Исходная покупка не отправлена",
+          "invalid_value": "Некорректная сумма",
+          "invalid_currency": "Некорректная валюта",
+          "invalid_event_time": "Некорректное время события",
+          "event_in_future": "Событие в будущем",
+          "missing_snapshot": "Нет снимка отправки",
+          "missing_whatsapp_source": "Нет источника WhatsApp",
+          "unsupported_outcome": "Неподдерживаемый результат",
+          "invalid_ctwa_clid": "Некорректный click ID",
+          "invalid_dataset_id": "Некорректный набор данных",
+          "invalid_waba_id": "Некорректный аккаунт WhatsApp",
+          "other": "Другая причина провайдера",
+          "purchase_not_eligible": "Исходная покупка не подходит",
+          "purchase_destination_changed": "Направление исходной покупки изменено",
+          "invalid_snapshot": "Некорректный снимок отправки",
+          "invalid_source_id": "Некорректный ID источника",
+          "invalid_event_name": "Некорректное имя события",
+          "invalid_test_event_code": "Некорректный тестовый код",
+          "invalid_event_id": "Некорректный ID события",
+          "invalid_access_token": "Токен доступа недействителен",
+          "transport_error": "Ошибка соединения",
+          "unconfirmed_http_error": "Неподтверждённый ответ провайдера",
+          "missing_acceptance": "Принятие не подтверждено",
+          "provider_response_timeout": "Истекло время ответа провайдера",
+          "provider_response_too_large": "Ответ провайдера слишком большой",
+          "meta": "Ошибка Meta {code}"
+        }
+      }
+    },
+    "internalLabels": {
+      "title": "Внутренние метки",
+      "description": "Метки рабочей области по объёму обращений и состоянию обработки.",
+      "labeled": "{percent} с метками",
+      "tiles": {
+        "tagged": "С метками",
+        "unlabeled": "Без метки",
+        "uniqueLabels": "Уникальные метки",
+        "topLabels": "Основные метки"
+      },
+      "coverageDetail": "{percent} обращений",
+      "noLabelAttached": "Внутренняя метка не назначена",
+      "assignmentCount": "{count, plural, one {{countValue} назначение} few {{countValue} назначения} many {{countValue} назначений} other {{countValue} назначения}}",
+      "shownBelow": "Показаны в таблице ниже",
+      "table": {
+        "label": "Метка",
+        "conversations": "Обращения",
+        "open": "Открыто",
+        "inProgress": "В работе",
+        "closed": "Закрыто",
+        "responded": "С ответом",
+        "latest": "Последнее"
+      },
+      "view": "Открыть"
+    },
+    "managerResponse": {
+      "title": "Ответы менеджеров",
+      "description": "Медиана первого ответа сотрудника после первого сообщения клиента.",
+      "table": {
+        "manager": "Менеджер",
+        "handled": "Обработано",
+        "medianFirstResponse": "Медиана первого ответа",
+        "p90": "P90",
+        "replies": "Ответы"
+      },
+      "help": {
+        "ariaLabel": "Что означает «{metric}»",
+        "medianFirstResponse": "Половина первых ответов этого менеджера быстрее этого времени, другая половина медленнее. Медиана устойчивее среднего к редким долгим ответам.",
+        "p90": "90% первых ответов этого менеджера уложились в это время. Остальные 10% клиентов ждали дольше. Так видны задержки, которые клиенты замечают чаще всего."
+      },
+      "genericManager": "менеджер"
+    },
+    "serviceTruth": {
+      "title": "Данные обслуживания людьми",
+      "description": "Первые ответы людей, чаты без ответа и подтверждённые даты решения.",
+      "eligible": "Чаты с первым входящим",
+      "answered": "Ответил человек",
+      "unanswered": "Нет ответа человека",
+      "coverage": "Доля с ответом",
+      "oldestUnanswered": "Самый ранний без ответа",
+      "medianResolution": "Медиана времени решения",
+      "unknownClosures": "Закрытия без данных решения",
+      "timeouts": "Закрытия по таймауту",
+      "managerFilterNotice": "Фильтр первого ответившего не определяет ответственного за чаты без ответа; их знаменатель недоступен.",
+      "knownResolutions": "{count} измеренных решений",
+      "resolutionNotice": "Решение использует устойчивую дату жизненного цикла. Обновления и таймауты не означают решение.",
+      "empty": "Нет данных обслуживания",
+      "partialCoverage": "Время, статусы и менеджеры показаны только для новейших {limit} чатов за период. Полный объём сообщений считается отдельно.",
+      "cohortNotice": "Ответы относятся к чатам с первым входящим за период. Данные закрытий — к активным за период чатам; исторические переходы имеют отдельное покрытие."
+    }
+  },
+  "DateRangeControl": {
+    "last7Days": "Последние 7 дней",
+    "last30Days": "Последние 30 дней",
+    "last90Days": "Последние 90 дней",
+    "thisWeek": "Эта неделя",
+    "last12Months": "Последние 12 месяцев",
+    "allTime": "За всё время",
+    "select": "Выберите период",
+    "customRange": "Произвольный период",
+    "previousMonth": "Предыдущий месяц",
+    "nextMonth": "Следующий месяц"
+  },
+  "DashboardClientPage": {
+    "board": {
+      "title": "Аналитика",
+      "description": "Понимайте спрос и качество обслуживания.",
+      "conversationScope": "Даты и фильтры применяются к количеству обращений. Сводки ИИ и рассылок охватывают отдельные 30-дневные периоды. Рекламные метрики и подтверждённые продажи имеют собственный охват.",
+      "view": "Дашборд",
+      "new": "Новый дашборд",
+      "newTitle": "Создать дашборд",
+      "newDescription": "Выберите начальную раскладку. Перед сохранением можно добавить, удалить и изменить размер карточек.",
+      "name": "Название дашборда",
+      "namePlaceholder": "Например, Поддержка за неделю",
+      "edit": "Изменить раскладку",
+      "editHint": "Перемещайте карточки или откройте настройки карточки, чтобы изменить размер или удалить её. Когда закончите, сохраните изменения.",
+      "save": "Сохранить изменения",
+      "saving": "Сохранение…",
+      "cancel": "Отмена",
+      "delete": "Удалить дашборд",
+      "viewLimit": "Можно сохранить до 12 дашбордов. Удалите существующий, чтобы создать новый.",
+      "addCard": "Добавить карточку",
+      "libraryTitle": "Добавить карточки",
+      "libraryDescription": "Выберите карточки для дашборда. Каждую можно добавить один раз.",
+      "allCardsAdded": "Все доступные карточки уже добавлены.",
+      "emptyTitle": "Дашборд пуст",
+      "emptyDescription": "Добавьте карточку, чтобы начать.",
+      "grid": "Карточки дашборда",
+      "drag": "Переместить: {card}",
+      "dragInstructions": "Нажмите пробел, чтобы взять карточку. Стрелками переместите её, пробелом отпустите, Escape отменит перемещение.",
+      "dragStarted": "Выбрана карточка «{card}».",
+      "dragPosition": "Карточка «{card}» на позиции {position}.",
+      "dragDropped": "Карточка «{card}» перемещена на позицию {position}.",
+      "dragCancelled": "Перемещение карточки «{card}» отменено.",
+      "settings": "Настройки: {card}",
+      "width": "Ширина",
+      "height": "Высота",
+      "widthChoices": {
+        "1": "1 столбец",
+        "2": "2 столбца",
+        "3": "3 столбца",
+        "4": "4 столбца"
+      },
+      "heightChoices": {
+        "1": "1 строка",
+        "2": "2 строки",
+        "3": "3 строки"
+      },
+      "sizeHint": "Размеры применяются на широких экранах. На телефоне высота карточки зависит от содержимого.",
+      "earlier": "Переместить раньше",
+      "later": "Переместить позже",
+      "remove": "Удалить карточку",
+      "loading": "Загрузка настроек дашборда…",
+      "loadFailed": "Не удалось загрузить дашборды. Повторите попытку, чтобы открыть сохранённые виды.",
+      "saveFailed": "Не удалось сохранить дашборд. Ваши изменения сохранены в черновике; попробуйте ещё раз.",
+      "conflict": "Дашборд изменён в другом месте. Загрузите сохранённую версию перед редактированием. Несохранённые изменения будут потеряны.",
+      "reloadFailed": "Не удалось загрузить сохранённый дашборд. Ваши несохранённые изменения остались в черновике.",
+      "reload": "Загрузить сохранённую версию",
+      "retry": "Повторить",
+      "noCardData": "За выбранный период нет данных для этой карточки.",
+      "comparisonUnavailable": "Выберите сопоставимый период для просмотра изменений.",
+      "templates": {
+        "starter": {
+          "title": "Начало работы",
+          "description": "Объём обращений, время ответа и темы, с которыми обращаются клиенты.",
+          "question": "Как меняется спрос?"
+        },
+        "sales": {
+          "title": "Рост",
+          "description": "Источники обращений, повторные контакты и отклики на рассылки.",
+          "question": "Какие источники приносят обращения и ответы?"
+        },
+        "support": {
+          "title": "Поддержка клиентов",
+          "description": "Уровень сервиса, удовлетворённость клиентов и время ответа команды.",
+          "question": "Получают ли клиенты помощь вовремя?"
+        },
+        "operations": {
+          "title": "Работа команды",
+          "description": "Планирование нагрузки по занятости, часам пик и использованию ИИ.",
+          "question": "Где команде нужны дополнительные ресурсы?"
+        }
+      },
+      "cards": {
+        "total": "Всего обращений",
+        "new": "Новые обращения",
+        "resolved": "Решённые обращения",
+        "first_response": "Время первого ответа",
+        "in_progress": "В работе",
+        "sla": "Нарушения SLA",
+        "repeat": "Повторные обращения",
+        "csat": "Удовлетворённость клиентов",
+        "ttr": "Время решения",
+        "volume": "Объём обращений",
+        "category_comparison": "Сравнение категорий",
+        "period_summary": "Итоги периода",
+        "categories": "Категории обращений",
+        "channels": "Каналы",
+        "team": "Нагрузка команды",
+        "activity": "Часы пик",
+        "advertisements": "Рекламные источники",
+        "labels": "Внутренние метки",
+        "ai_usage": "Использование ИИ",
+        "campaigns": "Результаты рассылок"
+      },
+      "domain": {
+        "window": "Последние 30 дней",
+        "aiScope": "Все вызовы ИИ",
+        "campaignScope": "Все получатели рассылок",
+        "campaignReplyWindow": "Ответы в течение 7 дней после каждой отправки",
+        "openReport": "Открыть подробный отчёт",
+        "loading": "Загрузка сводки…",
+        "unavailable": "Сводка недоступна",
+        "emptyAi": "За этот период нет активности ИИ",
+        "emptyCampaigns": "За этот период нет принятых отправок рассылок",
+        "loadFailed": "Не удалось загрузить сводку",
+        "retry": "Повторить",
+        "notAvailable": "Недоступно",
+        "aiErrors": "Ошибки вызовов ИИ"
+      },
+      "done": "Готово",
+      "close": "Закрыть",
+      "move": "Переместить",
+      "cardSettings": "Настройки карточки",
+      "nameRequired": "Введите название дашборда, прежде чем сохранять или создавать другой.",
+      "invalidLayout": "Проверьте названия дашбордов перед сохранением изменений.",
+      "librarySearch": "Найти карточку",
+      "librarySearchPlaceholder": "Поиск по метрике, теме или охвату отчёта",
+      "libraryNoResults": "Карточки не найдены. Попробуйте другой запрос.",
+      "groups": {
+        "conversations": "Обзор обращений",
+        "service": "Качество обслуживания",
+        "sources": "Темы и источники",
+        "team": "Нагрузка команды",
+        "automation": "ИИ и рассылки"
+      },
+      "scopes": {
+        "conversation": "Выбранный период и фильтры обращений",
+        "ai": "Последние 30 дней · все вызовы ИИ",
+        "campaigns": "Последние 30 дней · все получатели рассылок",
+        "advertising": "Выбранные даты. Фильтры обращений влияют на количество чатов; рекламные метрики и подтверждённые продажи имеют собственный охват."
+      },
+      "nav": {
+        "dashboards": "Дашборды",
+        "conversations": "Обращения",
+        "campaigns": "Рассылки",
+        "ai": "Использование ИИ",
+        "performance": "Эффективность",
+        "widget": "Веб-виджет",
+        "outcomes": "Результаты"
+      },
+      "cardDescriptions": {
+        "total": "Количество обращений за выбранный период.",
+        "new": "Обращения с открытым статусом.",
+        "resolved": "Обращения со статусом «Решены».",
+        "first_response": "Медиана времени первого ответа, среднее и P90.",
+        "in_progress": "Обращения, которые сейчас находятся в работе.",
+        "sla": "Открытые и находящиеся в работе обращения, не решённые более трёх дней.",
+        "repeat": "Клиенты, начавшие ещё одно обращение в этом периоде.",
+        "csat": "Средняя оценка клиентов за выбранный период.",
+        "ttr": "Среднее время от открытия до решения обращения.",
+        "volume": "Количество обращений по дням и сравнение периодов.",
+        "category_comparison": "Сравнение тем обращений в текущем и предыдущем периодах.",
+        "period_summary": "Краткий обзор изменений относительно предыдущего периода.",
+        "categories": "Распределение обращений по темам.",
+        "channels": "Каналы, по которым клиенты обращаются к вам.",
+        "team": "Нагрузка и время ответа менеджеров.",
+        "activity": "Дни и часы с наибольшим количеством обращений.",
+        "advertisements": "Рекламные источники и результаты обращений.",
+        "labels": "Обращения с метками и их статусы.",
+        "ai_usage": "Вызовы, использование и ошибки ИИ за последние 30 дней.",
+        "campaigns": "Принятые отправки и ответы получателей за последние 30 дней."
+      },
+      "unsavedChanges": "Несохранённые изменения",
+      "libraryAdded": "Карточка «{card}» добавлена.",
+      "dashboardCount": "{count, plural, one {# дашборд} few {# дашборда} many {# дашбордов} other {# дашборда}}",
+      "dashboardsTitle": "Ваши дашборды",
+      "dashboardsDescription": "Откройте дашборд, переименуйте или удалите его либо создайте новый.",
+      "viewSummary": "{count, plural, one {# карточка} few {# карточки} many {# карточек} other {# карточки}} · Шаблон: {template}",
+      "rename": "Переименовать",
+      "deleteShort": "Удалить",
+      "deletePending": "{count, plural, =1 {Дашборд {names} будет удалён после сохранения изменений.} other {После сохранения изменений будут удалены дашборды: {names}.}}",
+      "deletePendingName": "«{name}»",
+      "recommended": "Рекомендуем для вашего рабочего пространства",
+      "recommendationReasons": {
+        "new_workspace": "Рабочее пространство создано недавно — начните с объёма обращений и времени ответа.",
+        "low_volume": "Обращений пока немного — начните с их объёма и времени ответа.",
+        "ads_connected": "Подключена Meta Ads — следите, какие источники приносят обращения.",
+        "recent_campaigns": "Недавно были рассылки в WhatsApp — следите за источниками и ответами.",
+        "team_size": "Клиентам отвечают несколько сотрудников — следите за нагрузкой и часами пик.",
+        "support_default": "Обращения поступают стабильно — следите за уровнем сервиса и удовлетворённостью."
+      },
+      "unreadable": "Не удалось открыть сохранённую раскладку, поэтому показан начальный дашборд. При сохранении изменений она будет заменена.",
+      "resizeHint": "Потяните, чтобы изменить размер. Размер также можно изменить в настройках карточки.",
+      "resizePreview": "{width} × {height}"
+    },
+    "tabs": {
+      "label": "Разделы дашборда",
+      "overview": "Обзор",
+      "categories": "Категории",
+      "team": "Команда и нагрузка",
+      "sources": "Источники и метки"
+    },
+    "conversationVolume": {
+      "title": "Количество обращений",
+      "description": "Уникальные обращения клиентов по дням за выбранный период."
+    },
+    "comparison": {
+      "label": "Сравнение периодов",
+      "enabled": "Сравнить с предыдущим периодом",
+      "disabled": "Только текущий период",
+      "unavailable": "Сравнение недоступно для этого диапазона",
+      "currentPeriod": "Текущий: {range}",
+      "previousPeriod": "Предыдущий: {range}",
+      "previousValue": "Предыдущий: {value}"
+    },
+    "activeFilters": {
+      "label": "Активные фильтры",
+      "count": "Активных фильтров: {count}",
+      "clearAll": "Очистить все",
+      "remove": "Удалить {value}",
+      "removeAction": "Убрать"
+    },
+    "categoryComparison": {
+      "title": "Сравнение категорий",
+      "description": "Количество обращений по категориям за выбранные периоды.",
+      "currentOnlyDescription": "Количество обращений по категориям за выбранный период.",
+      "caption": "Количество обращений по категориям в текущем и предыдущем периодах",
+      "currentOnlyCaption": "Количество обращений по категориям в текущем периоде",
+      "views": {
+        "all": "Все",
+        "increased": "Увеличились",
+        "decreased": "Уменьшились",
+        "new": "Новые",
+        "noLongerActive": "Больше не активны"
+      },
+      "table": {
+        "category": "Категория",
+        "current": "Текущий",
+        "previous": "Предыдущий",
+        "difference": "Разница",
+        "change": "Изменение",
+        "total": "Итого",
+        "totalAllCategories": "Итого по всем категориям"
+      },
+      "mobile": {
+        "current": "Текущий",
+        "previous": "Предыдущий",
+        "difference": "Разница",
+        "rate": "Темп"
+      },
+      "changeKinds": {
+        "increase": "Увеличение",
+        "decrease": "Уменьшение",
+        "unchanged": "Без изменений",
+        "new": "Новая",
+        "noLongerActive": "Больше не активна"
+      },
+      "viewAll": "Показать все",
+      "empty": "Нет категорий для этого вида."
+    },
+    "notableChanges": {
+      "title": "Заметные изменения",
+      "description": "Наибольшее изменение количества обращений по категории.",
+      "increase": "В категории {category} обращений стало на {delta} больше.",
+      "decrease": "В категории {category} обращений стало на {delta} меньше.",
+      "new": "Новая категория {category}: {delta} обращений.",
+      "noLongerActive": "Категория {category} больше не активна: изменение на {delta} обращений.",
+      "unchanged": "Количество обращений по категориям не изменилось."
+    },
+    "moreMetrics": "Больше показателей",
+    "showInactiveManagers": "Показать неактивных менеджеров",
+    "empty": {
+      "dashboard": "За этот период активности нет.",
+      "chart": "За этот период обращений нет."
+    },
+    "accessibility": {
+      "comparisonControl": "Выберите сравнение периодов",
+      "categoryViews": "Фильтр категорий по изменению",
+      "currentValue": "Текущее значение",
+      "previousValue": "Предыдущее значение",
+      "differenceValue": "Разница",
+      "changeRate": "Темп изменения"
+    },
+    "failedToLoadData": "Не удалось загрузить данные дашборда.",
+    "topGrowingCategories": "Самые растущие категории",
+    "topDecliningCategories": "Самые убывающие категории",
+    "conversationActivityTitle": "Пиковые часы",
+    "conversationActivityDescription": "Когда сообщений больше всего. Время указано в {timeZone}.",
+    "conversationActivityPeakLabel": "Пик:",
+    "conversationActivityPeakValue": "{day}, {hour} ({count} сообщений)",
+    "conversationActivityTotal": "{count} сообщений",
+    "conversationActivityEmpty": "За этот период активности сообщений нет.",
+    "conversationActivityGridLabel": "Активность сообщений по дням и часам",
+    "conversationActivityCellLabel": "{day}, {hour}: {count} сообщений",
+    "conversationActivityLegendLow": "Мало",
+    "conversationActivityLegendHigh": "Много",
+    "conversationActivityDayMon": "Пн",
+    "conversationActivityDayTue": "Вт",
+    "conversationActivityDayWed": "Ср",
+    "conversationActivityDayThu": "Чт",
+    "conversationActivityDayFri": "Пт",
+    "conversationActivityDaySat": "Сб",
+    "conversationActivityDaySun": "Вс",
+    "topInsight": "Главный вывод",
+    "viewMore": "Подробнее",
+    "complaintInsight": "Категория «Жалоба» чаще всего связана с темой «{tag}».",
+    "noComplaintTrends": "Значимых тенденций в жалобах не обнаружено.",
+    "insufficientDataForPeak": "Недостаточно данных для определения пиковой нагрузки.",
+    "peakTimeInsight": "Пик сообщений приходится на {dayOfWeek}, с {startHour}:00 до {endHour}:00.",
+    "uncategorized": "Без категории",
+    "unknown": "Неизвестно",
+    "missingValue": "—",
+    "retry": "Повторить",
+    "metricDefinition": "Определение"
+  },
+  "ChannelBreakdown": {
+    "title": "Категории по каналам",
+    "description": "Сравнение количества чатов в разных каналах.",
+    "category": "Категория",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "insight": "Инсайт:",
+    "total": "Итого"
+  },
+  "CategoryDistributionChart": {
+    "title": "Топ категорий",
+    "description": "Распределение чатов по основным категориям.",
+    "uncategorized": "Чаты без категории:",
+    "previousValue": "Предыдущий: {value}"
+  },
+  "SectionCards": {
+    "noChange": "Без изменений",
+    "previousValue": "Предыдущий: {value}",
+    "comparisonNotes": {
+      "liveStatus": "Текущее состояние · без сравнения",
+      "notCompared": "Без сравнения с предыдущим периодом"
+    },
+    "metrics": {
+      "total": "Всего чатов",
+      "new": "Открытые",
+      "inProgress": "В работе",
+      "resolved": "Решено",
+      "slaBreached": "Нарушение SLA",
+      "repeatRequests": "Повторные чаты",
+      "avgCsat": "Средняя оценка (CSAT)",
+      "medianFirstManagerResponseTime": "Первый ответ менеджера",
+      "avgResolutionTime": "Среднее время решения"
+    },
+    "duration": {
+      "missing": "—",
+      "lessThanMinute": "Меньше минуты",
+      "seconds": "{count, plural, one {{value} сек.} few {{value} сек.} many {{value} сек.} other {{value} сек.}}",
+      "minutes": "{count, plural, one {{value} мин.} few {{value} мин.} many {{value} мин.} other {{value} мин.}}",
+      "hours": "{count, plural, one {{value} ч.} few {{value} ч.} many {{value} ч.} other {{value} ч.}}",
+      "days": "{count, plural, one {{value} дн.} few {{value} дн.} many {{value} дн.} other {{value} дн.}}",
+      "noChange": "Без изменений"
+    },
+    "firstManagerResponseInsight": "Ответов: {countValue}. Среднее: {average}, P90: {p90}",
+    "help": {
+      "ariaLabel": "Что означает «{metric}»",
+      "firstResponse": "Крупная цифра показывает медиану: половина первых ответов быстрее, половина медленнее. Ниже указаны число учтённых ответов, среднее и P90 (время, в которое уложились 90% ответов). Среднее и P90 часто выше медианы из‑за редких долгих ответов.",
+      "sla": "Открытые чаты старше окна внимания; это возраст очереди, а не измеренный SLA ответа.",
+      "repeat": "Клиенты с несколькими активными чатами в выбранной группе. Подтверждённые повторные покупки доступны в разделе Результаты.",
+      "csat": "Средняя оценка клиентов за выбранный период.",
+      "ttr": "Среднее время от открытия до закрытия решённых чатов."
+    },
+    "view": "Открыть",
+    "openRequestQueue": "Открыть очередь обращений"
+  },
+  "KeyMomentsNavigator": {
+    "title": "Ключевые моменты",
+    "price_inquiry": "Запрос цены",
+    "objection": "Возражение",
+    "positive_feedback": "Положительный отзыв",
+    "negative_feedback": "Отрицательный отзыв",
+    "upsell_attempt": "Попытка допродажи"
+  },
+  "ConversionDialog": {
+    "sourceMessageNotLoaded": "Сообщение находится в более ранней истории. Загрузите предыдущие сообщения, чтобы проверить его.",
+    "recordSale": "Записать продажу",
+    "saleDescription": "Запишите продажу после проверки поступления оплаты.",
+    "paymentConfirmationDescription": "Чек или сообщение об оплате не подтверждают поступление денег. Проверьте оплату, затем подтвердите сумму и валюту.",
+    "saleAmount": "Сумма продажи",
+    "transactionId": "Идентификатор платёжной операции (необязательно)",
+    "transactionIdRequired": "Идентификатор платёжной операции *",
+    "transactionIdHelp": "Укажите идентификатор операции платёжного провайдера, а не номер заказа. Без него продажа сохранится только в airi.chat и не будет отправлена в Meta.",
+    "transactionIdRequiredHelp": "Укажите идентификатор операции платёжного провайдера, а не номер заказа. При включённом автоимпорте продаж он обязателен, чтобы один платёж не учитывался дважды.",
+    "transactionIdMissing": "Укажите идентификатор платёжной операции, чтобы записать продажу.",
+    "currency": "Валюта",
+    "confirmSale": "Подтвердить продажу",
+    "salesTitle": "Продажи",
+    "salesActions": "Продажи и напоминания",
+    "paymentSuggestions": "Проверить оплаты",
+    "noPaymentSuggestions": "Пока нет оплат для проверки.",
+    "loadingPayments": "Загрузка предложений об оплате",
+    "paymentsError": "Не удалось загрузить предложения об оплате.",
+    "retry": "Повторить",
+    "receiptSuggested": "Возможный чек об оплате",
+    "paymentClaimSuggested": "Клиент сообщает об оплате",
+    "amountUnknown": "Сумма не определена",
+    "currencyUnknown": "Валюта не определена",
+    "needsConfirmation": "Нужно подтверждение",
+    "viewMessage": "Сообщение",
+    "saleRecorded": "Продажа записана",
+    "reviewPayment": "Проверить",
+    "merchantConfirmed": "Подтверждено вашей командой",
+    "title": "Зафиксировать конверсию",
+    "description": "Запишите бизнес-результат этого разговора для отслеживания ROI и эффективности агента.",
+    "conversionType": "Тип конверсии *",
+    "conversionTypes": {
+      "sale": "Продажа или покупка",
+      "signup": "✍️ Регистрация",
+      "booking": "Бронирование или запись",
+      "retention": "Удержание или продление",
+      "custom": "⭐ Своя конверсия"
+    },
+    "conversionValue": "Сумма конверсии (необязательно)",
+    "valuePlaceholder": "0.00",
+    "currencies": {
+      "USD": "USD - Доллар США",
+      "EUR": "EUR - Евро",
+      "KZT": "KZT - Казахстанский тенге",
+      "RUB": "RUB - Российский рубль",
+      "UZS": "UZS - Узбекский сум"
+    },
+    "notes": "Заметки (необязательно)",
+    "notesPlaceholder": "Добавьте контекст к этой конверсии...",
+    "cancel": "Отмена",
+    "trackConversion": "Зафиксировать",
+    "tracking": "Сохранение...",
+    "toast": {
+      "success": "Конверсия зафиксирована",
+      "error": "Не удалось зафиксировать конверсию. Пожалуйста, попробуйте еще раз."
+    },
+    "compactSale": "Продажа",
+    "compactEvent": "Событие",
+    "compactPayments": "Платежи"
+  },
+  "HelpPage": {
+    "title": "Помощь и поддержка",
+    "description": "Найдите ответы на часто задаваемые вопросы и получите поддержку.",
+    "gettingStartedTitle": "С чего начать",
+    "contactSupportTitle": "Связаться с поддержкой",
+    "contactSupportBody": "Нужна помощь? Обратитесь в нашу службу поддержки.",
+    "quickLinks": "Быстрые ссылки на частые задачи",
+    "connectNewSource": "Подключить новый источник",
+    "inviteTeamMembers": "Пригласить участников команды",
+    "configureAiContext": "Настроить управление AI",
+    "documentation": "Документация",
+    "documentationDescription": "Узнайте, как эффективно использовать Airi.chat",
+    "emailSupport": "Поддержка по Email",
+    "telegramSupport": "Поддержка в Telegram"
+  },
+  "CreativeAssetsWorkspace": {
+    "storageLoading": "Проверяем хранилище компании…",
+    "storageUnavailable": "Данные о хранилище компании временно недоступны.",
+    "storagePreparing": "Хранилище компании готовится. Новые загрузки станут доступны после подготовки.",
+    "storageRecording": "Новые загрузки: сохранено {stored} ГиБ + зарезервировано {reserved} ГиБ из {limit} ГиБ. Ранее загруженные файлы ещё подсчитываются.",
+    "storageUsage": "Хранилище компании: {stored} ГиБ сохранено + {reserved} ГиБ ожидается / {limit} ГиБ.",
+    "storageFull": "Лимит хранилища исчерпан.",
+    "title": "Материалы",
+    "subtitle": "Изображения, видео, аудио и подписи для кампаний, шаблонов и Airi Create",
+    "studioTab": "Студия",
+    "libraryTab": "Библиотека",
+    "avatarPortraitUpload": "Загрузить портрет",
+    "loadingAssets": "Загрузка материалов",
+    "noAssetsFound": "Материалы не найдены",
+    "emptyAssetsTitle": "Материалов пока нет",
+    "emptyAssetsDescription": "Загрузите медиа, перетащите файлы на эту страницу или сгенерируйте готовые для кампаний изображения и видео.",
+    "emptySearchDescription": "Попробуйте другой запрос, тип медиа или фильтр статуса.",
+    "clearSearch": "Очистить поиск",
+    "searchAssets": "Поиск материалов",
+    "uploadAsset": "Загрузить",
+    "assetUploaded": "Материал загружен",
+    "assetUploadTooLarge": "Файл больше текущего лимита загрузки креативных ассетов.",
+    "assetUrlCopied": "Ссылка на материал скопирована",
+    "assetUrlCopyFailed": "Не удалось скопировать ссылку на ассет.",
+    "assetsLoadFailed": "Не удалось загрузить ассеты.",
+    "retry": "Повторить",
+    "sourceImagesLoading": "Загрузка исходных изображений...",
+    "sourceImagesLoadFailed": "Не удалось обновить исходные изображения. Предыдущие варианты по-прежнему доступны.",
+    "sourceMediaLoading": "Загрузка исходных медиа...",
+    "sourceMediaLoadFailed": "Не удалось обновить часть исходных медиа. Предыдущие варианты по-прежнему доступны.",
+    "mediaKind": "Тип медиа",
+    "assetStatus": "Статус",
+    "justNow": "Только что",
+    "minutesAgo": "{count} мин назад",
+    "hoursAgo": "{count} ч назад",
+    "daysAgo": "{count} дн назад",
+    "characterReferenceUpload": "Загрузить референс",
+    "uploadInProgressDescription": "Загрузка выполняется. Не закрывайте эту страницу.",
+    "removeSourceImage": "Удалить изображение",
+    "replaceAvatarPortrait": "Заменить портрет",
+    "removeAvatarPortrait": "Удалить портрет",
+    "studioSkillSetupRequired": "Настройте этот навык, чтобы использовать его.",
+    "studioGenerationBlockerSetupRequired": "Настройте нужного провайдера для создания этого ассета.",
+    "studioGenerationBlockerPromptRequired": "Добавьте запрос перед созданием.",
+    "studioGenerationBlockerSourceImageRequired": "Выберите исходное изображение перед созданием.",
+    "studioGenerationBlockerSourceMediaRequired": "Выберите исходный медиафайл, чтобы продолжить.",
+    "studioGenerationBlockerCharacterReferenceRequired": "Добавьте хотя бы одно референсное изображение персонажа.",
+    "studioGenerationBlockerMorphFramesRequired": "Выберите первый и последний кадры.",
+    "studioGenerationBlockerMorphFramesMustDiffer": "Первый и последний кадры должны отличаться.",
+    "studioGenerationBlockerDurationInvalid": "Выберите корректную длительность.",
+    "studioGenerationBlockerAvatarPortraitRequired": "Выберите портрет для аватара.",
+    "studioGenerationBlockerAvatarAudioRequired": "Выберите аудио с речью для аватара.",
+    "studioGenerationBlockerAvatarVoiceRequired": "Подключите ElevenLabs для создания речи аватара.",
+    "dropToUpload": "Перетащите для загрузки",
+    "refreshAssets": "Обновить материалы",
+    "summaryReady": "Готово: {count}",
+    "summaryGenerating": "Генерируется: {count}",
+    "summaryVideos": "Видео: {count}",
+    "shownCount": "Показано {shown} из {total}",
+    "allMedia": "Все медиа",
+    "images": "Изображения",
+    "videos": "Видео",
+    "audio": "Аудио",
+    "textAssets": "Текст",
+    "allStates": "Все статусы",
+    "complete": "Готово",
+    "queued": "В очереди",
+    "inProgress": "В процессе",
+    "failed": "Ошибка",
+    "nsfw": "NSFW",
+    "imageKind": "изображение",
+    "videoKind": "видео",
+    "audioKind": "аудио",
+    "textKind": "текст",
+    "sourceUpload": "Загрузка",
+    "sourceHiggsfield": "Higgsfield",
+    "sourceGoogle": "Google",
+    "sourceElevenLabs": "ElevenLabs",
+    "sourceWan": "Wan Avatar",
+    "sourceHappyHorse": "HappyHorse",
+    "sourceAlibaba": "Alibaba",
+    "sourceEdited": "Редактировано",
+    "videoTextToVideoHint": "Без изображения → text-to-video (9:16). Добавьте изображение для image-to-video.",
+    "imageTab": "Изображение",
+    "bannerTab": "Баннер",
+    "videoTab": "Видео",
+    "characterTab": "Персонаж",
+    "audioTab": "Голос",
+    "avatarTab": "Аватар",
+    "studioSkillsGroup": "Навыки",
+    "studioSkillsEmpty": "Навыки не найдены.",
+    "studioSkillAlreadySelected": "Активно",
+    "studioSkillImageDescription": "Сгенерировать изображение из текстового промпта",
+    "studioSkillBannerDescription": "Рекламные баннеры с соотношением сторон и местом под текст",
+    "studioSkillVideoDescription": "Создайте видео через подключённый источник Google AI или Higgsfield",
+    "studioSkillCharacterDescription": "Согласованность персонажа/продукта по 1–9 референсам (HappyHorse r2v)",
+    "studioSkillVoiceDescription": "Голос, SFX, транскрипт, субтитры или дубляж",
+    "studioSkillAvatarDescription": "Talking avatar из портрета + скрипт/аудио (Wan)",
+    "providerStatusImage": "Изображение: {provider}",
+    "providerStatusVideo": "Видео: {provider}",
+    "providerStatusCharacter": "Персонаж: {provider}",
+    "providerStatusMorph": "Морф: {provider}",
+    "providerStatusAvatar": "Аватар: {provider}",
+    "sourceCanva": "Canva",
+    "openEditor": "Открыть редактор",
+    "avatarPortraitUploaded": "Портрет загружен",
+    "bannerAspectRatio": "Соотношение сторон",
+    "bannerPromptPlaceholder": "Опишите баннер: оффер, продукт, компоновка и место для заголовка/CTA. Наберите @ для навыков.",
+    "generateBanner": "Создать баннер",
+    "bannerGenerationQueued": "Баннер поставлен в очередь",
+    "characterPromptPlaceholder": "Опишите сцену и ссылайтесь на рефы как [Image 1], [Image 2], …. Наберите @ для навыков.",
+    "characterRatio": "Соотношение сторон",
+    "characterAddFromLibrary": "Добавить референс",
+    "characterReferenceHint": "{count}/{max} референсов",
+    "characterImageLabel": "Img {n}",
+    "characterMoveLeft": "Влево",
+    "characterMoveRight": "Вправо",
+    "characterRemoveReference": "Удалить референс",
+    "characterReferenceUploaded": "Референс загружен",
+    "generateCharacter": "Создать видео персонажа",
+    "characterGenerationQueued": "Видео персонажа в очереди",
+    "characterGenerationFailed": "Не удалось запустить видео персонажа",
+    "characterUnavailableTitle": "Reference-to-video недоступен",
+    "characterUnavailableDescription": "Этот инструмент пока не поддерживает ваши ключи. Используйте генерацию изображений или видео с подключённым Google AI или Higgsfield.",
+    "morphTab": "Морф",
+    "studioSkillMorphDescription": "Морф before/after из первого и последнего кадра (Wan i2v)",
+    "morphPromptPlaceholder": "Опишите переход между before и after. Наберите @ для навыков.",
+    "morphFirstFrame": "Первый кадр (before)",
+    "morphLastFrame": "Последний кадр (after)",
+    "morphUploadFirst": "Загрузить before",
+    "morphUploadLast": "Загрузить after",
+    "morphReplaceFirst": "Заменить before",
+    "morphReplaceLast": "Заменить after",
+    "generateMorph": "Создать морф",
+    "morphGenerationQueued": "Морф-видео в очереди",
+    "morphGenerationFailed": "Не удалось запустить морф-видео",
+    "morphUnavailableTitle": "Морф-видео недоступно",
+    "morphUnavailableDescription": "Этот инструмент пока не поддерживает ваши ключи. Используйте генерацию изображений или видео с подключённым Google AI или Higgsfield.",
+    "studioProductSlot": "Продукт",
+    "avatarMode": "Режим аватара",
+    "avatarModeScript": "Изображение + текст (TTS)",
+    "avatarModeAudio": "Изображение + аудио",
+    "avatarPortrait": "Портрет",
+    "avatarAudio": "Речь (аудио)",
+    "avatarSelectAudio": "Выберите аудио до 15 с",
+    "avatarAudioLimitHint": "Wan 2.7 нужен чёткий speech audio (WAV/MP3, 2–30 с). Видео ограничено 15 с.",
+    "avatarScript": "Скрипт",
+    "avatarScriptPlaceholder": "Напишите короткую речь для аватара.",
+    "avatarNeedsElevenLabs": "Режим скрипта требует ElevenLabs для TTS.",
+    "avatarResolution": "Разрешение",
+    "avatarUnavailableTitle": "Wan talking avatars недоступны",
+    "avatarUnavailableDescription": "Этот инструмент пока не поддерживает ваши ключи. Используйте генерацию изображений или видео с подключённым Google AI или Higgsfield.",
+    "generateAvatar": "Создать talking avatar",
+    "avatarGenerationQueued": "Talking avatar в очереди",
+    "avatarGenerationFailed": "Не удалось запустить talking avatar",
+    "prompt": "Промпт",
+    "motion": "Движение",
+    "seconds": "Сек",
+    "imagePromptPlaceholder": "Опишите финальное изображение: продукт, сцену, освещение, стиль и композицию.",
+    "videoPromptPlaceholder": "Опишите движение камеры, движение объекта, темп и настроение.",
+    "generateImage": "Сгенерировать изображение",
+    "generateVideo": "Сгенерировать видео",
+    "sourceImageDropTitle": "Перетащите исходное изображение сюда",
+    "sourceImageDropDescription": "Загрузите или перетащите изображение, чтобы использовать его как первый кадр.",
+    "uploadSourceImage": "Загрузить изображение",
+    "replaceSourceImage": "Заменить изображение",
+    "selectLibraryImage": "Выбрать из библиотеки",
+    "sourceImageSelected": "Изображение выбрано для видео",
+    "sourceImageOnly": "Загрузите изображение, чтобы использовать его как источник для видео.",
+    "sourceImageUploaded": "Исходное изображение загружено",
+    "sourceImageReady": "Готово для видео",
+    "useForVideo": "Использовать для видео",
+    "selectedForVideo": "Выбрано для видео",
+    "makeGreenScreen": "Сделать зелёный фон",
+    "greenScreenAlreadyExistsTooltip": "Копия с зелёным фоном уже существует. Повторите или удалите эту копию перед созданием новой.",
+    "greenScreenQueued": "Редактирование с зелёным фоном поставлено в очередь",
+    "greenScreenFailed": "Не удалось поставить редактирование с зелёным фоном в очередь",
+    "copyUrl": "Скопировать ссылку",
+    "tryAgain": "Попробовать снова",
+    "retryQueued": "Повтор поставлен в очередь",
+    "retryUnavailable": "Этот материал нельзя сгенерировать повторно.",
+    "retryPossibleDuplicateTitle": "Повтор может создать второе платное видео",
+    "retryPossibleDuplicateDescription": "Провайдер мог принять исходное задание. Повтор может создать второе платное видео. Продолжайте, только если принимаете этот риск.",
+    "retryPossibleDuplicateCancel": "Продолжить ожидание",
+    "retryPossibleDuplicateConfirm": "Всё равно повторить",
+    "deleteAsset": "Удалить материал",
+    "deleteAssetConfirm": "Удалить этот материал?",
+    "assetDeleted": "Материал удалён",
+    "deleteFailed": "Не удалось удалить",
+    "imageGenerationQueued": "Генерация изображения поставлена в очередь",
+    "videoGenerationQueued": "Генерация видео поставлена в очередь",
+    "higgsfieldProvider": "Источник Higgsfield",
+    "higgsfieldSourceConnected": "Используется ваш подключённый источник Higgsfield для генерации.",
+    "higgsfieldSourceRequiredTitle": "Подключите источник генерации, чтобы продолжить",
+    "higgsfieldSourceRequiredDescription": "Для генерации изображений и видео подключите свои ключи Google AI или Higgsfield в «Настройки > Интеграции».",
+    "generationUnavailableTitle": "Генерация изображений недоступна",
+    "generationUnavailableDescription": "Для генерации изображений и видео подключите свои ключи Google AI или Higgsfield в «Настройки > Интеграции». Провайдер списывает оплату с вашего аккаунта.",
+    "openIntegrations": "Открыть интеграции",
+    "openElevenLabsIntegration": "Подключить ElevenLabs",
+    "elevenLabsConnectHint": "Подключите ElevenLabs, чтобы создавать озвучку, звуковые эффекты, субтитры, расшифровки и дубляж.",
+    "elevenLabsMode": "Действие ElevenLabs",
+    "elevenLabsVoiceover": "Озвучка",
+    "elevenLabsSoundEffect": "Звуковой эффект",
+    "elevenLabsTranscript": "Расшифровка",
+    "elevenLabsSubtitles": "Субтитры",
+    "elevenLabsDub": "Дубляж",
+    "elevenLabsScript": "Сценарий",
+    "elevenLabsPrompt": "Промпт звука",
+    "elevenLabsScriptPlaceholder": "Напишите короткий текст озвучки, который нужно сгенерировать.",
+    "elevenLabsPromptPlaceholder": "Опишите звуковой эффект, атмосферу, тайминг и стиль.",
+    "elevenLabsSourceMedia": "Исходное медиа",
+    "elevenLabsSelectSourceMedia": "Выберите аудио или видео",
+    "sourceMediaReady": "Готово",
+    "elevenLabsTargetLanguage": "Целевой язык",
+    "elevenLabsUnavailableTitle": "Подключите ElevenLabs для работы с голосовыми инструментами",
+    "elevenLabsUnavailableDescription": "Подключите свой API-ключ ElevenLabs в разделе «Настройки > Интеграции». Услуги провайдера оплачиваются с вашего аккаунта.",
+    "elevenLabsGenerate": "Сгенерировать",
+    "elevenLabsGenerationQueued": "Материал ElevenLabs поставлен в очередь",
+    "elevenLabsGenerationFailed": "Не удалось создать материал ElevenLabs",
+    "canvaConnectHint": "Подключите Canva в разделе «Интеграции», чтобы показывать брендовые шаблоны здесь.",
+    "canvaTemplatesTitle": "Брендовые шаблоны Canva",
+    "canvaTemplatesDescription": "Шаблоны из вашего подключённого источника Canva, которые могут вдохновить на follow-up в WhatsApp.",
+    "openCanvaTemplate": "Открыть в Canva",
+    "airiDraftTitle": "Черновик креатива Airi",
+    "airiDraftDescription": "Проверьте черновик от Airi, затем сгенерируйте материал или откройте подходящий инструмент.",
+    "airiDraftProvider": "Провайдер: {provider}",
+    "airiDraftUse": "Использовать",
+    "airiDraftActive": "Активен",
+    "marketingTemplatesTitle": "Маркетинговые шаблоны",
+    "marketingTemplatesDescription": "Начните с готового шаблона.",
+    "marketingTemplatesCount": "{count} шаблонов",
+    "marketingTemplatesUse": "Использовать",
+    "marketingTemplatesApplied": "«{title}» загружен в Studio",
+    "marketingTemplatesCategoryAll": "Все",
+    "marketingTemplatesCategoryUgc": "UGC",
+    "marketingTemplatesCategoryProduct": "Продукт",
+    "marketingTemplatesCategoryAvatar": "Аватар",
+    "marketingTemplatesCategoryVoice": "Голос",
+    "marketingTemplatesCategoryStory": "Сторис",
+    "marketingTemplatesCollectionAiri": "Шаблоны airi.chat",
+    "marketingTemplatesCollectionTikTok": "Вдохновение из TikTok",
+    "marketingTemplatesCollectionNew": "Новое",
+    "marketingTemplatesTikTokTitle": "Вдохновение из TikTok",
+    "marketingTemplatesTikTokCount": "{count} референсов",
+    "marketingTemplatesTikTokReferenceNotice": "Публичные публикации TikTok показаны только как референсы, а не как готовые к повторному использованию материалы. Проверьте права на использование в TikTok.",
+    "marketingTemplatesTikTokMarketLabel": "Рынок",
+    "marketingTemplatesTikTokCategoryLabel": "Отрасль",
+    "marketingTemplatesTikTokSearch": "Поиск",
+    "marketingTemplatesTikTokNoResults": "Ничего не найдено",
+    "marketingTemplatesTikTokLoading": "Загрузка ссылок TikTok",
+    "marketingTemplatesTikTokRefreshing": "Обновляем референсы TikTok",
+    "marketingTemplatesTikTokUnavailableTitle": "Вдохновение из TikTok недоступно",
+    "marketingTemplatesTikTokTemporaryTitle": "Вдохновение из TikTok временно недоступно",
+    "marketingTemplatesTikTokEmptyTitle": "Ссылки не найдены",
+    "marketingTemplatesTikTokRetryableErrorTitle": "Не удалось загрузить ссылки TikTok",
+    "marketingTemplatesTikTokNonretryableErrorTitle": "Вдохновение из TikTok недоступно",
+    "marketingTemplatesTikTokRetry": "Повторить",
+    "marketingTemplatesTikTokResetFilters": "Сбросить фильтры",
+    "marketingTemplatesTikTokStaleWarning": "Показаны сохранённые ссылки, пока TikTok недоступен.",
+    "marketingTemplatesTikTokOpenReference": "Открыть «{title}» в TikTok (откроется в новой вкладке)",
+    "marketingTemplatesTikTokViewReference": "Смотреть в TikTok",
+    "marketingTemplatesTikTokImageUnavailable": "Превью недоступно",
+    "marketingTemplatesTikTokPresetPending": "Шаблон промпта появится позже",
+    "marketingTemplatesTikTokCategoryAll": "Все отрасли",
+    "marketingTemplatesTikTokCategoryApparelAndAccessories": "Одежда и аксессуары",
+    "marketingTemplatesTikTokCategoryBabyKidsAndMaternity": "Товары для детей и мам",
+    "marketingTemplatesTikTokCategoryBeautyAndPersonalCare": "Красота и уход за собой",
+    "marketingTemplatesTikTokCategoryBusinessServices": "Бизнес-услуги",
+    "marketingTemplatesTikTokCategoryEducation": "Образование",
+    "marketingTemplatesTikTokCategoryFinancialServices": "Финансовые услуги",
+    "marketingTemplatesTikTokCategoryFoodAndBeverage": "Еда и напитки",
+    "marketingTemplatesTikTokCategoryGames": "Игры",
+    "marketingTemplatesTikTokCategoryHealth": "Здоровье",
+    "marketingTemplatesTikTokCategoryHomeImprovement": "Обустройство дома",
+    "marketingTemplatesTikTokCategoryHouseholdProducts": "Товары для дома",
+    "marketingTemplatesTikTokCategoryLifeServices": "Бытовые услуги",
+    "marketingTemplatesTikTokCategoryNewsAndEntertainment": "Новости и развлечения",
+    "marketingTemplatesTikTokCategoryPets": "Домашние животные",
+    "marketingTemplatesTikTokCategorySportsAndOutdoor": "Спорт и активный отдых",
+    "marketingTemplatesTikTokCategoryTechnology": "Технологии",
+    "marketingTemplatesTikTokCategoryTravel": "Путешествия",
+    "marketingTemplatesTikTokCategoryVehicleAndTransportation": "Транспорт и перевозки",
+    "referenceVideoUseIdea": "Использовать идею",
+    "referenceVideoOpenPlanner": "Видео из моих материалов",
+    "referenceVideoTitle": "План вашего видео",
+    "referenceVideoDescription": "Выберите формат, добавьте фото или клипы и проверьте план перед созданием.",
+    "referenceVideoReviewTitle": "Проверьте план видео",
+    "referenceVideoResultTitle": "Ваше видео",
+    "referenceVideoReferenceLabel": "Референс из TikTok",
+    "referenceVideoReferenceNotice": "Выберите структуру монтажа по мотивам референса. Мы не анализируем и не воссоздаём видео из TikTok автоматически.",
+    "referenceVideoFormat": "Формат монтажа",
+    "referenceVideoBusinessTitle": "Название бизнеса или предложения",
+    "referenceVideoBusinessPlaceholder": "Например: пятничный обед в кафе «Ива»",
+    "referenceVideoStoryboard": "Раскадровка",
+    "referenceVideoDuration": "{seconds} с · Вертикальное 9:16",
+    "referenceVideoPreviewNotice": "Раскадровка показывает порядок, длительность и подписи. Пропорции исходников сохраняются; при необходимости добавляются чёрные поля.",
+    "referenceVideoScenePreview": "Предпросмотр сцены {number}",
+    "referenceVideoEmptyScene": "Выберите фото или видео",
+    "referenceVideoChooseSceneAsset": "Выбрать материал для сцены {number}",
+    "referenceVideoChangeAsset": "Заменить материал",
+    "referenceVideoChooseAsset": "Выбрать материал",
+    "referenceVideoCaption": "Подпись сцены {number}",
+    "referenceVideoSourceStart": "Сцена {number}: начать с (секунды)",
+    "referenceVideoReviewedTrim": "Взять {seconds} с начиная с {start} с",
+    "referenceVideoReviewedPhoto": "Показать фото на {seconds} с",
+    "referenceVideoNoAiCharge": "Без платы за AI-генерацию",
+    "referenceVideoAudioNotice": "Звук исходных клипов сохраняется. Фото беззвучны. Музыка не добавляется.",
+    "referenceVideoClipLengthNotice": "Выбирайте клипы достаточной длины для каждой сцены. Слишком короткие клипы не получится обработать.",
+    "referenceVideoApprovalNotice": "Подтвердите эту раскадровку, чтобы начать сборку. Изменённый план нужно проверить заново.",
+    "referenceVideoMissingAssets": "Выберите материалы ещё для {count} сцен.",
+    "referenceVideoClose": "Закрыть",
+    "referenceVideoEdit": "Изменить план",
+    "referenceVideoReview": "Проверить план",
+    "referenceVideoApprove": "Подтвердить и создать видео",
+    "referenceVideoPreparing": "Подготовка к проверке…",
+    "referenceVideoStarting": "Запуск сборки…",
+    "referenceVideoComplete": "Видео готово",
+    "referenceVideoFailed": "Не удалось создать видео",
+    "referenceVideoRendering": "Собираем подтверждённое видео…",
+    "referenceVideoRefreshFailed": "Статус временно недоступен. Продолжим проверку.",
+    "referenceVideoFailedDescription": "Проверьте исходные клипы и создайте новый план.",
+    "referenceVideoOutputPreview": "Предпросмотр готового видео",
+    "referenceVideoDownload": "Открыть / скачать видео",
+    "referenceVideoSavedToAssets": "Результат сохранён в вашей библиотеке материалов.",
+    "referenceVideoInvalidResponse": "Не удалось проверить ответ сервера. Повторите попытку.",
+    "referenceVideoTimeout": "Время ожидания истекло. Повторите запрос, чтобы проверить то же подтверждение.",
+    "referenceVideoRequestFailed": "Не удалось выполнить запрос. Повторите попытку.",
+    "referenceVideoRecipes": {
+      "product-reveal": {
+        "title": "Знакомство с продуктом",
+        "description": "Представьте продукт, покажите детали и предложите следующий шаг.",
+        "scenes": {
+          "hook": {
+            "label": "Первый взгляд",
+            "caption": "Познакомьтесь с будущим фаворитом"
+          },
+          "details": {
+            "label": "Детали продукта",
+            "caption": "Рассмотрите поближе"
+          },
+          "cta": {
+            "label": "Призыв к действию",
+            "caption": "Откройте коллекцию"
+          }
+        }
+      },
+      "before-after": {
+        "title": "До и после",
+        "description": "Покажите исходное состояние, работу и реальный результат.",
+        "scenes": {
+          "before": {
+            "label": "До",
+            "caption": "До"
+          },
+          "process": {
+            "label": "Процесс",
+            "caption": "Как всё менялось"
+          },
+          "after": {
+            "label": "После",
+            "caption": "После"
+          },
+          "cta": {
+            "label": "Призыв к действию",
+            "caption": "Свяжитесь с нашей командой"
+          }
+        }
+      },
+      "three-details": {
+        "title": "Три детали",
+        "description": "Помогите запомнить три особенности продукта или услуги.",
+        "scenes": {
+          "hook": {
+            "label": "Общий вид",
+            "caption": "Всё дело в деталях"
+          },
+          "first": {
+            "label": "Первая деталь",
+            "caption": "Посмотрите поближе"
+          },
+          "second": {
+            "label": "Вторая деталь",
+            "caption": "Другой ракурс"
+          },
+          "third": {
+            "label": "Третья деталь",
+            "caption": "Последний штрих"
+          },
+          "cta": {
+            "label": "Призыв к действию",
+            "caption": "Узнайте больше"
+          }
+        }
+      },
+      "how-it-works": {
+        "title": "Как это работает",
+        "description": "Объясните простой процесс за три наглядных шага.",
+        "scenes": {
+          "first": {
+            "label": "Шаг первый",
+            "caption": "Шаг 1"
+          },
+          "second": {
+            "label": "Шаг второй",
+            "caption": "Шаг 2"
+          },
+          "third": {
+            "label": "Шаг третий",
+            "caption": "Шаг 3"
+          },
+          "cta": {
+            "label": "Призыв к действию",
+            "caption": "Готовы попробовать?"
+          }
+        }
+      },
+      "offer-spotlight": {
+        "title": "Ваше предложение",
+        "description": "Покажите предложение, детали и способ заказа.",
+        "scenes": {
+          "hook": {
+            "label": "Предложение",
+            "caption": "Кое-что для вас"
+          },
+          "details": {
+            "label": "Детали предложения",
+            "caption": "Узнайте подробности"
+          },
+          "cta": {
+            "label": "Как заказать",
+            "caption": "Напишите нам для заказа"
+          }
+        }
+      },
+      "menu-picks": {
+        "title": "Выбор из меню",
+        "description": "Помогите выбрать из трёх блюд или товаров.",
+        "scenes": {
+          "first": {
+            "label": "Первый выбор",
+            "caption": "В нашем меню"
+          },
+          "second": {
+            "label": "Второй выбор",
+            "caption": "Стоит попробовать"
+          },
+          "third": {
+            "label": "Третий выбор",
+            "caption": "Что выберете вы?"
+          },
+          "cta": {
+            "label": "Визит или заказ",
+            "caption": "Загляните к нам сегодня"
+          }
+        }
+      },
+      "space-tour": {
+        "title": "Обзор пространства",
+        "description": "Покажите вход, интерьер и любимый уголок.",
+        "scenes": {
+          "entrance": {
+            "label": "Вход",
+            "caption": "Заходите"
+          },
+          "inside": {
+            "label": "Внутри",
+            "caption": "Осмотритесь"
+          },
+          "detail": {
+            "label": "Любимый уголок",
+            "caption": "Чувствуйте себя как дома"
+          },
+          "cta": {
+            "label": "План визита",
+            "caption": "Запланируйте визит"
+          }
+        }
+      },
+      "behind-scenes": {
+        "title": "За кулисами",
+        "description": "Покажите людей и внимание к деталям за готовой работой.",
+        "scenes": {
+          "team": {
+            "label": "Люди",
+            "caption": "Знакомьтесь с командой"
+          },
+          "process": {
+            "label": "За работой",
+            "caption": "Загляните за кулисы"
+          },
+          "result": {
+            "label": "Готовая работа",
+            "caption": "Сделано с заботой"
+          },
+          "cta": {
+            "label": "Призыв к действию",
+            "caption": "Посмотрите другие наши работы"
+          }
+        }
+      },
+      "collection": {
+        "title": "Обзор коллекции",
+        "description": "Представьте небольшую коллекцию в едином визуальном стиле.",
+        "scenes": {
+          "first": {
+            "label": "Первый товар",
+            "caption": "Откройте коллекцию"
+          },
+          "second": {
+            "label": "Второй товар",
+            "caption": "Найдите свой стиль"
+          },
+          "third": {
+            "label": "Третий товар",
+            "caption": "Выберите любимый"
+          },
+          "cta": {
+            "label": "Призыв к действию",
+            "caption": "Посмотрите всю коллекцию"
+          }
+        }
+      },
+      "service-story": {
+        "title": "История услуги",
+        "description": "Свяжите потребность клиента, вашу услугу и следующий шаг.",
+        "scenes": {
+          "need": {
+            "label": "Потребность клиента",
+            "caption": "Давайте начнём"
+          },
+          "service": {
+            "label": "Ваша услуга",
+            "caption": "Вот как мы можем помочь"
+          },
+          "result": {
+            "label": "Реальная работа",
+            "caption": "Посмотрите наши работы"
+          },
+          "cta": {
+            "label": "Запись или связь",
+            "caption": "Свяжитесь с нами"
+          }
+        }
+      }
+    }
+  },
+  "WidgetBrandingPage": {
+    "title": "Брендинг виджета",
+    "description": "Настройте цвета, тексты и легкое поведение макета для вашего веб-виджета.",
+    "empty": {
+      "title": "Виджет не установлен",
+      "description": "Установите интеграцию Web Widget, чтобы настроить здесь её оформление.",
+      "cta": "Перейти к интеграциям"
+    }
+  },
+  "PlanUpgradeDialog": {
+    "gateTrialExpired": "Ваш 14-дневный бесплатный пробный период закончился. Перейдите на платный тариф, чтобы снова открыть это рабочее пространство.",
+    "gateConversationLimit": "{hiddenCount, plural, one {# диалог скрыт из-за текущего тарифа.} few {# диалога скрыты из-за текущего тарифа.} many {# диалогов скрыто из-за текущего тарифа.} other {# диалога скрыто из-за текущего тарифа.}} Новые диалоги не сохраняются, пока вы не перейдёте на платный тариф.",
+    "gateConversationLimitReached": "Это рабочее пространство достигло лимита тарифа. Новые диалоги не сохраняются, пока вы не перейдёте на платный тариф.",
+    "gateFeatureLimit": "Перейдите на платный тариф, чтобы открыть «{featureLabel}» в этом рабочем пространстве.",
+    "gateDefault": "Это рабочее пространство достигло лимита тарифа.",
+    "title": "Улучшите тариф",
+    "checkoutFailed": "Не удалось открыть оплату",
+    "unlimited": "Без ограничений:",
+    "billingCycle": "Выберите период оплаты",
+    "monthly": "Помесячно",
+    "annual": "За год",
+    "proDescription": "Для активной работы с клиентами.",
+    "upgradeToPro": "Перейти на Pro",
+    "openingCheckout": "Открываем оплату...",
+    "billingDisabled": "Оплата в этой среде не включена.",
+    "enterpriseDescription": "Индивидуальные лимиты для больших команд.",
+    "contactSales": "Связаться с отделом продаж",
+    "features": {
+      "conversations": "диалоги",
+      "bulkCampaigns": "массовые рассылки",
+      "seats": "места в команде",
+      "workspaces": "рабочие пространства",
+      "oneSeat": "1 место в команде",
+      "oneWorkspace": "1 рабочее пространство",
+      "oneWhatsAppNumber": "1 номер WhatsApp",
+      "allIntegrations": "Все интеграции, по одному подключению каждой",
+      "voiceReplies": "Голосовые ответы в WhatsApp (ваш аккаунт ElevenLabs)",
+      "proAiUsage": "В 5 раз больше использования ИИ",
+      "proScenarios": "50 сценариев",
+      "enterpriseAiUsage": "В 20 раз больше использования ИИ",
+      "whatsAppCapacity": "Индивидуальное число номеров WhatsApp",
+      "integrationCapacity": "Индивидуальное число интеграций"
+    }
+  },
+  "WhatsAppReconnectBanner": {
+    "warningTitle": "Восстановите подключение WhatsApp",
+    "expiredTitle": "Восстановите подключение WhatsApp",
+    "removedTitle": "WhatsApp отключён",
+    "body": "Подтвердите доступ к WhatsApp, чтобы восстановить подключение.",
+    "bodyWithPhone": "Подтвердите доступ к {phone}, чтобы восстановить подключение WhatsApp.",
+    "removedBody": "Этот бизнес-аккаунт WhatsApp больше не подключён к airi.chat. Отправка сообщений через Cloud API приостановлена.",
+    "removedBodyWithPhone": "{phone} больше не подключён к airi.chat. Отправка сообщений через Cloud API приостановлена.",
+    "cta": "Переподключить",
+    "dismiss": "Скрыть",
+    "dismissWorkspace": "Скрыть для всех в этом рабочем пространстве",
+    "dismissError": "Не удалось скрыть уведомление. Попробуйте ещё раз."
+  },
+  "WhatsAppSubscribers": {
+    "page": {
+      "title": "Подписчики WhatsApp",
+      "description": "Ссылки подписки, события согласия, QR-коды и клиентские базы для сообщений."
+    },
+    "connectRequired": {
+      "title": "Сначала подключите WhatsApp",
+      "description": "Для ссылок подписки и отслеживания согласия нужен подключенный аккаунт WhatsApp Business.",
+      "action": "Подключить WhatsApp"
+    },
+    "stats": {
+      "links": "Ссылки",
+      "optedIn": "Подписаны",
+      "customerBases": "Клиентские базы"
+    },
+    "tabs": {
+      "links": "Ссылки",
+      "subscribers": "Подписчики",
+      "bases": "Клиентские базы"
+    },
+    "createLink": {
+      "title": "Создать ссылку подписки в WhatsApp",
+      "description": "Согласия учитываются для допуска к маркетинговым сообщениям."
+    },
+    "defaults": {
+      "signupMessage": "Подпишитесь, чтобы получать обновления в WhatsApp.",
+      "confirmationMessage": "Вы подписаны."
+    },
+    "fields": {
+      "displayName": "Внутреннее имя",
+      "privacyPolicyUrl": "URL политики конфиденциальности",
+      "signupMessage": "Сообщение до согласия",
+      "confirmationMessage": "Сообщение подтверждения",
+      "websiteUrl": "URL сайта",
+      "promoCode": "Промокод",
+      "productLine": "Линейка продуктов",
+      "shop": "Магазин",
+      "campaign": "Кампания",
+      "landingPage": "Лендинг",
+      "ad": "Реклама",
+      "checkoutFlow": "Сценарий оформления заказа",
+      "baseName": "Название клиентской базы"
+    },
+    "placeholders": {
+      "displayName": "Летний запуск",
+      "baseName": "Летние подписчики"
+    },
+    "actions": {
+      "refresh": "Обновить",
+      "createLink": "Создать ссылку",
+      "creatingLink": "Создание...",
+      "copyLink": "Копировать ссылку",
+      "copyEmbed": "Копировать код",
+      "qr": "QR",
+      "disable": "Отключить",
+      "createBase": "Создать",
+      "creatingBase": "Создание...",
+      "setDefault": "Сделать основной"
+    },
+    "copyLabels": {
+      "link": "Ссылка",
+      "embed": "Код"
+    },
+    "empty": {
+      "links": "Ссылок подписки пока нет.",
+      "subscribers": "Событий согласия пока нет.",
+      "bases": "Клиентские базы пока не синхронизированы.",
+      "attribution": "Нет атрибуции",
+      "value": "-"
+    },
+    "toasts": {
+      "signupCreated": "Ссылка подписки создана",
+      "baseCreated": "Клиентская база создана",
+      "signupDisabled": "Ссылка подписки отключена",
+      "defaultBaseUpdated": "Основная клиентская база обновлена",
+      "copied": "{label} скопировано"
+    },
+    "errors": {
+      "load": "Не удалось загрузить подписчиков WhatsApp",
+      "createSignup": "Не удалось создать ссылку подписки",
+      "createBase": "Не удалось создать клиентскую базу",
+      "disableSignup": "Не удалось отключить ссылку подписки",
+      "setDefaultBase": "Не удалось назначить основную клиентскую базу"
+    },
+    "created": "Создано {date}",
+    "embedCta": "Подписаться в WhatsApp",
+    "qrAlt": "QR-код подписки WhatsApp",
+    "subscribers": {
+      "title": "Согласие подписчиков",
+      "description": "Последние события подписки и отказа, полученные из WhatsApp."
+    },
+    "table": {
+      "user": "Пользователь",
+      "status": "Статус",
+      "source": "Источник",
+      "attribution": "Атрибуция",
+      "eventTime": "Время события",
+      "name": "Имя",
+      "metaId": "Meta ID",
+      "default": "Основная",
+      "action": "Действие"
+    },
+    "status": {
+      "optedIn": "Подписан",
+      "optedOut": "Отписан",
+      "default": "Основная",
+      "no": "Нет"
+    },
+    "bases": {
+      "defaultHint": "Основная клиентская база задается на уровне WABA. Локальные сегменты остаются источником правды для таргетинга по продукту, магазину, кампании, лендингу, рекламе и оформлению заказа.",
+      "createTitle": "Создать клиентскую базу"
+    }
+  },
+  "WhatsAppWelcomeSequences": {
+    "page": {
+      "title": "Приветственные последовательности",
+      "description": "Создавайте Partner App последовательности для Click-to-WhatsApp рекламы. Используйте Meta sequence ID в Ads Manager или будущей настройке CTWA креативов."
+    },
+    "connectRequired": {
+      "title": "Сначала подключите WhatsApp",
+      "description": "Подключите WhatsApp Business account, чтобы создавать welcome message sequences.",
+      "action": "Подключить WhatsApp"
+    },
+    "summary": "{count} sequences синхронизировано из Meta",
+    "actions": {
+      "sync": "Синхронизировать из Meta",
+      "create": "Создать",
+      "edit": "Изменить",
+      "save": "Сохранить",
+      "delete": "Удалить",
+      "copyId": "Скопировать sequence ID",
+      "cancel": "Отмена"
+    },
+    "badges": {
+      "usedInAd": "Используется в рекламе"
+    },
+    "fields": {
+      "text": "Текст",
+      "autofill": "Автозаполнение",
+      "iceBreakers": "FAQ",
+      "empty": "Не задано"
+    },
+    "empty": {
+      "title": "Welcome sequences пока нет",
+      "description": "Создайте sequence один раз, затем выберите его как Partner App в рекламном креативе."
+    },
+    "dialog": {
+      "createTitle": "Создать welcome sequence",
+      "editTitle": "Изменить welcome sequence",
+      "description": "Meta отправит эту sequence, когда клиент откроет Click-to-WhatsApp рекламу."
+    },
+    "form": {
+      "name": "Название",
+      "namePlaceholder": "Driver sign-up",
+      "text": "Welcome text",
+      "textPlaceholder": "Здравствуйте! Напишите, чем помочь.",
+      "autofill": "Предзаполненное сообщение клиента",
+      "autofillPlaceholder": "Здравствуйте! Хочу узнать подробнее.",
+      "iceBreakers": "FAQ кнопки",
+      "iceBreakerPlaceholder": "Quick reply {index}"
+    },
+    "preview": {
+      "title": "Превью",
+      "empty": "Добавьте контент, чтобы увидеть preview.",
+      "emptyText": "Welcome text не задан."
+    },
+    "alerts": {
+      "loadFailed": "Не удалось загрузить welcome message sequences",
+      "createFailed": "Не удалось создать welcome message sequence",
+      "updateFailed": "Не удалось обновить welcome message sequence",
+      "deleteFailed": "Не удалось удалить welcome message sequence",
+      "created": "Welcome sequence создан",
+      "updated": "Welcome sequence обновлен",
+      "deleted": "Welcome sequence удален",
+      "copied": "Sequence ID скопирован",
+      "deleteConfirm": "Удалить welcome sequence {name}?",
+      "usedInAdDeleteBlocked": "Эта sequence привязана к активной рекламе и не может быть удалена."
+    }
+  },
+  "WhatsAppQr": {
+    "page": {
+      "title": "QR-коды WhatsApp",
+      "description": "Помогите клиентам начать чат в WhatsApp без ввода или сохранения вашего номера. Добавьте необязательную подсказку, которую они смогут проверить и отправить."
+    },
+    "source": {
+      "requiredTitle": "Подключите WhatsApp для создания QR-кодов",
+      "requiredDescription": "Подключите номер WhatsApp, чтобы создать QR-код и ссылку на чат или подключить существующие.",
+      "connectAction": "Подключить WhatsApp",
+      "loadErrorTitle": "Не удалось загрузить источники WhatsApp",
+      "loadErrorDescription": "Это ошибка загрузки источников, а не пустое рабочее пространство. Повторите попытку перед изменением интеграций."
+    },
+    "actions": {
+      "create": "Создать QR-код для чата",
+      "import": "Импортировать",
+      "saveDraft": "Сохранить черновик",
+      "cancel": "Отмена",
+      "retry": "Повторить",
+      "refresh": "Обновить",
+      "filter": "Фильтр",
+      "clearFilter": "Убрать фильтр",
+      "clearFilters": "Сбросить фильтры",
+      "previous": "Назад",
+      "next": "Далее"
+    },
+    "form": {
+      "sourceLabel": "Источник WhatsApp",
+      "sourcePlaceholder": "Выберите источник",
+      "sourceDescription": "Номер WhatsApp, которому принадлежит этот QR-код.",
+      "placementLabel": "Название размещения",
+      "placementDescription": "Укажите место, где будет размещён напечатанный QR-код.",
+      "messageLabel": "Предзаполненное сообщение",
+      "optional": "(необязательно)",
+      "messageDescription": "{count}/{maximum}. Эта необязательная подсказка откроется в WhatsApp, где клиент сможет проверить и отправить её. Автоматизация запустится только после отправки.",
+      "errors": {
+        "chooseSource": "Выберите подключённый источник WhatsApp.",
+        "enterPlacementName": "Введите название размещения.",
+        "enterDesiredMessage": "Введите сообщение, которое должен отправить клиент.",
+        "maxCharacters": "Используйте не более {maximum} символов."
+      }
+    },
+    "manager": {
+      "columns": {
+        "asset": "QR-код",
+        "readiness": "Готовность",
+        "scenario": "Сценарий",
+        "updated": "Обновлено"
+      },
+      "searchLabel": "Поиск QR-кодов",
+      "searchPlaceholder": "Поиск по названию размещения",
+      "loading": "Загрузка QR-кодов",
+      "loadErrorTitle": "Не удалось загрузить QR-коды",
+      "refreshErrorTitle": "Не удалось загрузить последние изменения",
+      "refreshing": "Обновление",
+      "firstEmptyTitle": "Упростите начало чата в WhatsApp",
+      "firstEmptyDescription": "Создайте QR-код и ссылку на чат для упаковки, чеков, вывесок, печатных или цифровых материалов. Клиентам не придётся вводить или сохранять ваш номер.",
+      "filteredEmptyTitle": "Нет QR-кодов с такими фильтрами",
+      "filteredEmptyDescription": "Попробуйте другое название или удалите активный фильтр.",
+      "paginationLabel": "Страницы QR-кодов"
+    },
+    "filter": {
+      "all": "Все QR-коды",
+      "source": "Источник",
+      "status": "Статус",
+      "assignment": "Назначение",
+      "assigned": "Назначен",
+      "unassigned": "Не назначен",
+      "activeSource": "Источник: {value}",
+      "activeStatus": "Статус: {value}",
+      "activeAssignment": "Назначение: {value}"
+    },
+    "status": {
+      "DRAFT": "Черновик",
+      "ACTIVE": "Активен",
+      "DETACHED": "Отсоединён"
+    },
+    "readiness": {
+      "ready": "Готов",
+      "draft": "Нужна настройка",
+      "reconciling": "Синхронизация",
+      "detached": "Отсоединён",
+      "unhealthy": "Требует внимания"
+    },
+    "providerState": {
+      "PENDING": "Ожидание провайдера",
+      "ACTIVE": "Активен у провайдера",
+      "DELETED": "Удалён у провайдера",
+      "RECONCILING": "Синхронизация с провайдером"
+    },
+    "routingState": {
+      "ENABLED": "Маршрутизация включена",
+      "DISABLED": "Маршрутизация выключена",
+      "RECONCILING": "Маршрутизация синхронизируется"
+    },
+    "assignment": {
+      "unassigned": "Не назначен",
+      "status": {
+        "draft": "Черновик сценария",
+        "active": "Активный сценарий"
+      }
+    },
+    "card": {
+      "sourceUnavailable": "Источник WhatsApp недоступен",
+      "message": "Предзаполненное сообщение",
+      "noMessage": "Сообщение ещё не задано",
+      "assignment": "Назначение сценарию",
+      "updated": "Последнее обновление",
+      "provider": "{state}",
+      "routing": "{state}",
+      "linkCopied": "Ссылка WhatsApp скопирована",
+      "copyFailed": "Не удалось скопировать ссылку WhatsApp",
+      "copyLink": "Скопировать ссылку WhatsApp",
+      "downloadPng": "Скачать QR в PNG",
+      "moreActions": "Другие действия",
+      "openDetails": "Открыть детали",
+      "testLink": "Проверить ссылку WhatsApp",
+      "recoveryTitle": "QR-код требует внимания",
+      "openRecovery": "Открыть восстановление",
+      "recovery": {
+        "ready": "Операция провайдера ещё синхронизируется.",
+        "draft": "Завершите настройку провайдера перед назначением QR-кода.",
+        "reconciling": "Операция провайдера ещё синхронизируется.",
+        "detached": "Проверьте привязку провайдера перед использованием QR-кода.",
+        "unhealthy": "Проверьте маршрутизацию и состояние провайдера."
+      },
+      "openArtwork": "Открыть {name}",
+      "artworkAlt": "QR-код для {name}",
+      "artworkUnavailable": "Изображение QR недоступно"
+    },
+    "dialog": {
+      "createTitle": "Создать QR-код",
+      "importTitle": "Импортировать QR-код",
+      "description": "Добавьте необязательную подсказку для чата, затем создайте QR-код в WhatsApp или сохраните черновик и завершите позже.",
+      "intentLabel": "Что вы хотите сделать?",
+      "createIntent": "Создать QR-код в WhatsApp",
+      "createIntentDescription": "Создать новый QR-код и ссылку на чат, которые откроют WhatsApp с необязательной подсказкой.",
+      "importIntent": "Подключить существующий QR-код",
+      "importIntentDescription": "Подключить QR-код и ссылку на чат, которые вы уже используете.",
+      "importMethodLabel": "Способ импорта",
+      "methodProvider": "Из WhatsApp",
+      "methodLink": "По ссылке",
+      "methodImage": "Из изображения",
+      "providerCodeLabel": "QR-код Meta",
+      "providerCodePlaceholder": "Выберите загруженный код",
+      "providerCodeDescription": "Загрузите QR-коды выбранного номера WhatsApp.",
+      "loadProviderCodes": "Загрузить коды",
+      "linkLabel": "Ссылка WhatsApp QR",
+      "linkDescription": "Вставьте ссылку wa.me, связанную с существующим QR-кодом.",
+      "imageLabel": "Изображение QR",
+      "chooseImageAction": "Выбрать изображение",
+      "imageDescription": "Загрузите PNG, JPEG или WebP с QR-кодом.",
+      "operationFailedTitle": "Не удалось выполнить действие с QR-кодом",
+      "openDraft": "Открыть сохранённый черновик",
+      "errors": {
+        "chooseProviderCode": "Загрузите и выберите код с текущей страницы источника.",
+        "enterLink": "Введите ссылку существующего WhatsApp QR.",
+        "chooseImage": "Выберите изображение с QR-кодом."
+      }
+    },
+    "placementState": {
+      "CURRENT": "Текущее размещение",
+      "HISTORICAL": "Историческое размещение",
+      "DETACHED": "Размещение отвязано"
+    },
+    "operationKind": {
+      "CREATE": "создание кода",
+      "CONNECT": "подключение кода",
+      "APPLY_MESSAGE": "обновление сообщения",
+      "REPLACE": "замена",
+      "MOVE": "перенос",
+      "SET_ROUTING": "обновление маршрутизации",
+      "DELETE": "удаление",
+      "SYNC_PROVIDER": "проверка статуса Meta",
+      "RECONCILE": "сверка"
+    },
+    "detail": {
+      "source": {
+        "notConnected": "Не подключён",
+        "linkedUnavailable": "Источник WhatsApp, связанный с этим QR-кодом, больше недоступен в рабочем пространстве.",
+        "chooseRequired": "Выберите подключённый источник WhatsApp перед созданием или изменением кода у провайдера.",
+        "unavailableDescription": "{reason} Изменения у провайдера отключены, пока не появится настроенный источник. Локальные данные и доступные изображения остаются доступны."
+      },
+      "artwork": {
+        "title": "Изображение и ссылка QR-кода",
+        "description": "Скачайте текущее изображение или откройте точную ссылку WhatsApp.",
+        "previewOnManager": "Предпросмотр изображения доступен на странице менеджера.",
+        "previewUnavailable": "Создайте или подключите код у провайдера, чтобы получить изображение.",
+        "deepLinkUnavailable": "Прямая ссылка недоступна"
+      },
+      "settings": {
+        "title": "Настройки",
+        "description": "Переименуйте размещение и настройте предзаполненное сообщение клиента.",
+        "save": "Сохранить настройки",
+        "applyMessage": "Обновить подсказку в WhatsApp",
+        "createProviderCode": "Создать QR-код в WhatsApp"
+      },
+      "assignment": {
+        "title": "Привязка к сценарию",
+        "description": "Привязка меняется в выборе QR-кода для триггера.",
+        "meta": "Триггер {nodeId} · редакция {revision}",
+        "unassignedDescription": "Когда QR-код будет готов, выберите его в сохранённом триггере сценария."
+      },
+      "health": {
+        "title": "Состояние",
+        "description": "Сохранённое состояние ресурса, последнее известное состояние Meta, размещения и маршрутизации.",
+        "resource": "Ресурс: {state}",
+        "source": "Источник: {source}",
+        "provider": "Провайдер: {state}",
+        "routing": "Маршрутизация: {state}",
+        "placement": "Размещение: {state}",
+        "missingCode": "Код у провайдера: отсутствует",
+        "lastKnownDescription": "Выше показано последнее состояние Meta, сохранённое в airi.chat.",
+        "checkProvider": "Проверить статус Meta"
+      },
+      "history": {
+        "title": "Замена и история кодов",
+        "description": "Напечатанные исторические версии остаются связанными с этой стабильной точкой входа.",
+        "current": "Текущий",
+        "historical": "Исторический",
+        "empty": "Текущего кода у провайдера нет.",
+        "moreTitle": "Сохранена дополнительная история",
+        "moreDescription": "Здесь показано доступное для действий окно истории. Более старые записи сохраняются локально.",
+        "createReplacement": "Создать замену",
+        "codeMeta": "{codeId} · {providerState} · {routingState}",
+        "disableRouting": "Отключить маршрутизацию",
+        "enableRouting": "Включить маршрутизацию",
+        "delete": "Удалить"
+      },
+      "recovery": {
+        "title": "Восстановление",
+        "description": "Восстановите отвязанное локальное состояние или сверьте сохранённую операцию провайдера.",
+        "recover": "Восстановить отвязанную точку входа",
+        "reconcile": "Сверить: {kind}"
+      },
+      "danger": {
+        "title": "Опасная зона",
+        "description": "Удаление из Meta сохраняет локальную точку входа и её историю.",
+        "activeTitle": "Привязка к активному сценарию",
+        "activeDescription": "Деактивируйте «{scenarioName}» перед удалением текущего кода у провайдера.",
+        "historyTitle": "Сначала удалите исторические коды",
+        "historyDescription": "Удалите все сохранённые коды провайдера из истории перед удалением текущего кода.",
+        "deleteCurrent": "Удалить текущий код из Meta"
+      },
+      "actionFailedTitle": "Не удалось выполнить действие",
+      "draft": {
+        "title": "Подготовьте локальный черновик Chat QR",
+        "description": "Сохранение черновика ничего не создаёт и не изменяет в Meta."
+      },
+      "load": {
+        "notFoundTitle": "Chat QR-код не найден",
+        "notFoundDescription": "Этот QR-код мог быть удалён или принадлежать другому рабочему пространству. Вернитесь в менеджер QR-кодов и выберите доступный код.",
+        "errorTitle": "Не удалось загрузить этот Chat QR-код",
+        "refreshErrorTitle": "Не удалось обновить последнее состояние",
+        "loadingLabel": "Загрузка Chat QR-кода",
+        "loadingDescription": "Загружается последнее сохранённое состояние QR-кода."
+      }
+    },
+    "deleteDialog": {
+      "title": "Удалить этот QR-код из Meta?",
+      "codeIdentity": "{referenceCode} ({codeId})",
+      "currentDescription": "Код провайдера {code} будет удалён. Локальная точка входа и история кодов сохранятся. После удаления текущего кода ресурс вернётся в состояние повторно используемого черновика.",
+      "historicalDescription": "Код провайдера {code} будет удалён. Локальная точка входа и история кодов сохранятся. Удаление исторического кода не меняет текущий код или состояние ресурса.",
+      "activeTitle": "Сначала деактивируйте привязанный сценарий",
+      "activeDescription": "Этот QR-код привязан к активному сценарию «{scenarioName}». Откройте и деактивируйте его перед удалением кода у провайдера.",
+      "acknowledgement": "Я понимаю, что напечатанный код перестанет открывать этот Chat QR.",
+      "confirm": "Удалить из Meta"
+    },
+    "controller": {
+      "status": {
+        "draftSaved": "Черновик сохранён",
+        "codeCreated": "QR-код создан",
+        "codeConnected": "QR-код подключён",
+        "messageUpdated": "Предзаполненное сообщение обновлено",
+        "replacementCreated": "Заменяющий QR-код создан",
+        "routingEnabled": "Маршрутизация включена",
+        "routingDisabled": "Маршрутизация отключена",
+        "codeDeleted": "QR-код удалён из Meta",
+        "entryPointRecovered": "Точка входа QR восстановлена",
+        "providerChecked": "Статус Meta соответствует сохранённому QR-коду",
+        "providerReconciled": "Состояние провайдера сверено",
+        "pngDownloaded": "PNG скачан",
+        "svgDownloaded": "SVG скачан"
+      },
+      "errors": {
+        "ownerChanged": "Этот Chat QR изменился до завершения действия.",
+        "requestFailed": "Не удалось выполнить запрос.",
+        "indexMigrationRequired": "Сохранение QR-кодов временно недоступно. Повторите попытку через несколько минут.",
+        "providerDriftDetected": "Состояние в Meta больше не соответствует сохранённому QR-коду. Откройте раздел восстановления.",
+        "providerCheckUnavailable": "Сейчас не удаётся проверить статус Meta. Повторите попытку позже.",
+        "providerRequestFailed": "WhatsApp не удалось выполнить запрос к провайдеру. Повторите попытку.",
+        "operationBusy": "Уже выполняется другая операция с QR-кодом.",
+        "stateChanged": "QR-код изменился до завершения действия. Обновите страницу и повторите попытку.",
+        "withOperationId": "{message} (операция {operationId})",
+        "placementNameLength": "Введите название размещения длиной от 1 до {maximum} символов.",
+        "entryPointNotLoaded": "Запрошенная точка входа Chat QR ещё не загружена.",
+        "currentCodeUnavailable": "Текущий QR-код недоступен.",
+        "sourceUnavailable": "Источник WhatsApp недоступен.",
+        "codeVersionUnavailable": "Эта версия QR-кода недоступна.",
+        "entryPointUnavailable": "Точка входа QR недоступна.",
+        "reconciliationUnavailable": "Операция сверки недоступна.",
+        "artworkUnavailable": "Текущее изображение QR-кода недоступно."
+      }
+    }
+  },
+  "MessengersSection": {
+    "title": "Менеджер WhatsApp",
+    "templates": "Шаблоны WhatsApp",
+    "flows": "Потоки WhatsApp",
+    "welcomeSequences": "Welcome Sequences",
+    "qrCodes": "QR-коды WhatsApp",
+    "subscribers": "Подписчики WhatsApp",
+    "catalog": "Каталог",
+    "officialBadge": "Официальный значок"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@icecore/whatsapp",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./sendingReadiness": "./sendingReadiness.ts",
+    "./businessUsernameState": "./businessUsernameState.ts",
+    "./formatCatalogBatchPrice": "./formatCatalogBatchPrice.ts",
+    "./groupWebhooks": "./groupWebhooks.ts",
+    "./historySyncState": "./historySyncState.ts",
+    "./marketingConsent": "./marketingConsent.ts",
+    "./referralFields": "./referralFields.ts",
+    "./webhookLogSummary": "./webhookLogSummary.ts",
+    "./webhookFields": "./webhookFields.ts",
+    "./webhookMessageDedupe": "./webhookMessageDedupe.ts",
+    "./qrEntryPoints/importLink": "./qrEntryPoints/importLink.ts",
+    "./qrEntryPoints/provider": "./qrEntryPoints/provider.ts",
+    "./mediaTypes": "./mediaTypes.ts"
+  },
+  "dependencies": {
+    "@icecore/shared": "workspace:*",
+    "@icecore/scenario-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.19.17",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "BillingSettings": {
+    "title": "Billing",
+    "loading": "Loading billing",
+    "loadingPlan": "Loading plan",
+    "planUnavailable": "Could not load the current plan",
+    "unavailable": "Could not load billing",
+    "refresh": "Refresh",
+    "refreshFailed": "Billing could not be refreshed. Showing saved data.",
+    "actionFailed": "Could not complete the action. Try again.",
+    "checkoutUnavailable": "Checkout unavailable",
+    "checkoutUnavailableHint": "Try again later or contact support.",
+    "subscription": "Subscription",
+    "periodEnds": "Current period ends",
+    "renewal": "Renewal",
+    "endsAtPeriod": "Ends after this period",
+    "renews": "Automatic renewal",
+    "noRenewal": "No scheduled renewal",
+    "paymentMethod": "Payment method",
+    "managedByPaddle": "Managed by Paddle",
+    "notScheduled": "Not scheduled",
+    "dateUnavailable": "Date unavailable",
+    "upgrade": "Upgrade to Pro",
+    "reactivate": "Keep subscription",
+    "cancelRenewal": "Cancel renewal",
+    "adminOnly": "An admin can manage billing.",
+    "invoices": "Invoices",
+    "noInvoices": "No invoices yet.",
+    "plans": {
+      "free": "Free plan",
+      "pro": "Pro plan",
+      "enterprise": "Enterprise plan"
+    },
+    "status": {
+      "active": "Active",
+      "trialing": "Trial",
+      "past_due": "Payment overdue",
+      "paused": "Paused",
+      "canceled": "Canceled",
+      "cancelled": "Canceled",
+      "paid": "Paid",
+      "pending": "Pending",
+      "failed": "Failed",
+      "requires_action": "Action required",
+      "draft": "Draft",
+      "open": "Open",
+      "completed": "Completed",
+      "billed": "Billed",
+      "none": "No paid subscription",
+      "unknown": "Status unavailable"
+    }
+  }
+}

@@ -1,0 +1,1954 @@
+name: Deploy Temporal Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/temporal-worker/**"
+      # Worker + AI gateway images bundle apps/web and load it at runtime (see apps/temporal-worker/Dockerfile).
+      - "apps/web/src/lib/**"
+      - "apps/web/src/models/**"
+      - "apps/web/src/app/api/**"
+      - "apps/web/src/types/**"
+      - "apps/web/scripts/migrate-whatsapp-qr-entry-point-indexes.ts"
+      - "apps/web/package.json"
+      - "packages/**"
+      - "cloudbuild.temporal-worker.yaml"
+      - ".github/workflows/deploy-temporal-worker.yml"
+      - ".github/cloud-run/runtime-manifest.json"
+      - ".github/scripts/ensure-pubsub-resources.mjs"
+      - ".github/scripts/ensure-service-account-project-roles.mjs"
+      - ".github/scripts/ensure-worker-startup-probe.mjs"
+      - ".github/scripts/prepare-cloud-run-runtime.mjs"
+      - ".github/scripts/resolve-valkey-endpoint.mjs"
+      - ".github/scripts/sync-gcp-llm-product-analytics.mjs"
+      - ".github/scripts/creative-assets-bucket-config.mjs"
+      - ".github/scripts/sync-vercel-runtime-env.mjs"
+      - ".github/scripts/verify-gcloud-auth.mjs"
+      - ".github/scripts/verify-supabase-campaign-contract.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+  workflow_dispatch:
+    inputs:
+      requests_rollout_action:
+        description: "Deployment or protected Requests realtime action"
+        required: true
+        type: choice
+        default: deploy_or_bootstrap
+        options:
+          - deploy_or_bootstrap
+          - transition_sequence
+          - capture_pre_b_baseline
+          - redeploy_web
+          - tenant_cost_preflight
+          - tenant_cost_prepare
+          - widget_preflight
+      web_deployment_id:
+        description: "Existing production Vercel deployment to rebuild (redeploy_web only)."
+        required: false
+        type: string
+      web_expected_sha:
+        description: "Full current main commit SHA of that deployment (redeploy_web only)."
+        required: false
+        type: string
+      bootstrap_infra:
+        description: "Allow this manual run to create missing GCP infra when the matching repo variable also enables creation."
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-temporal-worker-prod
+  cancel-in-progress: false
+
+# Hybrid runner: keep GitHub Actions as orchestrator, move this fat workflow off hosted minutes.
+# Repo variable DEPLOY_RUNS_ON (JSON array), e.g. ["self-hosted","linux","deploy"]
+# Default stays ubuntu-latest until the variable is set (avoids queued jobs with no runner).
+jobs:
+  widget_preflight:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.requests_rollout_action == 'widget_preflight' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Test read-only widget preflight
+        run: node --test .github/scripts/widget-release-preflight.test.mjs .github/scripts/redeploy-vercel-production.test.mjs
+      - name: Inspect widget release configuration
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_WIDGET_PROJECT_ID: prj_TA7KG42qs2nABb34RMREHUdaKFq3
+          VERCEL_TEAM_ID: team_WPHPkKZP5eLOhTmwJvwsywwJ
+        run: node .github/scripts/widget-release-preflight.mjs
+  tenant_cost_infrastructure:
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.requests_rollout_action == 'tenant_cost_preflight' || inputs.requests_rollout_action == 'tenant_cost_prepare') }}
+    uses: ./.github/workflows/tenant-cost-infrastructure.yml
+    with:
+      phase: ${{ inputs.requests_rollout_action == 'tenant_cost_prepare' && 'prepare' || 'preflight' }}
+    secrets: inherit
+  redeploy_web:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.requests_rollout_action == 'redeploy_web' }}
+    runs-on: ${{ fromJSON(vars.DEPLOY_RUNS_ON || '["ubuntu-latest"]') }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    # Serialized with Deploy Web (.github/workflows/deploy-web.yml) so two web
+    # production deploys never race.
+    concurrency:
+      group: deploy-web-prod
+      cancel-in-progress: false
+    steps:
+      - name: Check out recovery tooling
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Test production deployment recovery
+        run: node --test .github/scripts/redeploy-vercel-production.test.mjs .github/scripts/sync-vercel-runtime-env.test.mjs
+      - name: Redeploy exact web production release
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          VERCEL_REDEPLOY_ID: ${{ inputs.web_deployment_id }}
+          VERCEL_REDEPLOY_EXPECTED_SHA: ${{ inputs.web_expected_sha }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_NAME: ${{ vars.VERCEL_PROJECT_NAME }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          VERCEL_TEAM_SLUG: ${{ vars.VERCEL_TEAM_SLUG }}
+          AI_GATEWAY_VERCEL_OIDC_AUDIENCE: ${{ vars.AI_GATEWAY_VERCEL_OIDC_AUDIENCE }}
+          AI_GATEWAY_VERCEL_OIDC_ISSUER_URL: ${{ vars.AI_GATEWAY_VERCEL_OIDC_ISSUER_URL }}
+          AI_GATEWAY_VERCEL_OIDC_SUBJECTS: ${{ vars.AI_GATEWAY_VERCEL_OIDC_SUBJECTS }}
+        run: node .github/scripts/redeploy-vercel-production.mjs
+  deploy:
+    if: ${{ github.event_name == 'push' || github.event_name != 'workflow_dispatch' || inputs.requests_rollout_action == 'deploy_or_bootstrap' }}
+    runs-on: ${{ fromJSON(vars.DEPLOY_RUNS_ON || '["ubuntu-latest"]') }}
+    timeout-minutes: 120
+    env:
+      CLOUDSDK_CORE_DISABLE_PROMPTS: "1"
+      CLOUDSDK_CORE_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_SERVICE_ACCOUNT_EMAIL: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+      GCP_PUBSUB_PUBLISHER_SERVICE_ACCOUNT: ${{ vars.GCP_PUBSUB_PUBLISHER_SERVICE_ACCOUNT || vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+      GCP_TRANSLATION_SERVICE_ACCOUNT: ${{ vars.GCP_TRANSLATION_SERVICE_ACCOUNT || vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+      GCP_TRANSLATION_SKIP_IAM_BINDING: ${{ vars.GCP_TRANSLATION_SKIP_IAM_BINDING }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GCP_ARTIFACT_REPOSITORY: ${{ vars.GCP_ARTIFACT_REPOSITORY }}
+      GCP_ENABLE_REQUIRED_APIS: ${{ vars.GCP_ENABLE_REQUIRED_APIS }}
+      GCP_LLM_ANALYTICS_LOCATION: ${{ vars.GCP_LLM_ANALYTICS_LOCATION || 'US' }}
+      CLOUD_RUN_SKIP_SECRET_SYNC: ${{ vars.CLOUD_RUN_SKIP_SECRET_SYNC }}
+      GCP_WORKER_POOL_NAME: ${{ vars.GCP_WORKER_POOL_NAME }}
+      GCP_WORKER_SERVICE_ACCOUNT: ${{ vars.GCP_WORKER_SERVICE_ACCOUNT }}
+      GCP_WORKER_INSTANCES: ${{ vars.GCP_WORKER_INSTANCES }}
+      GCP_WORKER_CPU: ${{ vars.GCP_WORKER_CPU }}
+      GCP_WORKER_MEMORY: ${{ vars.GCP_WORKER_MEMORY }}
+      GCP_WORKER_STARTUP_PROBE_ENABLED: ${{ vars.GCP_WORKER_STARTUP_PROBE_ENABLED || 'false' }}
+      GCP_WORKER_STARTUP_PROBE_PORT: "8080"
+      GCP_OTP_WORKER_POOL_NAME: ${{ vars.GCP_OTP_WORKER_POOL_NAME }}
+      GCP_OTP_API_SERVICE_NAME: ${{ vars.GCP_OTP_API_SERVICE_NAME }}
+      GCP_OTP_API_SERVICE_ACCOUNT: ${{ vars.GCP_OTP_API_SERVICE_ACCOUNT }}
+      GCP_OTP_API_MIN_INSTANCES: ${{ vars.GCP_OTP_API_MIN_INSTANCES }}
+      GCP_OTP_API_MAX_INSTANCES: ${{ vars.GCP_OTP_API_MAX_INSTANCES }}
+      GCP_OTP_API_CPU: ${{ vars.GCP_OTP_API_CPU }}
+      GCP_OTP_API_MEMORY: ${{ vars.GCP_OTP_API_MEMORY }}
+      GCP_OTP_API_VPC_NETWORK: ${{ vars.GCP_OTP_API_VPC_NETWORK }}
+      GCP_OTP_API_VPC_SUBNET: ${{ vars.GCP_OTP_API_VPC_SUBNET }}
+      GCP_OTP_API_ENABLED: ${{ vars.GCP_OTP_API_ENABLED }}
+      GCP_VALKEY_CREATE_IF_MISSING: ${{ vars.GCP_VALKEY_CREATE_IF_MISSING }}
+      GCP_VALKEY_INSTANCE_NAME: ${{ vars.GCP_VALKEY_INSTANCE_NAME }}
+      GCP_VALKEY_LOCATION: ${{ vars.GCP_VALKEY_LOCATION }}
+      GCP_VALKEY_NETWORK: ${{ vars.GCP_VALKEY_NETWORK }}
+      GCP_REALTIME_DISPATCHER_POOL_NAME: ${{ vars.GCP_REALTIME_DISPATCHER_POOL_NAME }}
+      GCP_REALTIME_DISPATCHER_INSTANCES: ${{ vars.GCP_REALTIME_DISPATCHER_INSTANCES }}
+      REALTIME_DISPATCHER_ENABLED: ${{ vars.REALTIME_DISPATCHER_ENABLED }}
+      GCP_REALTIME_DISPATCHER_CPU: ${{ vars.GCP_REALTIME_DISPATCHER_CPU }}
+      GCP_REALTIME_DISPATCHER_MEMORY: ${{ vars.GCP_REALTIME_DISPATCHER_MEMORY }}
+      GCP_REALTIME_GATEWAY_SERVICE_NAME: ${{ vars.GCP_REALTIME_GATEWAY_SERVICE_NAME }}
+      GCP_REALTIME_GATEWAY_MIN_INSTANCES: ${{ vars.GCP_REALTIME_GATEWAY_MIN_INSTANCES }}
+      GCP_REALTIME_GATEWAY_MAX_INSTANCES: ${{ vars.GCP_REALTIME_GATEWAY_MAX_INSTANCES }}
+      GCP_REALTIME_GATEWAY_CPU: ${{ vars.GCP_REALTIME_GATEWAY_CPU }}
+      GCP_REALTIME_GATEWAY_MEMORY: ${{ vars.GCP_REALTIME_GATEWAY_MEMORY }}
+      GCP_REALTIME_GATEWAY_CONCURRENCY: ${{ vars.GCP_REALTIME_GATEWAY_CONCURRENCY }}
+      GCP_REALTIME_GATEWAY_TIMEOUT: ${{ vars.GCP_REALTIME_GATEWAY_TIMEOUT }}
+      GCP_REALTIME_VPC_NETWORK: ${{ vars.GCP_REALTIME_VPC_NETWORK }}
+      GCP_REALTIME_VPC_SUBNET: ${{ vars.GCP_REALTIME_VPC_SUBNET }}
+      GCP_AI_GATEWAY_SERVICE_NAME: ${{ vars.GCP_AI_GATEWAY_SERVICE_NAME }}
+      GCP_AI_GATEWAY_SERVICE_ACCOUNT: ${{ vars.GCP_AI_GATEWAY_SERVICE_ACCOUNT }}
+      GCP_AI_GATEWAY_MIN_INSTANCES: ${{ vars.GCP_AI_GATEWAY_MIN_INSTANCES }}
+      GCP_AI_GATEWAY_MAX_INSTANCES: ${{ vars.GCP_AI_GATEWAY_MAX_INSTANCES }}
+      GCP_AI_GATEWAY_CPU: ${{ vars.GCP_AI_GATEWAY_CPU }}
+      GCP_AI_GATEWAY_MEMORY: ${{ vars.GCP_AI_GATEWAY_MEMORY }}
+      GCP_MEDIA_API_SERVICE_NAME: ${{ vars.GCP_MEDIA_API_SERVICE_NAME }}
+      GCP_MEDIA_API_SERVICE_ACCOUNT: ${{ vars.GCP_MEDIA_API_SERVICE_ACCOUNT }}
+      GCP_MEDIA_API_MIN_INSTANCES: ${{ vars.GCP_MEDIA_API_MIN_INSTANCES }}
+      GCP_MEDIA_API_MAX_INSTANCES: ${{ vars.GCP_MEDIA_API_MAX_INSTANCES }}
+      GCP_MEDIA_API_CPU: ${{ vars.GCP_MEDIA_API_CPU }}
+      GCP_MEDIA_API_MEMORY: ${{ vars.GCP_MEDIA_API_MEMORY }}
+      GCS_CREATIVE_ASSETS_BUCKET: ${{ vars.GCS_CREATIVE_ASSETS_BUCKET }}
+      GCS_BULK_DISPATCH_BUCKET: ${{ vars.GCS_BULK_DISPATCH_BUCKET }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      TEMPORAL_CLOUD_ADDRESS: ${{ vars.TEMPORAL_CLOUD_ADDRESS }}
+      TEMPORAL_CLOUD_NAMESPACE: ${{ vars.TEMPORAL_CLOUD_NAMESPACE }}
+      TEMPORAL_WORKER_DEPLOYMENT_NAME: ${{ vars.TEMPORAL_WORKER_DEPLOYMENT_NAME }}
+      TEMPORAL_CLOUD_API_KEY: ${{ secrets.TEMPORAL_CLOUD_API_KEY }}
+      # Optional: tune waits if deploys are slow (bash defaults apply when unset/empty).
+      TEMPORAL_BUILD_ID_WAIT_ATTEMPTS: ${{ vars.TEMPORAL_BUILD_ID_WAIT_ATTEMPTS }}
+      TEMPORAL_BUILD_ID_WAIT_SECONDS: ${{ vars.TEMPORAL_BUILD_ID_WAIT_SECONDS }}
+      TEMPORAL_WORKER_STARTUP_LOG_WAIT_ATTEMPTS: ${{ vars.TEMPORAL_WORKER_STARTUP_LOG_WAIT_ATTEMPTS }}
+      TEMPORAL_WORKER_STARTUP_LOG_WAIT_SECONDS: ${{ vars.TEMPORAL_WORKER_STARTUP_LOG_WAIT_SECONDS }}
+      TEMPORAL_SET_CURRENT_MAX_ATTEMPTS: ${{ vars.TEMPORAL_SET_CURRENT_MAX_ATTEMPTS }}
+      TEMPORAL_SET_CURRENT_WAIT_SECONDS: ${{ vars.TEMPORAL_SET_CURRENT_WAIT_SECONDS }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Validate Temporal deployment contracts
+        run: >
+          node --test
+          .github/scripts/temporal-deployment-contracts.test.mjs
+          .github/scripts/redeploy-vercel-production.test.mjs
+          .github/scripts/verify-supabase-campaign-contract.test.mjs
+          .github/scripts/verify-gcloud-auth.test.mjs
+          .github/scripts/ensure-pubsub-resources.test.mjs
+          .github/scripts/sync-gcp-llm-product-analytics.test.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check worker types
+        run: pnpm --filter @icecore/temporal-worker check-types
+
+      - name: Install Temporal CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TEMPORAL_INSTALL_DIR="$HOME/.temporalio"
+
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/temporalio/cli/main/install.sh \
+            --output /tmp/install-temporal.sh
+
+          sh /tmp/install-temporal.sh --dir "$TEMPORAL_INSTALL_DIR"
+          echo "$TEMPORAL_INSTALL_DIR/bin" >> "$GITHUB_PATH"
+
+      - name: Ensure worker audio tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Start local Valkey for worker tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker rm -f airi-ci-valkey >/dev/null 2>&1 || true
+          # ECR Public first; its anonymous pull quota can run out for shared
+          # runner IPs, so fall back to Google's Docker Hub mirror.
+          started=false
+          status=0
+          for image in public.ecr.aws/docker/library/redis:7-alpine mirror.gcr.io/library/redis:7-alpine; do
+            if docker run -d --name airi-ci-valkey -p 16379:6379 "$image"; then
+              started=true
+              break
+            else
+              status=$?
+            fi
+            echo "::warning::Could not start Valkey from $image (exit $status)." >&2
+            docker rm -f airi-ci-valkey >/dev/null 2>&1 || true
+          done
+          if [[ "$started" != true ]]; then
+            exit "$status"
+          fi
+          for i in $(seq 1 30); do
+            if docker exec airi-ci-valkey redis-cli ping 2>/dev/null | grep -q PONG; then
+              echo "Local Valkey is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Local Valkey did not become ready for Temporal worker tests." >&2
+          exit 1
+
+      - name: Test Temporal worker runtime
+        env:
+          REALTIME_VALKEY_URL: redis://127.0.0.1:16379
+        run: pnpm --filter @icecore/temporal-worker test
+
+      - name: Stop local Valkey for worker tests
+        if: always()
+        shell: bash
+        run: docker rm -f airi-ci-valkey >/dev/null 2>&1 || true
+
+      - name: Check worker startup imports
+        env:
+          NODE_ENV: production
+          MONGODB_URI: mongodb://127.0.0.1:27017/airi_worker_import_smoke
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: import-smoke-anon
+          SUPABASE_SERVICE_ROLE_KEY: import-smoke-service-role
+        run: pnpm --filter @icecore/temporal-worker check:startup-import
+
+      - name: Ensure Mongo indexes
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pnpm --filter @icecore/web run ensure:mongo-indexes
+
+      - name: Apply WhatsApp QR index migration
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pnpm --filter @icecore/web run migrate:whatsapp-qr-entry-point-indexes --apply
+
+      - name: Verify Supabase campaign contract
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node .github/scripts/verify-supabase-campaign-contract.mjs
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER || vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT || vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          version: ">= 416.0.0"
+
+      - name: Verify gcloud authentication
+        run: node .github/scripts/verify-gcloud-auth.mjs
+
+      - name: Ensure Cloud Translation runtime IAM
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${GCP_PROJECT_ID:?Set repo variable GCP_PROJECT_ID}"
+          TRANSLATION_SERVICE_ACCOUNT="${GCP_TRANSLATION_SERVICE_ACCOUNT:-${GCP_PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}}"
+          if [[ -z "${TRANSLATION_SERVICE_ACCOUNT}" ]]; then
+            candidate_service_account="vercel-wa-pubsub-publisher@${PROJECT_ID}.iam.gserviceaccount.com"
+            if gcloud iam service-accounts describe "${candidate_service_account}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+              TRANSLATION_SERVICE_ACCOUNT="${candidate_service_account}"
+            fi
+          fi
+
+          if [[ -z "${TRANSLATION_SERVICE_ACCOUNT}" ]]; then
+            echo "No Cloud Translation runtime service account was configured or auto-detected; skipping IAM binding."
+            exit 0
+          fi
+
+          iam_args=(
+            --project "${PROJECT_ID}"
+            --service-account "${TRANSLATION_SERVICE_ACCOUNT}"
+            --role roles/cloudtranslate.user
+          )
+
+          if [[ "${GCP_TRANSLATION_SKIP_IAM_BINDING:-}" == "1" ]]; then
+            iam_args+=(--skip-iam)
+          fi
+
+          node .github/scripts/ensure-service-account-project-roles.mjs "${iam_args[@]}"
+
+      - name: Validate required worker secrets
+        shell: bash
+        env:
+          ENCRYPTION_SECRET: ${{ secrets.ENCRYPTION_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${ENCRYPTION_SECRET:-}" ]]; then
+            {
+              echo "Missing required GitHub secret: ENCRYPTION_SECRET."
+              echo "Set it to the same value used by the web app, otherwise the Temporal worker cannot decrypt encrypted source credentials such as WhatsApp access tokens."
+            } >&2
+            exit 1
+          fi
+
+      - name: Enable required Google Cloud APIs
+        if: ${{ vars.GCP_ENABLE_REQUIRED_APIS == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${GCP_PROJECT_ID:?Set repo variable GCP_PROJECT_ID}"
+
+          gcloud services enable \
+            aiplatform.googleapis.com \
+            artifactregistry.googleapis.com \
+            bigquery.googleapis.com \
+            cloudbuild.googleapis.com \
+            iamcredentials.googleapis.com \
+            memorystore.googleapis.com \
+            networkconnectivity.googleapis.com \
+            pubsub.googleapis.com \
+            run.googleapis.com \
+            secretmanager.googleapis.com \
+            translate.googleapis.com \
+            --project="${PROJECT_ID}"
+
+      - name: Resolve deploy metadata
+        id: deploy-meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${GCP_PROJECT_ID:?Set repo variable GCP_PROJECT_ID}"
+          REGION="${GCP_REGION:-europe-west1}"
+          ARTIFACT_REPOSITORY="${GCP_ARTIFACT_REPOSITORY:-icecore}"
+          WORKER_POOL_NAME="${GCP_WORKER_POOL_NAME:-airi-temporal-worker-prod}"
+          OTP_WORKER_POOL_NAME="${GCP_OTP_WORKER_POOL_NAME:-airi-otp-worker-prod}"
+          OTP_API_SERVICE_NAME="${GCP_OTP_API_SERVICE_NAME:-airi-otp-api}"
+          MEDIA_API_SERVICE_NAME="${GCP_MEDIA_API_SERVICE_NAME:-airi-media-api}"
+          REALTIME_DISPATCHER_POOL_NAME="${GCP_REALTIME_DISPATCHER_POOL_NAME:-airi-realtime-dispatcher-prod}"
+          REALTIME_GATEWAY_SERVICE_NAME="${GCP_REALTIME_GATEWAY_SERVICE_NAME:-airi-realtime-gateway}"
+          TEMPORAL_DEPLOYMENT_NAME="${TEMPORAL_WORKER_DEPLOYMENT_NAME:-airi-temporal-worker}"
+          TEMPORAL_DEPLOYMENT_NAME="${TEMPORAL_DEPLOYMENT_NAME#"${TEMPORAL_DEPLOYMENT_NAME%%[![:space:]]*}"}"
+          TEMPORAL_DEPLOYMENT_NAME="${TEMPORAL_DEPLOYMENT_NAME%"${TEMPORAL_DEPLOYMENT_NAME##*[![:space:]]}"}"
+          if [[ -z "${TEMPORAL_DEPLOYMENT_NAME}" ]]; then
+            echo "TEMPORAL_WORKER_DEPLOYMENT_NAME must not be blank."
+            exit 1
+          fi
+          BUILD_ID="${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPOSITORY}/airi-temporal-worker:${BUILD_ID}"
+
+          echo "project_id=${PROJECT_ID}" >> "$GITHUB_OUTPUT"
+          echo "region=${REGION}" >> "$GITHUB_OUTPUT"
+          echo "worker_pool_name=${WORKER_POOL_NAME}" >> "$GITHUB_OUTPUT"
+          echo "otp_worker_pool_name=${OTP_WORKER_POOL_NAME}" >> "$GITHUB_OUTPUT"
+          echo "otp_api_service_name=${OTP_API_SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "media_api_service_name=${MEDIA_API_SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "realtime_dispatcher_pool_name=${REALTIME_DISPATCHER_POOL_NAME}" >> "$GITHUB_OUTPUT"
+          echo "realtime_gateway_service_name=${REALTIME_GATEWAY_SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "temporal_deployment_name=${TEMPORAL_DEPLOYMENT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "build_id=${BUILD_ID}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Export live Temporal replay histories
+        run: >
+          pnpm --filter @icecore/temporal-worker export:replay-histories --
+          --from-gcloud
+          --gcloud-project "${{ steps.deploy-meta.outputs.project_id }}"
+          --gcloud-region "${{ steps.deploy-meta.outputs.region }}"
+          --worker-pool "${{ steps.deploy-meta.outputs.worker_pool_name }}"
+          --limit 20
+          --include-workflow-task-failures
+          --failure-scan-limit 100
+          --failure-export-limit 10
+          --out .codex/temporal-replay-deploy
+
+      - name: Replay live Temporal histories
+        run: >
+          pnpm --filter @icecore/temporal-worker replay:histories:strict --
+          --fixtures-dir .codex/temporal-replay-deploy
+
+      - name: Validate LLM product analytics
+        shell: bash
+        env:
+          GCP_AI_GATEWAY_SERVICE_ACCOUNT: ${{ vars.GCP_AI_GATEWAY_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          PUBLISHER_SERVICE_ACCOUNT="${GCP_AI_GATEWAY_SERVICE_ACCOUNT:-${GCP_WORKER_SERVICE_ACCOUNT:-}}"
+          PUBLISHER_SERVICE_ACCOUNT="$(printf '%s' "${PUBLISHER_SERVICE_ACCOUNT}" | xargs)"
+          if [[ -z "${PUBLISHER_SERVICE_ACCOUNT}" ]]; then
+            echo "::error::Set GCP_AI_GATEWAY_SERVICE_ACCOUNT or GCP_WORKER_SERVICE_ACCOUNT for the deployed gateway identity." >&2
+            exit 1
+          fi
+
+          node .github/scripts/sync-gcp-llm-product-analytics.mjs \
+            --phase validate-finalized \
+            --project "${PROJECT_ID}" \
+            --publisher-service-account "${PUBLISHER_SERVICE_ACCOUNT}" \
+            --publisher-service-account "${GCP_WORKER_SERVICE_ACCOUNT:-}"
+
+      - name: Ensure WhatsApp Pub/Sub resources
+        shell: bash
+        env:
+          WHATSAPP_WEBHOOK_PUBSUB_SKIP_SETUP: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_SKIP_SETUP }}
+          WHATSAPP_WEBHOOK_PUBSUB_TOPIC: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_TOPIC }}
+          WHATSAPP_WEBHOOK_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_SUBSCRIPTION }}
+          WHATSAPP_WEBHOOK_PUBSUB_DLQ_TOPIC: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_DLQ_TOPIC }}
+          WHATSAPP_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION }}
+          WHATSAPP_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_SETUP: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_SETUP }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_SUBSCRIPTION }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_TOPIC: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_TOPIC }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS }}
+          WHATSAPP_FAST_LANE_PUBSUB_SKIP_SETUP: ${{ vars.WHATSAPP_FAST_LANE_PUBSUB_SKIP_SETUP }}
+          WHATSAPP_FAST_LANE_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_FAST_LANE_PUBSUB_SUBSCRIPTION }}
+          WHATSAPP_CALL_PUBSUB_SKIP_SETUP: ${{ vars.WHATSAPP_CALL_PUBSUB_SKIP_SETUP }}
+          WHATSAPP_CALL_PUBSUB_TOPIC: ${{ vars.WHATSAPP_CALL_PUBSUB_TOPIC }}
+          WHATSAPP_CALL_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_CALL_PUBSUB_SUBSCRIPTION }}
+          WHATSAPP_CALL_PUBSUB_DLQ_TOPIC: ${{ vars.WHATSAPP_CALL_PUBSUB_DLQ_TOPIC }}
+          WHATSAPP_CALL_PUBSUB_DLQ_SUBSCRIPTION: ${{ vars.WHATSAPP_CALL_PUBSUB_DLQ_SUBSCRIPTION }}
+          WHATSAPP_CALL_PUBSUB_SKIP_IAM_BINDINGS: ${{ vars.WHATSAPP_CALL_PUBSUB_SKIP_IAM_BINDINGS }}
+          WHATSAPP_OTP_PUBSUB_SKIP_SETUP: ${{ vars.WHATSAPP_OTP_PUBSUB_SKIP_SETUP }}
+          WHATSAPP_OTP_PUBSUB_TOPIC: ${{ vars.WHATSAPP_OTP_PUBSUB_TOPIC }}
+          WHATSAPP_OTP_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_OTP_PUBSUB_SUBSCRIPTION }}
+          WHATSAPP_OTP_PUBSUB_DLQ_TOPIC: ${{ vars.WHATSAPP_OTP_PUBSUB_DLQ_TOPIC }}
+          WHATSAPP_OTP_PUBSUB_DLQ_SUBSCRIPTION: ${{ vars.WHATSAPP_OTP_PUBSUB_DLQ_SUBSCRIPTION }}
+          WHATSAPP_OTP_PUBSUB_SKIP_IAM_BINDINGS: ${{ vars.WHATSAPP_OTP_PUBSUB_SKIP_IAM_BINDINGS }}
+          WORKSPACE_USAGE_PUBSUB_SKIP_SETUP: ${{ vars.WORKSPACE_USAGE_PUBSUB_SKIP_SETUP }}
+          WORKSPACE_USAGE_PUBSUB_TOPIC: ${{ vars.WORKSPACE_USAGE_PUBSUB_TOPIC }}
+          WORKSPACE_USAGE_PUBSUB_SUBSCRIPTION: ${{ vars.WORKSPACE_USAGE_PUBSUB_SUBSCRIPTION }}
+          WORKSPACE_USAGE_PUBSUB_DLQ_TOPIC: ${{ vars.WORKSPACE_USAGE_PUBSUB_DLQ_TOPIC }}
+          WORKSPACE_USAGE_PUBSUB_DLQ_SUBSCRIPTION: ${{ vars.WORKSPACE_USAGE_PUBSUB_DLQ_SUBSCRIPTION }}
+          WORKSPACE_USAGE_PUBSUB_SKIP_IAM_BINDINGS: ${{ vars.WORKSPACE_USAGE_PUBSUB_SKIP_IAM_BINDINGS }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_SKIP_SETUP: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_SKIP_SETUP }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_SUBSCRIPTION: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_SUBSCRIPTION }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_DLQ_TOPIC: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_DLQ_TOPIC }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_DLQ_SUBSCRIPTION: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_DLQ_SUBSCRIPTION }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_SKIP_IAM_BINDINGS: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_SKIP_IAM_BINDINGS }}
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          PUBSUB_PUBLISHER_SERVICE_ACCOUNT="${GCP_PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}"
+          if [[ -z "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}" ]]; then
+            candidate_publisher_service_account="vercel-wa-pubsub-publisher@${PROJECT_ID}.iam.gserviceaccount.com"
+            if gcloud iam service-accounts describe "${candidate_publisher_service_account}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+              PUBSUB_PUBLISHER_SERVICE_ACCOUNT="${candidate_publisher_service_account}"
+            fi
+          fi
+
+          if [[ "${WHATSAPP_WEBHOOK_PUBSUB_SKIP_SETUP:-}" != "1" ]]; then
+            webhook_pubsub_args=(
+              --project "${PROJECT_ID}"
+              --topic "${WHATSAPP_WEBHOOK_PUBSUB_TOPIC:-icecore-whatsapp-webhook-events}"
+              --subscription "${WHATSAPP_WEBHOOK_PUBSUB_SUBSCRIPTION:-icecore-whatsapp-webhook-events-worker}"
+              --dlq-topic "${WHATSAPP_WEBHOOK_PUBSUB_DLQ_TOPIC:-icecore-whatsapp-webhook-events-dlq}"
+              --dlq-subscription "${WHATSAPP_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION:-icecore-whatsapp-webhook-events-dlq}"
+              --disable-exactly-once-delivery
+              --ack-deadline-seconds 20
+            )
+            if [[ "${WHATSAPP_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+              webhook_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+            fi
+            if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+              webhook_pubsub_args+=(--subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}")
+            fi
+            if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+              webhook_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+            fi
+            node .github/scripts/ensure-pubsub-resources.mjs "${webhook_pubsub_args[@]}"
+          fi
+
+          if [[ "${WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_SETUP:-}" != "1" ]]; then
+            fast_webhook_pubsub_args=(
+              --project "${PROJECT_ID}"
+              --topic "${WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC:-icecore-whatsapp-fast-events}"
+              --subscription "${WHATSAPP_FAST_WEBHOOK_PUBSUB_SUBSCRIPTION:-icecore-whatsapp-fast-events-worker}"
+              --dlq-topic "${WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_TOPIC:-icecore-whatsapp-fast-events-dlq}"
+              --dlq-subscription "${WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION:-icecore-whatsapp-fast-events-dlq}"
+              --disable-exactly-once-delivery
+              --ack-deadline-seconds 20
+            )
+            if [[ "${WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+              fast_webhook_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+            fi
+            if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+              fast_webhook_pubsub_args+=(--subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}")
+            fi
+            if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+              fast_webhook_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+            fi
+            node .github/scripts/ensure-pubsub-resources.mjs "${fast_webhook_pubsub_args[@]}"
+          fi
+
+          # Unordered copy of the fast topic for the fast lane. It shares the
+          # fast DLQ and keeps only 10 minutes of messages: the ordered
+          # subscription stays the durable path, so stale copies are useless.
+          if [[ "${WHATSAPP_FAST_LANE_PUBSUB_SKIP_SETUP:-}" != "1" ]]; then
+            fast_lane_pubsub_args=(
+              --project "${PROJECT_ID}"
+              --topic "${WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC:-icecore-whatsapp-fast-events}"
+              --subscription "${WHATSAPP_FAST_LANE_PUBSUB_SUBSCRIPTION:-icecore-whatsapp-fast-events-unordered-worker}"
+              --dlq-topic "${WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_TOPIC:-icecore-whatsapp-fast-events-dlq}"
+              --dlq-subscription "${WHATSAPP_FAST_WEBHOOK_PUBSUB_DLQ_SUBSCRIPTION:-icecore-whatsapp-fast-events-dlq}"
+              --disable-message-ordering
+              --disable-exactly-once-delivery
+              --ack-deadline-seconds 20
+              --message-retention-duration 10m
+            )
+            if [[ "${WHATSAPP_FAST_WEBHOOK_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+              fast_lane_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+            fi
+            if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+              fast_lane_pubsub_args+=(--subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}")
+            fi
+            if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+              fast_lane_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+            fi
+            node .github/scripts/ensure-pubsub-resources.mjs "${fast_lane_pubsub_args[@]}"
+          fi
+
+          if [[ "${WHATSAPP_CALL_PUBSUB_SKIP_SETUP:-}" != "1" ]]; then
+            call_pubsub_args=(
+              --project "${PROJECT_ID}"
+              --topic "${WHATSAPP_CALL_PUBSUB_TOPIC:-icecore-whatsapp-call-events}"
+              --subscription "${WHATSAPP_CALL_PUBSUB_SUBSCRIPTION:-icecore-whatsapp-call-events-worker}"
+              --dlq-topic "${WHATSAPP_CALL_PUBSUB_DLQ_TOPIC:-icecore-whatsapp-call-events-dlq}"
+              --dlq-subscription "${WHATSAPP_CALL_PUBSUB_DLQ_SUBSCRIPTION:-icecore-whatsapp-call-events-dlq}"
+            )
+            if [[ "${WHATSAPP_CALL_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+              call_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+            fi
+            if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+              call_pubsub_args+=(--subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}")
+            fi
+            if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+              call_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+            fi
+            node .github/scripts/ensure-pubsub-resources.mjs "${call_pubsub_args[@]}"
+          fi
+
+          if [[ "${WHATSAPP_OTP_PUBSUB_SKIP_SETUP:-}" != "1" ]]; then
+            otp_pubsub_args=(
+              --project "${PROJECT_ID}"
+              --topic "${WHATSAPP_OTP_PUBSUB_TOPIC:-icecore-whatsapp-otp-delivery}"
+              --subscription "${WHATSAPP_OTP_PUBSUB_SUBSCRIPTION:-icecore-whatsapp-otp-delivery-worker}"
+              --dlq-topic "${WHATSAPP_OTP_PUBSUB_DLQ_TOPIC:-icecore-whatsapp-otp-delivery-dlq}"
+              --dlq-subscription "${WHATSAPP_OTP_PUBSUB_DLQ_SUBSCRIPTION:-icecore-whatsapp-otp-delivery-dlq}"
+            )
+            if [[ "${WHATSAPP_OTP_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+              otp_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+            fi
+            OTP_WORKER_SUBSCRIBER_SERVICE_ACCOUNT="${GCP_WORKER_SERVICE_ACCOUNT:-}"
+            if [[ -n "${OTP_WORKER_SUBSCRIBER_SERVICE_ACCOUNT}" ]]; then
+              otp_pubsub_args+=(--subscriber-service-account "${OTP_WORKER_SUBSCRIBER_SERVICE_ACCOUNT}")
+            fi
+            if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+              otp_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+            fi
+            node .github/scripts/ensure-pubsub-resources.mjs "${otp_pubsub_args[@]}"
+          fi
+
+          if [[ "${WORKSPACE_USAGE_PUBSUB_SKIP_SETUP:-}" != "1" ]]; then
+            usage_pubsub_args=(
+              --project "${PROJECT_ID}"
+              --topic "${WORKSPACE_USAGE_PUBSUB_TOPIC:-icecore-workspace-usage-events}"
+              --subscription "${WORKSPACE_USAGE_PUBSUB_SUBSCRIPTION:-icecore-workspace-usage-events-worker}"
+              --dlq-topic "${WORKSPACE_USAGE_PUBSUB_DLQ_TOPIC:-icecore-workspace-usage-events-dlq}"
+              --dlq-subscription "${WORKSPACE_USAGE_PUBSUB_DLQ_SUBSCRIPTION:-icecore-workspace-usage-events-dlq-worker}"
+            )
+            if [[ "${WORKSPACE_USAGE_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+              usage_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+            fi
+            if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+              usage_pubsub_args+=(--subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}")
+            fi
+            if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+              usage_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+            fi
+            node .github/scripts/ensure-pubsub-resources.mjs "${usage_pubsub_args[@]}"
+          fi
+
+          realtime_pubsub_args=(
+            --project "${PROJECT_ID}"
+            --topic "icecore-realtime-events"
+            --subscription "icecore-realtime-events-dispatcher"
+            --dlq-topic "icecore-realtime-events-dlq"
+            --dlq-subscription "icecore-realtime-events-dlq"
+            --disable-exactly-once-delivery
+            --ack-deadline-seconds 20
+          )
+          if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            realtime_pubsub_args+=(--subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+          if [[ -n "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT:-}" ]]; then
+            realtime_pubsub_args+=(--publisher-service-account "${PUBSUB_PUBLISHER_SERVICE_ACCOUNT}")
+          fi
+          node .github/scripts/ensure-pubsub-resources.mjs "${realtime_pubsub_args[@]}"
+
+          classification_pubsub_args=(
+            --project "${CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID:-${PROJECT_ID}}"
+            --topic "${CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC:-icecore-conversation-classification-events}"
+            --subscription "${CONVERSATION_CLASSIFICATION_PUBSUB_SUBSCRIPTION:-icecore-conversation-classification-events-worker}"
+            --dlq-topic "${CONVERSATION_CLASSIFICATION_PUBSUB_DLQ_TOPIC:-icecore-conversation-classification-events-dlq}"
+            --dlq-subscription "${CONVERSATION_CLASSIFICATION_PUBSUB_DLQ_SUBSCRIPTION:-icecore-conversation-classification-events-dlq-worker}"
+            --message-retention-duration "31d"
+            --never-expire
+          )
+          if [[ "${CONVERSATION_CLASSIFICATION_PUBSUB_SKIP_SETUP:-}" == "1" ]]; then
+            classification_pubsub_args+=(--skip-setup)
+          fi
+          if [[ "${CONVERSATION_CLASSIFICATION_PUBSUB_SKIP_IAM_BINDINGS:-}" == "1" ]]; then
+            classification_pubsub_args+=(--skip-dead-letter-iam --skip-subscriber-iam --skip-publisher-iam)
+          fi
+
+          GCP_SERVICE_ACCOUNT_EMAIL="$(printf '%s' "${GCP_SERVICE_ACCOUNT_EMAIL:-}" | xargs)"
+          if [[ -z "${GCP_SERVICE_ACCOUNT_EMAIL}" ]]; then
+            echo "::error::Set repo variable GCP_SERVICE_ACCOUNT_EMAIL to a nonblank service account email." >&2
+            exit 1
+          fi
+          GCP_WORKER_SERVICE_ACCOUNT="$(printf '%s' "${GCP_WORKER_SERVICE_ACCOUNT:-}" | xargs)"
+          if [[ -z "${GCP_WORKER_SERVICE_ACCOUNT}" ]]; then
+            echo "::error::Set repo variable GCP_WORKER_SERVICE_ACCOUNT to a nonblank service account email." >&2
+            exit 1
+          fi
+          classification_pubsub_args+=(
+            --subscriber-service-account "${GCP_WORKER_SERVICE_ACCOUNT}"
+            --publisher-service-account "${GCP_SERVICE_ACCOUNT_EMAIL}"
+            --publisher-service-account "${GCP_WORKER_SERVICE_ACCOUNT}"
+          )
+          node .github/scripts/ensure-pubsub-resources.mjs "${classification_pubsub_args[@]}"
+
+      - name: Resolve Memorystore Valkey endpoint
+        id: valkey
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          LOCATION="${GCP_VALKEY_LOCATION:-${REGION}}"
+          INSTANCE="${GCP_VALKEY_INSTANCE_NAME:-airi-realtime-valkey}"
+          NETWORK="${GCP_VALKEY_NETWORK:-${GCP_REALTIME_VPC_NETWORK:-${GCP_OTP_API_VPC_NETWORK:-default}}}"
+          REQUESTED_CREATE_IF_MISSING="${GCP_VALKEY_CREATE_IF_MISSING:-false}"
+          REQUESTED_CREATE_IF_MISSING_NORMALIZED="$(echo "${REQUESTED_CREATE_IF_MISSING}" | tr '[:upper:]' '[:lower:]')"
+          BOOTSTRAP_INFRA="${{ github.event_name == 'workflow_dispatch' && inputs.bootstrap_infra == true && 'true' || 'false' }}"
+          CREATE_IF_MISSING="false"
+
+          if [[ "${BOOTSTRAP_INFRA}" == "true" ]]; then
+            CREATE_IF_MISSING="${REQUESTED_CREATE_IF_MISSING}"
+          elif [[ "${REQUESTED_CREATE_IF_MISSING_NORMALIZED}" =~ ^(1|true|yes)$ ]]; then
+            echo "::warning::Ignoring GCP_VALKEY_CREATE_IF_MISSING=${REQUESTED_CREATE_IF_MISSING} because this is not a manual bootstrap_infra run. Normal deploys resolve existing Valkey only."
+          fi
+
+          node .github/scripts/resolve-valkey-endpoint.mjs \
+            --project "${PROJECT_ID}" \
+            --location "${LOCATION}" \
+            --instance "${INSTANCE}" \
+            --network "${NETWORK}" \
+            --create-if-missing "${CREATE_IF_MISSING}" \
+            --github-output "${GITHUB_OUTPUT}"
+
+      - name: Prepare Cloud Run runtime config
+        id: runtime-config
+        shell: bash
+        env:
+          CLOUD_RUN_SKIP_SECRET_SYNC: ${{ vars.CLOUD_RUN_SKIP_SECRET_SYNC }}
+          AIRI_AUTO_REPLY: ${{ vars.AIRI_AUTO_REPLY }}
+          AIRI_AUTO_REPLY_MODE: ${{ vars.AIRI_AUTO_REPLY_MODE }}
+          AIRI_CAMPAIGN_EMAIL_BATCH_ENABLED: ${{ vars.AIRI_CAMPAIGN_EMAIL_BATCH_ENABLED || 'true' }}
+          AIRI_FAST_RAG: ${{ vars.AIRI_FAST_RAG }}
+          AIRI_FAST_RAG_TELEGRAM: ${{ vars.AIRI_FAST_RAG_TELEGRAM }}
+          AI_GATEWAY_VERCEL_OIDC_AUDIENCE: ${{ vars.AI_GATEWAY_VERCEL_OIDC_AUDIENCE }}
+          AI_GATEWAY_VERCEL_OIDC_ISSUER_URL: ${{ vars.AI_GATEWAY_VERCEL_OIDC_ISSUER_URL }}
+          AI_GATEWAY_VERCEL_OIDC_SUBJECTS: ${{ vars.AI_GATEWAY_VERCEL_OIDC_SUBJECTS }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_STT_ENABLED: ${{ vars.ELEVENLABS_STT_ENABLED }}
+          ELEVENLABS_STT_MODEL: ${{ vars.ELEVENLABS_STT_MODEL }}
+          ELEVENLABS_STT_WEBHOOK_ID: ${{ vars.ELEVENLABS_STT_WEBHOOK_ID }}
+          ELEVENLABS_STT_WEBHOOK_SECRET: ${{ secrets.ELEVENLABS_STT_WEBHOOK_SECRET }}
+          ELEVENLABS_TIMEOUT_MS: ${{ vars.ELEVENLABS_TIMEOUT_MS }}
+          EMBEDDING_BATCH_CONCURRENCY: ${{ vars.EMBEDDING_BATCH_CONCURRENCY }}
+          ENCRYPTION_SECRET: ${{ secrets.ENCRYPTION_SECRET }}
+          OTP_HASH_SECRET: ${{ secrets.OTP_HASH_SECRET }}
+          GOOGLE_CLOUD_PROJECT: ${{ vars.GOOGLE_CLOUD_PROJECT || vars.GCP_PROJECT_ID }}
+          GCP_LLM_ANALYTICS_MAX_BYTES_BILLED: ${{ vars.GCP_LLM_ANALYTICS_MAX_BYTES_BILLED }}
+          REALTIME_DISPATCHER_ENABLED: ${{ vars.REALTIME_DISPATCHER_ENABLED }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_VIDEO_GENERATION_MODEL: ${{ vars.GOOGLE_VIDEO_GENERATION_MODEL }}
+          GOOGLE_GENERATIVE_MEDIA_HOST_ALLOWLIST: ${{ vars.GOOGLE_GENERATIVE_MEDIA_HOST_ALLOWLIST }}
+          GCS_CREATIVE_ASSETS_BUCKET: ${{ vars.GCS_CREATIVE_ASSETS_BUCKET }}
+          STORAGE_QUOTA_ROLLOUT_MODE: ${{ vars.STORAGE_QUOTA_ROLLOUT_MODE }}
+          GCS_BULK_DISPATCH_BUCKET: ${{ vars.GCS_BULK_DISPATCH_BUCKET || vars.GCS_CREATIVE_ASSETS_BUCKET }}
+          LLM_WHATSAPP_FEEDBACK_PROMPT_ENABLED: ${{ vars.LLM_WHATSAPP_FEEDBACK_PROMPT_ENABLED }}
+          LLM_WHATSAPP_FEEDBACK_TESTERS: ${{ vars.LLM_WHATSAPP_FEEDBACK_TESTERS }}
+          BRIA_API_TOKEN: ${{ secrets.BRIA_API_TOKEN }}
+          ALIBABA_API_KEY: ${{ secrets.ALIBABA_API_KEY }}
+          ALIBABA_API_HOST: ${{ vars.ALIBABA_API_HOST }}
+          WAN_S2V_MODEL: ${{ vars.WAN_S2V_MODEL }}
+          WAN_I2V_MODEL: ${{ vars.WAN_I2V_MODEL }}
+          WAN_S2V_DEFAULT_RESOLUTION: ${{ vars.WAN_S2V_DEFAULT_RESOLUTION }}
+          HAPPYHORSE_T2V_MODEL: ${{ vars.HAPPYHORSE_T2V_MODEL }}
+          HAPPYHORSE_I2V_MODEL: ${{ vars.HAPPYHORSE_I2V_MODEL }}
+          HAPPYHORSE_R2V_MODEL: ${{ vars.HAPPYHORSE_R2V_MODEL }}
+          HAPPYHORSE_DEFAULT_RESOLUTION: ${{ vars.HAPPYHORSE_DEFAULT_RESOLUTION }}
+          HAPPYHORSE_DEFAULT_RATIO: ${{ vars.HAPPYHORSE_DEFAULT_RATIO }}
+          HIGGSFIELD_API_KEY: ${{ secrets.HIGGSFIELD_API_KEY }}
+          HIGGSFIELD_API_SECRET: ${{ secrets.HIGGSFIELD_API_SECRET }}
+          HIGGSFIELD_IMAGE_MODEL: ${{ vars.HIGGSFIELD_IMAGE_MODEL }}
+          HIGGSFIELD_IMAGE_TO_VIDEO_MODEL: ${{ vars.HIGGSFIELD_IMAGE_TO_VIDEO_MODEL }}
+          HIGGSFIELD_KEY: ${{ secrets.HIGGSFIELD_KEY }}
+          HIGGSFIELD_MEDIA_HOST_ALLOWLIST: ${{ vars.HIGGSFIELD_MEDIA_HOST_ALLOWLIST }}
+          HIGGSFIELD_MEDIA_DOWNLOAD_TIMEOUT_MS: ${{ vars.HIGGSFIELD_MEDIA_DOWNLOAD_TIMEOUT_MS }}
+          HIGGSFIELD_WEBHOOK_SECRET: ${{ secrets.HIGGSFIELD_WEBHOOK_SECRET }}
+          AIRI_MEDIA_TASK_QUEUE: ${{ vars.AIRI_MEDIA_TASK_QUEUE }}
+          AIRI_MEDIA_WORKER_ENABLED: ${{ vars.AIRI_MEDIA_WORKER_ENABLED }}
+          AIRI_MEDIA_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_EXECUTIONS: ${{ vars.AIRI_MEDIA_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_EXECUTIONS }}
+          AIRI_MEDIA_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_POLLS: ${{ vars.AIRI_MEDIA_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_POLLS }}
+          AIRI_MEDIA_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_EXECUTIONS: ${{ vars.AIRI_MEDIA_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_EXECUTIONS }}
+          AIRI_MEDIA_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_POLLS: ${{ vars.AIRI_MEDIA_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_POLLS }}
+          HALYK_EPAY_CLIENT_ID: ${{ secrets.HALYK_EPAY_CLIENT_ID || vars.HALYK_EPAY_CLIENT_ID }}
+          HALYK_EPAY_CLIENT_SECRET: ${{ secrets.HALYK_EPAY_CLIENT_SECRET }}
+          HALYK_EPAY_ENV: ${{ vars.HALYK_EPAY_ENV }}
+          HALYK_EPAY_TERMINAL_ID: ${{ vars.HALYK_EPAY_TERMINAL_ID }}
+          LIVEKIT_MEDIA_TOKEN_TTL_SECONDS: ${{ vars.LIVEKIT_MEDIA_TOKEN_TTL_SECONDS }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          LIVEKIT_EGRESS_GCP_CREDENTIALS_JSON: ${{ secrets.LIVEKIT_EGRESS_GCP_CREDENTIALS_JSON }}
+          LIVEKIT_EGRESS_TOKEN_TTL_SECONDS: ${{ vars.LIVEKIT_EGRESS_TOKEN_TTL_SECONDS }}
+          LIVEKIT_URL: ${{ vars.LIVEKIT_URL }}
+          LIVEKIT_WHATSAPP_CLOUD_API_VERSION: ${{ vars.LIVEKIT_WHATSAPP_CLOUD_API_VERSION }}
+          MEMORYSTORE_VALKEY_HOST: ${{ steps.valkey.outputs.host }}
+          MEMORYSTORE_VALKEY_PORT: ${{ steps.valkey.outputs.port }}
+          MEMORYSTORE_VALKEY_TIMEOUT_MS: ${{ vars.MEMORYSTORE_VALKEY_TIMEOUT_MS }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_META_APP_ID: ${{ vars.NEXT_PUBLIC_META_APP_ID }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
+          POSTHOG_PROJECT_API_KEY: ${{ vars.POSTHOG_PROJECT_API_KEY || secrets.POSTHOG_PROJECT_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          POSTMARK_ACCOUNT_TOKEN: ${{ secrets.POSTMARK_ACCOUNT_TOKEN }}
+          POSTMARK_INBOUND_TOKEN: ${{ secrets.POSTMARK_INBOUND_TOKEN }}
+          POSTMARK_SERVER_TOKEN: ${{ secrets.POSTMARK_SERVER_TOKEN }}
+          REALTIME_TOKEN_SECRET: ${{ secrets.REALTIME_TOKEN_SECRET }}
+          MEMORYSTORE_VALKEY_AUTH_TOKEN: ${{ secrets.MEMORYSTORE_VALKEY_AUTH_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TEMPORAL_CLOUD_ADDRESS: ${{ vars.TEMPORAL_CLOUD_ADDRESS }}
+          TEMPORAL_CLOUD_API_KEY: ${{ secrets.TEMPORAL_CLOUD_API_KEY }}
+          TEMPORAL_CLOUD_NAMESPACE: ${{ vars.TEMPORAL_CLOUD_NAMESPACE }}
+          TEMPORAL_TASK_QUEUE: ${{ vars.TEMPORAL_TASK_QUEUE }}
+          TEMPORAL_WORKER_BUILD_ID: ${{ steps.deploy-meta.outputs.build_id }}
+          TEMPORAL_WORKER_DEPLOYMENT_NAME: ${{ steps.deploy-meta.outputs.temporal_deployment_name }}
+          TEMPORAL_WORKER_IDENTITY: ${{ vars.TEMPORAL_WORKER_IDENTITY }}
+          TEMPORAL_WORKER_MAX_CACHED_WORKFLOWS: ${{ vars.TEMPORAL_WORKER_MAX_CACHED_WORKFLOWS }}
+          TEMPORAL_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_EXECUTIONS: ${{ vars.TEMPORAL_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_EXECUTIONS }}
+          # Unset keeps the code default (3 concurrent sends per bulk batch).
+          BULK_CAMPAIGN_DISPATCH_CONCURRENCY: ${{ vars.BULK_CAMPAIGN_DISPATCH_CONCURRENCY }}
+          TEMPORAL_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_POLLS: ${{ vars.TEMPORAL_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_POLLS }}
+          TEMPORAL_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_EXECUTIONS: ${{ vars.TEMPORAL_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_EXECUTIONS }}
+          TEMPORAL_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_POLLS: ${{ vars.TEMPORAL_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_POLLS }}
+          TEMPORAL_WORKER_REUSE_V8_CONTEXT: ${{ vars.TEMPORAL_WORKER_REUSE_V8_CONTEXT }}
+          TEMPORAL_WORKER_SHUTDOWN_FORCE_TIME: ${{ vars.TEMPORAL_WORKER_SHUTDOWN_FORCE_TIME }}
+          TEMPORAL_WORKER_SHUTDOWN_GRACE_TIME: ${{ vars.TEMPORAL_WORKER_SHUTDOWN_GRACE_TIME }}
+          TEMPORAL_WORKER_VERSIONING_BEHAVIOR: ${{ vars.TEMPORAL_WORKER_VERSIONING_BEHAVIOR }}
+          TEMPORAL_WORKER_WORKFLOW_BUNDLE_PATH: ${{ vars.TEMPORAL_WORKER_WORKFLOW_BUNDLE_PATH }}
+          WHATSAPP_WEBHOOK_PUBSUB_ENABLED: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_ENABLED || 'true' }}
+          WHATSAPP_WEBHOOK_PUBSUB_PROJECT_ID: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          WHATSAPP_WEBHOOK_PUBSUB_TOPIC: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_TOPIC || 'icecore-whatsapp-webhook-events' }}
+          WHATSAPP_WEBHOOK_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_SUBSCRIPTION || 'icecore-whatsapp-webhook-events-worker' }}
+          WHATSAPP_WEBHOOK_PUBSUB_MAX_MESSAGES: ${{ vars.WHATSAPP_WEBHOOK_PUBSUB_MAX_MESSAGES }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_ENABLED: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_ENABLED || 'true' }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC || 'icecore-whatsapp-fast-events' }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_SUBSCRIPTION || 'icecore-whatsapp-fast-events-worker' }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_MAX_MESSAGES: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_MAX_MESSAGES }}
+          WHATSAPP_FAST_LANE_PUBSUB_ENABLED: ${{ vars.WHATSAPP_FAST_LANE_PUBSUB_ENABLED || 'false' }}
+          WHATSAPP_FAST_LANE_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_FAST_LANE_PUBSUB_SUBSCRIPTION || 'icecore-whatsapp-fast-events-unordered-worker' }}
+          WHATSAPP_FAST_LANE_PUBSUB_MAX_MESSAGES: ${{ vars.WHATSAPP_FAST_LANE_PUBSUB_MAX_MESSAGES }}
+          # Always set: the listener is harmless, and a pool spec that still
+          # carries the probe must never meet a revision without it.
+          AIRI_WORKER_STARTUP_PROBE_PORT: ${{ env.GCP_WORKER_STARTUP_PROBE_PORT }}
+          CONVERSATION_CLASSIFICATION_PUBLISHING_ENABLED: "true"
+          CONVERSATION_CLASSIFICATION_PUBSUB_ENABLED: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_ENABLED || 'false' }}
+          CONVERSATION_CLASSIFICATION_WORKSPACE_ALLOWLIST: ${{ vars.CONVERSATION_CLASSIFICATION_WORKSPACE_ALLOWLIST }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC || 'icecore-conversation-classification-events' }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_SUBSCRIPTION: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_SUBSCRIPTION || 'icecore-conversation-classification-events-worker' }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_MAX_MESSAGES: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_MAX_MESSAGES }}
+          WHATSAPP_CALL_PUBSUB_ENABLED: ${{ vars.WHATSAPP_CALL_PUBSUB_ENABLED || 'true' }}
+          WHATSAPP_CALL_PUBSUB_PROJECT_ID: ${{ vars.WHATSAPP_CALL_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          WHATSAPP_CALL_PUBSUB_TOPIC: ${{ vars.WHATSAPP_CALL_PUBSUB_TOPIC || 'icecore-whatsapp-call-events' }}
+          WHATSAPP_CALL_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_CALL_PUBSUB_SUBSCRIPTION || 'icecore-whatsapp-call-events-worker' }}
+          WHATSAPP_CALL_PUBSUB_MAX_MESSAGES: ${{ vars.WHATSAPP_CALL_PUBSUB_MAX_MESSAGES }}
+          WHATSAPP_CALL_COMMAND_TIMEOUT_SECONDS: ${{ vars.WHATSAPP_CALL_COMMAND_TIMEOUT_SECONDS }}
+          WHATSAPP_CALL_RECORDING_BUCKET: ${{ vars.WHATSAPP_CALL_RECORDING_BUCKET }}
+          WHATSAPP_CALL_RECORDING_EGRESS_ENABLED: ${{ vars.WHATSAPP_CALL_RECORDING_EGRESS_ENABLED }}
+          WHATSAPP_CALL_RECORDING_FILE_TYPE: ${{ vars.WHATSAPP_CALL_RECORDING_FILE_TYPE }}
+          WHATSAPP_CALL_RECORDING_RETENTION_DAYS: ${{ vars.WHATSAPP_CALL_RECORDING_RETENTION_DAYS }}
+          WHATSAPP_CALL_RECORDING_PIPELINE_ENABLED: ${{ vars.WHATSAPP_CALL_RECORDING_PIPELINE_ENABLED }}
+          WHATSAPP_CALL_RECORDING_PIPELINE_URL: ${{ vars.WHATSAPP_CALL_RECORDING_PIPELINE_URL }}
+          WHATSAPP_CALL_RECORDING_WEBHOOK_URL: ${{ vars.WHATSAPP_CALL_RECORDING_WEBHOOK_URL }}
+          WHATSAPP_CALL_TRANSCRIPTION_ENABLED: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_ENABLED }}
+          WHATSAPP_CALL_TRANSCRIPTION_LANGUAGE_CODES: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_LANGUAGE_CODES }}
+          WHATSAPP_CALL_TRANSCRIPTION_LANGUAGE_CODE: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_LANGUAGE_CODE }}
+          WHATSAPP_CALL_TRANSCRIPTION_LOCATION: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_LOCATION }}
+          WHATSAPP_CALL_TRANSCRIPTION_MODEL: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_MODEL }}
+          WHATSAPP_CALL_TRANSCRIPTION_PROJECT_ID: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          WHATSAPP_CALL_TRANSCRIPTION_RECOGNIZER: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_RECOGNIZER }}
+          WHATSAPP_CALL_TRANSCRIPTION_DRAIN_SCHEDULE_ENABLED: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_DRAIN_SCHEDULE_ENABLED || 'true' }}
+          WHATSAPP_CALL_TRANSCRIPTION_DRAIN_LIMIT: ${{ vars.WHATSAPP_CALL_TRANSCRIPTION_DRAIN_LIMIT }}
+          WHATSAPP_CALL_TRANSCRIPTION_SERVICE_ACCOUNT_JSON: ${{ secrets.WHATSAPP_CALL_TRANSCRIPTION_SERVICE_ACCOUNT_JSON }}
+          WHATSAPP_CALL_ANALYTICS_ENABLED: ${{ vars.WHATSAPP_CALL_ANALYTICS_ENABLED }}
+          WHATSAPP_CALL_ANALYTICS_PROJECT_ID: ${{ vars.WHATSAPP_CALL_ANALYTICS_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          WHATSAPP_CALL_ANALYTICS_TOPIC: ${{ vars.WHATSAPP_CALL_ANALYTICS_TOPIC || 'icecore-whatsapp-call-analytics' }}
+          WHATSAPP_OTP_PUBSUB_ENABLED: ${{ vars.WHATSAPP_OTP_PUBSUB_ENABLED || 'true' }}
+          WHATSAPP_OTP_DELIVERY_MODE: ${{ vars.WHATSAPP_OTP_DELIVERY_MODE || 'pubsub' }}
+          WHATSAPP_OTP_TEMPORAL_WORKSPACE_ALLOWLIST: ${{ vars.WHATSAPP_OTP_TEMPORAL_WORKSPACE_ALLOWLIST }}
+          WHATSAPP_OTP_PUBSUB_PROJECT_ID: ${{ vars.WHATSAPP_OTP_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          WHATSAPP_OTP_PUBSUB_TOPIC: ${{ vars.WHATSAPP_OTP_PUBSUB_TOPIC || 'icecore-whatsapp-otp-delivery' }}
+          WHATSAPP_OTP_PUBSUB_SUBSCRIPTION: ${{ vars.WHATSAPP_OTP_PUBSUB_SUBSCRIPTION || 'icecore-whatsapp-otp-delivery-worker' }}
+          WHATSAPP_OTP_PUBSUB_MAX_MESSAGES: ${{ vars.WHATSAPP_OTP_PUBSUB_MAX_MESSAGES }}
+          WORKSPACE_USAGE_PUBSUB_ENABLED: ${{ vars.WORKSPACE_USAGE_PUBSUB_ENABLED || 'true' }}
+          WORKSPACE_USAGE_PUBSUB_PROJECT_ID: ${{ vars.WORKSPACE_USAGE_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          WORKSPACE_USAGE_PUBSUB_TOPIC: ${{ vars.WORKSPACE_USAGE_PUBSUB_TOPIC || 'icecore-workspace-usage-events' }}
+          WORKSPACE_USAGE_PUBSUB_SUBSCRIPTION: ${{ vars.WORKSPACE_USAGE_PUBSUB_SUBSCRIPTION || 'icecore-workspace-usage-events-worker' }}
+          WORKSPACE_USAGE_PUBSUB_MAX_MESSAGES: ${{ vars.WORKSPACE_USAGE_PUBSUB_MAX_MESSAGES }}
+          WORKSPACE_USAGE_PUBSUB_BATCH_SIZE: ${{ vars.WORKSPACE_USAGE_PUBSUB_BATCH_SIZE }}
+          WORKSPACE_USAGE_PUBSUB_FLUSH_MS: ${{ vars.WORKSPACE_USAGE_PUBSUB_FLUSH_MS }}
+          WORKSPACE_USAGE_REPAIR_SCHEDULE_ENABLED: ${{ vars.WORKSPACE_USAGE_REPAIR_SCHEDULE_ENABLED || 'true' }}
+          WORKSPACE_USAGE_REPAIR_LIMIT: ${{ vars.WORKSPACE_USAGE_REPAIR_LIMIT }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          UPSTASH_REDIS_REST_URL: ${{ vars.UPSTASH_REDIS_REST_URL }}
+          AI_CHAT_PROVIDER_ORDER: ${{ vars.AI_CHAT_PROVIDER_ORDER }}
+          ANTHROPIC_AI_ENABLED: ${{ vars.ANTHROPIC_AI_ENABLED }}
+          ANTHROPIC_LIGHT_MODEL: ${{ vars.ANTHROPIC_LIGHT_MODEL }}
+          ANTHROPIC_HEAVY_MODEL: ${{ vars.ANTHROPIC_HEAVY_MODEL }}
+          ANTHROPIC_REASONING_MODEL: ${{ vars.ANTHROPIC_REASONING_MODEL }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          VERTEX_AI_ENABLED: ${{ vars.VERTEX_AI_ENABLED }}
+          VERTEX_AI_LOCATION: ${{ vars.VERTEX_AI_LOCATION }}
+          VERTEX_EMBEDDING_LOCATION: ${{ vars.VERTEX_EMBEDDING_LOCATION }}
+          VERTEX_EMBEDDING_MODEL: ${{ vars.VERTEX_EMBEDDING_MODEL }}
+          VERTEX_EMBEDDINGS_ENABLED: ${{ vars.VERTEX_EMBEDDINGS_ENABLED }}
+          VERTEX_EMBEDDING_TIMEOUT_MS: ${{ vars.VERTEX_EMBEDDING_TIMEOUT_MS }}
+          VERTEX_FALLBACK_MODEL: ${{ vars.VERTEX_FALLBACK_MODEL }}
+          VERTEX_GEMINI_LOCATION: ${{ vars.VERTEX_GEMINI_LOCATION }}
+          VERTEX_GEMINI_LIGHT_MODEL: ${{ vars.VERTEX_GEMINI_LIGHT_MODEL }}
+          VERTEX_GEMINI_HEAVY_MODEL: ${{ vars.VERTEX_GEMINI_HEAVY_MODEL }}
+          VERTEX_MULTIMODAL_MODEL: ${{ vars.VERTEX_MULTIMODAL_MODEL }}
+          WHATSAPP_VERIFY_TOKEN: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          OUT_DIR="${RUNNER_TEMP}/cloud-run-config"
+          runtime_args=(
+            --runtime worker
+            --runtime gateway
+            --runtime mediaApi
+            --runtime otpWorker
+            --runtime realtimeGateway
+            --runtime realtimeDispatcher
+          )
+
+          if [[ "${GCP_OTP_API_ENABLED:-false}" == "true" ]]; then
+            runtime_args+=(--runtime otpApi)
+          fi
+
+          node .github/scripts/prepare-cloud-run-runtime.mjs \
+            --manifest .github/cloud-run/runtime-manifest.json \
+            --out-dir "${OUT_DIR}" \
+            "${runtime_args[@]}"
+
+          worker_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.worker.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+          gateway_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.gateway.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+          media_api_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.mediaApi.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+          otp_worker_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.otpWorker.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+          otp_api_env_file="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.otpApi?.envFile || "");' "${OUT_DIR}/metadata.json")"
+          otp_api_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.otpApi?.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+          realtime_gateway_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.realtimeGateway.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+          realtime_dispatcher_secrets_arg="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(data.realtimeDispatcher.setSecretsArg || "");' "${OUT_DIR}/metadata.json")"
+
+          echo "out_dir=${OUT_DIR}" >> "$GITHUB_OUTPUT"
+          echo "worker_env_file=${OUT_DIR}/worker.env" >> "$GITHUB_OUTPUT"
+          echo "gateway_env_file=${OUT_DIR}/gateway.env" >> "$GITHUB_OUTPUT"
+          echo "media_api_env_file=${OUT_DIR}/mediaApi.env" >> "$GITHUB_OUTPUT"
+          echo "otp_worker_env_file=${OUT_DIR}/otpWorker.env" >> "$GITHUB_OUTPUT"
+          echo "otp_api_env_file=${otp_api_env_file}" >> "$GITHUB_OUTPUT"
+          echo "realtime_gateway_env_file=${OUT_DIR}/realtimeGateway.env" >> "$GITHUB_OUTPUT"
+          echo "realtime_dispatcher_env_file=${OUT_DIR}/realtimeDispatcher.env" >> "$GITHUB_OUTPUT"
+          echo "metadata_file=${OUT_DIR}/metadata.json" >> "$GITHUB_OUTPUT"
+          echo "worker_secrets_arg=${worker_secrets_arg}" >> "$GITHUB_OUTPUT"
+          echo "gateway_secrets_arg=${gateway_secrets_arg}" >> "$GITHUB_OUTPUT"
+          echo "media_api_secrets_arg=${media_api_secrets_arg}" >> "$GITHUB_OUTPUT"
+          echo "otp_worker_secrets_arg=${otp_worker_secrets_arg}" >> "$GITHUB_OUTPUT"
+          echo "otp_api_secrets_arg=${otp_api_secrets_arg}" >> "$GITHUB_OUTPUT"
+          echo "realtime_gateway_secrets_arg=${realtime_gateway_secrets_arg}" >> "$GITHUB_OUTPUT"
+          echo "realtime_dispatcher_secrets_arg=${realtime_dispatcher_secrets_arg}" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure creative assets GCS bucket
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          BUCKET="${GCS_CREATIVE_ASSETS_BUCKET:-icecore-ai-creative-assets-prod}"
+          SERVICE_ACCOUNT="${GCP_MEDIA_API_SERVICE_ACCOUNT:-${GCP_WORKER_SERVICE_ACCOUNT:-}}"
+          APP_ORIGIN="${NEXT_PUBLIC_APP_URL:-https://airi.chat}"
+          CORS_FILE="${RUNNER_TEMP}/creative-assets-gcs-cors.json"
+          LIFECYCLE_FILE="${RUNNER_TEMP}/creative-assets-gcs-lifecycle.json"
+          BOOTSTRAP_INFRA="${{ github.event_name == 'workflow_dispatch' && inputs.bootstrap_infra == true && 'true' || 'false' }}"
+
+          if ! gcloud storage buckets describe "gs://${BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+            if [[ "${BOOTSTRAP_INFRA}" != "true" ]]; then
+              echo "Creative assets bucket gs://${BUCKET} does not exist. Run this workflow manually with bootstrap_infra=true to create it."
+              exit 1
+            fi
+
+            gcloud storage buckets create "gs://${BUCKET}" \
+              --project="${PROJECT_ID}" \
+              --location="${REGION}" \
+              --uniform-bucket-level-access \
+              --public-access-prevention
+          fi
+
+          export APP_ORIGIN CORS_FILE LIFECYCLE_FILE
+          node .github/scripts/creative-assets-bucket-config.mjs generate
+
+          if [[ "${BOOTSTRAP_INFRA}" == "true" ]]; then
+            gcloud storage buckets update "gs://${BUCKET}" \
+              --project="${PROJECT_ID}" \
+              --uniform-bucket-level-access \
+              --public-access-prevention
+
+            gcloud storage buckets update "gs://${BUCKET}" \
+              --project="${PROJECT_ID}" \
+              --cors-file="${CORS_FILE}"
+
+            gcloud storage buckets update "gs://${BUCKET}" \
+              --project="${PROJECT_ID}" \
+              --lifecycle-file="${LIFECYCLE_FILE}"
+          else
+            bucket_json="$(gcloud storage buckets describe "gs://${BUCKET}" --project="${PROJECT_ID}" --format=json)"
+            export BUCKET_JSON="${bucket_json}"
+            node .github/scripts/creative-assets-bucket-config.mjs validate
+          fi
+
+          if [[ -n "${SERVICE_ACCOUNT}" && "${BOOTSTRAP_INFRA}" == "true" ]]; then
+            iam_json="$(gcloud storage buckets get-iam-policy "gs://${BUCKET}" --project="${PROJECT_ID}" --format=json)"
+            set +e
+            IAM_JSON="${iam_json}" SERVICE_ACCOUNT="${SERVICE_ACCOUNT}" node -e '
+            const policy = JSON.parse(process.env.IAM_JSON || "{}");
+            const member = `serviceAccount:${process.env.SERVICE_ACCOUNT}`;
+            const hasBinding = Array.isArray(policy.bindings)
+              && policy.bindings.some(binding => binding.role === "roles/storage.objectAdmin"
+                && Array.isArray(binding.members)
+                && binding.members.includes(member));
+            if (!hasBinding) process.exit(2);
+            '
+            iam_status=$?
+            set -e
+            if [[ "${iam_status}" -eq 2 && "${BOOTSTRAP_INFRA}" == "true" ]]; then
+              gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
+                --project="${PROJECT_ID}" \
+                --member="serviceAccount:${SERVICE_ACCOUNT}" \
+                --role="roles/storage.objectAdmin" >/dev/null
+            elif [[ "${iam_status}" -ne 0 ]]; then
+              echo "Creative assets bucket is missing roles/storage.objectAdmin for serviceAccount:${SERVICE_ACCOUNT}. Run this workflow manually with bootstrap_infra=true or grant it out of band."
+              exit 1
+            fi
+
+            service_account_iam_json="$(gcloud iam service-accounts get-iam-policy "${SERVICE_ACCOUNT}" --project="${PROJECT_ID}" --format=json)"
+            set +e
+            IAM_JSON="${service_account_iam_json}" SERVICE_ACCOUNT="${SERVICE_ACCOUNT}" node -e '
+            const policy = JSON.parse(process.env.IAM_JSON || "{}");
+            const member = `serviceAccount:${process.env.SERVICE_ACCOUNT}`;
+            const hasBinding = Array.isArray(policy.bindings)
+              && policy.bindings.some(binding => binding.role === "roles/iam.serviceAccountTokenCreator"
+                && Array.isArray(binding.members)
+                && binding.members.includes(member));
+            if (!hasBinding) process.exit(2);
+            '
+            sign_blob_status=$?
+            set -e
+            if [[ "${sign_blob_status}" -eq 2 ]]; then
+              gcloud iam service-accounts add-iam-policy-binding "${SERVICE_ACCOUNT}" \
+                --project="${PROJECT_ID}" \
+                --member="serviceAccount:${SERVICE_ACCOUNT}" \
+                --role="roles/iam.serviceAccountTokenCreator" >/dev/null
+            elif [[ "${sign_blob_status}" -ne 0 ]]; then
+              echo "Creative assets media API service account ${SERVICE_ACCOUNT} could not verify roles/iam.serviceAccountTokenCreator self-binding."
+              exit 1
+            fi
+          elif [[ -n "${SERVICE_ACCOUNT}" ]]; then
+            echo "Skipping creative assets bucket IAM verification on normal deploy; bootstrap_infra owns bucket IAM setup."
+          fi
+
+      - name: Build and push worker image
+        run: >
+          gcloud builds submit
+          --project=${{ steps.deploy-meta.outputs.project_id }}
+          --config=cloudbuild.temporal-worker.yaml
+          --substitutions=_IMAGE_URI=${{ steps.deploy-meta.outputs.image_uri }},_IMAGE_SOURCE_COMMIT=${{ github.sha }},_BUILD_CONTEXT_SHA256=${{ vars.REQUESTS_BUILD_CONTEXT_SHA256 || 'unknown' }},_REQUESTS_WRITER_PROTOCOL=sequence_v2,_MINIMUM_COMPATIBLE_BUILD=requests-sequence-v2-a
+          .
+
+      - name: Deploy Cloud Run worker pool
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          WORKER_POOL_NAME="${{ steps.deploy-meta.outputs.worker_pool_name }}"
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          WORKER_INSTANCES="${GCP_WORKER_INSTANCES:-1}"
+          WORKER_CPU="${GCP_WORKER_CPU:-2}"
+          WORKER_MEMORY="${GCP_WORKER_MEMORY:-4Gi}"
+          WORKER_NETWORK="${GCP_WORKER_VPC_NETWORK:-${GCP_REALTIME_VPC_NETWORK:-${{ steps.valkey.outputs.network }}}}"
+          WORKER_SUBNET="${GCP_WORKER_VPC_SUBNET:-${GCP_REALTIME_VPC_SUBNET:-}}"
+
+          if ! [[ "${WORKER_INSTANCES}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "GCP_WORKER_INSTANCES must be a positive integer so the Temporal worker can poll and register its build ID; got '${WORKER_INSTANCES}'."
+            exit 1
+          fi
+
+          args=(
+            beta run worker-pools deploy "${WORKER_POOL_NAME}"
+            --project="${PROJECT_ID}"
+            --region="${REGION}"
+            --image="${{ steps.deploy-meta.outputs.image_uri }}"
+            --revision-suffix=""
+            --env-vars-file="${{ steps.runtime-config.outputs.worker_env_file }}"
+            --instances="${WORKER_INSTANCES}"
+            --cpu="${WORKER_CPU}"
+            --memory="${WORKER_MEMORY}"
+            --network="${WORKER_NETWORK}"
+            --vpc-egress=private-ranges-only
+          )
+
+          if [[ -n "${WORKER_SUBNET}" ]]; then
+            args+=(--subnet="${WORKER_SUBNET}")
+          fi
+
+          if [[ -n "${{ steps.runtime-config.outputs.worker_secrets_arg }}" ]]; then
+            args+=(--set-secrets="${{ steps.runtime-config.outputs.worker_secrets_arg }}")
+          fi
+
+          if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+
+          gcloud "${args[@]}"
+
+          # A worker-pool revision can be ready while instances still point at an
+          # older revision, especially after a prior --no-promote deploy.
+          gcloud beta run worker-pools update-instance-split "${WORKER_POOL_NAME}" \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --to-latest
+
+      - name: Wait for Cloud Run worker pool rollout
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          WORKER_POOL_NAME="${{ steps.deploy-meta.outputs.worker_pool_name }}"
+
+          # gcloud returns when the deploy API call succeeds; instances and revisions can
+          # still be rolling out. Temporal only learns the build ID after workers connect.
+          echo "Waiting for worker pool '${WORKER_POOL_NAME}' to finish reconciling..."
+          for attempt in $(seq 1 72); do
+            json="$(gcloud beta run worker-pools describe "${WORKER_POOL_NAME}" \
+              --project="${PROJECT_ID}" \
+              --region="${REGION}" \
+              --format=json)"
+
+            # gcloud beta can surface either the v2 WorkerPool schema (top-level
+            # reconciling / terminalCondition / latestReadyRevision) or the older
+            # v1-style schema where readiness lives under status.conditions.
+            generation="$(echo "${json}" | jq -r '.generation // .metadata.generation // empty')"
+            observed_generation="$(echo "${json}" | jq -r '.observedGeneration // .observed_generation // .status.observedGeneration // .status.observed_generation // empty')"
+            reconciling="$(echo "${json}" | jq -r '.reconciling // empty')"
+            terminal_state="$(echo "${json}" | jq -r '.terminalCondition.state // .terminal_condition.state // empty')"
+            ready_status="$(echo "${json}" | jq -r '((.status.conditions // .conditions // []) | map(select(.type == "Ready")) | .[0].status) // empty')"
+            latest_ready="$(echo "${json}" | jq -r '.latestReadyRevision // .latest_ready_revision // .status.latestReadyRevisionName // .status.latest_ready_revision_name // empty')"
+            latest_created="$(echo "${json}" | jq -r '.latestCreatedRevision // .latest_created_revision // .status.latestCreatedRevisionName // .status.latest_created_revision_name // empty')"
+
+            if [[ "${terminal_state}" == "CONDITION_FAILED" ]] || [[ "${ready_status}" == "False" ]]; then
+              echo "Worker pool rollout failed:"
+              echo "${json}" | jq '(.terminalCondition // .terminal_condition // ((.status.conditions // .conditions // []) | map(select(.type == "Ready")) | .[0]))' || true
+              exit 1
+            fi
+
+            if [[ -n "${terminal_state}" ]]; then
+              if [[ "${reconciling}" == "false" ]] && [[ "${terminal_state}" == "CONDITION_SUCCEEDED" ]] && \
+                 [[ -n "${latest_ready}" ]] && [[ "${latest_ready}" == "${latest_created}" ]]; then
+                echo "Worker pool ready (revision ${latest_ready})."
+                exit 0
+              fi
+            elif [[ -n "${ready_status}" ]]; then
+              if [[ "${ready_status}" == "True" ]] && [[ -n "${latest_ready}" ]] && \
+                 [[ -n "${latest_created}" ]] && [[ "${latest_ready}" == "${latest_created}" ]] && \
+                 [[ -n "${generation}" ]] && [[ "${generation}" == "${observed_generation}" ]]; then
+                echo "Worker pool ready (revision ${latest_ready})."
+                exit 0
+              fi
+            fi
+
+            if [[ "${attempt}" -eq 72 ]]; then
+              echo "Worker pool did not become ready within $((attempt * 10))s. Last describe:"
+              echo "${json}" | jq '.' || echo "${json}"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+      # Promote right after the pool rollout. The rollout has just stopped the
+      # previous build's instances, and AUTO_UPGRADE tasks keep routing to that
+      # build until this runs, so any step placed before it stalls Temporal
+      # work (it stalled ~1.5 min on every deploy while the gateway, dispatcher
+      # and env-sync steps ran first). The startup probe step must follow it.
+      - name: Mark build current in Temporal
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ADDRESS="${TEMPORAL_CLOUD_ADDRESS:?Set repo variable TEMPORAL_CLOUD_ADDRESS}"
+          NAMESPACE="${TEMPORAL_CLOUD_NAMESPACE:?Set repo variable TEMPORAL_CLOUD_NAMESPACE}"
+          API_KEY="${TEMPORAL_CLOUD_API_KEY:?Set repo secret TEMPORAL_CLOUD_API_KEY}"
+          DEPLOYMENT_NAME="${{ steps.deploy-meta.outputs.temporal_deployment_name }}"
+          BUILD_ID="${{ steps.deploy-meta.outputs.build_id }}"
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          WORKER_POOL_NAME="${{ steps.deploy-meta.outputs.worker_pool_name }}"
+          LIFECYCLE_LOG_FILTER="jsonPayload.event=\"airi.worker.lifecycle\" AND jsonPayload.buildId=\"${BUILD_ID}\""
+
+          temporal_args=(
+            --address "${ADDRESS}"
+            --namespace "${NAMESPACE}"
+            --api-key "${API_KEY}"
+          )
+
+          dump_diagnostics() {
+            echo "Temporal deployment snapshot:"
+            temporal worker deployment describe \
+              "${temporal_args[@]}" \
+              --name "${DEPLOYMENT_NAME}" \
+              --output json || true
+
+            echo "Cloud Run worker pool snapshot:"
+            gcloud beta run worker-pools describe "${WORKER_POOL_NAME}" \
+              --project="${PROJECT_ID}" \
+              --region="${REGION}" \
+              --format=json || true
+
+            echo "Cloud Run worker lifecycle logs:"
+            gcloud logging read \
+              "${LIFECYCLE_LOG_FILTER}" \
+              --project="${PROJECT_ID}" \
+              --freshness=1h \
+              --order=asc \
+              --limit=50 \
+              --format=json || true
+          }
+
+          # Build ID exists in Temporal only after at least one worker polls with that
+          # deploymentName + buildId (not when Cloud Run accepts the deploy).
+          DESCRIBE_MAX="${TEMPORAL_BUILD_ID_WAIT_ATTEMPTS:-48}"
+          DESCRIBE_SLEEP="${TEMPORAL_BUILD_ID_WAIT_SECONDS:-15}"
+          STARTUP_MAX="${TEMPORAL_WORKER_STARTUP_LOG_WAIT_ATTEMPTS:-24}"
+          STARTUP_SLEEP="${TEMPORAL_WORKER_STARTUP_LOG_WAIT_SECONDS:-5}"
+          SET_CURRENT_MAX="${TEMPORAL_SET_CURRENT_MAX_ATTEMPTS:-24}"
+          SET_CURRENT_SLEEP="${TEMPORAL_SET_CURRENT_WAIT_SECONDS:-15}"
+
+          require_positive_integer() {
+            local name="$1"
+            local value="$2"
+            if ! [[ "${value}" =~ ^[1-9][0-9]*$ ]]; then
+              echo "${name} must be a positive integer; got '${value}'."
+              exit 1
+            fi
+          }
+
+          require_nonnegative_integer() {
+            local name="$1"
+            local value="$2"
+            if ! [[ "${value}" =~ ^[0-9]+$ ]]; then
+              echo "${name} must be a nonnegative integer; got '${value}'."
+              exit 1
+            fi
+          }
+
+          require_positive_integer TEMPORAL_BUILD_ID_WAIT_ATTEMPTS "${DESCRIBE_MAX}"
+          require_nonnegative_integer TEMPORAL_BUILD_ID_WAIT_SECONDS "${DESCRIBE_SLEEP}"
+          require_positive_integer TEMPORAL_WORKER_STARTUP_LOG_WAIT_ATTEMPTS "${STARTUP_MAX}"
+          require_nonnegative_integer TEMPORAL_WORKER_STARTUP_LOG_WAIT_SECONDS "${STARTUP_SLEEP}"
+          require_positive_integer TEMPORAL_SET_CURRENT_MAX_ATTEMPTS "${SET_CURRENT_MAX}"
+          require_nonnegative_integer TEMPORAL_SET_CURRENT_WAIT_SECONDS "${SET_CURRENT_SLEEP}"
+
+          echo "Waiting for Temporal to register build ID '${BUILD_ID}' in deployment '${DEPLOYMENT_NAME}' (up to $((DESCRIBE_MAX * DESCRIBE_SLEEP))s)..."
+          for attempt in $(seq 1 "${DESCRIBE_MAX}"); do
+            if temporal worker deployment describe-version \
+              "${temporal_args[@]}" \
+              --deployment-name "${DEPLOYMENT_NAME}" \
+              --build-id "${BUILD_ID}" \
+              --output none; then
+              echo "Build ID registered (attempt ${attempt}/${DESCRIBE_MAX})."
+              break
+            fi
+
+            if [[ "${attempt}" -eq "${DESCRIBE_MAX}" ]]; then
+              echo "Build ID '${BUILD_ID}' was not registered in Worker Deployment '${DEPLOYMENT_NAME}' after ${attempt} attempts."
+              dump_diagnostics
+              exit 1
+            fi
+
+            sleep "${DESCRIBE_SLEEP}"
+          done
+
+          STARTUP_LOG_FILTER="${LIFECYCLE_LOG_FILTER} AND jsonPayload.note=\"started\""
+          STARTUP_FAILURE_LOG_FILTER="${LIFECYCLE_LOG_FILTER} AND (jsonPayload.note=\"auxiliary_step_failed\" OR jsonPayload.note=\"start_failed\")"
+          echo "Waiting for Cloud Run worker build '${BUILD_ID}' to finish auxiliary startup (up to $((STARTUP_MAX * STARTUP_SLEEP))s)..."
+          for attempt in $(seq 1 "${STARTUP_MAX}"); do
+            if ! failed_startup_note="$(gcloud logging read "${STARTUP_FAILURE_LOG_FILTER}" \
+              --project="${PROJECT_ID}" \
+              --freshness=1h \
+              --order=desc \
+              --limit=1 \
+              --format='value(jsonPayload.note)')"; then
+              echo "Unable to query Cloud Logging for worker startup failures. Ensure the deployer has logging.logEntries.list permission."
+              dump_diagnostics
+              exit 1
+            fi
+            if [[ -n "${failed_startup_note}" ]]; then
+              echo "Worker build '${BUILD_ID}' reported startup failure '${failed_startup_note}'."
+              dump_diagnostics
+              exit 1
+            fi
+
+            if ! started_build_id="$(gcloud logging read "${STARTUP_LOG_FILTER}" \
+              --project="${PROJECT_ID}" \
+              --freshness=1h \
+              --limit=1 \
+              --format='value(jsonPayload.buildId)')"; then
+              echo "Unable to query Cloud Logging for worker startup. Ensure the deployer has logging.logEntries.list permission."
+              dump_diagnostics
+              exit 1
+            fi
+            if [[ "${started_build_id}" == "${BUILD_ID}" ]]; then
+              echo "Worker startup completed (attempt ${attempt}/${STARTUP_MAX})."
+              break
+            fi
+
+            if [[ "${attempt}" -eq "${STARTUP_MAX}" ]]; then
+              echo "Worker build '${BUILD_ID}' registered with Temporal but did not finish auxiliary startup after ${attempt} attempts."
+              dump_diagnostics
+              exit 1
+            fi
+
+            sleep "${STARTUP_SLEEP}"
+          done
+
+          for attempt in $(seq 1 "${SET_CURRENT_MAX}"); do
+            if temporal worker deployment set-current-version \
+              "${temporal_args[@]}" \
+              --deployment-name "${DEPLOYMENT_NAME}" \
+              --build-id "${BUILD_ID}" \
+              --yes; then
+              exit 0
+            fi
+
+            if [[ "${attempt}" -eq "${SET_CURRENT_MAX}" ]]; then
+              echo "Failed to mark Temporal deployment current after ${attempt} attempts."
+              dump_diagnostics
+              exit 1
+            fi
+
+            sleep "${SET_CURRENT_SLEEP}"
+          done
+
+      - name: Ensure worker startup probe
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # The pool keeps its previous instances until new ones pass their
+          # startup check. With the probe, that waits until the worker has
+          # started its consumers. gcloud has no probe flag for worker pools,
+          # so the script sets it on the pool spec (one extra rollout of the
+          # same build when the setting changes). It runs after the build is
+          # current in Temporal: a failure here must never leave the running
+          # instances on a build Temporal does not route to. Before rolling
+          # back to an image built without the listener, turn
+          # GCP_WORKER_STARTUP_PROBE_ENABLED off and deploy.
+          node .github/scripts/ensure-worker-startup-probe.mjs \
+            --project "${{ steps.deploy-meta.outputs.project_id }}" \
+            --region "${{ steps.deploy-meta.outputs.region }}" \
+            --worker-pool "${{ steps.deploy-meta.outputs.worker_pool_name }}" \
+            --enabled "${GCP_WORKER_STARTUP_PROBE_ENABLED}" \
+            --port "${GCP_WORKER_STARTUP_PROBE_PORT}"
+
+      - name: Deploy Cloud Run realtime dispatcher worker pool
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DISPATCHER_POOL_NAME="${{ steps.deploy-meta.outputs.realtime_dispatcher_pool_name }}"
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          DISPATCHER_INSTANCES="$(node --input-type=module -e 'import { resolveRealtimeDispatcherInstanceCount } from "./.github/scripts/prepare-cloud-run-runtime.mjs"; console.log(resolveRealtimeDispatcherInstanceCount(process.env));')"
+          NETWORK="${GCP_REALTIME_VPC_NETWORK:-${{ steps.valkey.outputs.network }}}"
+
+          args=(
+            beta run worker-pools deploy "${DISPATCHER_POOL_NAME}"
+            --project="${PROJECT_ID}"
+            --region="${REGION}"
+            --image="${{ steps.deploy-meta.outputs.image_uri }}"
+            --env-vars-file="${{ steps.runtime-config.outputs.realtime_dispatcher_env_file }}"
+            --instances="${DISPATCHER_INSTANCES}"
+            --network="${NETWORK}"
+            --vpc-egress=private-ranges-only
+          )
+
+          if [[ -n "${GCP_REALTIME_VPC_SUBNET:-}" ]]; then
+            args+=(--subnet="${GCP_REALTIME_VPC_SUBNET}")
+          fi
+
+          if [[ -n "${{ steps.runtime-config.outputs.realtime_dispatcher_secrets_arg }}" ]]; then
+            args+=(--set-secrets="${{ steps.runtime-config.outputs.realtime_dispatcher_secrets_arg }}")
+          fi
+
+          if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+
+          if [[ -n "${GCP_REALTIME_DISPATCHER_CPU:-}" ]]; then
+            args+=(--cpu="${GCP_REALTIME_DISPATCHER_CPU}")
+          fi
+
+          if [[ -n "${GCP_REALTIME_DISPATCHER_MEMORY:-}" ]]; then
+            args+=(--memory="${GCP_REALTIME_DISPATCHER_MEMORY}")
+          fi
+
+          gcloud "${args[@]}"
+
+          gcloud beta run worker-pools update-instance-split "${DISPATCHER_POOL_NAME}" \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --to-latest
+
+      - name: Wait for Cloud Run realtime dispatcher rollout
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          DISPATCHER_POOL_NAME="${{ steps.deploy-meta.outputs.realtime_dispatcher_pool_name }}"
+
+          echo "Waiting for realtime dispatcher '${DISPATCHER_POOL_NAME}' to finish reconciling..."
+          for attempt in $(seq 1 72); do
+            json="$(gcloud beta run worker-pools describe "${DISPATCHER_POOL_NAME}" \
+              --project="${PROJECT_ID}" \
+              --region="${REGION}" \
+              --format=json)"
+
+            generation="$(echo "${json}" | jq -r '.generation // .metadata.generation // empty')"
+            observed_generation="$(echo "${json}" | jq -r '.observedGeneration // .observed_generation // .status.observedGeneration // .status.observed_generation // empty')"
+            reconciling="$(echo "${json}" | jq -r '.reconciling // empty')"
+            terminal_state="$(echo "${json}" | jq -r '.terminalCondition.state // .terminal_condition.state // empty')"
+            ready_status="$(echo "${json}" | jq -r '((.status.conditions // .conditions // []) | map(select(.type == "Ready")) | .[0].status) // empty')"
+            latest_ready="$(echo "${json}" | jq -r '.latestReadyRevision // .latest_ready_revision // .status.latestReadyRevisionName // .status.latest_ready_revision_name // empty')"
+            latest_created="$(echo "${json}" | jq -r '.latestCreatedRevision // .latest_created_revision // .status.latestCreatedRevisionName // .status.latest_created_revision_name // empty')"
+
+            if [[ "${terminal_state}" == "CONDITION_FAILED" ]] || [[ "${ready_status}" == "False" ]]; then
+              echo "Realtime dispatcher rollout failed:"
+              echo "${json}" | jq '(.terminalCondition // .terminal_condition // ((.status.conditions // .conditions // []) | map(select(.type == "Ready")) | .[0]))' || true
+              exit 1
+            fi
+
+            if [[ -n "${terminal_state}" ]]; then
+              if [[ "${reconciling}" == "false" ]] && [[ "${terminal_state}" == "CONDITION_SUCCEEDED" ]] && \
+                 [[ -n "${latest_ready}" ]] && [[ "${latest_ready}" == "${latest_created}" ]]; then
+                echo "Realtime dispatcher ready (revision ${latest_ready})."
+                exit 0
+              fi
+            elif [[ -n "${ready_status}" ]]; then
+              if [[ "${ready_status}" == "True" ]] && [[ -n "${latest_ready}" ]] && \
+                 [[ -n "${latest_created}" ]] && [[ "${latest_ready}" == "${latest_created}" ]] && \
+                 [[ -n "${generation}" ]] && [[ "${generation}" == "${observed_generation}" ]]; then
+                echo "Realtime dispatcher ready (revision ${latest_ready})."
+                exit 0
+              fi
+            fi
+
+            if [[ "${attempt}" -eq 72 ]]; then
+              echo "Realtime dispatcher did not become ready within $((attempt * 10))s. Last describe:"
+              echo "${json}" | jq '.' || echo "${json}"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+      - name: Deploy Cloud Run OTP API
+        if: ${{ vars.GCP_OTP_API_ENABLED == 'true' }}
+        id: deploy-otp-api
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SERVICE_NAME="${{ steps.deploy-meta.outputs.otp_api_service_name }}"
+          NETWORK="${GCP_OTP_API_VPC_NETWORK:-${{ steps.valkey.outputs.network }}}"
+          args=(
+            run deploy "${SERVICE_NAME}"
+            --project="${{ steps.deploy-meta.outputs.project_id }}"
+            --region="${{ steps.deploy-meta.outputs.region }}"
+            --image="${{ steps.deploy-meta.outputs.image_uri }}"
+            --env-vars-file="${{ steps.runtime-config.outputs.otp_api_env_file }}"
+            --no-invoker-iam-check
+            --network="${NETWORK}"
+            --vpc-egress=private-ranges-only
+          )
+
+          if [[ -n "${GCP_OTP_API_VPC_SUBNET:-}" ]]; then
+            args+=(--subnet="${GCP_OTP_API_VPC_SUBNET}")
+          fi
+
+          if [[ -n "${{ steps.runtime-config.outputs.otp_api_secrets_arg }}" ]]; then
+            args+=(--set-secrets="${{ steps.runtime-config.outputs.otp_api_secrets_arg }}")
+          fi
+
+          if [[ -n "${GCP_OTP_API_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_OTP_API_SERVICE_ACCOUNT}")
+          elif [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+
+          if [[ -n "${GCP_OTP_API_MIN_INSTANCES:-}" ]]; then
+            args+=(--min-instances="${GCP_OTP_API_MIN_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_OTP_API_MAX_INSTANCES:-}" ]]; then
+            args+=(--max-instances="${GCP_OTP_API_MAX_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_OTP_API_CPU:-}" ]]; then
+            args+=(--cpu="${GCP_OTP_API_CPU}")
+          fi
+
+          if [[ -n "${GCP_OTP_API_MEMORY:-}" ]]; then
+            args+=(--memory="${GCP_OTP_API_MEMORY}")
+          fi
+
+          gcloud "${args[@]}"
+
+          otp_api_url="$(gcloud run services describe "${SERVICE_NAME}" \
+            --project="${{ steps.deploy-meta.outputs.project_id }}" \
+            --region="${{ steps.deploy-meta.outputs.region }}" \
+            --format='value(status.url)')"
+
+          echo "service_name=${SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "otp_api_url=${otp_api_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Cloud Run AI gateway
+        id: deploy-gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SERVICE_NAME="${GCP_AI_GATEWAY_SERVICE_NAME:-airi-ai-gateway}"
+          args=(
+            run deploy "${SERVICE_NAME}"
+            --project="${{ steps.deploy-meta.outputs.project_id }}"
+            --region="${{ steps.deploy-meta.outputs.region }}"
+            --image="${{ steps.deploy-meta.outputs.image_uri }}"
+            --env-vars-file="${{ steps.runtime-config.outputs.gateway_env_file }}"
+            --no-invoker-iam-check
+          )
+
+          if [[ -n "${{ steps.runtime-config.outputs.gateway_secrets_arg }}" ]]; then
+            args+=(--set-secrets="${{ steps.runtime-config.outputs.gateway_secrets_arg }}")
+          fi
+
+          if [[ -n "${GCP_AI_GATEWAY_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_AI_GATEWAY_SERVICE_ACCOUNT}")
+          elif [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+
+          if [[ -n "${GCP_AI_GATEWAY_MIN_INSTANCES:-}" ]]; then
+            args+=(--min-instances="${GCP_AI_GATEWAY_MIN_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_AI_GATEWAY_MAX_INSTANCES:-}" ]]; then
+            args+=(--max-instances="${GCP_AI_GATEWAY_MAX_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_AI_GATEWAY_CPU:-}" ]]; then
+            args+=(--cpu="${GCP_AI_GATEWAY_CPU}")
+          fi
+
+          if [[ -n "${GCP_AI_GATEWAY_MEMORY:-}" ]]; then
+            args+=(--memory="${GCP_AI_GATEWAY_MEMORY}")
+          fi
+
+          gcloud "${args[@]}"
+
+          gateway_url="$(gcloud run services describe "${SERVICE_NAME}" \
+            --project="${{ steps.deploy-meta.outputs.project_id }}" \
+            --region="${{ steps.deploy-meta.outputs.region }}" \
+            --format='value(status.url)')"
+
+          echo "service_name=${SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "gateway_url=${gateway_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Cloud Run media API
+        id: deploy-media-api
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SERVICE_NAME="${{ steps.deploy-meta.outputs.media_api_service_name }}"
+          args=(
+            run deploy "${SERVICE_NAME}"
+            --project="${{ steps.deploy-meta.outputs.project_id }}"
+            --region="${{ steps.deploy-meta.outputs.region }}"
+            --image="${{ steps.deploy-meta.outputs.image_uri }}"
+            --env-vars-file="${{ steps.runtime-config.outputs.media_api_env_file }}"
+            --no-invoker-iam-check
+          )
+
+          if [[ -n "${{ steps.runtime-config.outputs.media_api_secrets_arg }}" ]]; then
+            args+=(--set-secrets="${{ steps.runtime-config.outputs.media_api_secrets_arg }}")
+          fi
+
+          if [[ -n "${GCP_MEDIA_API_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_MEDIA_API_SERVICE_ACCOUNT}")
+          elif [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+
+          if [[ -n "${GCP_MEDIA_API_MIN_INSTANCES:-}" ]]; then
+            args+=(--min-instances="${GCP_MEDIA_API_MIN_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_MEDIA_API_MAX_INSTANCES:-}" ]]; then
+            args+=(--max-instances="${GCP_MEDIA_API_MAX_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_MEDIA_API_CPU:-}" ]]; then
+            args+=(--cpu="${GCP_MEDIA_API_CPU}")
+          fi
+
+          if [[ -n "${GCP_MEDIA_API_MEMORY:-}" ]]; then
+            args+=(--memory="${GCP_MEDIA_API_MEMORY}")
+          fi
+
+          gcloud "${args[@]}"
+
+          media_api_url="$(gcloud run services describe "${SERVICE_NAME}" \
+            --project="${{ steps.deploy-meta.outputs.project_id }}" \
+            --region="${{ steps.deploy-meta.outputs.region }}" \
+            --format='value(status.url)')"
+
+          echo "service_name=${SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "media_api_url=${media_api_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify media API health
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          media_api_url="${{ steps.deploy-media-api.outputs.media_api_url }}"
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error "${media_api_url}/readyz" >/tmp/media-api-health.json; then
+              cat /tmp/media-api-health.json
+              exit 0
+            fi
+            if [[ "${attempt}" -eq 12 ]]; then
+              echo "Media API did not pass /readyz health check after ${attempt} attempts."
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Deploy Cloud Run realtime gateway
+        id: deploy-realtime-gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SERVICE_NAME="${{ steps.deploy-meta.outputs.realtime_gateway_service_name }}"
+          NETWORK="${GCP_REALTIME_VPC_NETWORK:-${{ steps.valkey.outputs.network }}}"
+          args=(
+            run deploy "${SERVICE_NAME}"
+            --project="${{ steps.deploy-meta.outputs.project_id }}"
+            --region="${{ steps.deploy-meta.outputs.region }}"
+            --image="${{ steps.deploy-meta.outputs.image_uri }}"
+            --env-vars-file="${{ steps.runtime-config.outputs.realtime_gateway_env_file }}"
+            --no-invoker-iam-check
+            --network="${NETWORK}"
+            --vpc-egress=private-ranges-only
+            --concurrency="${GCP_REALTIME_GATEWAY_CONCURRENCY:-1000}"
+            --timeout="${GCP_REALTIME_GATEWAY_TIMEOUT:-3600s}"
+            --no-cpu-throttling
+          )
+
+          if [[ -n "${GCP_REALTIME_VPC_SUBNET:-}" ]]; then
+            args+=(--subnet="${GCP_REALTIME_VPC_SUBNET}")
+          fi
+
+          if [[ -n "${{ steps.runtime-config.outputs.realtime_gateway_secrets_arg }}" ]]; then
+            args+=(--set-secrets="${{ steps.runtime-config.outputs.realtime_gateway_secrets_arg }}")
+          fi
+
+          if [[ -n "${GCP_WORKER_SERVICE_ACCOUNT:-}" ]]; then
+            args+=(--service-account="${GCP_WORKER_SERVICE_ACCOUNT}")
+          fi
+
+          if [[ -n "${GCP_REALTIME_GATEWAY_MIN_INSTANCES:-}" ]]; then
+            args+=(--min-instances="${GCP_REALTIME_GATEWAY_MIN_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_REALTIME_GATEWAY_MAX_INSTANCES:-}" ]]; then
+            args+=(--max-instances="${GCP_REALTIME_GATEWAY_MAX_INSTANCES}")
+          fi
+
+          if [[ -n "${GCP_REALTIME_GATEWAY_CPU:-}" ]]; then
+            args+=(--cpu="${GCP_REALTIME_GATEWAY_CPU}")
+          fi
+
+          if [[ -n "${GCP_REALTIME_GATEWAY_MEMORY:-}" ]]; then
+            args+=(--memory="${GCP_REALTIME_GATEWAY_MEMORY}")
+          fi
+
+          gcloud "${args[@]}"
+
+          realtime_gateway_url="$(gcloud run services describe "${SERVICE_NAME}" \
+            --project="${{ steps.deploy-meta.outputs.project_id }}" \
+            --region="${{ steps.deploy-meta.outputs.region }}" \
+            --format='value(status.url)')"
+
+          echo "service_name=${SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "realtime_gateway_url=${realtime_gateway_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify realtime gateway health
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          realtime_gateway_url="${{ steps.deploy-realtime-gateway.outputs.realtime_gateway_url }}"
+          curl --fail --silent --show-error "${realtime_gateway_url}/readyz" >/tmp/realtime-gateway-health.json
+          cat /tmp/realtime-gateway-health.json
+
+      - name: Sync Vercel runtime env
+        shell: bash
+        env:
+          VERTEX_GEMINI_HEAVY_MODEL: ${{ vars.VERTEX_GEMINI_HEAVY_MODEL }}
+          AI_CHAT_PROVIDER_ORDER: ${{ vars.AI_CHAT_PROVIDER_ORDER }}
+          ANTHROPIC_AI_ENABLED: ${{ vars.ANTHROPIC_AI_ENABLED }}
+          ANTHROPIC_LIGHT_MODEL: ${{ vars.ANTHROPIC_LIGHT_MODEL }}
+          ANTHROPIC_HEAVY_MODEL: ${{ vars.ANTHROPIC_HEAVY_MODEL }}
+          ANTHROPIC_REASONING_MODEL: ${{ vars.ANTHROPIC_REASONING_MODEL }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_NAME: ${{ vars.VERCEL_PROJECT_NAME }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          VERCEL_TEAM_SLUG: ${{ vars.VERCEL_TEAM_SLUG }}
+          VERCEL_ENV_TARGETS: ${{ vars.VERCEL_ENV_TARGETS }}
+          AI_GATEWAY_VERCEL_OIDC_AUDIENCE: ${{ vars.AI_GATEWAY_VERCEL_OIDC_AUDIENCE }}
+          AI_GATEWAY_VERCEL_OIDC_ISSUER_URL: ${{ vars.AI_GATEWAY_VERCEL_OIDC_ISSUER_URL }}
+          AI_GATEWAY_VERCEL_OIDC_SUBJECTS: ${{ vars.AI_GATEWAY_VERCEL_OIDC_SUBJECTS }}
+          GCP_AI_GATEWAY_URL: ${{ steps.deploy-gateway.outputs.gateway_url }}
+          GCP_MEDIA_API_URL: ${{ steps.deploy-media-api.outputs.media_api_url }}
+          REALTIME_GATEWAY_URL: ${{ steps.deploy-realtime-gateway.outputs.realtime_gateway_url }}
+          WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC: ${{ vars.WHATSAPP_FAST_WEBHOOK_PUBSUB_TOPIC || 'icecore-whatsapp-fast-events' }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID || vars.GCP_PROJECT_ID }}
+          CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC: ${{ vars.CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC || 'icecore-conversation-classification-events' }}
+          CONVERSATION_CLASSIFICATION_RECONCILIATION_ENABLED: "true"
+          WHATSAPP_OTP_DELIVERY_MODE: ${{ vars.WHATSAPP_OTP_DELIVERY_MODE || 'pubsub' }}
+          WHATSAPP_OTP_TEMPORAL_WORKSPACE_ALLOWLIST: ${{ vars.WHATSAPP_OTP_TEMPORAL_WORKSPACE_ALLOWLIST }}
+        run: |
+          set -euo pipefail
+
+          node .github/scripts/sync-vercel-runtime-env.mjs
+          echo "::warning title=Vercel production redeploy required::Vercel environment changes do not affect the active deployment. Mandatory next step: redeploy Vercel production and verify the new deployment before considering this rollout complete."
+
+      - name: Verify AI gateway public auth boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gateway_url="${{ steps.deploy-gateway.outputs.gateway_url }}"
+          payload='{"text":"health check"}'
+
+          http_status="$(curl --silent --show-error --output /tmp/gateway-auth.json \
+            --write-out "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data "${payload}" \
+            "${gateway_url}/v1/embeddings/document")"
+
+          response_body="$(cat /tmp/gateway-auth.json || true)"
+
+          if [[ "${http_status}" == "401" ]] && grep -q '"error":"Missing bearer token"' /tmp/gateway-auth.json; then
+            exit 0
+          fi
+
+          echo "Gateway auth boundary check failed with HTTP ${http_status}"
+          echo "${response_body}"
+          exit 1
+
+      - name: Verify live Temporal history health after rollout
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MAX_ATTEMPTS="${TEMPORAL_POST_DEPLOY_REPLAY_ATTEMPTS:-6}"
+          WAIT_SECONDS="${TEMPORAL_POST_DEPLOY_REPLAY_WAIT_SECONDS:-20}"
+
+          for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
+            rm -rf .codex/temporal-replay-post-deploy
+
+            pnpm --filter @icecore/temporal-worker export:replay-histories -- \
+              --from-gcloud \
+              --gcloud-project "${{ steps.deploy-meta.outputs.project_id }}" \
+              --gcloud-region "${{ steps.deploy-meta.outputs.region }}" \
+              --worker-pool "${{ steps.deploy-meta.outputs.worker_pool_name }}" \
+              --limit 20 \
+              --include-workflow-task-failures \
+              --failure-scan-limit 100 \
+              --failure-export-limit 10 \
+              --out .codex/temporal-replay-post-deploy
+
+            if pnpm --filter @icecore/temporal-worker replay:histories:strict -- \
+              --fixtures-dir .codex/temporal-replay-post-deploy; then
+              exit 0
+            fi
+
+            if [[ "${attempt}" -eq "${MAX_ATTEMPTS}" ]]; then
+              echo "Temporal live replay/health check still failed after ${attempt} attempt(s)."
+              exit 1
+            fi
+
+            sleep "${WAIT_SECONDS}"
+          done
+
+      - name: Retire standalone OTP worker pool
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECT_ID="${{ steps.deploy-meta.outputs.project_id }}"
+          REGION="${{ steps.deploy-meta.outputs.region }}"
+          WORKER_POOL_NAME="${{ steps.deploy-meta.outputs.worker_pool_name }}"
+          OTP_WORKER_POOL_NAME="${{ steps.deploy-meta.outputs.otp_worker_pool_name }}"
+
+          if [[ "${OTP_WORKER_POOL_NAME}" == "${WORKER_POOL_NAME}" ]]; then
+            echo "The standalone OTP pool must be different from the main worker pool."
+            exit 1
+          fi
+
+          worker_json="$(gcloud beta run worker-pools describe "${WORKER_POOL_NAME}" \
+            --project="${PROJECT_ID}" --region="${REGION}" --format=json)"
+          otp_enabled="$(echo "${worker_json}" | jq -r \
+            '[(.spec.template.spec.containers // .template.containers)[] | .env[]? | select(.name == "WHATSAPP_OTP_PUBSUB_ENABLED") | .value][0] // "false" | ascii_downcase | gsub("^\\s+|\\s+$"; "")')"
+          case "${otp_enabled}" in
+            true|1|yes|on) ;;
+            *) echo "The main worker must consume OTP Pub/Sub before retiring the standalone pool."; exit 1 ;;
+          esac
+
+          existing_pool="$(gcloud beta run worker-pools list \
+            --project="${PROJECT_ID}" --region="${REGION}" \
+            --filter="metadata.name=${OTP_WORKER_POOL_NAME}" --format='value(metadata.name)')"
+          if [[ -z "${existing_pool}" ]]; then
+            echo "No standalone OTP pool remains."
+            exit 0
+          fi
+
+          otp_consumer_binding() {
+            jq -c --arg project "${PROJECT_ID}" '
+              [(.spec.template.spec.containers // .template.containers)[] | .env[]? |
+                {key: .name, value: ((.value // "") | gsub("^\\s+|\\s+$"; ""))}] | from_entries |
+              [(.WHATSAPP_OTP_PUBSUB_PROJECT_ID | select(. != null and . != "")) //
+                (.GOOGLE_CLOUD_PROJECT | select(. != null and . != "")) //
+                (.GCP_PROJECT_ID | select(. != null and . != "")) // $project,
+               (.WHATSAPP_OTP_PUBSUB_SUBSCRIPTION | select(. != null and . != "")) //
+                "icecore-whatsapp-otp-delivery-worker"]'
+          }
+          legacy_json="$(gcloud beta run worker-pools describe "${OTP_WORKER_POOL_NAME}" \
+            --project="${PROJECT_ID}" --region="${REGION}" --format=json)"
+          if [[ "$(echo "${worker_json}" | otp_consumer_binding)" != "$(echo "${legacy_json}" | otp_consumer_binding)" ]]; then
+            echo "The main worker must consume the legacy OTP subscription before retiring its pool."
+            exit 1
+          fi
+
+          # Exact-build auxiliary startup and live Temporal history checks above
+          # must succeed before the old consumer stops. Keep its revision for rollback.
+          gcloud beta run worker-pools update "${OTP_WORKER_POOL_NAME}" \
+            --project="${PROJECT_ID}" --region="${REGION}" --instances=0
+
+      - name: Summarize deployment
+        run: |
+          {
+            echo "## Temporal worker deployed"
+            echo ""
+            echo "- Worker pool: \`${{ steps.deploy-meta.outputs.worker_pool_name }}\`"
+            echo "- OTP delivery: consolidated into the main worker; standalone pool scaled to zero"
+            echo "- Realtime dispatcher worker pool: \`${{ steps.deploy-meta.outputs.realtime_dispatcher_pool_name }}\`"
+            if [[ "${GCP_OTP_API_ENABLED:-false}" == "true" ]]; then
+              echo "- OTP API service: \`${{ steps.deploy-otp-api.outputs.service_name }}\`"
+              echo "- OTP API URL: \`${{ steps.deploy-otp-api.outputs.otp_api_url }}\`"
+            else
+              echo "- OTP API service: skipped because \`GCP_OTP_API_ENABLED\` is not \`true\`"
+            fi
+            echo "- Image: \`${{ steps.deploy-meta.outputs.image_uri }}\`"
+            echo "- Build ID: \`${{ steps.deploy-meta.outputs.build_id }}\`"
+            echo "- Temporal deployment: \`${{ steps.deploy-meta.outputs.temporal_deployment_name }}\`"
+            echo "- AI gateway service: \`${{ steps.deploy-gateway.outputs.service_name }}\`"
+            echo "- AI gateway URL: \`${{ steps.deploy-gateway.outputs.gateway_url }}\`"
+            echo "- Media API service: \`${{ steps.deploy-media-api.outputs.service_name }}\`"
+            echo "- Media API URL: \`${{ steps.deploy-media-api.outputs.media_api_url }}\`"
+            echo "- Realtime gateway service: \`${{ steps.deploy-realtime-gateway.outputs.service_name }}\`"
+            echo "- Realtime gateway URL: \`${{ steps.deploy-realtime-gateway.outputs.realtime_gateway_url }}\`"
+            echo "- Vercel env synced: \`GCP_AI_GATEWAY_URL=${{ steps.deploy-gateway.outputs.gateway_url }}\`"
+            echo "- Vercel env synced: \`GCP_MEDIA_API_URL=${{ steps.deploy-media-api.outputs.media_api_url }}\`"
+            echo "- Vercel env synced: \`REALTIME_GATEWAY_URL=${{ steps.deploy-realtime-gateway.outputs.realtime_gateway_url }}\`"
+            echo "- Vercel env changes need a new production deployment. Deploy Web makes one after a push-triggered rollout; after a manual run, dispatch Deploy Web with the exact sha. If production already serves this commit, run \`redeploy_web\` instead."
+            if [[ "${GCP_OTP_API_ENABLED:-false}" == "true" ]]; then
+              echo "- Vercel env to set: \`GCP_OTP_API_URL=${{ steps.deploy-otp-api.outputs.otp_api_url }}\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report web deploy withheld
+        if: ${{ github.event_name == 'push' && (failure() || cancelled()) }}
+        shell: bash
+        run: |
+          {
+            echo "## Web production not deployed"
+            echo ""
+            echo "- This worker rollout did not succeed, so Deploy Web will not deploy \`${GITHUB_SHA}\`; later commits that contain its worker changes wait for a successful rollout."
+            echo "- Recovery: fix and re-run this workflow (web deploys after it succeeds), or dispatch Deploy Web with an exact \`sha\` once the worker is known good."
+            echo "- See apps/temporal-worker/README.md#deploy-order-web-after-worker."
+          } >> "$GITHUB_STEP_SUMMARY"

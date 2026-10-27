@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "description": "Product-oriented RAG stress contracts. These fixtures exercise noisy retrieval, conflicting documents, multi-hop coverage, multilingual turns, abstention, citation integrity, and workspace isolation.",
+  "cases": [
+    {
+      "id": "stress-en-noisy-refund-ranking",
+      "locale": "en",
+      "tags": ["noisy_context", "policy", "ranking"],
+      "workspaceId": "workspace-retail",
+      "query": "Can I get my money back after buying?",
+      "retrievalPath": "kb",
+      "retrievedSourceIds": [
+        "kb-shipping-zones",
+        "kb-refund-policy",
+        "kb-billing-faq"
+      ],
+      "goldSourceIds": ["kb-refund-policy", "kb-billing-faq"],
+      "citations": ["kb-refund-policy", "kb-billing-faq"],
+      "retrievedContext": "We ship to the United States, Canada, Mexico, and most of the European Union. Refund policy: customers can request a full refund within 14 days of purchase. Refunds return to the original payment method within 5 business days. Billing FAQ: invoice reissues and subscription proration are handled by support.",
+      "generatedAnswer": "You can request a full refund within 14 days of purchase. The refund goes back to the original payment method within 5 business days.",
+      "goldAnswer": "Full refund is available within 14 days of purchase and goes back to the original payment method within 5 business days.",
+      "expected": {
+        "outcome": "answer",
+        "retrievalPath": "kb",
+        "requireCitations": true,
+        "requiredCitationSourceIds": ["kb-refund-policy"],
+        "requiredAnswerTerms": ["14 days", "original payment method"],
+        "forbiddenAnswerTerms": ["store credit"],
+        "minScores": {
+          "contextPrecisionAtK": 0.45,
+          "contextRecallAtK": 1,
+          "answerRelevancy": 0.55,
+          "faithfulness": 0.7
+        }
+      }
+    },
+    {
+      "id": "stress-en-conflicting-policy-current-wins",
+      "locale": "en",
+      "tags": ["conflicting_context", "policy", "citation_integrity"],
+      "workspaceId": "workspace-retail",
+      "query": "How long do I have to return an item?",
+      "retrievalPath": "kb",
+      "retrievedSourceIds": [
+        "kb-current-return-policy",
+        "kb-legacy-return-policy"
+      ],
+      "goldSourceIds": ["kb-current-return-policy"],
+      "citations": ["kb-current-return-policy"],
+      "retrievedContext": "Current return policy: returns are available within 30 days of delivery and there is no restocking fee. Legacy policy archive: returns were previously limited to 7 days with a restocking fee.",
+      "generatedAnswer": "Returns are available within 30 days of delivery, and there is no restocking fee.",
+      "goldAnswer": "Returns are available within 30 days of delivery with no restocking fee.",
+      "expected": {
+        "outcome": "answer",
+        "retrievalPath": "kb",
+        "requireCitations": true,
+        "requiredCitationSourceIds": ["kb-current-return-policy"],
+        "requiredAnswerTerms": ["30 days", "no restocking fee"],
+        "forbiddenAnswerTerms": ["7 days", "restocking fee applies"],
+        "minScores": {
+          "contextPrecisionAtK": 0.66,
+          "contextRecallAtK": 1,
+          "answerRelevancy": 0.65,
+          "faithfulness": 0.75
+        }
+      }
+    },
+    {
+      "id": "stress-en-multihop-trial-export",
+      "locale": "en",
+      "tags": ["multi_hop", "coverage"],
+      "workspaceId": "workspace-saas",
+      "query": "If I cancel during trial, can I still export my data?",
+      "retrievalPath": "blended",
+      "retrievedSourceIds": [
+        "kb-trial-policy",
+        "kb-data-export",
+        "kb-plan-limits"
+      ],
+      "goldSourceIds": ["kb-trial-policy", "kb-data-export"],
+      "citations": ["kb-trial-policy", "kb-data-export"],
+      "retrievedContext": "Trial policy: cancelling during the 7-day trial stops billing before the first charge. Data export: workspace admins can export account data for 30 days after cancellation from Settings > Data Export. Plan limits: paid plans add custom branding.",
+      "generatedAnswer": "Cancelling during the 7-day trial stops billing before the first charge. Workspace admins can export account data for 30 days after cancellation from Settings > Data Export.",
+      "goldAnswer": "Cancelling during the 7-day trial stops billing before the first charge. Admins can export account data for 30 days after cancellation from Settings > Data Export.",
+      "expected": {
+        "outcome": "answer",
+        "retrievalPath": "blended",
+        "requireCitations": true,
+        "requiredCitationSourceIds": ["kb-trial-policy", "kb-data-export"],
+        "requiredAnswerTerms": ["7-day trial", "30 days", "Data Export"],
+        "forbiddenAnswerTerms": ["custom branding"],
+        "minScores": {
+          "contextPrecisionAtK": 0.8,
+          "contextRecallAtK": 1,
+          "answerRelevancy": 0.65,
+          "faithfulness": 0.75
+        }
+      }
+    },
+    {
+      "id": "stress-en-integration-topic-specificity",
+      "locale": "en",
+      "tags": ["integration", "topic_specificity"],
+      "workspaceId": "workspace-saas",
+      "query": "Can I connect Slack?",
+      "retrievalPath": "kb",
+      "retrievedSourceIds": ["kb-slack-integration", "kb-trello-integration"],
+      "goldSourceIds": ["kb-slack-integration"],
+      "citations": ["kb-slack-integration"],
+      "retrievedContext": "Slack integration: connect Slack from Settings > Integrations to send conversation alerts to a selected channel. Trello integration: Trello cards can be created from support requests.",
+      "generatedAnswer": "Connect Slack from Settings > Integrations to send conversation alerts to a selected channel.",
+      "goldAnswer": "Slack can be connected from Settings > Integrations to send conversation alerts to a selected channel.",
+      "expected": {
+        "outcome": "answer",
+        "retrievalPath": "kb",
+        "requireCitations": true,
+        "requiredCitationSourceIds": ["kb-slack-integration"],
+        "requiredAnswerTerms": ["Slack", "Settings", "Integrations"],
+        "forbiddenAnswerTerms": ["Trello cards"],
+        "minScores": {
+          "contextPrecisionAtK": 0.66,
+          "contextRecallAtK": 1,
+          "answerRelevancy": 0.6,
+          "faithfulness": 0.7
+        }
+      }
+    },
+    {
+      "id": "stress-uz-business-hours",
+      "locale": "uz",
+      "tags": ["multilingual", "business_hours"],
+      "workspaceId": "workspace-retail",
+      "query": "Ish vaqtingiz qanday?",
+      "retrievalPath": "kb",
+      "retrievedSourceIds": ["kb-hours-uz", "kb-contact-uz"],
+      "goldSourceIds": ["kb-hours-uz"],
+      "citations": ["kb-hours-uz"],
+      "retrievedContext": "Ish vaqti: dushanbadan jumagacha 09:00 dan 18:00 gacha ishlaymiz. Shanba kuni faqat oldindan yozilish bo'yicha xizmat ko'rsatiladi. Aloqa: support@example.com.",
+      "generatedAnswer": "Ish vaqti dushanbadan jumagacha 09:00 dan 18:00 gacha. Shanba kuni xizmat faqat oldindan yozilish bo'yicha ko'rsatiladi.",
+      "goldAnswer": "Dushanbadan jumagacha 09:00-18:00 ishlaydi; shanba kuni faqat oldindan yozilish bo'yicha xizmat ko'rsatiladi.",
+      "expected": {
+        "outcome": "answer",
+        "retrievalPath": "kb",
+        "requireCitations": true,
+        "requiredCitationSourceIds": ["kb-hours-uz"],
+        "requiredAnswerTerms": ["09:00", "18:00", "oldindan yozilish"],
+        "forbiddenAnswerTerms": ["yakshanba"],
+        "minScores": {
+          "contextPrecisionAtK": 0.66,
+          "contextRecallAtK": 1,
+          "answerRelevancy": 0.55,
+          "faithfulness": 0.65
+        }
+      }
+    },
+    {
+      "id": "stress-en-abstain-unrelated-context",
+      "locale": "en",
+      "tags": ["abstention", "unrelated_context"],
+      "workspaceId": "workspace-retail",
+      "query": "Do you deliver to Mars?",
+      "retrievalPath": "none",
+      "retrievedSourceIds": ["kb-shipping-zones"],
+      "goldSourceIds": [],
+      "citations": [],
+      "retrievedContext": "We ship to the United States, Canada, Mexico, and most of the European Union. See the shipping-zones page for the complete list.",
+      "generatedAnswer": "",
+      "goldAnswer": "",
+      "expected": {
+        "outcome": "abstain",
+        "retrievalPath": "none",
+        "forbiddenAnswerTerms": ["Mars", "yes", "we deliver"]
+      }
+    },
+    {
+      "id": "stress-en-workspace-isolation",
+      "locale": "en",
+      "tags": ["workspace_isolation", "policy"],
+      "workspaceId": "workspace-a",
+      "query": "What is our return window?",
+      "retrievalPath": "kb",
+      "retrievedSourceIds": ["kb-ws1-return-window", "kb-ws1-shipping"],
+      "goldSourceIds": ["kb-ws1-return-window"],
+      "citations": ["kb-ws1-return-window"],
+      "sourceWorkspaceIds": {
+        "kb-ws1-return-window": "workspace-a",
+        "kb-ws1-shipping": "workspace-a",
+        "kb-ws2-return-window": "workspace-b"
+      },
+      "retrievedContext": "Workspace A return policy: customers have 21 days from delivery to request a return. Workspace A shipping: standard delivery takes 3 to 5 business days.",
+      "generatedAnswer": "Customers have 21 days from delivery to request a return.",
+      "goldAnswer": "Customers have 21 days from delivery to request a return.",
+      "expected": {
+        "outcome": "answer",
+        "retrievalPath": "kb",
+        "requireCitations": true,
+        "requireWorkspaceIsolation": true,
+        "requiredCitationSourceIds": ["kb-ws1-return-window"],
+        "requiredAnswerTerms": ["21 days"],
+        "forbiddenAnswerTerms": ["30 days"],
+        "minScores": {
+          "contextPrecisionAtK": 0.66,
+          "contextRecallAtK": 1,
+          "answerRelevancy": 0.8,
+          "faithfulness": 0.8
+        }
+      }
+    },
+    {
+      "id": "stress-en-clarify-missing-pricing",
+      "locale": "en",
+      "tags": ["clarification", "pricing", "missing_knowledge"],
+      "workspaceId": "workspace-saas",
+      "query": "How much is the enterprise onboarding package?",
+      "retrievalPath": "none",
+      "retrievedSourceIds": [],
+      "goldSourceIds": [],
+      "citations": [],
+      "retrievedContext": "",
+      "generatedAnswer": "I don't have enough information about the enterprise onboarding package price. I can connect you with the team for the current quote.",
+      "goldAnswer": "",
+      "expected": {
+        "outcome": "clarify",
+        "retrievalPath": "none",
+        "requiredAnswerTerms": [
+          "don't have enough information",
+          "current quote"
+        ],
+        "forbiddenAnswerTerms": ["$99", "$1,000", "free"]
+      }
+    }
+  ]
+}

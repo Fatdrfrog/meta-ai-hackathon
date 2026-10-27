@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "description": "Launch-gate fixture. Stricter than ragas-golden; intended as the release gate that runs before flipping `RAG_USE_CANONICAL_SNIPPETS` / publishing prod changes. Cases were drafted from real-workspace turn shapes (inbound question phrasings, retrieved-chunk counts, multilingual mix, and one explicit abstention). Keep every case graded: top-of-rank = correct source, retrieved context grounded by the gold source, gold answer copy-paste-faithful to the context.",
+  "aggregateThresholds": {
+    "contextPrecisionAtK": 0.72,
+    "contextRecallAtK": 0.88,
+    "answerRelevancy": 0.65,
+    "faithfulness": 0.75
+  },
+  "perCaseThresholds": {
+    "contextPrecisionAtK": 0.5,
+    "contextRecallAtK": 0.75,
+    "answerRelevancy": 0.4,
+    "faithfulness": 0.55
+  },
+  "cases": [
+    {
+      "id": "lg-en-refund",
+      "query": "Can I get a refund if I cancel after 10 days?",
+      "retrievedSourceIds": ["kb-refund-policy", "kb-billing-faq"],
+      "goldSourceIds": ["kb-refund-policy"],
+      "retrievedContext": "We offer a full refund within 14 days of purchase, no questions asked. Refunds are processed back to the original payment method within 5 business days.",
+      "generatedAnswer": "Yes. You can request a full refund within 14 days of purchase, and the refund is processed back to the original payment method within 5 business days.",
+      "goldAnswer": "Full refund available within 14 days of purchase; refunded to original payment method within 5 business days."
+    },
+    {
+      "id": "lg-en-cancel",
+      "query": "Where do I cancel my subscription?",
+      "retrievedSourceIds": ["kb-cancel-subscription", "kb-billing-faq"],
+      "goldSourceIds": ["kb-cancel-subscription"],
+      "retrievedContext": "To cancel your subscription, open Settings, go to the Subscription section, and click Cancel Subscription. Changes take effect at the end of the current billing period.",
+      "generatedAnswer": "Open Settings, go to the Subscription section, and click Cancel Subscription. Your plan stays active until the end of the current billing period.",
+      "goldAnswer": "Go to Settings > Subscription and click Cancel Subscription. Changes apply at the end of the billing period."
+    },
+    {
+      "id": "lg-en-trial",
+      "query": "Is there a free trial?",
+      "retrievedSourceIds": ["kb-free-trial", "kb-plans"],
+      "goldSourceIds": ["kb-free-trial"],
+      "retrievedContext": "All new users get a 7-day free trial. The trial starts automatically after sign-up and does not require a credit card on file.",
+      "generatedAnswer": "Yes, all new users get a 7-day free trial. The trial starts automatically after sign-up and does not require a credit card on file.",
+      "goldAnswer": "Yes, 7-day free trial for new users; starts automatically after sign-up and no credit card required."
+    },
+    {
+      "id": "lg-en-contact",
+      "query": "How do I reach support?",
+      "retrievedSourceIds": ["kb-contact", "kb-support-hours"],
+      "goldSourceIds": ["kb-contact", "kb-support-hours"],
+      "retrievedContext": "You can reach customer support by emailing support@example.com or by clicking the chat icon in the bottom right corner of the app. We respond within one hour during business hours.",
+      "generatedAnswer": "Email support@example.com or click the chat icon in the bottom right corner of the app. We respond within one hour during business hours.",
+      "goldAnswer": "Email support@example.com or use the in-app chat widget; response time under one hour during business hours."
+    },
+    {
+      "id": "lg-en-rate-limit",
+      "query": "What's the API rate limit?",
+      "retrievedSourceIds": ["kb-api-limits"],
+      "goldSourceIds": ["kb-api-limits"],
+      "retrievedContext": "The public API is rate-limited to 60 requests per minute per API key. Requests that exceed the limit return HTTP 429 with a Retry-After header.",
+      "generatedAnswer": "The public API is rate-limited to 60 requests per minute per API key. Requests that exceed the limit return HTTP 429 with a Retry-After header.",
+      "goldAnswer": "60 requests per minute per API key; exceeding returns HTTP 429 with a Retry-After header."
+    },
+    {
+      "id": "lg-en-reset-password",
+      "query": "How do I reset my password?",
+      "retrievedSourceIds": ["kb-password-reset", "kb-account-settings"],
+      "goldSourceIds": ["kb-password-reset"],
+      "retrievedContext": "To reset your password, click Forgot password on the sign-in screen, enter the email address on your account, and follow the reset link. The link expires after 30 minutes.",
+      "generatedAnswer": "Click Forgot password on the sign-in screen, enter the email address on your account, and follow the reset link. The link expires after 30 minutes.",
+      "goldAnswer": "Click Forgot password, enter your email, and follow the reset link. Link expires after 30 minutes."
+    },
+    {
+      "id": "lg-en-integration-whatsapp",
+      "query": "Can I connect WhatsApp to airi.chat?",
+      "retrievedSourceIds": ["kb-whatsapp-integration", "kb-channels"],
+      "goldSourceIds": ["kb-whatsapp-integration"],
+      "retrievedContext": "airi.chat integrates with WhatsApp Business Platform via embedded signup. Once connected, incoming WhatsApp messages are routed into the shared inbox and classified automatically.",
+      "generatedAnswer": "Yes. airi.chat integrates with WhatsApp Business Platform via embedded signup. Once connected, incoming WhatsApp messages are routed into the shared inbox and classified automatically.",
+      "goldAnswer": "Yes, via WhatsApp Business Platform embedded signup; messages flow into the shared inbox and are classified automatically."
+    },
+    {
+      "id": "lg-ru-trial",
+      "query": "Есть ли бесплатный пробный период?",
+      "retrievedSourceIds": ["kb-trial-ru", "kb-plans-ru"],
+      "goldSourceIds": ["kb-trial-ru"],
+      "retrievedContext": "Для всех новых пользователей действует бесплатный пробный период 7 дней. Пробный период подключается автоматически после регистрации и не требует банковской карты.",
+      "generatedAnswer": "Да, бесплатный пробный период 7 дней действует для всех новых пользователей. Пробный период подключается автоматически после регистрации и не требует банковской карты.",
+      "goldAnswer": "Да, для новых пользователей доступен бесплатный пробный период 7 дней, подключается автоматически."
+    },
+    {
+      "id": "lg-ru-cancel",
+      "query": "Как отменить подписку?",
+      "retrievedSourceIds": ["kb-cancel-ru", "kb-billing-ru"],
+      "goldSourceIds": ["kb-cancel-ru"],
+      "retrievedContext": "Чтобы отменить подписку, откройте Настройки, перейдите в раздел Подписка и нажмите кнопку Отменить подписку. Подписка останется активной до конца текущего расчётного периода.",
+      "generatedAnswer": "Откройте Настройки, перейдите в раздел Подписка и нажмите кнопку Отменить подписку. Подписка останется активной до конца текущего расчётного периода.",
+      "goldAnswer": "Настройки → Подписка → Отменить подписку; доступ сохраняется до конца текущего расчётного периода."
+    },
+    {
+      "id": "lg-ru-support",
+      "query": "Как связаться с поддержкой?",
+      "retrievedSourceIds": ["kb-support-ru", "kb-support-hours-ru"],
+      "goldSourceIds": ["kb-support-ru"],
+      "retrievedContext": "Связаться с поддержкой можно по адресу support@example.com или через встроенный чат в правом нижнем углу приложения. Мы отвечаем в течение одного часа в рабочее время.",
+      "generatedAnswer": "Напишите на support@example.com или используйте встроенный чат в правом нижнем углу приложения. Мы отвечаем в течение одного часа в рабочее время.",
+      "goldAnswer": "support@example.com или встроенный чат; ответ в течение одного часа в рабочее время."
+    },
+    {
+      "id": "lg-en-abstain-no-info",
+      "query": "Do you support delivery to the Moon?",
+      "retrievedSourceIds": ["kb-shipping-zones"],
+      "goldSourceIds": [],
+      "retrievedContext": "We ship to the United States, Canada, Mexico, and most of the European Union. See the shipping-zones page for the complete list.",
+      "generatedAnswer": "",
+      "goldAnswer": ""
+    },
+    {
+      "id": "lg-en-abstain-unrelated",
+      "query": "What is the capital of France?",
+      "retrievedSourceIds": [],
+      "goldSourceIds": [],
+      "retrievedContext": "",
+      "generatedAnswer": "",
+      "goldAnswer": ""
+    }
+  ]
+}

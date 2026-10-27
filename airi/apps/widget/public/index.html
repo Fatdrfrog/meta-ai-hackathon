@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airi.chat Widget CDN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: #f4f4f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 640px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .status::before {
+            content: '●';
+            font-size: 12px;
+        }
+
+        .files {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .files h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .file-list li:last-child {
+            border-bottom: none;
+        }
+
+        .file-name {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+
+        .file-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .file-link:hover {
+            text-decoration: underline;
+        }
+
+        .usage {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .usage h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        pre {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e5e7eb;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .footer {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="status">CDN Online</div>
+
+        <h1>Airi.chat Widget CDN</h1>
+        <p>
+            This is the CDN endpoint for Airi.chat web widget.
+            Use the loader script below to embed the widget on your website.
+        </p>
+
+        <div class="files">
+            <h2>Available Files</h2>
+            <ul class="file-list">
+                <li>
+                    <span class="file-name">loader.js</span>
+                    <a href="/loader.js" class="file-link" target="_blank">View →</a>
+                </li>
+                <li>
+                    <span class="file-name">widget.js</span>
+                    <a href="/widget.js" class="file-link" target="_blank">View →</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="usage">
+            <h2>Usage Example</h2>
+            <pre>&lt;script async 
+  src="https://widget.airi.chat/loader.js" 
+  data-client-key="YOUR_CLIENT_KEY"&gt;
+&lt;/script&gt;</pre>
+        </div>
+
+        <div class="footer">
+            <p>
+                Powered by <a href="https://airi.chat" target="_blank">Airi.chat</a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

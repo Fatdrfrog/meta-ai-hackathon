@@ -1,0 +1,39 @@
+{
+  "name": "@icecore/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@icecore/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.116.0",
+    "expo": "56.0.11",
+    "expo-constants": "56.0.18",
+    "expo-dev-client": "^56.0.20",
+    "expo-linking": "56.0.14",
+    "expo-router": "56.2.10",
+    "expo-secure-store": "56.0.4",
+    "expo-status-bar": "56.0.4",
+    "lucide-react-native": "^1.17.0",
+    "react": "19.2.8",
+    "react-native": "0.86.0",
+    "react-native-gesture-handler": "^3.0.1",
+    "react-native-reanimated": "^4.4.1",
+    "react-native-safe-area-context": "^5.8.0",
+    "react-native-screens": "^4.25.2",
+    "react-native-svg": "^15.15.5",
+    "react-native-url-polyfill": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "typescript": "^5.9.2"
+  }
+}

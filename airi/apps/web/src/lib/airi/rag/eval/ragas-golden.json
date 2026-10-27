@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "aggregateThresholds": {
+    "contextPrecisionAtK": 0.7,
+    "contextRecallAtK": 0.8,
+    "answerRelevancy": 0.55,
+    "faithfulness": 0.6
+  },
+  "perCaseThresholds": {
+    "contextPrecisionAtK": 0.25,
+    "contextRecallAtK": 0.5,
+    "answerRelevancy": 0.3,
+    "faithfulness": 0.4
+  },
+  "cases": [
+    {
+      "id": "en-refund-policy",
+      "query": "What is your refund policy?",
+      "retrievedSourceIds": ["kb-refund-policy", "kb-billing-faq", "kb-pricing"],
+      "goldSourceIds": ["kb-refund-policy", "kb-billing-faq"],
+      "retrievedContext": "We offer a full refund within 14 days of purchase, no questions asked. Refunds are processed back to the original payment method within 5 business days. Billing FAQ covers invoice reissues and subscription proration.",
+      "generatedAnswer": "You can request a full refund within 14 days of purchase. Refunds go back to the original payment method within 5 business days.",
+      "goldAnswer": "Full refund available within 14 days of purchase; refunded to original payment method within 5 business days."
+    },
+    {
+      "id": "en-cancel-subscription",
+      "query": "How do I cancel my subscription?",
+      "retrievedSourceIds": ["kb-cancel-subscription", "kb-billing-faq", "kb-account-settings"],
+      "goldSourceIds": ["kb-cancel-subscription"],
+      "retrievedContext": "To cancel your subscription, open Settings, go to the Subscription section, and click Cancel Subscription. Changes take effect at the end of the current billing period. You can re-activate at any time.",
+      "generatedAnswer": "Open Settings, go to Subscription, and click Cancel Subscription. Your plan stays active until the end of the current billing period.",
+      "goldAnswer": "Go to Settings > Subscription and click Cancel Subscription. Changes apply at the end of the billing period."
+    },
+    {
+      "id": "ru-trial-period",
+      "query": "Есть ли бесплатный пробный период?",
+      "retrievedSourceIds": ["kb-trial-ru", "kb-plans-ru"],
+      "goldSourceIds": ["kb-trial-ru"],
+      "retrievedContext": "Для всех новых пользователей действует бесплатный пробный период 7 дней. Пробный период подключается автоматически после регистрации и не требует банковской карты.",
+      "generatedAnswer": "Да, бесплатный пробный период 7 дней действует для всех новых пользователей. Пробный период подключается автоматически после регистрации и не требует банковской карты.",
+      "goldAnswer": "Да, для новых пользователей доступен бесплатный пробный период 7 дней, подключается автоматически."
+    },
+    {
+      "id": "en-contact-support",
+      "query": "How can I contact customer support?",
+      "retrievedSourceIds": ["kb-contact", "kb-support-hours", "kb-chat-widget"],
+      "goldSourceIds": ["kb-contact", "kb-support-hours"],
+      "retrievedContext": "You can reach customer support by emailing support@example.com or by clicking the chat icon in the bottom right corner of the app. We respond within one hour during business hours.",
+      "generatedAnswer": "Email support@example.com or click the chat icon in the bottom right corner of the app. We respond within an hour during business hours.",
+      "goldAnswer": "Email support@example.com or use the in-app chat widget; response time under one hour during business hours."
+    },
+    {
+      "id": "en-api-rate-limit",
+      "query": "What is the API rate limit?",
+      "retrievedSourceIds": ["kb-api-limits", "kb-api-auth"],
+      "goldSourceIds": ["kb-api-limits"],
+      "retrievedContext": "The public API is rate-limited to 60 requests per minute per API key. Requests that exceed the limit return HTTP 429 with a Retry-After header. Enterprise plans can raise the limit.",
+      "generatedAnswer": "The API is limited to 60 requests per minute per API key. If you exceed it you get HTTP 429 with a Retry-After header. Enterprise plans can increase this.",
+      "goldAnswer": "60 requests per minute per API key; exceeding returns HTTP 429 with a Retry-After header. Enterprise can raise this."
+    },
+    {
+      "id": "en-no-info",
+      "query": "Do you support Mars delivery?",
+      "retrievedSourceIds": ["kb-shipping-zones"],
+      "goldSourceIds": [],
+      "retrievedContext": "We ship to the United States, Canada, Mexico, and most of the European Union. See the shipping-zones page for the complete list.",
+      "generatedAnswer": "",
+      "goldAnswer": ""
+    }
+  ]
+}

@@ -1,0 +1,2085 @@
+{
+  "CampaignTestSend": {
+    "open": "Отправить тест себе в WhatsApp",
+    "title": "Тестовая отправка",
+    "description": "Мы отправим шаблон {template} вам в WhatsApp, чтобы вы проверили его до рассылки. Тесты не учитываются в лимитах рассылок.",
+    "phoneLabel": "Ваш номер WhatsApp",
+    "phonePlaceholder": "+7 700 123 45 67",
+    "valuesFromRecipient": "Переменные возьмём из первого получателя.",
+    "valuesFromSample": "Переменные заполним примерами из шаблона.",
+    "phoneSaved": "Номер сохраним для следующего теста.",
+    "send": "Отправить тест",
+    "sending": "Отправляем…",
+    "cancel": "Отмена",
+    "sent": "Тест отправлен на {phone}. Проверьте WhatsApp на этом телефоне.",
+    "errors": {
+      "invalid_request": "Не хватает данных для отправки. Обновите страницу и попробуйте снова.",
+      "invalid_phone": "Введите номер WhatsApp с кодом страны, например +7 700 123 45 67.",
+      "not_allowed": "Отправлять тесты могут только менеджеры и администраторы.",
+      "whatsapp_not_connected": "Подключите WhatsApp в интеграциях, чтобы отправить тест.",
+      "rate_limited": "Достигнут лимит тестов на этот час. Попробуйте позже.",
+      "template_unavailable": "Этот шаблон не одобрен для этого номера. Выберите одобренный шаблон.",
+      "template_variables_missing": "Заполните {variables} для первого получателя и попробуйте снова.",
+      "header_media_missing": "Шаблону нужна картинка или файл в заголовке. Добавьте их в шаблон и попробуйте снова.",
+      "template_parameters": "WhatsApp не принял значения шаблона. Проверьте переменные и попробуйте снова.",
+      "recipient_not_allowed": "Этот аккаунт WhatsApp пока может писать только на разрешённые номера. Добавьте этот номер в настройках WhatsApp в Meta.",
+      "recipient_unreachable": "На этот номер нельзя отправить сообщение WhatsApp. Проверьте номер.",
+      "recipient_is_sender": "Это номер вашего бизнеса. Введите свой личный номер WhatsApp.",
+      "meta_billing": "WhatsApp нужен способ оплаты. Настройте оплату в WhatsApp Manager.",
+      "meta_rate_limited": "WhatsApp ограничивает отправку с этого номера. Попробуйте через несколько минут.",
+      "token_invalid": "Подключение WhatsApp устарело. Переподключите WhatsApp в интеграциях.",
+      "send_failed": "Тест не отправлен. Попробуйте снова."
+    }
+  },
+  "BulkAnalytics": {
+    "errors": {
+      "loadFailed": "Не удалось загрузить аналитику массовых рассылок.",
+      "selectBothDates": "Выберите обе даты: «От» и «До».",
+      "fromBeforeTo": "Дата «От» должна быть раньше даты «До».",
+      "futureRange": "Выберите период, который начинается сегодня или раньше."
+    },
+    "periodPresets": {
+      "1": "Последние 24 часа",
+      "7": "Последние 7 дней",
+      "14": "Последние 14 дней",
+      "30": "Последние 30 дней",
+      "90": "Последние 90 дней",
+      "custom": "Выбрать даты"
+    },
+    "period": {
+      "lastDays": "{count, plural, one {Последний # день} few {Последние # дня} many {Последние # дней} other {Последние # дня}}",
+      "pickEnd": "{from} · выберите дату окончания",
+      "pickDateRange": "Выберите диапазон дат",
+      "aria": "Период: {label}",
+      "title": "Диапазон дат",
+      "description": "Выберите даты, затем примените.",
+      "cancel": "Отмена",
+      "apply": "Применить"
+    },
+    "accessibility": {
+      "periodPreset": "Готовые периоды",
+      "addMessagePhrase": "Добавить фразу сообщения",
+      "removeMessagePhrase": "Удалить фразу сообщения {phrase}"
+    },
+    "units": {
+      "lessThanMinute": "Менее 1 мин",
+      "minutes": "{count, plural, one {# мин} few {# мин} many {# мин} other {# мин}}",
+      "hours": "{count, plural, one {# ч} few {# ч} many {# ч} other {# ч}}",
+      "percentagePoints": "{value} п. п.",
+      "notAvailable": "н/д"
+    },
+    "categories": {
+      "no_reply": "Нет ответа",
+      "flow": "Ответ через Flow",
+      "deleted": "Удалено",
+      "audio": "Аудио",
+      "mockup": "Макет",
+      "price": "Цена",
+      "other": "Другое"
+    },
+    "engagementOptions": {
+      "all": " Любая вовлеченность",
+      "high": "Высокий балл (70+)",
+      "medium": "Средний балл (40-69)",
+      "low": "Низкий балл (1-39)",
+      "unscored": "Без баллов"
+    },
+    "multiSelect": {
+      "selected": "Выбрано: {count}",
+      "searchPlaceholder": "Поиск {label}",
+      "clearSelection": "Очистить выбор",
+      "noMatches": "Совпадений не найдено"
+    },
+    "statusBadge": {
+      "replied": "Отвечено",
+      "noReply": "Нет ответа"
+    },
+    "filters": {
+      "title": "Фильтры",
+      "description": "Фильтры выбора обновляются автоматически. Текстовые фильтры применяются при нажатии Enter или «Применить».",
+      "activeCount": "Активно: {count}",
+      "noActive": "Нет активных фильтров",
+      "messageTextLabel": "Текст сообщения",
+      "messageTextPlaceholder": "Ключевое слово или точный текст",
+      "messageTextMatchModeAria": "Режим соответствия текста сообщения",
+      "contains": "Содержит",
+      "doesNot": "Не содержит",
+      "conversationsLabel": "Диалоги",
+      "conversationScopes": {
+        "campaign_sends": "Рассылки рассылок",
+        "all": "Все диалоги",
+        "fresh": "Новые диалоги",
+        "campaign_or_fresh": "Кампания + новые"
+      },
+      "periodLabel": "Период",
+      "templatesLabel": "Шаблоны",
+      "templatesPlaceholder": "Все шаблоны",
+      "campaignsLabel": "Рассылки",
+      "campaignsPlaceholder": "Все рассылки",
+      "excludeTemplatesLabel": "Исключить шаблоны",
+      "excludeTemplatesAria": "Исключить исходящие сообщения шаблонов",
+      "excludeTemplatesOn": "Исключены",
+      "excludeTemplatesOff": "Включены",
+      "excludeTemplatesDisabledTooltip": "Отключено, пока активен фильтр «Исключить шаблоны». Выключите его, чтобы фильтровать по шаблонам или кампаниям.",
+      "repliesLabel": "Ответы",
+      "replyStatuses": {
+        "all": "Все",
+        "replied": "Отвечено",
+        "not_replied": "Не отвечено"
+      },
+      "engagementLabel": "Вовлеченность",
+      "replyWindowLabel": "Окно ответа",
+      "more": "Ещё",
+      "hideMore": "Скрыть",
+      "apply": "Применить",
+      "reset": "Сбросить",
+      "replyWindowOptions": {
+        "24": "24 часа",
+        "72": "72 часа",
+        "168": "7 дней",
+        "336": "14 дней",
+        "720": "30 дней"
+      },
+      "chips": {
+        "message": "Сообщение: {value}",
+        "excludingMessageText": "Исключая текст сообщения",
+        "conversations": "Диалоги: {value}",
+        "period": "Период: {from} – {to}",
+        "periodFrom": "с",
+        "periodTo": "по",
+        "engagement": "Вовлеченность: {value}",
+        "templates": "Шаблоны: {count}",
+        "campaigns": "Рассылки: {value}"
+      },
+      "addPhrase": "Добавить",
+      "removePhrase": "Удалить"
+    },
+    "summary": {
+      "acceptedSends": "Принятые отправки",
+      "conversations": "Диалоги",
+      "conversationsDetail": "Диалогов: {count}",
+      "readRate": "Прочтения",
+      "readCountDetail": "Прочитано: {count}",
+      "failed": "Ошибки",
+      "failedRateDetail": "Ошибок: {value}",
+      "replied": "Отвечено",
+      "replyRateDetail": "Уровень ответов: {value}",
+      "notReplied": "Не отвечено",
+      "inboundMessagesDetail": "Входящих сообщений: {count}",
+      "averageFirstReply": "Среднее время первого ответа"
+    },
+    "funnel": {
+      "title": "Воронка отправки",
+      "description": "Принято → ошибка / доставлено → прочитано → отвечено → оценка стоимости для текущих фильтров.",
+      "accepted": "Принято",
+      "failed": "Ошибки",
+      "delivered": "Доставлено",
+      "read": "Прочитано",
+      "replied": "Отвечено",
+      "cost": "Стоимость",
+      "conversionOfPrevious": "{value} от предыдущего",
+      "costPerReplyDetail": "{value} / ответ",
+      "costPerReplyUnavailable": "Пока нет ответов",
+      "costNotPriced": "Не рассчитана",
+      "costUnpricedMessages": "{count, plural, one {У # доставленного сообщения нет подтверждённой цены} few {У # доставленных сообщений нет подтверждённой цены} many {У # доставленных сообщений нет подтверждённой цены} other {У # доставленного сообщения нет подтверждённой цены}}",
+      "costNotPricedDetail": "У доставленных сообщений нет подтверждённой цены",
+      "costNotPricedNote": "Для стоимости рассылки нужны подтверждённые тарифы сообщений. Отсутствие цены не означает нулевую стоимость. Общие расходы WhatsApp доступны на вкладке «Расходы аккаунта».",
+      "allFailedBannerTitle": "Все принятые отправки завершились ошибкой доставки",
+      "allFailedBannerDescription": "{failed} из {accepted} отправок не дошли после того, как Meta их приняла. Это ошибки доставки, а не отсутствие интереса. Проверьте коды ошибок ниже.",
+      "highFailedBannerTitle": "Высокий процент ошибок доставки",
+      "highFailedBannerDescription": "{failed} из {accepted} отправок упали ({rate}). Прочтения и ответы низкие, потому что сообщения не дошли до телефона."
+    },
+    "outcomes": {
+      "failed": "Ошибка",
+      "not_delivered": "Не доставлено",
+      "delivered_unread": "Доставлено, нет подтверждения прочтения",
+      "read_no_reply": "Прочитано, без ответа",
+      "replied": "Отвечено"
+    },
+    "failures": {
+      "unknown": "Неизвестная ошибка",
+      "codeLabel": "Ошибка {code}"
+    },
+    "compare": {
+      "label": "Сравнение",
+      "previous": "С прошлым периодом",
+      "off": "Выкл.",
+      "vsPrior": "{value} к прошлому"
+    },
+    "empty": {
+      "title": "Диалоги не найдены",
+      "description": "Подходящие диалоги WhatsApp появятся здесь после того, как в них будут написаны сообщения.",
+      "noSendsTitle": "В этом периоде нет принятых отправок",
+      "noSendsDescription": "Аналитика массовых рассылок показывает только WhatsApp-отправки, которые Meta уже приняла. Расширьте период или выберите день, когда кампания реально уходила.",
+      "filteredTitle": "Нет отправок под эти фильтры",
+      "filteredDescription": "Сбросьте фильтр кампании или шаблона либо расширьте период. Пустой результат обычно значит: нет принятых отправок для точного выбора.",
+      "futureTitle": "Эта дата ещё в будущем",
+      "futureDescription": "Аналитика кампаний покрывает только уже состоявшиеся отправки. Выберите сегодня или более раннюю дату.",
+      "recentCampaignHints": "Недавние кампании в этом воркспейсе:"
+    },
+    "overviewDisabled": {
+      "title": "Обзор диалогов временно приостановлен",
+      "description": "Аналитика отправок кампаний доступна. Общий обзор диалогов временно отключен, пока атрибуция ответов переносится в масштабируемый отчетный контур."
+    },
+    "charts": {
+      "dailyVolumeTitle": "Ежедневный объем",
+      "dailyVolumeDescription": "Принятые отправки WhatsApp по дням с ответами во всплывающей подсказке.",
+      "dailyValueLabel": "Принято",
+      "dailyRepliesLabel": "Ответов: {count}",
+      "replyCategoriesTitle": "Категории ответов",
+      "replyCategoriesDescription": "Классификация первого входящего сообщения после массовой рассылки по шаблону.",
+      "replyCategoriesValueLabel": "Диалоги",
+      "outcomesTitle": "Исходы",
+      "outcomesDescription": "Почему отправки не привели к ответу.",
+      "outcomesValueLabel": "Отправки",
+      "failuresTitle": "Ошибки доставки",
+      "failuresDescription": "Неудачные отправки по коду ошибки WhatsApp.",
+      "failuresValueLabel": "Ошибки"
+    },
+    "templatesTable": {
+      "title": "Шаблоны",
+      "description": "Эффективность, сгруппированная по названию шаблона WhatsApp.",
+      "aria": "Эффективность шаблона",
+      "columns": {
+        "template": "Шаблон",
+        "accepted": "Принято",
+        "replied": "Отвечено",
+        "replyRate": "Частота ответов",
+        "avgFirstReply": "Ср. первый ответ",
+        "window": "Окно"
+      }
+    },
+    "detectedRuns": {
+      "title": "Обнаруженные запуски",
+      "description": "Почасовые кластеры отправок выше выбранного порога.",
+      "aria": "Обнаруженные массовые запуски",
+      "columns": {
+        "hour": "Час",
+        "template": "Шаблон",
+        "accepted": "Принято",
+        "replyRate": "Частота ответов"
+      }
+    },
+    "topConversations": {
+      "title": "Самые активные ответы",
+      "description": "Диалоги с наибольшей входящей активностью.",
+      "aria": "Диалоги с самыми активными ответами",
+      "columns": {
+        "recipient": "Получатель",
+        "template": "Шаблон",
+        "replies": "Ответы",
+        "firstReply": "Первый ответ"
+      },
+      "attachment": "Вложение"
+    },
+    "recentTable": {
+      "titles": {
+        "conversationPool": "Диалоги",
+        "acceptedSends": "Недавние принятые отправки"
+      },
+      "descriptions": {
+        "conversationPool": "Диалоги WhatsApp, соответствующие текущим фильтрам пула.",
+        "acceptedSends": "Последние принятые отправки шаблонов и состояние их диалогов."
+      },
+      "refresh": "Обновить",
+      "aria": {
+        "conversationPool": "Отфильтрованные диалоги WhatsApp",
+        "acceptedSends": "Недавние принятые отправки WhatsApp"
+      },
+      "columns": {
+        "activity": "Активность",
+        "sent": "Отправлено",
+        "recipient": "Получатель",
+        "template": "Шаблон",
+        "status": "Статус",
+        "engagement": "Вовлеченность",
+        "replies": "Ответы",
+        "firstReply": "Первый ответ",
+        "matchedMessage": "Совпавшее сообщение"
+      },
+      "messagePrefix": "{direction}: {text}",
+      "messageDirectionFallback": "сообщение",
+      "noMatch": "Нет совпадений"
+    },
+    "header": {
+      "loadingWindow": "Загрузка окна",
+      "badge": "Массовая рассылка WhatsApp",
+      "title": "Аналитика рассылок",
+      "description": "Принятые отправки шаблонов, ответы и совпадения по ключевым словам из диалогов.",
+      "updated": "Обновлено {value}",
+      "refreshing": "Обновление",
+      "refresh": "Обновить",
+      "saveFilter": "Сохранить фильтр",
+      "exportExcel": "Экспорт в Excel",
+      "exportFailed": "Не удалось экспортировать Excel."
+    },
+    "export": {
+      "sheets": {
+        "summary": "Сводка",
+        "templates": "Шаблоны",
+        "daily": "По дням",
+        "outcomes": "Исходы",
+        "failures": "Ошибки доставки",
+        "runs": "Обнаруженные запуски",
+        "topConversations": "Самые активные ответы",
+        "records": "Принятые отправки"
+      },
+      "columns": {
+        "metric": "Метрика",
+        "current": "Текущий",
+        "previous": "Предыдущий",
+        "conversationId": "ID диалога"
+      }
+    },
+    "sendToAudience": "Отправить этой аудитории",
+    "scopeFacets": {
+      "hiddenTitle": "Графики отправок требуют область «Отправки кампаний»",
+      "hiddenDescription": "Графики шаблонов и ежедневных отправок доступны только для отправок кампаний. Переключите область диалогов на «Отправки кампаний», чтобы увидеть их."
+    },
+    "saveFilter": {
+      "title": "Сохранить фильтр",
+      "description": "Сохраните текущие фильтры аналитики как аудиторию для массовой рассылки.",
+      "nameLabel": "Название фильтра",
+      "namePlaceholder": "например, Спящие лиды",
+      "cancel": "Отмена",
+      "save": "Сохранить",
+      "saving": "Сохранение...",
+      "success": "Фильтр сохранен",
+      "error": "Не удалось сохранить фильтр"
+    },
+    "details": {
+      "toggle": "Графики и статистика"
+    },
+    "operations": {
+      "deliveryFilter": "Статус доставки",
+      "errorCode": "Код ошибки доставки",
+      "anyError": "Любая ошибка",
+      "unavailable": "Недоступно",
+      "missingProof": "Подтверждения доставки недоступны",
+      "attemptsGrain": "Попытки с ID провайдера; принятие не означает доставку",
+      "ofAccepted": "{value} от принятых попыток",
+      "deliveryTitle": "Подтверждения доставки",
+      "deliveryDescription": "Выбранные принятые отправки. Прочитанные входят в доставленные; ответы считаются отдельно.",
+      "diagnosticAudience": "Фильтры доставки нельзя использовать как аудиторию отправки. Повторную отправку выполняйте через историю кампаний с действующей политикой.",
+      "openHistory": "Открыть историю кампаний",
+      "exportProgress": "Сбор полного экспорта: {count} строк",
+      "cancelExport": "Отменить экспорт",
+      "incomplete": "Неполные данные",
+      "incompleteDescription": "Часть данных недоступна или превышает лимит чтения. Итоги могут быть неполными; полный экспорт недоступен.",
+      "healthTitle": "Состояние кампании и продолжений",
+      "oneFamily": "Выберите одну кампанию, чтобы увидеть исходную отправку и её продолжения.",
+      "selectCampaign": "Выберите кампанию: состояние включает получателей без принятых отправок.",
+      "familyScope": "Все сохранённые исходные и повторные попытки. Не зависит от периода, шаблонов и фильтров ответов.",
+      "updating": "Обновление…",
+      "refreshHealth": "Обновить данные",
+      "healthFailed": "Не удалось загрузить состояние кампании. Повторите обновление.",
+      "observedAt": "Данные на {value}",
+      "observedLowerBound": "Только доступные сохранённые данные. Состояния могут измениться при получении пропущенных новых попыток.",
+      "distinctRecipients": "Уникальные получатели",
+      "providerAttempts": "Попытки провайдера",
+      "nestedEvidence": "Прочтение подтверждает доставку. Показатели вложены и не являются последовательными этапами воронки.",
+      "atLeast": "Наблюдается {count}",
+      "failureGroups": "Известные ошибки",
+      "failureScope": "Ошибки кампании включают отклонённые отправки. Фильтр проверяет принятые попытки; ошибки до принятия доступны в истории кампании.",
+      "unknownError": "Ошибка без кода",
+      "noErrorDetail": "Описание ошибки не сохранено",
+      "filterFailures": "Проверить ошибки принятых отправок",
+      "historyTitle": "Подтверждения доставки получателю",
+      "historyDescription": "Последний сохранённый результат и предыдущие попытки показаны отдельно. Прошлая доставка не гарантирует повторную; отсутствие истории не доказывает отсутствие отправок.",
+      "historyFailed": "Не удалось загрузить историю.",
+      "latestOutcome": "Последний сохранённый результат",
+      "noHistory": "Сохранённые попытки не найдены. Это не доказывает отсутствие прошлых отправок.",
+      "close": "Закрыть",
+      "deliveredAt": "Доставлено",
+      "readAt": "Прочитано",
+      "providerRecipient": "Получатель у провайдера",
+      "identityConflict": "Неоднозначный получатель",
+      "comparisonLoading": "Загрузка предыдущего периода…",
+      "comparisonFailed": "Сравнение с предыдущим периодом недоступно. Текущие результаты доступны.",
+      "replyStatus": "Статус ответа",
+      "noFirstReply": "Ответ не зафиксирован",
+      "historyAction": "Предыдущие подтверждения",
+      "noResults": "Нет получателей с выбранными фильтрами.",
+      "statuses": {
+        "all": "Все статусы доставки",
+        "accepted": "Ожидает квитанций",
+        "delivered": "Доставлено (включая прочитанные)",
+        "read": "Прочитано",
+        "failed": "Ошибка",
+        "unknown": "Неизвестный результат"
+      },
+      "metrics": {
+        "accepted": "Принято",
+        "delivered": "Доставлено",
+        "read": "Прочитано",
+        "failed": "Ошибка",
+        "awaiting": "Ожидает подтверждения"
+      },
+      "recipientMetrics": {
+        "planned": "Запланировано",
+        "attempted": "Была попытка",
+        "accepted": "Принято",
+        "delivered": "Доставлено",
+        "read": "Прочитано",
+        "failed": "Ошибка",
+        "awaitingReceipts": "Ожидает квитанций",
+        "uncertain": "Неопределённый результат",
+        "untouched": "Без попыток"
+      },
+      "historyStatuses": {
+        "untouched": "Без попыток",
+        "uncertain": "Неопределённый результат",
+        "accepted": "Принято без подтверждения доставки",
+        "delivered": "Доставлено",
+        "read": "Прочитано",
+        "failed": "Ошибка"
+      },
+      "evidence": {
+        "delivered": "Прошлая доставка подтверждена",
+        "read": "Прошлое прочтение подтверждено",
+        "acceptedWithoutDeliveryProof": "Принято без подтверждения доставки",
+        "priorFailure": "Известная прошлая ошибка",
+        "disputedIdentity": "Неоднозначный получатель"
+      },
+      "exportUnavailable": "Полный экспорт недоступен: сохранённый контекст данных отсутствует. Обновите отчёт и попробуйте снова.",
+      "conflictingAttempts": "У {count} попыток неоднозначная личность получателя. Подтверждение провайдера не доказывает доставку отображаемому получателю; проверьте историю получателя.",
+      "batchCount": "{count, plural, one {# отправка} few {# отправки} many {# отправок} other {# отправки}}",
+      "batchDetails": "Подробности отправок кампании",
+      "healthMetric": "Показатель",
+      "batchLifecycle": "Отправки и состояние",
+      "dispatchProgress": "Обработано {count} из {total}",
+      "scheduledFor": "Запланировано на {value}",
+      "dispatchExpires": "Срок отправки истекает {value}",
+      "dispatchStopped": "Отправка остановлена. Подробности доступны в истории кампаний.",
+      "dispatchStopReasons": {
+        "paused_by_operator": "Приостановлено оператором",
+        "workflow_cancelled": "Отменено оператором",
+        "provider_circuit_open": "Остановлено после повторных ошибок провайдера. Перед повтором может потребоваться подтверждение.",
+        "empty_audience": "Подходящих получателей не осталось",
+        "workflow_start_failed": "Не удалось начать отправку",
+        "dispatch_expired_before_start": "Срок отправки истёк до запуска"
+      },
+      "historyTargetUnavailable": "Выбранная кампания недоступна в этом пространстве или сохранённой истории.",
+      "returnToAllCampaigns": "Вернуться ко всем кампаниям"
+    },
+    "recipients": {
+      "range": "Показано {from}–{to} из {total}",
+      "rangeUnknown": "Показано {from}–{to}",
+      "page": "Страница {number}",
+      "details": "Подробности",
+      "conversation": "Диалог",
+      "actions": "Действия",
+      "replyCount": "Ответов: {count}",
+      "searchLabel": "Найти получателя по телефону",
+      "searchPlaceholder": "Номер телефона или минимум 3 цифры",
+      "searchApply": "Найти",
+      "searchClear": "Очистить",
+      "searchHelp": "Поиск по телефону во всей выбранной аудитории, а не только на этой странице. Поиск по имени не поддерживается.",
+      "searchInvalid": "Введите 3–15 цифр телефона. Допустимы пробелы, +, скобки, точки, дефисы и wa_; поиск по имени не поддерживается.",
+      "detailsTitle": "Подробности попытки отправки",
+      "detailsDescription": "Данные этой записи. Доставка и ответ показаны отдельно; историю подтверждений можно открыть ниже.",
+      "conflictDescription": "Получатель провайдера отличается от отображаемого. Подтверждение доставки провайдера не доказывает доставку этому получателю; проверьте историю.",
+      "providerMessageId": "ID сообщения провайдера",
+      "firstReplyAt": "Время первого ответа",
+      "replyDelay": "Задержка первого ответа",
+      "matchedCount": "Совпадающих сообщений",
+      "matchedAt": "Время первого совпадающего сообщения",
+      "matchedDirection": "Направление первого совпадающего сообщения",
+      "conversationStatus": "Статус диалога",
+      "managerRead": "Прочитано менеджером",
+      "conversationSource": "Источник диалога",
+      "yes": "Да",
+      "no": "Нет"
+    },
+    "reports": {
+      "title": "Отчёт по рассылке",
+      "allCampaigns": "Все рассылки",
+      "recipients": "Получатели",
+      "failures": "Причины ошибок",
+      "insights": "Анализ",
+      "accountSpend": "Расходы аккаунта",
+      "campaignCost": "Оценка стоимости рассылки",
+      "replyAttribution": "В пределах выбранного окна ответа",
+      "attributionWindow": "Ответы учитываются в течение {hours} ч. после отправки",
+      "failureScope": "Ошибки принятых провайдером сообщений с текущими фильтрами. Ошибки до принятия и условия повторной отправки доступны в истории рассылок.",
+      "inspectRecipients": "Посмотреть получателей",
+      "noFailures": "С текущими фильтрами нет зарегистрированных ошибок доставки.",
+      "clearDelivery": "Сбросить фильтр доставки",
+      "clearSearch": "Сбросить поиск по телефону",
+      "errorDescriptions": {
+        "131026": "WhatsApp не смог доставить сообщение. Посмотрите детали попытки: сам код не определяет точную причину.",
+        "131047": "Для этой отправки истекло окно повторного взаимодействия.",
+        "131049": "Meta ограничила доставку маркетингового сообщения этому получателю.",
+        "131000": "Провайдер сообщил о временной или неизвестной ошибке."
+      }
+    }
+  },
+  "BulkCampaignsPage": {
+    "title": "Массовые рассылки",
+    "description": "Настройте, напишите сообщение, добавьте получателей и отправьте.",
+    "tabs": {
+      "campaigns": "Создать",
+      "analytics": "Аналитика"
+    },
+    "filters": {
+      "title": "Аудитория рассылки",
+      "description": "Настройте источник получателей для этой рассылки.",
+      "sourceLabel": "Источник",
+      "manual": "Ввести получателей вручную",
+      "fromAnalytics": "Текущая аудитория аналитики",
+      "limitedBadge": "Ограничено",
+      "limitedDescription": "Некоторые условия аналитики нельзя преобразовать в доступных для отправки получателей.",
+      "pendingHint": "Выбор еще не применен.",
+      "appliedHint": "Этот источник получателей уже активен.",
+      "apply": "Применить",
+      "manage": "Управление сохраненными аудиториями",
+      "manageTitle": "Сохраненные аудитории аналитики",
+      "activeLabel": "Активная аудитория",
+      "activeManual": "Получатели, введенные вручную",
+      "activeAnalytics": "Текущая аудитория аналитики",
+      "activeSaved": "Сохраненная аудитория: {name}",
+      "clear": "Сбросить",
+      "deleted": "Сохраненный фильтр удален",
+      "deleteFailed": "Не удалось удалить сохраненный фильтр",
+      "deleteAria": "Удалить сохраненный фильтр {name}"
+    }
+  },
+  "MultiChannelCampaignBuilder": {
+    "sendSummary": {
+      "title": "Отправить рассылку?",
+      "description": "Проверьте, кто получит сообщение, перед отправкой.",
+      "message": "Сообщение",
+      "textMessage": "Текстовое сообщение",
+      "emailMessage": "Письмо",
+      "sender": "Отправитель",
+      "recipients": "Получат сообщение",
+      "recipientCount": "{count, plural, one {# получатель} few {# получателя} many {# получателей} other {# получателя}}",
+      "skipped": "Не получат",
+      "overflow": "Дневной лимит — {dailyLimit}. {firstWaveCount} отправим сейчас, остальные {queuedCount} будут ждать в очереди по 24 часа до {lastWaveAt}.",
+      "confirm": "Отправить рассылку",
+      "cancel": "Назад"
+    },
+    "templatesAfterConnect": "Одобренные шаблоны появятся здесь после подключения WhatsApp.",
+    "validationMessages": {
+      "campaignNameRequired": "Введите название рассылки",
+      "messageLimit": "Сообщение может содержать до {limit} символов",
+      "templateRequired": "Выберите шаблон WhatsApp",
+      "messageTextRequired": "Введите текст сообщения",
+      "emailSubjectRequired": "Введите тему письма",
+      "emailBodyRequired": "Введите текст письма"
+    },
+    "pendingTemplates": {
+      "title": "На проверке у Meta",
+      "hint": "Эти шаблоны можно будет отправить после одобрения Meta."
+    },
+    "refreshTemplates": "Проверить снова",
+    "createTemplate": "Создать шаблон",
+    "connectWhatsApp": {
+      "title": "Подключите WhatsApp, чтобы отправлять рассылки",
+      "description": "Рассылки отправляются с вашего номера WhatsApp Business. Подключение занимает несколько минут в окне Meta.",
+      "action": "Подключить WhatsApp"
+    },
+    "campaignDetails": "Детали рассылки",
+    "stepSetup": "Настройка",
+    "stepMessage": "Сообщение",
+    "stepRecipients": "Получатели",
+    "stepSend": "Отправка",
+    "sendRecapRecipients": "{count} получателей",
+    "channel": "Канал",
+    "whatsappNumber": "Номер WhatsApp",
+    "emailSender": "Отправитель email",
+    "selectSource": "Выберите источник",
+    "whatsappTemplates": "WhatsApp",
+    "telegramMessages": "Telegram",
+    "emailCampaigns": "Email",
+    "campaignName": "Название",
+    "campaignNamePlaceholder": "например, Распродажа Черная пятница, Запуск продукта",
+    "whatsappTemplate": "Шаблон WhatsApp",
+    "whatsappMessageType": "Тип сообщения WhatsApp",
+    "whatsappTemplateMode": "Шаблон",
+    "whatsappServiceText": "Сервисный текст (24 ч)",
+    "whatsappServiceMessage": "Сервисное сообщение WhatsApp",
+    "whatsappServiceWindowHelp": "Только для тех, кто писал на этот номер за последние 24 часа.",
+    "whatsappServiceTextPlaceholder": "Напишите сервисный ответ...",
+    "serviceCharactersLimit": "{count}/4096 символов",
+    "template": "Шаблон",
+    "chooseTemplate": "Выберите шаблон",
+    "templatePreview": "Предпросмотр шаблона:",
+    "noTemplates": "Одобренных шаблонов пока нет. Создайте шаблон, Meta обычно проверяет его за несколько минут.",
+    "templatesUnavailable": "Meta сейчас не может загрузить одобренные шаблоны. Повторите попытку позже.",
+    "savedTemplatesWarning": "Показаны сохранённые шаблоны. Статус одобрения мог измениться; Meta проверит шаблон при отправке.",
+    "airiDraft": {
+      "title": "Черновик bulk-рассылки от Airi",
+      "audience": "Аудитория:",
+      "approvedTemplateMatched": "Выбран одобренный шаблон: {template}",
+      "templateNeedsApproval": "Шаблон {template} должен быть одобрен Meta перед отправкой этой рассылки.",
+      "selectApprovedTemplate": "Выберите одобренный WhatsApp-шаблон перед отправкой.",
+      "templateUnverified": "Шаблона {template} нет в сохранённом списке, поэтому его сейчас нельзя проверить. Выберите шаблон ниже."
+    },
+    "telegramMessage": "Сообщение в Telegram",
+    "emailContent": "Содержание Email",
+    "emailUsesDefaultSender": "Email-рассылки используют отправителя по умолчанию, настроенного в Настройки > Интеграции > Email.",
+    "messageText": "Текст сообщения",
+    "messageTextPlaceholder": "Введите ваше сообщение... Используйте {exampleName}, {exampleCompany} и т.д. для персонализации",
+    "charactersLimit": "{count}/4096 символов · Используйте {exampleVariable} для персонализации",
+    "campaignRecipients": "Получатели рассылок",
+    "campaignSummary": "Резюме рассылки",
+    "channelLabel": "Канал:",
+    "whatsappChannel": "WhatsApp",
+    "telegramChannel": "Telegram",
+    "campaignNameLabel": "Название рассылки:",
+    "notSet": "Не задано",
+    "templateLabel": "Шаблон:",
+    "messageLabel": "Сообщение:",
+    "notSelected": "Не выбрано",
+    "ready": "Готово",
+    "notWritten": "Не написано",
+    "recipients": "Получатели:",
+    "noRecipientsSelected": "Получатели не выбраны",
+    "sendingCampaign": "Отправка рассылки...",
+    "sendAgain": "Отправить снова",
+    "recentAudienceOverlap": "Вы недавно писали {intersection} из {candidate} получателей ({percent}%). Подтвердите повторную отправку.",
+    "dispatchLifecycleStatus": "Статус: {status}",
+    "dispatchAttempted": "Отправлено {attempted} из {total}",
+    "dispatchAccepted": "Принято: {count}",
+    "dispatchDelivered": "Доставлено: {count}",
+    "dispatchRead": "Прочитано: {count}",
+    "dispatchFailed": "Не удалось: {count}",
+    "cancelDispatch": "Отменить кампанию",
+    "cancellingDispatch": "Отмена...",
+    "pauseDispatch": "Пауза",
+    "pausingDispatch": "Пауза...",
+    "resumeDispatch": "Продолжить",
+    "resumingDispatch": "Возобновление...",
+    "pausedDispatch": "На паузе",
+    "dispatchStatusUnavailable": "Текущий статус недоступен: {message}",
+    "dispatchCancelFailed": "Предупреждение при отмене: {message}",
+    "dispatchPauseFailed": "Предупреждение при паузе: {message}",
+    "sendToRecipients": "Отправить {count, plural, one {# получателю} other {# получателям}}",
+    "overflowQueue": {
+      "title": "Рассылка пойдёт очередью на несколько дней",
+      "description": "{recipientCount, plural, one {Прикреплён # получатель} few {Прикреплено # получателя} other {Прикреплено # получателей}}. Дневной лимит {dailyLimit}. Сейчас уйдёт {firstWaveCount}. Остальные {queuedCount} будут отправляться каждые 24 часа до {lastWaveAt}.",
+      "confirm": "Поставить в очередь и отправить",
+      "cancel": "Отмена"
+    },
+    "sendingBatches": "Отправляем…",
+    "whatsappAccountHealthWarningTitle": "Предупреждение Meta",
+    "whatsappAccountHealthWarningFallback": "Состояние аккаунта Meta: {state}.",
+    "whatsappAccountHealthWarnOnly": "Проверьте сведения о подключении в настройках WhatsApp.",
+    "marketingOptInWarningToast": "{count, plural, one {У # получателя} other {У # получателей}} WhatsApp marketing нет зафиксированного opt-in. Отправка разрешена, но есть риск нарушения политики.",
+    "marketingOptInWarningAlert": "{count, plural, one {У # получателя} other {У # получателей}} нет записи о согласии. Убедитесь, что они согласились на рассылку.",
+    "marketingTemplateConsentNotice": "Для маркетинговых сообщений нужно согласие получателя. Если согласие не зафиксировано, перед отправкой появится предупреждение.",
+    "marketingOptInWarningInline": "У {count, number} из {total, plural, one {# получателя} other {# получателей}} нет записи о согласии. Убедитесь, что они согласились на рассылку.",
+    "telegramAudience": {
+      "manual": "Список вручную",
+      "known": "Известные чаты",
+      "bot": "Бот",
+      "selectBot": "Выберите бота",
+      "loading": "Загрузка...",
+      "subscriberCount": "Известных чатов: {count, number}",
+      "rateHint": "Бесплатно можно отправлять около 30 сообщений в секунду. Платная рассылка Telegram, если она включена, отправляет до 1 000 в секунду.",
+      "serverResolves": "Сервер определит подходящие личные чаты для этого бота во время отправки."
+    },
+    "checkingEligibility": "Проверка пригодности",
+    "riskBadge": "риск",
+    "noMatchingRecipients": "Нет подходящих получателей",
+    "validation": {
+      "invalidRecipientEmails": "Один или несколько email-адресов получателей недействительны",
+      "uploadRecipients": "Добавьте хотя бы одного получателя"
+    },
+    "toast": {
+      "campaignSent": "Кампания отправлена: ушло {successful} из {total} сообщений.",
+      "campaignQueued": "Кампания в очереди! {total} сообщений будут отправлены в фоновом режиме.",
+      "optInExcluded": "Исключено получателей без согласия (opt-in): {count, number}.",
+      "priorFailedExcluded": "Исключено получателей с ошибкой последней массовой доставки: {count, number}.",
+      "serviceWindowExcluded": "Исключено получателей без открытого 24-часового сервисного окна: {count, number}.",
+      "recipientFileImporting": "Файл с получателями ещё загружается. Дождитесь окончания.",
+      "noRegisteredUsers": "Зарегистрированные пользователи приложения не найдены.",
+      "noTelegramChats": "У этого бота нет известных чатов Telegram.",
+      "finishEmailContent": "Заполните или очистите текст письма: {locales}.",
+      "duplicateRequestIgnored": "Уже в очереди. Повторный запрос пропущен.",
+      "recipientsSkipped": "Пропущено получателей: {count, number}.",
+      "sendFailed": "Не удалось отправить кампанию",
+      "sendFailedOptInList": "{message}\n\nДобавьте эти номера в список согласий:\n{phones}",
+      "templateVariablesMissing": "Не хватает переменных шаблона у получателей: {count, number}.",
+      "fillUpTemplateVariablesMissing": "Не хватает переменных шаблона у дополнительных получателей: {count, number}.",
+      "templateVariablesMissingMore": "...и ещё {count, number}",
+      "customValuesMissing": "Не заполнены свои значения: {variables}."
+    },
+    "analyticsNoRecipients": "Нет получателей, соответствующих текущему фильтру аналитики.",
+    "analyticsAudienceTitle": "Аудитория из аналитики",
+    "analyticsAudienceChecking": "Проверка фильтра...",
+    "analyticsAudienceSummary": "Под этот фильтр подходит получателей: {count, number}.",
+    "analyticsAudienceCapped": "Аудитория слишком велика (макс. {count}). Сузьте фильтр.",
+    "analyticsAudienceUnavailable": "Аудитория из аналитики недоступна.",
+    "analyticsAudienceMatched": "Совпало",
+    "analyticsAudienceEligible": "Доступно",
+    "excludeRecentClientWindowLabel": "Пропускать активные чаты",
+    "excludeRecentClientWindowHint": "Пропускать тех, кто писал за последние 24 часа.",
+    "excludePriorFailedBulkSendsLabel": "Пропускать неудачные доставки",
+    "excludePriorFailedBulkSendsHint": "Пропускать контакты с ошибкой последней доставки. Общие ошибки аккаунта не учитываются.",
+    "priorFailedBulkSendsExcludedInline": "Из этой кампании будет исключено получателей: {count, number}.",
+    "priorFailedBulkSendsLookupUnavailable": "Не удалось проверить доставки. Повторите проверку.",
+    "priorFailedBulkSendsLoading": "Проверяем доставки…",
+    "priorFailedBulkSendsRetry": "Повторить",
+    "priorFailedBulkSendsAllExcluded": "После фильтрации нет получателей.",
+    "priorFailedBulkSendsUnsupported": "Недоступно для этого канала или типа сообщения.",
+    "eligibilityFrozenAtAdmission": "Для этого запланированного запуска пригодность фиксируется при допуске.",
+    "eligibilityEvaluatedEachRun": "Текущая пригодность оценивается при каждом запуске.",
+    "outcome": {
+      "skippedTitle": "Не отправлены",
+      "recentContact": "Недавно получали сообщение",
+      "marketingOptOut": "Отказ от маркетинга",
+      "recipientLimit": "Сверх лимита получателей",
+      "priorFailure": "Предыдущая ошибка",
+      "ineligible": "Непригодны",
+      "serviceWindow": "Сервисное окно",
+      "unsubscribed": "Отписка",
+      "missingMarketingConsent": "Без отметки о согласии на маркетинг (не блокирует отправку)"
+    },
+    "analyticsFillUpTitle": "Добавить получателей",
+    "analyticsFillUpDescription": "Добавьте контакты в пределах лимита.",
+    "analyticsFillUpRemaining": "Осталось мест",
+    "analyticsFillUpLimitUnavailable": "Официальный лимит получателей недоступен.",
+    "analyticsFillUpNoCapacity": "Аудитория аналитики уже заполняет текущий официальный лимит.",
+    "analyticsFillUpAccepted": "Будет добавлено дополнительных получателей: {count, number}.",
+    "analyticsFillUpIgnored": "Пропущено дубликатов или некорректных получателей: {count, number}.",
+    "analyticsFillUpTruncated": "Не будут отправлены получатели сверх официального лимита: {count, number}.",
+    "bulkLimit": {
+      "blocked": "Получатели рассылок на тарифе Free закончились. Повысьте тариф, чтобы отправлять ещё.",
+      "upgrade": "Посмотреть тарифы",
+      "freeRemaining": "Free: {remaining, plural, one {остался # получатель} few {осталось # получателя} many {осталось # получателей} other {осталось # получателя}} из {limit, number}",
+      "freeTrimmed": "Free: {remaining, plural, one {остался # получатель} few {осталось # получателя} many {осталось # получателей} other {осталось # получателя}}. {remaining, plural, one {Отправим только первому из {count, number}.} other {Отправим только первым # из {count, number}.}}",
+      "freeExhausted": "Все {limit, number} получателей рассылок на Free использованы.",
+      "proUnlimited": "Тариф Pro: bulk-кампании без лимита."
+    },
+    "variablesLabel": "Переменные",
+    "recipientFilters": "Фильтры получателей",
+    "recipientFiltersActive": "Включён 1",
+    "recipientFiltersOff": "Выкл.",
+    "recipientFiltersExcluded": "−{count}"
+  },
+  "CampaignDispatchPlanCard": {
+    "readiness": {
+      "fix": {
+        "integrations": "Открыть настройки WhatsApp",
+        "whatsappManager": "Открыть WhatsApp Manager"
+      },
+      "checking": "Проверяем…",
+      "checkingDescription": "Проверяем выбранный номер WhatsApp и аудиторию.",
+      "ready": "Готово к отправке",
+      "readyDescription": "Блокировок отправки не обнаружено. Лимиты аккаунта продолжают действовать, а Meta определяет доставку каждому получателю.",
+      "blocked": "Пока нельзя отправить",
+      "blockedDescription": "Устраните причину ниже и обновите проверку перед отправкой.",
+      "unavailable": "Проверка отправки недоступна",
+      "rateLimited": "Пока нельзя проверить отправку",
+      "unavailableDescription": "Не удалось завершить проверку отправки. Повторите проверку этой рассылки.",
+      "awaitingAudience": "Выберите сообщение и добавьте получателей",
+      "awaitingRecipients": "Добавьте получателей",
+      "noRecipients": "Нет получателей для отправки",
+      "awaitingAudienceDescription": "Выберите шаблон и добавьте получателей.",
+      "refresh": "Проверить снова",
+      "recheck": "Проверить снова",
+      "providerCode": "Код Meta: {code}",
+      "cooldownEligible": "{count} получателей проходят текущие ограничения частоты контактов.",
+      "cooldownUntil": "Повторите после {time}.",
+      "cooldownUnknown": "Обновите проверку, чтобы узнать, когда можно отправить.",
+      "checkedAt": "Проверено: {time}",
+      "remainingUnknown": "Оставшийся лимит отправки WhatsApp недоступен.",
+      "acceptedNotDelivered": "Сообщения в очереди или принятые к отправке ещё не считаются доставленными. Показатели доставки и прочтения обновляются по данным Meta.",
+      "reasons": {
+        "meta_business_limit": "WhatsApp ограничивает отправку. Проверьте WhatsApp Manager.",
+        "meta_sender_restricted": "WhatsApp заблокировал отправку. Проверьте WhatsApp Manager.",
+        "meta_billing": "Проверьте оплату WhatsApp для отправки.",
+        "meta_disconnected": "Подключите номер WhatsApp заново в интеграциях.",
+        "meta_check_unavailable": "Не удалось проверить WhatsApp. Обновите проверку.",
+        "contact_frequency_limit": "Вы недавно писали {count, plural, one {# получателю} other {# получателям}}."
+      },
+      "errors": {
+        "meta_rate_limited": "WhatsApp временно ограничил запросы для этого аккаунта.",
+        "template_lookup_unavailable": "Не удалось проверить этот шаблон в WhatsApp.",
+        "template_unavailable": "Шаблона нет среди одобренных. Выберите одобренный шаблон.",
+        "plan_unavailable": "Номер WhatsApp недоступен. Проверьте подключение в интеграциях."
+      },
+      "details": "Подробности"
+    },
+    "templateCatalog": {
+      "unavailable": "Не удалось загрузить шаблоны WhatsApp.",
+      "rateLimited": "WhatsApp временно ограничил запросы шаблонов."
+    },
+    "sendBlocked": {
+      "checking": "Дождитесь окончания проверки.",
+      "check_failed": "Отправка станет доступна после успешной проверки.",
+      "all_excluded": "Не осталось получателей для отправки.",
+      "blocked": "Устраните проблему из проверки перед отправкой."
+    },
+    "lifecycleStatus": "{status, select, queued {В очереди} scheduled {Запланирована} running {Выполняется} completed {Завершена} failed {Ошибка} expired {Срок истёк} cancelled {Отменена} paused {На паузе} other {{status}}}",
+    "title": "План отправки",
+    "description": "Темп задается на сервере. Интерфейс не настраивает размер пакета напрямую.",
+    "credentialsUnavailable": "Подключите этот канал в интеграциях для отправки.",
+    "unknown": "Неизвестно",
+    "unlimited": "Без лимита",
+    "unavailable": "Недоступно",
+    "messagesPerSecond": "{rate} сообщ./с",
+    "milliseconds": "{delay} мс",
+    "rate": "Скорость",
+    "batchSize": "Размер пакета",
+    "delay": "Пауза",
+    "source": "Источник",
+    "recipientLimit": "Лимит получателей",
+    "whatsappLine": "Линия WhatsApp",
+    "metaStatus": "Качество номера",
+    "throughput": "Пропускная способность",
+    "metaFallback": "Резервные данные Meta: {warning}",
+    "queuedRecipients": "Получателей в очереди",
+    "payloadStaging": "Размещение payload",
+    "workflow": "Workflow",
+    "sources": {
+      "metaPhoneThroughput": "Пропускная способность телефона Meta",
+      "metaDefaultThroughput": "Документированный стандарт Meta",
+      "channelDefault": "Стандарт канала"
+    },
+    "queuedSummary": "Получателей: {count}",
+    "planRestriction": {
+      "title": "Отправка приостановлена — достигнут лимит Free",
+      "trial_expired": "Пробный период Free завершён. Выберите платный тариф, чтобы возобновить рассылки.",
+      "campaign_limit": "В этом рабочем пространстве действует тариф Free, и лимит получателей рассылок исчерпан. Вы можете продолжить редактирование рассылки.",
+      "conversation_limit": "В этом рабочем пространстве действует тариф Free, и достигнут лимит диалогов. Вы можете продолжить редактирование рассылки.",
+      "details": "Подробности использования",
+      "recipientUsage": "Учтено получателей: {used}. Всего доступно на Free: {limit}.",
+      "conversationUsage": "Диалогов: {used}. Лимит Free: {limit}.",
+      "upgrade": "Посмотреть тариф Pro",
+      "checksPending": "Перед отправкой проверки должны завершиться успешно."
+    },
+    "sendUnavailable": "Отправка недоступна",
+    "viewSendingStatus": "Посмотреть статус отправки",
+    "selectedRecipients": "{count, plural, one {Выбран # получатель} few {Выбрано # получателя} many {Выбрано # получателей} other {Выбрано # получателя}}",
+    "otherChecks": "Другие проверки отправки",
+    "connectionDetails": "Сведения о подключении WhatsApp",
+    "inboundActivityTitle": "Нужно проверить входящие сообщения",
+    "inboundActivityDescription": "Недавние входящие сообщения не зафиксированы. Проверьте приём сообщений в настройках WhatsApp."
+  },
+  "CampaignRecipientPicker": {
+    "recipient": {
+      "title": "Получатели рассылок",
+      "selectedCount": "{selected} выбрано / {limit}",
+      "overflowQueueHint": "Получателей ({count, number}) больше сегодняшнего лимита {limit}. Остальные уйдут очередями каждые 24 часа.",
+      "unlimited": "без лимита",
+      "quickAddLabel": "Добавить одного получателя",
+      "addRecipient": "Добавить получателя",
+      "emailPlaceholder": "email@example.com",
+      "telegramPlaceholder": "ID чата или телефон",
+      "whatsappPlaceholder": "+77001234567",
+      "contactsTitle": "Контакты",
+      "addShownContacts": "Добавить",
+      "searchContacts": "Поиск контактов",
+      "loadingContacts": "Загрузка контактов...",
+      "noContacts": "Контакты не найдены",
+      "noTelegramContacts": "Нет подходящих Telegram DM. Нужен прошлый личный контакт с ботом, импорт chat_id или активное Business-окно 24ч. Группы исключены.",
+      "variablesTitle": "Переменные шаблона",
+      "autoFill": "Автозаполнение",
+      "contactName": "Имя контакта",
+      "recipientIdentifier": "Идентификатор получателя",
+      "tableColumn": "Столбец таблицы",
+      "customValue": "Свое значение",
+      "selectTableColumn": "Выберите столбец",
+      "customValuePlaceholder": "Статичное значение для переменной {variable}",
+      "selectedTable": "Выбранные получатели рассылок",
+      "identifier": "Получатель",
+      "name": "Имя",
+      "removeRecipient": "Удалить получателя",
+      "attachedCount": "Прикреплено получателей: {count, number}",
+      "clearAll": "Очистить всех",
+      "clearedToast": "{count, plural, one {Удалён # получатель} few {Удалены # получателя} many {Удалено # получателей} other {Удалено # получателя}}",
+      "undoClear": "Вернуть",
+      "previousPage": "Назад",
+      "nextPage": "Далее",
+      "pageStatus": "Страница {page} из {total}",
+      "renameColumn": "Переименовать столбец {column}",
+      "variableMatchStatus": "Совпадение столбца для переменной {variable}",
+      "variableMatched": "Совпало",
+      "variableUnmatched": "Нет точного столбца",
+      "variablePreview": "Первый получатель увидит: {value}",
+      "variablePreviewEmpty": "У первого получателя нет значения",
+      "variablePhoneFallback": "{count, plural, one {# получатель без имени получит номер телефона} few {# получателя без имени получат номер телефона} many {# получателей без имени получат номер телефона} other {# получателя без имени получат номер телефона}}"
+    }
+  },
+  "LlmAnalytics": {
+    "pageTitle": "Аналитика LLM",
+    "pageDescription": "Операторский обзор надёжности автоответов Airi: безопасные ответы, восстановление из контекста, общие уточнения и сигналы низкой уверенности.",
+    "limitedSample": "Данные основаны на усечённой выборке PostHog. Итоги могут быть ниже полного объёма за выбранный период.",
+    "dateRanges": {
+      "7": "Последние 7 дней",
+      "30": "Последние 30 дней",
+      "90": "Последние 90 дней"
+    },
+    "errors": {
+      "loadFailed": "Не удалось загрузить аналитику LLM"
+    },
+    "common": {
+      "aiQuality": "Качество ИИ",
+      "warehouseActive": "Хранилище активно",
+      "waitingForEvents": "Ожидание событий",
+      "manualApproval": "Ручное подтверждение",
+      "title": "Контроль качества LLM",
+      "description": "Следите за вызовами моделей, надёжностью RAG и замечаниями, подтверждаемыми пользователем. Решение закрывает замечание и может создать регрессионный сценарий, но не дообучает модель и не меняет поведение агента.",
+      "warehousePartialUnavailable": "Некоторые метрики хранилища временно недоступны.",
+      "unknown": "Неизвестно",
+      "unknownValue": "Неизвестное значение ({value})",
+      "notAvailable": "Нет данных",
+      "technicalDetail": "Техническая деталь"
+    },
+    "units": {
+      "calls": "{count, plural, one {# вызов} few {# вызова} many {# вызовов} other {# вызова}}",
+      "tokens": "{count, plural, one {# токен} few {# токена} many {# токенов} other {# токена}}",
+      "sampledEvaluations": "{count, plural, one {# выборочная оценка} few {# выборочные оценки} many {# выборочных оценок} other {# выборочной оценки}}",
+      "observedCalls": "{count, plural, one {# наблюдаемый вызов} few {# наблюдаемых вызова} many {# наблюдаемых вызовов} other {# наблюдаемого вызова}}",
+      "openFindings": "{count, plural, one {# открытое замечание} few {# открытых замечания} many {# открытых замечаний} other {# открытого замечания}}",
+      "turns": "{count, plural, one {# ход} few {# хода} many {# ходов} other {# хода}}",
+      "milliseconds": "{value} мс",
+      "seconds": "{value} с",
+      "perSecond": "{value}/с",
+      "scoreOutOf100": "{value} из 100",
+      "shareOfSpend": "{value}% расходов"
+    },
+    "operations": {
+      "items": {
+        "genericChatCompletion": "Обычная генерация в чате",
+        "airiCoach": "Помощник тренера Airi",
+        "airiChatTitle": "Чат Airi: заголовок",
+        "airiChatProductCapabilities": "Чат Airi: возможности продукта",
+        "airiChatWhatsAppTemplateDraft": "Чат Airi: черновик шаблона WhatsApp",
+        "airiChatWhatsAppFlowDraft": "Чат Airi: черновик WhatsApp Flow",
+        "airiChatImageGenerationBrief": "Чат Airi: бриф для изображения",
+        "airiChatOpportunityScan": "Чат Airi: поиск возможностей",
+        "airiChatCampaignPackage": "Чат Airi: пакет кампании",
+        "airiChatIntentClassification": "Чат Airi: классификация намерения",
+        "airiChatReply": "Ответ в чате Airi",
+        "ragGenerateResponse": "RAG: генерация ответа",
+        "ragRetrievalIntentClassifier": "RAG: классификация поискового намерения",
+        "ragGroundingReflection": "RAG: проверка обоснованности",
+        "ragVerifier": "RAG: верификатор",
+        "ragReranker": "RAG: переранжирование",
+        "ragHyde": "RAG: HyDE",
+        "ragQueryCleaner": "RAG: очистка запроса",
+        "ragPrepareQuery": "RAG: подготовка запроса",
+        "replyGenerate": "Ответ клиенту: генерация",
+        "replyTurnUnderstanding": "Ответ клиенту: понимание хода",
+        "replyLoadThreadContext": "Ответ клиенту: контекст диалога",
+        "replyFinalGeneration": "Ответ клиенту: финальная генерация",
+        "replyFallbackRecoveryGeneration": "Ответ клиенту: восстановление ответа",
+        "replyAnswerCoverageJudge": "Ответ клиенту: оценка полноты"
+      },
+      "details": {
+        "generic": "Общие вызовы помощника без отдельного ключа сценария.",
+        "coach": "Рекомендации для операторов в диалогах с клиентами.",
+        "airiChat": "Вызовы помощника Airi, сгруппированные по действию продукта.",
+        "rag": "Вызовы поиска и обоснования перед генерацией ответа.",
+        "reply": "Вызовы конвейера ответа в диалоге с клиентом.",
+        "unknown": "Трассированные вызовы модели с неизвестным ключом операции."
+      }
+    },
+    "judge": {
+      "explanationPrompt": "Объяснение судьи: почему ответ получил такую оценку?",
+      "scorePrompt": "Оценка «{dimension}» (0–1, оставьте пустым, чтобы пропустить)",
+      "dimensions": {
+        "relevance": "Релевантность",
+        "trustworthiness": "Достоверность",
+        "conciseness": "Краткость",
+        "completeness": "Полнота",
+        "safety": "Безопасность",
+        "overall": "Итог"
+      }
+    },
+    "quality": {
+      "title": "Качество модели и чата Airi",
+      "description": "Метрики качества модели, задержки, эффективности и использования чата Airi из BigQuery.",
+      "airiChatReporting": "Отчётность чата Airi",
+      "cards": {
+        "airiAnswers": {
+          "title": "Ответы Airi",
+          "subtitle": "Сохранённые ходы чата помощника"
+        },
+        "noContextTurns": {
+          "title": "Ходы без контекста",
+          "subtitle": "Ответы без найденного контекста"
+        },
+        "airiChatSpend": {
+          "title": "Расходы чата Airi",
+          "subtitle": "Пересчитано по трассам BigQuery"
+        },
+        "generationQuality": {
+          "title": "Качество генерации",
+          "subtitle": "Взвешенная оценка соответствия"
+        },
+        "groundedness": {
+          "title": "Обоснованность",
+          "subtitle": "Ходы с найденным контекстом"
+        },
+        "answerRelevance": {
+          "title": "Релевантность ответа",
+          "subtitle": "Оценка релевантности судьёй"
+        },
+        "guardrailPass": {
+          "title": "Проверки безопасности",
+          "subtitle": "Пройденные проверки безопасности"
+        },
+        "evalPass": {
+          "title": "Успешные оценки",
+          "subtitle": "Доля успешно пройденных оценок"
+        },
+        "answerCompleteness": {
+          "title": "Полнота ответа",
+          "subtitle": "Обнаруженные вопросы с ответом"
+        },
+        "citationCoverage": {
+          "title": "Покрытие цитатами",
+          "subtitle": "Цитаты по найденному контексту"
+        },
+        "toxicityScore": {
+          "title": "Оценка токсичности",
+          "subtitle": "Чем ниже, тем лучше"
+        },
+        "toxicOutputs": {
+          "title": "Токсичные ответы",
+          "subtitle": "Срабатывания флага токсичности"
+        }
+      }
+    },
+    "systemPerformance": {
+      "title": "Производительность системы",
+      "cards": {
+        "p95Latency": {
+          "title": "Задержка P95",
+          "subtitle": "Задержка трасс LLM"
+        },
+        "p99Latency": {
+          "title": "Задержка P99",
+          "subtitle": "Хвостовая задержка"
+        },
+        "tokensPerSecond": {
+          "title": "Токенов / с",
+          "subtitle": "Скорость промпта и завершения"
+        },
+        "outputTokensPerSecond": {
+          "title": "Выходных токенов / с",
+          "subtitle": "Скорость завершения"
+        },
+        "timeToFirstToken": {
+          "title": "Время до первого токена",
+          "subtitle": "Требует инструментирования потоковой передачи"
+        }
+      }
+    },
+    "costEfficiency": {
+      "title": "Стоимость и операционная эффективность",
+      "cards": {
+        "errorRate": {
+          "title": "Доля ошибок",
+          "subtitle": "Неудачные вызовы модели"
+        },
+        "promptTokenShare": {
+          "title": "Доля токенов промпта",
+          "subtitle": "Доля входа во всех токенах"
+        },
+        "completionTokenShare": {
+          "title": "Доля токенов ответа",
+          "subtitle": "Доля выхода во всех токенах"
+        },
+        "costPerThousandTokens": {
+          "title": "Цена / 1 тыс. токенов",
+          "subtitle": "Пересчитанная стоимость трасс"
+        },
+        "semanticCacheHit": {
+          "title": "Попадание в семантический кэш",
+          "subtitle": "Наблюдаемые вызовы семантического кэша"
+        }
+      }
+    },
+    "health": {
+      "daily": {
+        "title": "Состояние чата Airi по дням",
+        "empty": "Данных о состоянии чата Airi по дням пока нет.",
+        "series": {
+          "answers": "Ответы",
+          "grounded": "Обоснованные",
+          "noContext": "Без контекста"
+        }
+      },
+      "warnings": {
+        "title": "Предупреждения о контексте чата Airi",
+        "empty": "Предупреждений о контексте чата Airi за этот период нет.",
+        "columns": {
+          "issue": "Проблема",
+          "turns": "Ходы"
+        }
+      }
+    },
+    "reviewQueue": {
+      "title": "Очередь проверки",
+      "description": "Открытые замечания, которые нужно подтвердить перед созданием регрессионных сценариев.",
+      "loadFailed": "Не удалось загрузить замечания.",
+      "empty": "Открытых замечаний по качеству ИИ нет.",
+      "columns": {
+        "finding": "Замечание",
+        "evidence": "Свидетельство",
+        "decision": "Решение"
+      },
+      "labels": {
+        "replyExcerpt": "Фрагмент ответа",
+        "noReplyExcerpt": "Фрагмента ответа нет",
+        "recommendedNextStep": "Рекомендуемый следующий шаг"
+      },
+      "actions": {
+        "resolve": "Решить",
+        "ignore": "Игнорировать"
+      }
+    },
+    "prompts": {
+      "resolveWithRegression": "Решить и добавить регрессионный сценарий",
+      "resolveWithoutRegression": "Решить без регрессионного сценария: фрагмент входных данных отсутствует"
+    },
+    "toasts": {
+      "resolvedWithRegression": "Замечание решено и добавлено в регрессионные сценарии",
+      "resolved": "Замечание решено",
+      "ignored": "Замечание проигнорировано",
+      "updateFailed": "Не удалось обновить замечание"
+    },
+    "enums": {
+      "fallbackAction": {
+        "useGeneratedReply": "Использовать созданный ответ",
+        "groundedRecovery": "Восстановление из контекста",
+        "intentFallback": "Запасной ответ по намерению",
+        "genericClarification": "Общее уточнение",
+        "clarifyingGeneration": "Генерация уточнения"
+      },
+      "fallbackReason": {
+        "generatedReplyComplete": "Созданный ответ завершён",
+        "emptyGeneratedReply": "Созданный ответ пуст",
+        "incompleteGeneratedReply": "Созданный ответ не завершён",
+        "hydeLeakageGuard": "Защита от утечки HyDE",
+        "missingAskCoverage": "Не все вопросы покрыты",
+        "groundedContextAvailable": "Доступен обоснованный контекст",
+        "missingKnowledgeSignal": "Сигнал о нехватке знаний",
+        "genericUngroundedTurn": "Общий ход без обоснования",
+        "clarifyingGenerationAllowed": "Разрешена генерация уточнения",
+        "evidencePolicyClarify": "Политика свидетельств: уточнить",
+        "evidencePolicyHandoff": "Политика свидетельств: передать оператору"
+      },
+      "resultType": {
+        "verifiedSnippet": "Проверенный фрагмент",
+        "suggestionWithAi": "Предложение с ИИ",
+        "aiReply": "Ответ ИИ",
+        "fallback": "Запасной ответ",
+        "evidenceRetrieve": "Поиск свидетельств",
+        "evidenceContext": "Контекст свидетельств",
+        "noContext": "Без контекста"
+      },
+      "turnKind": {
+        "greeting": "Приветствие",
+        "presenceCheck": "Проверка присутствия",
+        "metaQuestion": "Мета-вопрос",
+        "thanks": "Благодарность",
+        "farewell": "Прощание",
+        "acknowledgment": "Подтверждение",
+        "impatience": "Нетерпение",
+        "dataSharing": "Передача данных",
+        "question": "Вопрос",
+        "followupQuestion": "Уточняющий вопрос",
+        "unknown": "Неизвестно"
+      },
+      "channel": {
+        "whatsApp": "WhatsApp",
+        "telegram": "Telegram",
+        "email": "Электронная почта",
+        "widget": "Виджет",
+        "instagram": "Instagram",
+        "facebook": "Facebook"
+      },
+      "retrievalPath": {
+        "snippet": "Фрагмент",
+        "knowledgeBase": "База знаний",
+        "blended": "Смешанный поиск",
+        "none": "Нет"
+      },
+      "issueType": {
+        "knowledgeGap": "Пробел в знаниях",
+        "unsupportedAnswer": "Неподтверждённый ответ",
+        "badRetrieval": "Плохой поиск",
+        "scenarioActionMismatch": "Несоответствие действию сценария",
+        "escalationIssue": "Проблема эскалации",
+        "tonePolicyIssue": "Нарушение тональности",
+        "costLatencySpike": "Скачок стоимости или задержки",
+        "other": "Другое"
+      },
+      "severity": {
+        "critical": "Критическая",
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая",
+        "info": "Информация"
+      }
+    },
+    "cards": {
+      "safeReplies": {
+        "title": "Безопасные ответы",
+        "subtitle": "Ответы без RAG: приветствия и подтверждения"
+      },
+      "ragTurns": {
+        "title": "RAG-ходы",
+        "subtitle": "Ходы, дошедшие до генерации ответа из контекста"
+      },
+      "groundedRecovery": {
+        "title": "Восстановление из контекста",
+        "subtitle": "Неполные генерации, восстановленные из БЗ или сниппетов"
+      },
+      "genericClarification": {
+        "title": "Общие уточнения",
+        "subtitle": "Ответы-заглушки, которые ещё нужно улучшить"
+      },
+      "lowConfidence": {
+        "title": "Низкая уверенность",
+        "subtitle": "Ходы, где понимание намерения осталось неопределённым"
+      },
+      "groundedRecoveryRate": {
+        "title": "Доля восстановления из контекста",
+        "subtitle": "Процент RAG-ходов, восстановленных из контекста"
+      },
+      "genericClarificationRate": {
+        "title": "Доля общих уточнений",
+        "subtitle": "Процент RAG-ходов, завершившихся общим ответом"
+      },
+      "lowConfidenceRate": {
+        "title": "Доля низкой уверенности",
+        "subtitle": "Процент отслеживаемых ходов с низкой уверенностью"
+      },
+      "safeReplyShare": {
+        "title": "Доля безопасных ответов",
+        "subtitle": "Процент ходов, обработанных без RAG"
+      }
+    },
+    "charts": {
+      "dailyTrend": "Дневной тренд надёжности",
+      "fallbackActions": "Разбивка по типам запасных действий"
+    },
+    "tables": {
+      "fallbackReasons": "Причины запасных ответов",
+      "channels": "Разбивка по каналам",
+      "resultTypes": "Типы RAG-результатов",
+      "safeReplyKinds": "Виды безопасных ответов",
+      "lowConfidenceKinds": "Виды низкой уверенности"
+    },
+    "legend": {
+      "ragTurns": "RAG-ходы",
+      "groundedRecovery": "Восстановление из контекста",
+      "genericClarification": "Общие уточнения",
+      "safeReplies": "Безопасные ответы"
+    },
+    "labels": {
+      "events": "События",
+      "name": "Название",
+      "count": "Количество"
+    },
+    "empty": {
+      "title": "Данных LLM-оператора пока нет",
+      "description": "Когда автоответы Airi начнут отправлять операторские метрики, здесь появятся тренды надёжности и разбивка по запасным ответам.",
+      "noFallbackActions": "За этот период запасные действия не зафиксированы.",
+      "noFallbackReasons": "За этот период причины запасных ответов не зафиксированы.",
+      "noChannels": "За этот период данные по каналам не зафиксированы.",
+      "noResultTypes": "За этот период типы RAG-результатов не зафиксированы.",
+      "noSafeReplyKinds": "За этот период виды безопасных ответов не зафиксированы.",
+      "noLowConfidenceKinds": "За этот период виды низкой уверенности не зафиксированы."
+    },
+    "warehouse": {
+      "title": "Телеметрия warehouse",
+      "description": "Агрегаты BigQuery для текущей рабочей области.",
+      "descriptionWithRefresh": "Агрегаты BigQuery для текущей рабочей области, обновлено {time}.",
+      "partialFailure": "Запрос к warehouse частично завершился с ошибкой: {message}",
+      "cards": {
+        "llmCalls": {
+          "title": "LLM-вызовы",
+          "subtitle": "Вызовы модели, отслеживаемые warehouse"
+        },
+        "errorRate": {
+          "title": "Доля ошибок",
+          "subtitle": "Неудачные вызовы модели за этот период"
+        },
+        "p95Latency": {
+          "title": "P95 задержка",
+          "subtitle": "Задержка вызовов в warehouse"
+        },
+        "totalTokens": {
+          "title": "Всего токенов",
+          "subtitle": "Токены промпта и ответа"
+        },
+        "ragIssues": {
+          "title": "Проблемы RAG",
+          "subtitle": "Fallback, отсутствующий контекст или неудачные turns"
+        }
+      },
+      "spend": {
+        "title": "Расходы на LLM",
+        "description": "Оценочная стоимость чат-LLM для этой рабочей области (без эмбеддингов и медиа).",
+        "footnote": "Оценка по токенам × опубликованным тарифам моделей; старые трейсы пересчитываются при запросе.",
+        "cards": {
+          "totalSpend": {
+            "title": "Общие расходы",
+            "subtitle": "Стоимость LLM в рабочей области за период"
+          },
+          "avgCost": {
+            "title": "Средняя цена / вызов",
+            "subtitle": "Средний USD на трассированный вызов"
+          },
+          "totalTokens": {
+            "title": "Всего токенов",
+            "subtitle": "Токены промпта и ответа"
+          },
+          "companyTotal": {
+            "title": "Итого по компании",
+            "subtitle": "Рабочие области компании: {count}"
+          }
+        },
+        "charts": {
+          "daily": "Расходы по дням",
+          "dailyDescription": "Оценочные расходы в USD по дням на основе трассированных вызовов модели."
+        },
+        "tables": {
+          "byOperation": "Топ операций по стоимости",
+          "byOperationDescription": "Какие рабочие процессы ИИ используют бюджет LLM.",
+          "byModel": "Топ моделей по стоимости",
+          "byModelDescription": "Пары модели и рабочего процесса из трассированных вызовов. Длинные идентификаторы переносятся, чтобы столбец стоимости оставался видимым."
+        },
+        "labels": {
+          "cost": "Стоимость",
+          "modelAndWorkflow": "Модель и рабочий процесс",
+          "volume": "Объём"
+        },
+        "legend": {
+          "dailySpend": "Расходы по дням"
+        },
+        "empty": {
+          "daily": "Нет дневных данных о расходах за период.",
+          "byOperation": "Нет данных о расходах по операциям за период."
+        }
+      }
+    }
+  },
+  "CampaignHistory": {
+    "refreshError": "Обновления временно недоступны. Показаны последние полученные результаты; восстановите соединение или обновите страницу.",
+    "title": "История",
+    "campaignCount": "Кампаний: {count}",
+    "campaign": "Кампания",
+    "channel": "Канал",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "email": "Email",
+    "templateMessage": "Шаблон/Сообщение",
+    "recipients": "Получатели",
+    "results": "Результаты",
+    "actions": "Действия",
+    "acceptedRate": "Принято",
+    "deliveryRate": "Доставляемость",
+    "readRate": "Прочтения",
+    "openRate": "Открытия",
+    "clickRate": "Клики",
+    "unsubscribeRate": "Отписки",
+    "emailOnlyMetric": "Считается только для email, не для WhatsApp",
+    "failedOrBounceRate": "Ошибки / отказы",
+    "replyRate": "Ответы",
+    "cost": "Стоимость",
+    "costPerReply": "Стоимость / ответ",
+    "costStatus": {
+      "notPriced": "Не рассчитана",
+      "unpricedMessages": "{count, plural, one {У # доставленного сообщения нет подтверждённой цены} few {У # доставленных сообщений нет подтверждённой цены} many {У # доставленных сообщений нет подтверждённой цены} other {У # доставленного сообщения нет подтверждённой цены}}",
+      "notPricedDetail": "У доставленных сообщений нет подтверждённой цены",
+      "notTracked": "Отправлена до начала учёта стоимости",
+      "explanation": "Meta не сообщает цену каждого сообщения, а подтверждённого тарифа WhatsApp для вашего рынка пока нет, поэтому стоимость рассылки не рассчитывается. Расходы всего аккаунта WhatsApp по данным Meta показаны над списком рассылок."
+    },
+    "viewAnalytics": "Ответы",
+    "sentAt": "Отправлено",
+    "sentBy": "Кем",
+    "sentByValue": "Отправил: {name}",
+    "unknown": "Неизвестно",
+    "empty": {
+      "title": "Рассылки еще не отправлялись",
+      "description": "Здесь будет отображаться история ваших рассылок"
+    },
+    "failureSummary": {
+      "allFailed": "Все отправки не удались",
+      "someFailed": "Не удалось: {count}",
+      "errorCode": "Ошибка Meta",
+      "localCooldown": "Остановлено лимитами контактов airi.chat",
+      "localCooldownDescription": "airi.chat остановил эти сообщения из-за лимита частоты контактов. В Meta они не отправлялись."
+    },
+    "summary": {
+      "accepted": "Принято: {accepted} из {total}",
+      "failed": "Ошибок: {count}"
+    },
+    "operations": {
+      "status": {
+        "queued": "В очереди",
+        "scheduled": "Запланирована",
+        "running": "Выполняется",
+        "completed": "Завершена",
+        "failed": "Ошибка",
+        "expired": "Срок истёк",
+        "cancelled": "Отменена",
+        "paused": "На паузе"
+      },
+      "progress": "Обработано",
+      "notAttempted": "Без попытки",
+      "remaining": "Осталось {count}",
+      "delivery": {
+        "pending": "В ожидании",
+        "accepted": "Отправлено",
+        "delivered": "Доставлено",
+        "read": "Прочитано",
+        "failed": "Ошибки"
+      },
+      "cancel": {
+        "action": "Отменить",
+        "pending": "Отмена…",
+        "success": "Рассылка отменена.",
+        "localWarning": "Рассылка отменена локально, но отмена процесса ещё не подтверждена.",
+        "error": "Не удалось отменить рассылку."
+      },
+      "pause": {
+        "action": "Пауза",
+        "pending": "Пауза…",
+        "success": "Рассылка на паузе. Оставшиеся волны остаются в очереди.",
+        "error": "Не удалось поставить рассылку на паузу.",
+        "resume": "Продолжить",
+        "resuming": "Возобновление…",
+        "resumeSuccess": "Рассылка возобновлена.",
+        "resumeError": "Не удалось возобновить рассылку."
+      },
+      "retry": {
+        "successSkippedRecent": "Неудачные получатели поставлены в очередь. {count, plural, one {# получателя, которому недавно писали, пропустили} few {# получателей, которым недавно писали, пропустили} many {# получателей, которым недавно писали, пропустили} other {# получателя, которым недавно писали, пропустили}}.",
+        "action": "Повторить неудавшиеся ({count})",
+        "pending": "Повторная отправка…",
+        "success": "Неудавшиеся получатели поставлены в очередь на повторную отправку.",
+        "error": "Не удалось повторно отправить сообщения этим получателям.",
+        "circuitWarning": "Сработала защита провайдера. Перед повтором подтвердите, что проблема устранена.",
+        "provider": "Провайдер:",
+        "code": "Код:",
+        "failureCount": "Сбоев:",
+        "acknowledgeCircuit": "Подтверждаю, что проблема провайдера устранена.",
+        "cooldown": "Для {count} получателей ещё действует пауза airi.chat между контактами. Текущая политика разрешает повтор для этой аудитории с {date}. Ограничения провайдера также должны быть устранены.",
+        "cooldownUnknown": "Для {count} получателей действует ограничение контактов airi.chat. Проверьте лимиты перед повторной отправкой."
+      }
+    },
+    "details": {
+      "localSuppression": "Остановлено в airi.chat",
+      "action": "Действия",
+      "show": "Подробнее ({count})",
+      "hide": "Скрыть",
+      "showDeliveryDetails": "Показать данные доставки для {count} получателей",
+      "hideDeliveryDetails": "Скрыть данные доставки",
+      "none": "-",
+      "title": "Данные доставки",
+      "description": "Показатели канала и события доставки по получателям.",
+      "recipientEvents": "Получатели",
+      "noneAvailable": "Для этой рассылки нет событий доставки по получателям.",
+      "recipient": "Получатель",
+      "status": "Статус",
+      "provider": "Провайдер",
+      "details": "Детали",
+      "updated": "Обновлено",
+      "metrics": {
+        "recipients": "Получатели",
+        "accepted": "Принято",
+        "failed": "Ошибки",
+        "deliveryRate": "Доставка",
+        "readRate": "Прочтение",
+        "replyRate": "Ответы",
+        "openRate": "Открытия",
+        "clickRate": "Клики",
+        "bounceRate": "Отказы",
+        "unsubscribeRate": "Отписки",
+        "cost": "Стоимость",
+        "costPerReply": "Стоимость ответа"
+      }
+    }
+  },
+  "WhatsAppSpendSummary": {
+    "title": "Расходы WhatsApp по данным Meta",
+    "window": "{start} – {end} (UTC)",
+    "approximate": "Приблизительно, {currency}",
+    "loading": "Загружаем расходы WhatsApp…",
+    "error": "Не удалось загрузить расходы WhatsApp из Meta.",
+    "retry": "Повторить",
+    "retrying": "Повторяем…",
+    "noSource": "Подключите WhatsApp, чтобы видеть расходы по данным Meta.",
+    "connect": "Подключить WhatsApp",
+    "noSpend": "Meta не сообщила о списаниях WhatsApp за этот период.",
+    "reconnect": "Доступ Meta к этому аккаунту WhatsApp истёк или недостаточен, поэтому расходы прочитать нельзя.",
+    "reconnectAction": "Переподключить WhatsApp",
+    "unavailable": "Не удалось загрузить данные о расходах.",
+    "outOfRange": "Расходы из Meta показываются только за периоды в пределах последних 365 дней.",
+    "partial": "Часть аккаунтов прочитать не удалось, поэтому итог включает только аккаунты с суммой ниже.",
+    "scope": "Приблизительные расходы, которые Meta сообщает по всему аккаунту WhatsApp Business: рассылки, чаты и все остальные сообщения. Это не стоимость отдельной рассылки.",
+    "truncated": "Показаны только первые 10 аккаунтов WhatsApp.",
+    "accountState": {
+      "reported": "Есть данные",
+      "no_activity": "Списаний нет",
+      "cost_withheld": "Meta сообщила объём, но не стоимость",
+      "reconnect": "Нет доступа Meta, переподключите WhatsApp",
+      "unsupported": "Недоступно для этого аккаунта",
+      "unavailable": "Временно недоступно"
+    }
+  },
+  "CsvUpload": {
+    "skipped": {
+      "title": "{count, plural, one {# строка пропущена} few {# строки пропущены} many {# строк пропущено} other {# строки пропущены}}",
+      "description": "В этих строках нет подходящего получателя, им сообщение не уйдёт.",
+      "row": "Строка {row}",
+      "more": "и ещё {count}",
+      "download": "Скачать пропущенные строки",
+      "columns": {
+        "row": "Строка",
+        "value": "Значение",
+        "reason": "Причина"
+      },
+      "reasons": {
+        "missing_recipient": "Нет получателя",
+        "invalid_phone": "Неверный номер",
+        "invalid_email": "Неверный email"
+      }
+    },
+    "replaceFile": "Заменить",
+    "uploadFile": "Загрузить CSV/XLSX",
+    "clearFile": "Очистить загруженный файл",
+    "browseFile": "Выбрать файл",
+    "dropzoneTitle": "Загрузить получателей",
+    "dropzoneDescription": "Перетащите CSV или XLSX сюда либо выберите файл.",
+    "recipientCount": "{count, plural, one {# получатель} few {# получателя} many {# получателей} other {# получателя}}",
+    "mergedDuplicates": "{count, plural, one {# повтор объединён} few {# повтора объединены} many {# повторов объединены} other {# повтора объединены}}",
+    "hiddenRowsSkipped": "Пропущены строки, скрытые фильтром Excel: {count, number}.",
+    "truncationNotice": "Импортировано получателей: {original, number}. Используем первых {count, number} из-за текущего лимита отправки.",
+    "csvFormat": "Формат CSV:",
+    "formatExample": {
+      "whatsapp": "phone,name,company\n+77001234567,Айбек,TechCorp",
+      "telegram": "chat_id,name,company\n123456789,Айбек,TechCorp",
+      "email": "email,name,company\nalice@example.com,Алиса,Acme"
+    },
+    "requirements": {
+      "firstRow": "Первая строка должна содержать заголовки столбцов",
+      "requiredColumn": "Обязательный столбец:",
+      "phone": "phone (телефон)",
+      "chatId": "chat_id (ID чата)",
+      "email": "email",
+      "orEquivalent": "или эквивалент",
+      "additionalColumns": "Дополнительные столбцы становятся переменными сообщения",
+      "maxRecipients": "До {count, number} получателей на кампанию"
+    },
+    "errors": {
+      "emptyFile": "Файл CSV пуст",
+      "noValidRecipients": "В CSV не найдено подходящих получателей",
+      "maxRecipientsExceeded": "Превышен лимит в {count, number} получателей на кампанию",
+      "whatsappMissingPhone": "CSV должен содержать столбец «phone» или «phone_number» для WhatsApp",
+      "whatsappInvalidPhone": "Некорректный номер телефона в строке {row}. Укажите номер в международном формате, например +77001234567, и загрузите файл заново.",
+      "invalidCsv": "Некорректный формат CSV. Проверьте разделители и кавычки, затем загрузите файл заново.",
+      "whatsappBirthdayMissingColumns": "Для дней рождения нужны столбцы phone/phone_number и birthday/date_of_birth.",
+      "telegramBirthdayMissingColumns": "Для дней рождения нужны столбцы chat_id/telegram_id и birthday/date_of_birth.",
+      "telegramMissingChatId": "CSV должен содержать столбец «chat_id» или «phone» для Telegram",
+      "emailMissingAddress": "CSV должен содержать столбец «email» для Email-рассылок",
+      "failedToParseCSV": "Не удалось разобрать CSV"
+    }
+  },
+  "WidgetAnalytics": {
+    "title": "Аналитика вашего виджета",
+    "subtitle": "Трафик сайта и данные о диалогах",
+    "emptyWidget": {
+      "title": "Виджет не установлен",
+      "description": "Установите интеграцию Web Widget, чтобы отслеживать аналитику сайта и поведение посетителей.",
+      "cta": "Перейти к интеграциям"
+    },
+    "privateAnalytics": "Приватная аналитика",
+    "errorTitle": "Не удалось загрузить аналитику",
+    "refresh": "Обновить",
+    "noDataAvailable": "Нет данных аналитики для вашего пространства",
+    "noDataDescription": "Аналитика доступна только вам. Если данных нет, убедитесь, что виджет установлен и на сайте есть посетители.",
+    "unknown": "Неизвестно",
+    "errors": {
+      "loadFailed": "Не удалось загрузить аналитику виджета."
+    },
+    "units": {
+      "seconds": "{value} с",
+      "minutes": "{value} мин",
+      "hours": "{value} ч"
+    },
+    "websiteUnavailable": {
+      "title": "Веб-аналитика недоступна",
+      "queryFailed": "Не удалось загрузить метрики сайта. Обновите страницу, чтобы повторить попытку. Метрики диалогов доступны.",
+      "description": "Для этого окружения не настроены учетные данные запросов PostHog. Метрики диалогов доступны.",
+      "metric": "Веб-метрики недоступны"
+    },
+    "websiteMetrics": "Метрики сайта (последние 30 дней)",
+    "conversationMetrics": "Метрики диалогов (последние 30 дней)",
+    "stats": {
+      "pageviews": "Просмотры страниц",
+      "sessions": "Сессии",
+      "conversations": "Диалоги",
+      "chatStartRate": "Старт чата",
+      "chatStartRateSubtitle": "Диалогов на сессию"
+    },
+    "charts": {
+      "pageviewsTitle": "Просмотры со временем",
+      "pageviewsDescription": "Дневные просмотры (30 дней)",
+      "trafficSourcesTitle": "Источники трафика",
+      "trafficSourcesDescription": "Откуда приходят посетители",
+      "deviceBreakdownTitle": "По устройствам",
+      "deviceBreakdownDescription": "ПК, мобильные, планшеты",
+      "noTimeSeriesData": "Временные данные пока отсутствуют",
+      "noTrafficSourceData": "Данные об источниках трафика пока отсутствуют",
+      "noDeviceData": "Данные об устройствах пока отсутствуют",
+      "valueLabel": "Просмотры",
+      "noData": "Нет данных для графика"
+    },
+    "devices": {
+      "desktop": "ПК",
+      "mobile": "Мобильные",
+      "tablet": "Планшеты"
+    },
+    "traffic": {
+      "direct": "Прямой переход"
+    },
+    "source": {
+      "title": "Настройка виджета",
+      "noSource": "Источник виджета не найден",
+      "installed": "Установлен",
+      "position": "Позиция",
+      "domains": "Разрешенные домены",
+      "noDomains": "Список доменов пуст",
+      "statusActive": "Активен",
+      "statusInactive": "Неактивен",
+      "airiEnabled": "Airi включена",
+      "helpEnabled": "Вкладка помощи",
+      "autoOpen": "Автооткрытие",
+      "positions": {
+        "bottomLeft": "Слева внизу",
+        "bottomRight": "Справа внизу"
+      }
+    },
+    "breakdowns": {
+      "empty": "Данных для разбивки пока нет"
+    },
+    "insights": {
+      "title": "Здоровье диалогов"
+    },
+    "pages": {
+      "title": "Страницы",
+      "description": "Трафик и диалоги, объединенные по URL",
+      "page": "Страница",
+      "views": "Просмотры",
+      "conversations": "Чаты",
+      "startRate": "Старт чата",
+      "lastActive": "Активность",
+      "empty": "Постраничной активности пока нет"
+    },
+    "engagement": {
+      "title": "Аналитика вовлечённости (за 30 дней)",
+      "avgResponseTime": "Среднее время ответа",
+      "avgMessages": "Сообщений на диалог",
+      "csatScore": "Оценка CSAT",
+      "csatResponses": "{count} ответов",
+      "returningVisitors": "Возвратные посетители",
+      "uniqueVisitorCount": "{count} уникальных посетителей",
+      "statusTitle": "Статус диалогов",
+      "statusDesc": "Текущий статус всех диалогов виджета",
+      "sentimentTitle": "Настроение посетителей",
+      "sentimentDesc": "Анализ настроений из классифицированных диалогов",
+      "categoriesTitle": "Топ категории",
+      "categoriesDesc": "Самые частые темы обращений",
+      "open": "Открыт",
+      "inProgress": "В работе",
+      "closed": "Закрыт",
+      "positive": "Позитивный",
+      "neutral": "Нейтральный",
+      "negative": "Негативный"
+    },
+    "privacyBanner": {
+      "title": "Приватная аналитика пространства",
+      "description": "Все данные здесь доступны только вам. Другие компании не видят вашу статистику. Изоляция данных обеспечивается на уровне запросов по вашему ID рабочего пространства."
+    }
+  },
+  "PerformancePage": {
+    "tooLittleData": "Слишком мало данных для расчета эффективности команды :(",
+    "collectMoreData": "Чтобы увидеть красивые аналитические графики, соберите больше данных о ваших коммуникациях.",
+    "title": "Эффективность команды",
+    "description": "Наблюдайте за эффективностью команды и улучшайте ее.",
+    "dateRanges": {
+      "last7Days": "Последние 7 дней",
+      "last30Days": "Последние 30 дней",
+      "last90Days": "Последние 90 дней"
+    },
+    "errors": {
+      "loadFailed": "Не удалось загрузить данные об эффективности.",
+      "retry": "Повторить"
+    },
+    "chart": {
+      "title": "Недостаточно данных",
+      "collectMoreData": "Соберите больше данных о диалогах, чтобы увидеть эффективность команды."
+    },
+    "dimensions": {
+      "empathy": "Эмпатия",
+      "clarity": "Ясность",
+      "scriptAdherence": "Соблюдение скрипта",
+      "resolution": "Решение"
+    },
+    "duration": {
+      "missing": "—",
+      "seconds": "{count, plural, one {{value} сек.} few {{value} сек.} many {{value} сек.} other {{value} сек.}}",
+      "minutes": "{count, plural, one {{value} мин.} few {{value} мин.} many {{value} мин.} other {{value} мин.}}",
+      "hours": "{count, plural, one {{value} ч.} few {{value} ч.} many {{value} ч.} other {{value} ч.}}"
+    },
+    "units": {
+      "scoreOutOfTen": "{value} из 10",
+      "scoreOutOfFive": "{value} из 5",
+      "percent": "{value} %"
+    },
+    "insights": {
+      "noTrendYet": "Тренда пока нет",
+      "summary": {
+        "teamQaScore": "Оценка QA команды",
+        "noPreviousPeriod": "Нет предыдущего периода для сравнения",
+        "vsPreviousPeriod": "{value} к предыдущему периоду",
+        "qaCoverage": "Покрытие QA",
+        "scoredOfHandled": "{count, plural, one {{scored} оценённый диалог} few {{scored} оценённых диалога} many {{scored} оценённых диалогов} other {{scored} оценённого диалога}} из {handled}",
+        "managersNeedingSupport": "Менеджеры, которым нужна поддержка",
+        "managerTrends": "{improving, plural, one {# менеджер улучшает результат} few {# менеджера улучшают результаты} many {# менеджеров улучшают результаты} other {# менеджера улучшают результаты}}, {declining, plural, one {# менеджер снижает результат} few {# менеджера снижают результаты} many {# менеджеров снижают результаты} other {# менеджера снижают результаты}}",
+        "averageResponseTime": "Среднее время ответа",
+        "responseTimeDescription": "По метрикам взаимодействий в оценённых диалогах",
+        "averageCsat": "Средний CSAT",
+        "csatDescription": "Только диалоги с оценкой CSAT",
+        "activeManagers": "Активные менеджеры",
+        "lastDays": "{count, plural, one {Последний {value} день} few {Последние {value} дня} many {Последние {value} дней} other {Последние {value} дня}}"
+      },
+      "dimensions": {
+        "title": "Состояние показателей QA",
+        "description": "Сильные стороны команды и навыки, которые стоит развивать.",
+        "empty": "Данных по показателям пока недостаточно.",
+        "best": "Лучший результат",
+        "needsCoaching": "Нужен коучинг"
+      },
+      "coaching": {
+        "title": "Приоритеты коучинга",
+        "description": "Возможности с наибольшим влиянием по оценке, тренду и объёму.",
+        "empty": "За этот период приоритеты коучинга не выявлены.",
+        "focus": "Фокус",
+        "summary": "QA {score} из 10 · {count, plural, one {{countValue} оценённый диалог} few {{countValue} оценённых диалога} many {{countValue} оценённых диалогов} other {{countValue} оценённого диалога}}",
+        "risk": "Риск"
+      }
+    },
+    "leaderboard": {
+      "title": "Рейтинг менеджеров",
+      "agent": "Менеджер",
+      "dialogsProcessed": "Обработано диалогов",
+      "qaCoverage": "Покрытие QA",
+      "avgResponse": "Средний ответ",
+      "avgQaScore": "Средняя оценка QA",
+      "emptyTitle": "Данных об эффективности пока нет.",
+      "emptyDescription": "Менеджеры появятся здесь после оценённых диалогов.",
+      "scoreBreakdown": "Разбивка оценки",
+      "csat": "CSAT",
+      "lowQaConversations": "Диалоги с низким QA",
+      "previousPeriodComparison": "{value} к предыдущему периоду"
+    },
+    "performanceChart": {
+      "title": "Сравнение оценок QA",
+      "singleAgentTitle": "Пока один менеджер",
+      "singleAgentDescription": "Добавьте ещё одного менеджера для сравнения.",
+      "description": "Сравнение команды со средним и целевым уровнем QA.",
+      "qaScore": "Оценка QA",
+      "scoredConversations": "Оценённые диалоги",
+      "conversationsShort": "{count, plural, one {{value} диалог} few {{value} диалога} many {{value} диалогов} other {{value} диалога}}",
+      "teamAverage": "Команда {value}",
+      "target": "Цель {value}"
+    }
+  },
+  "AnalyticsOutcomes": {
+    "title": "Результаты",
+    "observation": "Окно наблюдения",
+    "days": "{days} дней",
+    "source": "Источник",
+    "allSources": "Все источники",
+    "refresh": "Обновить",
+    "tabs": {
+      "acquisition": "Привлечение",
+      "attention": "Ожидающие лиды",
+      "delivery": "Доставка и стоимость",
+      "templates": "Шаблоны",
+      "health": "Состояние WhatsApp",
+      "flows": "Flows",
+      "retention": "Повторные покупки"
+    },
+    "unavailable": "Отчёт недоступен. Обновите, чтобы повторить.",
+    "projectedThrough": "Обращения обновлены до {date}",
+    "ledgerThrough": "Подтверждённые операции обновлены до {date}",
+    "coverage": {
+      "ready": "Данные актуальны.",
+      "backfilling": "История ещё загружается. Счётчики неполные.",
+      "stale": "Обновление задерживается. Новые результаты могут отсутствовать.",
+      "unavailable": "Обновление завершилось ошибкой. Покрытие данных неполное."
+    },
+    "truncated": "Достигнут лимит отчёта; показана только часть выборки.",
+    "cohortDefinition": "Обращения за выбранный период; результаты в течение {days} дней до следующего обращения. Возвраты относятся к исходной покупке.",
+    "qualification": "Правило квалификации",
+    "qualificationHelp": "Квалификация — переход на одну из этих стадий CRM в окне наблюдения. Продажа требует подтверждённой операции.",
+    "save": "Сохранить правило",
+    "saving": "Сохранение…",
+    "saveFailed": "Не удалось сохранить правило. Обновите его и повторите.",
+    "empty": "Нет данных для этой выборки",
+    "emptyCohort": "Новые обращения появятся после завершения обновления.",
+    "entryType": "Обращение",
+    "ad": "Реклама",
+    "adId": "Объявление",
+    "entries": "Обращения",
+    "engaged": "Двусторонний чат",
+    "qualified": "Квалифицированы",
+    "booked": "Подтверждённые записи",
+    "paid": "Обращения с оплатой",
+    "pending": "Наблюдение продолжается",
+    "currency": "Валюта",
+    "unknownCurrency": "Валюта неизвестна",
+    "netRevenue": "Чистая выручка",
+    "grossRevenue": "Выручка до возвратов",
+    "refundedRevenue": "Возвраты",
+    "costQualified": "Стоимость / квалификация",
+    "costPaid": "Стоимость / оплату",
+    "roas": "Чистый ROAS",
+    "adEntry": "Из рекламы",
+    "organic": "Органические",
+    "efficiencyHelp": "Эффективность требует зрелых входов, полных расходов, совпадающих валют и часовых поясов, одного источника на объявление и проверенного назначения WhatsApp без изменений группы с начала периода. Цена квалификации также требует сохранённой истории этапов за весь период.",
+    "identityCoverage": "У {count} рекламных входов неполные данные клика, объявления или источника.",
+    "attentionScope": "Текущие активные квалифицированные клиенты и их основной чат на {date}.",
+    "needsReply": "Нужен ответ",
+    "agedUnanswered": "Давно без ответа",
+    "stalled": "Застряли на стадии",
+    "handoff": "Ждут подключения",
+    "emptyAttention": "Нет квалифицированных лидов, требующих внимания",
+    "stage": "Стадия",
+    "owner": "Ответственный",
+    "nextAction": "Следующее действие",
+    "chat": "Чат",
+    "openChat": "Открыть чат",
+    "unassigned": "Не назначен",
+    "followUp": {
+      "reply": "Ответить",
+      "take_over": "Подключиться",
+      "review_quote": "Проверить предложение",
+      "follow_up": "Напомнить"
+    },
+    "deliveryScope": "Уникальные исходящие сообщения ИИ, менеджеров, сценариев и кампаний. Ответы учитываются до следующей отправки или в течение 7 дней.",
+    "accepted": "Приняты",
+    "delivered": "Доставлены",
+    "read": "Прочитаны",
+    "replied": "С ответом",
+    "failed": "Ошибки",
+    "pendingDelivery": "Ждут квитанции",
+    "free": "Бесплатно по квитанции",
+    "unknownPricing": "Цена неизвестна",
+    "origin": "Источник отправки",
+    "origins": {
+      "manager": "Менеджер",
+      "airi": "Airi",
+      "scenario": "Сценарий",
+      "campaign": "Кампания",
+      "bulk_analytics": "Кампания",
+      "system": "Система",
+      "unknown": "Не определён",
+      "manual": "Вручную"
+    },
+    "latency": "Задержка",
+    "medianSeconds": "Медиана, секунд",
+    "p95Seconds": "P95, секунд",
+    "deliveryLatency": "От отправки до доставки",
+    "readLatency": "От отправки до чтения",
+    "accountSpend": "Расходы аккаунта WhatsApp",
+    "pricingHelp": "Расходы провайдера приблизительны и относятся к аккаунту WhatsApp. Они отличаются от доставки по номеру и стоимости ИИ. Неизвестный тариф не означает нулевые расходы.",
+    "account": "Аккаунт",
+    "status": "Статус",
+    "approximateSpend": "Расходы по данным провайдера",
+    "fetchedAt": "Последняя синхронизация",
+    "errorCode": "Код ошибки провайдера",
+    "count": "Количество",
+    "templateScope": "Метрики аккаунта WhatsApp с учётом доступности отслеживания. Чтения и клики собираются 7 дней после отправки; недоступные значения пусты.",
+    "template": "Шаблон",
+    "quality": "Качество",
+    "sent": "Отправлены",
+    "clicked": "Клики",
+    "uniqueClicked": "Уникальные клики",
+    "quickReply": "Быстрые ответы",
+    "cost": "Стоимость провайдера",
+    "healthScope": "Текущее состояние источников и последняя проверка. Текущий снимок не доказывает историческую доступность.",
+    "phoneQuality": "Качество номера",
+    "portfolioLimit": "Лимит портфеля",
+    "accountStatus": "Состояние аккаунта",
+    "webhook": "Webhook",
+    "templateIssues": "Проблемы шаблонов",
+    "tracking": "Сбор Insights",
+    "lastVerified": "Последняя проверка",
+    "activationHelp": "Включение Insights — отдельное необратимое решение у провайдера. Отчёт не включает сбор автоматически.",
+    "insights": {
+      "enable": "Включить Insights для шаблонов",
+      "adminOnly": "Включить Insights для шаблонов может только администратор рабочего пространства.",
+      "confirmTitle": "Включить Insights для шаблонов в {account}?",
+      "confirmDescription": "Meta добавит Insights в этот аккаунт WhatsApp Business, включая отслеживание ссылок в кнопках шаблонов, и будет собирать обезличенные данные из ваших чатов с клиентами. Здесь появятся отправки, доставки, прочтения и клики по шаблонам; прочтения и клики учитываются 7 дней после отправки.",
+      "permanent": "Это необратимо: Meta не позволяет выключить Insights для шаблонов.",
+      "cancel": "Отмена",
+      "confirm": "Включить навсегда",
+      "enabling": "Включаем…",
+      "enabled": "Insights для шаблонов включены. Данные появятся по мере того, как Meta их сообщит.",
+      "reconnect": "Переподключить WhatsApp",
+      "errors": {
+        "reconnect": "Доступ Meta к этому аккаунту WhatsApp истёк или недостаточен, поэтому включить Insights пока нельзя.",
+        "unsupported": "Meta не предоставляет Insights для шаблонов аккаунтам, подключённым через приложение WhatsApp Business, поэтому для этого аккаунта их включить нельзя.",
+        "busy": "Meta сейчас занята. Попробуйте через несколько минут.",
+        "forbidden": "Включить Insights для шаблонов может только администратор рабочего пространства.",
+        "failed": "Не удалось включить Insights для шаблонов. Попробуйте снова."
+      }
+    },
+    "activation": {
+      "enabled": "Включено",
+      "required": "Требуется включение",
+      "unknown": "Неизвестно"
+    },
+    "webhookStatus": {
+      "healthy": "Настроен",
+      "action_required": "Требуется действие",
+      "unknown": "Не проверен"
+    },
+    "provider": {
+      "available": "Доступно",
+      "not_connected": "Не подключено",
+      "activation_required": "Требуется включение Insights",
+      "permission_required": "Нужен доступ провайдера",
+      "unsupported": "Недоступно для этого аккаунта",
+      "unavailable": "Данные провайдера недоступны"
+    },
+    "flowScope": "Отдельные отправки Flow, доставка, чтение и отправка формы, затем подтверждённые результаты после формы до следующей формы или конца окна. Чтение не измеряет открытие; отсутствие формы не доказывает отказ.",
+    "flow": "Flow",
+    "submitted": "Форма отправлена",
+    "retentionScope": "Клиенты по месяцу первой подтверждённой покупки и повторные покупки в течение {days} дней. Суммы разделены по валютам.",
+    "cohortMonth": "Месяц первой покупки",
+    "customers": "Клиенты",
+    "repeatCustomers": "Повторные покупатели",
+    "sales": "Подтверждённые покупки",
+    "retentionIdentity": "У {count} покупок нет стабильного ID клиента; они не включены в повторные покупки.",
+    "pendingTrend": "Ожидание доставки по дню отправки",
+    "dailyDelivery": "Доставка по дням",
+    "dailyDeliveryScope": "Отправки по дням с текущими квитанциями; поздние квитанции обновляют исходный день отправки.",
+    "day": "День",
+    "sourceTemplateBreakdown": "По источнику, номеру и шаблону",
+    "phone": "Номер",
+    "healthHistory": "Сохранённые наблюдения состояния",
+    "healthHistoryScope": "Ежедневные снимки синхронизации. Ожидания и ошибки — за предыдущие семь дней отправки; пропуски не наблюдались.",
+    "pending7d": "Ожидание, отправки за 7 дней",
+    "failed7d": "Ошибки, отправки за 7 дней",
+    "freshness": {
+      "fresh": "Проверка актуальна",
+      "stale": "Проверка устарела",
+      "unknown": "Проверка неизвестна"
+    },
+    "segments": "По источнику, рекламе и ответственному",
+    "viewAudience": "Показать этих лидов",
+    "clearSegment": "Сбросить сегмент",
+    "customer": "Клиент",
+    "qualificationCoverage": "Квалификация основана на сохранённых событиях CRM; старая история этапов может быть неполной.",
+    "segment": "Сегмент",
+    "viewSegment": "Показать лидов",
+    "pendingCustomers": "Ещё наблюдаем",
+    "unknownValues": "Неизвестные суммы",
+    "retentionMaturity": "Недавние когорты ещё наблюдаются; сравнивайте зрелые когорты с одинаковым окном.",
+    "templateHistory": "История шаблонов",
+    "templateHistoryScope": "Сохранённые события статуса, качества и категории шаблонов. Пропущенные интервалы не наблюдались.",
+    "event": "Событие",
+    "category": "Категория",
+    "serviceHistory": "Сохранённая история обслуживания",
+    "serviceHistoryScope": "Подтверждённые решения, повторные открытия и передачи с начала сбора. Снимки восстановления описывают текущие эпизоды и не восстанавливают пропущенные переходы.",
+    "resolved": "Подтверждённые решения",
+    "reopened": "Повторные открытия",
+    "handoffStarted": "Передачи начаты",
+    "handoffEnded": "Передачи завершены",
+    "unknownClosures": "Закрытия без подтверждения",
+    "timeoutClosures": "Закрытия по таймауту",
+    "snapshotEvents": "Снимки восстановления",
+    "streamEvents": "Сохранённые переходы",
+    "resolutionSeconds": "Решение, секунды",
+    "handoffSeconds": "Передача, секунды",
+    "measuredResolutions": "Измеренные решения",
+    "historyGap": "Обнаружен пропуск истории: {date}",
+    "lifecycleState": {
+      "not_started": "Сбор ещё не начат",
+      "streaming": "Сбор активен",
+      "degraded": "Сбор требует внимания",
+      "history_gap": "История неполная"
+    },
+    "loading": "Загрузка…",
+    "reconciliationThrough": "Сверено до {date}",
+    "healthObservedAt": "Состояние проверено",
+    "deliveryObservedAt": "Доставка проверена",
+    "providerWindow": "Весь аккаунт WhatsApp: с {start} по {end}",
+    "readRate": "Доля прочтений, %",
+    "clickRate": "Доля кликов, %",
+    "costPerDelivered": "Стоимость доставленного сообщения",
+    "pricingDetails": "Расходы по стране, категории и уровню",
+    "country": "Страна",
+    "billingType": "Тип тарификации",
+    "tier": "Уровень объёма",
+    "volume": "Количество сообщений",
+    "accountHealth": {
+      "healthy": "Подключён",
+      "warning": "Требует внимания",
+      "reconnecting": "Переподключение",
+      "disconnected": "Отключён",
+      "restricted": "Ограничен",
+      "disabled": "Выключен",
+      "payment_required": "Требуется оплата",
+      "inaccessible": "Доступ недоступен",
+      "unknown": "Неизвестно"
+    },
+    "qualifiedToPaid": "Из квалифицированных в оплатившие, %",
+    "qualifiedToPaidHelp": "Переход в оплату учитывает только подтвержденные покупки после квалификации в окне привлечения. Доля доступна для созревших когорт с полной историей этапов.",
+    "matureCohorts": "Когорты с завершенным наблюдением",
+    "cohortPeriod": "Даты привлечения: с {from} по {to} включительно.",
+    "workspace": {
+      "title": "Ваше рабочее пространство результатов",
+      "description": "Расположите нужные отчёты на своём месте.",
+      "edit": "Изменить раскладку",
+      "add": "Добавить отчёт",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "reset": "Сбросить раскладку",
+      "saving": "Сохраняем…",
+      "unsaved": "Есть несохранённые изменения",
+      "unreadable": "Не удалось открыть сохранённую раскладку, поэтому показаны отчёты по умолчанию. Сохранение заменит всю сохранённую раскладку, включая ваши дашборды.",
+      "libraryTitle": "Добавить отчёты",
+      "libraryDescription": "Выберите отчёты для своего рабочего пространства результатов.",
+      "emptyTitle": "Отчётов пока нет",
+      "emptyDescription": "Добавьте отчёт или сбросьте раскладку.",
+      "allAdded": "Все отчёты уже добавлены",
+      "added": "Добавлен отчёт: {report}",
+      "libraryClose": "Готово",
+      "resetHint": "Изменения применятся после сохранения.",
+      "period": "Период",
+      "observation": "Окно результатов: {days} дней",
+      "mature": "Завершённое наблюдение",
+      "refreshing": "Обновляем…",
+      "refreshFailed": "Не все отчёты обновились. Повторите попытку.",
+      "dateScope": "Даты обращений: {from} – {to}",
+      "freshness": "Актуальность данных",
+      "measurement": "Как считаем",
+      "entryBreakdown": "Обращения по источникам и рекламе",
+      "topEntries": "Первые {count} групп; все группы — в деталях.",
+      "entryDetails": "Обращения и выручка: детали",
+      "deliveryDetails": "Доставка и стоимость: детали",
+      "qualificationIncomplete": "История квалификации неполная. Отсутствие данных не означает ноль.",
+      "audienceUnavailable": "Список лидов неполный. Попробуйте обновить.",
+      "deliveryScope": "Отправлено за последние {days} дней. Статусы доставки — на сейчас.",
+      "unknownRevenue": "Неподтверждённых сумм: {count}",
+      "leadDetails": "Все лиды и сегменты",
+      "wait": "Ожидание"
+    }
+  }
+}

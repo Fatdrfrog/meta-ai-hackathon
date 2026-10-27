@@ -1,0 +1,166 @@
+{
+  "KnowledgeBase": {
+    "title": "Жауаптарды біліммен күшейтіңіз",
+    "view": "Көру",
+    "edit": "Өңдеу",
+    "noArticlesYet": "Мақалалар әлі жоқ.",
+    "createFirstArticle": "Мақала жасау",
+    "settings": {
+      "title": "Білім базасының баптаулары",
+      "description": "Кеңейтілген AI инсайттары үшін сыртқы URL индекстеуін баптаңыз."
+    },
+    "emptyState": {
+      "title": "Білім базасына қош келдіңіз",
+      "description": "Бастау үшін бүйір панельдегі плюс батырмасы арқылы алғашқы мақаланы жасаңыз.",
+      "hint": "Мақала жасау үшін бүйір панельдегі плюсті басыңыз"
+    },
+    "adminTree": {
+      "untitled": "Тақырыпсыз",
+      "draft": "Жоба",
+      "addSubArticle": "Ішкі мақала қосу",
+      "rename": "Атын өзгерту",
+      "delete": "Жою",
+      "deleteConfirm": "Бұл мақаланы жою керек пе?",
+      "deleteConfirmDescription": "Мақала және оның аудармалары біржола жойылады.",
+      "failedToUpdate": "Жаңарту сәтсіз аяқталды",
+      "failedToDelete": "Жою сәтсіз аяқталды",
+      "failedToReorder": "Қайта реттеу сәтсіз аяқталды",
+      "failedToLoad": "Мақалаларды жүктеу мүмкін болмады",
+      "retry": "Қайталау",
+      "loadingArticles": "Мақалалар жүктелуде...",
+      "openTree": "Мақалалар тізімін көрсету",
+      "expandArticle": "Мақаланы жаю",
+      "collapseArticle": "Мақаланы жию",
+      "cancel": "Болдырмау"
+    },
+    "articleEditor": {
+      "publishSuccess": "Мақала жарияланды",
+      "publishFailed": "Жариялау сәтсіз аяқталды",
+      "firstPublishOnboardingTitle": "Білім базасы іске қосылды",
+      "firstPublishOnboardingDescription": "Келесі қадам: Баптаулар -> AI басқаруы: {settingsPath} ішінде барлық чаттар үшін Airi ботын қосыңыз",
+      "publishing": "Жариялануда...",
+      "enterArticleTitle": "Мақала тақырыбын енгізіңіз",
+      "titleRequired": "Жарияламас бұрын тақырып енгізіңіз",
+      "saveFirst": "Алдымен мақаланы сақтаңыз",
+      "writeContentPlaceholder": "Мақала мазмұнын жазыңыз және пішімдеңіз...",
+      "loadingEditor": "Редактор жүктелуде...",
+      "saveStatus": {
+        "saving": "Сақталуда...",
+        "saved": "Сақталды",
+        "error": "Сақтау сәтсіз аяқталды",
+        "unsaved": "Сақталмаған өзгерістер"
+      },
+      "chunkPreview": {
+        "label": "RAG бөліктерінің шекараларын көрсету",
+        "hint": "Бұл тек алдын ала қарау. Airi мақаланы әр H1–H3 тақырыбы бойынша бөледі. Тақырып астындағы мәтін сол бөлікке жатады. Жолды жоғарыдағы бөлікте қалдыру үшін блок түрі мәзірінен «Қалыпты мәтін» таңдаңыз (мақалаға сақталмайды).",
+        "headingLineHint": "Бұл жол тақырып, одан жаңа іздеу бөлігі басталады. Жоғарыдағы бөлікпен біріктіру үшін «Қалыпты мәтін» таңдаңыз."
+      },
+      "published": "Жарияланды",
+      "publishToWeb": "Вебке жариялау",
+      "publishChanges": "Өзгерістерді жариялау",
+      "unpublishLanguage": "Бұл тілді жариялаудан алу",
+      "unpublishSuccess": "Бұл тіл жариялаудан алынды",
+      "unpublishFailed": "Жариялаудан алу сәтсіз аяқталды",
+      "unpublishing": "Жариялаудан алынуда...",
+      "unpublishedChangesHint": "Бұл тілде жарияланбаған өзгерістер бар.",
+      "shareLink": "Сілтемені бөлісу",
+      "copyLink": "Сілтемені көшіру",
+      "linkCopied": "Сілтеме алмасу буферіне көшірілді",
+      "publishMode": {
+        "title": "Жариялау режимі",
+        "publicWithAutoLink": "Жария + Airi жауаптарындағы авто сілтеме",
+        "publicWithAutoLinkShort": "Жария + авто сілтеме",
+        "publicWithAutoLinkDesc": "Сілтемесі бар кез келген адам көре алады; Airi бұл сілтемені қоса алады",
+        "publicWithAutoLinkDescShort": "Сілтемесі бар кез келген адам көре алады, Airi сілтеме қоса алады",
+        "publicNoAutoLink": "Жария + Airi жауаптарында авто сілтеме жоқ",
+        "publicNoAutoLinkShort": "Жария + авто сілтеме жоқ",
+        "publicNoAutoLinkDesc": "Сілтемесі бар кез келген адам көре алады; Airi сілтемені автоматты түрде қоспайды",
+        "publicNoAutoLinkDescShort": "Жария мақала, бірақ Airi сілтемені автоматты түрде қоспайды",
+        "aiContextOnly": "Тек AI контексті (жария емес)",
+        "aiContextOnlyShort": "Тек AI контексті",
+        "aiContextOnlyDesc": "Airi контексті қолданады, жария ББ-дан жасырылған",
+        "aiContextOnlyDescShort": "Жария ББ-дан жасырылған және жауаптарда авто-сілтеме жоқ",
+        "publishToAiContext": "AI контекстіне жариялау",
+        "autoLinkDisabled": "Бұл жариялау режимі үшін Airi авто-сілтеме енгізуі өшірілген."
+      }
+    },
+    "search": {
+      "placeholder": "Мақалаларды іздеу...",
+      "noResults": "Мақалалар табылмады",
+      "startTyping": "Мақалаларды іздеу үшін жазуды бастаңыз",
+      "searching": "Ізделуде...",
+      "failed": "Іздеу сәтсіз аяқталды",
+      "retry": "Қайталау"
+    },
+    "navigation": {
+      "knowledgeBase": "Білім базасы",
+      "kb": "ББ"
+    },
+    "breadcrumbs": {
+      "workspace": "Жұмыс кеңістігі",
+      "knowledgeBase": "Білім базасы",
+      "editArticle": "Мақаланы өңдеу",
+      "newArticle": "Жаңа мақала"
+    },
+    "metadata": {
+      "published": "Жарияланды",
+      "readingTime": "мин оқу"
+    },
+    "actions": {
+      "copyMarkdown": "Markdown көшіру",
+      "copyForLLM": "LLM үшін",
+      "copiedMarkdown": "Markdown көшірілді",
+      "copiedForLLM": "LLM мәтіні көшірілді",
+      "copyFailed": "Көшіру мүмкін болмады"
+    },
+    "localeFallbackNotice": "Мақала {requestedLanguage} тілінде әлі жарияланбаған. {renderedLanguage} нұсқасы көрсетілуде.",
+    "articleNotFound": "Мақала табылмады",
+    "emptyPublicKb": "Жарияланған мақалалар әзірге жоқ. Кейінірек кіріңіз.",
+    "languageControl": {
+      "articleLanguage": "Мақала тілі",
+      "newTranslation": "Жаңа аударма",
+      "published": "Жарияланды",
+      "publishedDraft": "Жарияланды + жоба",
+      "draft": "Жоба",
+      "languageActions": "Тіл әрекеттері",
+      "duplicateFrom": "Көшіру...",
+      "translateFrom": "Аудару...",
+      "copyPublicLink": "Жария сілтемені көшіру",
+      "deleteTranslation": "Аударманы жою",
+      "createVersion": "{language} нұсқасын жасау",
+      "createVersionDescription": "Интерфейс тілін өзгертпей тіл жобасын бастаңыз.",
+      "startEmpty": "Бос бастау",
+      "startEmptyDesc": "Қазіргі тақырыпты қалдырып, жаңа мәтін жазыңыз.",
+      "copyFromCurrent": "Ағымдағы тілден көшіру",
+      "copyFromCurrentDesc": "Ағымдағы жобаны негіз ретінде көшіріңіз.",
+      "copyFromDefault": "Әдепкі тілден көшіру",
+      "copyFromDefaultDesc": "Негіз ретінде {language} пайдаланыңыз.",
+      "translateWithAi": "Ағымдағы тілден ИИ-мен аудару",
+      "translateWithAiDesc": "Пішім мен сілтемелерді сақтау.",
+      "deleteTranslationTitle": "Аударманы жою керек пе?",
+      "deleteTranslationDescription": "{language} жобасы, нұсқалары және эмбеддингтері жойылады. Әдепкі тіл қалады.",
+      "cancel": "Болдырмау",
+      "saveFirst": "Аударма қосу үшін алдымен мақаланы сақтаңыз",
+      "updateFailed": "Аударманы жаңарту мүмкін болмады",
+      "draftReady": "{language} жобасы дайын",
+      "translationDeleted": "{language} аудармасы жойылды",
+      "publicLinkCopied": "Жария сілтеме көшірілді",
+      "copyPublicLinkFailed": "Сілтемені көшіру мүмкін болмады",
+      "deleteFailed": "Аударманы жою мүмкін болмады"
+    },
+    "feedback": {
+      "wasHelpful": "Бұл пайдалы болды ма?",
+      "yes": "Иә",
+      "no": "Жоқ",
+      "thanks": "Пікіріңізге рақмет."
+    },
+    "newArticle": {
+      "title": "Жаңа мақала жасау"
+    },
+    "delete": {
+      "title": "Мақаланы жою",
+      "confirmation": "Сіз \"{title}\" мақаласын жойғыңыз келетініне сенімдісіз бе? Бұл әрекетті қайтару мүмкін емес. Бұл мақаланы және оның барлық нұсқаларын, пікірлерін және қатысты деректерін біржола жояды.",
+      "deleting": "Жойылуда..."
+    }
+  }
+}

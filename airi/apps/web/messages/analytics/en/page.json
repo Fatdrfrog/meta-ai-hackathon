@@ -1,0 +1,2085 @@
+{
+  "CampaignTestSend": {
+    "open": "Send a test to my WhatsApp",
+    "title": "Send a test",
+    "description": "We'll send {template} to your WhatsApp so you can check it before the campaign goes out. Tests don't count toward campaign limits.",
+    "phoneLabel": "Your WhatsApp number",
+    "phonePlaceholder": "+7 700 123 45 67",
+    "valuesFromRecipient": "Variables use the first recipient's values.",
+    "valuesFromSample": "Variables use the template's sample values.",
+    "phoneSaved": "We'll remember this number for your next test.",
+    "send": "Send test",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "sent": "Test sent to {phone}. Check WhatsApp on that phone.",
+    "errors": {
+      "invalid_request": "Some details are missing. Reload the page and try again.",
+      "invalid_phone": "Enter a WhatsApp number with the country code, for example +7 700 123 45 67.",
+      "not_allowed": "Only managers and admins can send tests.",
+      "whatsapp_not_connected": "Connect WhatsApp in Integrations to send a test.",
+      "rate_limited": "You've reached the hourly limit for tests. Try again later.",
+      "template_unavailable": "This template isn't approved for this number. Choose an approved template.",
+      "template_variables_missing": "Fill in {variables} for the first recipient and try again.",
+      "header_media_missing": "This template needs a header image or file. Add it to the template, then try again.",
+      "template_parameters": "WhatsApp didn't accept the template's values. Check the variables and try again.",
+      "recipient_not_allowed": "This WhatsApp account can only message allowed numbers for now. Add this number in Meta's WhatsApp settings.",
+      "recipient_unreachable": "This number can't receive WhatsApp messages. Check the number.",
+      "recipient_is_sender": "This is your business number. Enter your personal WhatsApp number.",
+      "meta_billing": "WhatsApp needs a payment method. Set up billing in WhatsApp Manager.",
+      "meta_rate_limited": "WhatsApp is limiting messages from this number. Try again in a few minutes.",
+      "token_invalid": "The WhatsApp connection has expired. Reconnect WhatsApp in Integrations.",
+      "send_failed": "The test wasn't sent. Try again."
+    }
+  },
+  "BulkAnalytics": {
+    "errors": {
+      "loadFailed": "Failed to load bulk analytics.",
+      "selectBothDates": "Select both From and To dates.",
+      "fromBeforeTo": "From date must be before To date.",
+      "futureRange": "Choose a date range that starts on or before today."
+    },
+    "periodPresets": {
+      "1": "Last 24 hours",
+      "7": "Last 7 days",
+      "14": "Last 14 days",
+      "30": "Last 30 days",
+      "90": "Last 90 days",
+      "custom": "Custom dates"
+    },
+    "period": {
+      "lastDays": "{count, plural, one {Last # day} other {Last # days}}",
+      "pickEnd": "{from} · pick an end date",
+      "pickDateRange": "Pick date range",
+      "aria": "Period: {label}",
+      "title": "Date range",
+      "description": "Select dates, then apply.",
+      "cancel": "Cancel",
+      "apply": "Apply"
+    },
+    "accessibility": {
+      "periodPreset": "Period presets",
+      "addMessagePhrase": "Add message phrase",
+      "removeMessagePhrase": "Remove message phrase {phrase}"
+    },
+    "units": {
+      "lessThanMinute": "Less than 1 min",
+      "minutes": "{count, plural, one {# min} other {# min}}",
+      "hours": "{count, plural, one {# hr} other {# hr}}",
+      "percentagePoints": "{value} pp",
+      "notAvailable": "n/a"
+    },
+    "categories": {
+      "no_reply": "No reply",
+      "flow": "Flow response",
+      "deleted": "Deleted",
+      "audio": "Audio",
+      "mockup": "Mockup",
+      "price": "Price",
+      "other": "Other"
+    },
+    "engagementOptions": {
+      "all": "Any engagement",
+      "high": "High score (70+)",
+      "medium": "Medium score (40-69)",
+      "low": "Low score (1-39)",
+      "unscored": "No score"
+    },
+    "multiSelect": {
+      "selected": "{count} selected",
+      "searchPlaceholder": "Search {label}",
+      "clearSelection": "Clear selection",
+      "noMatches": "No matches"
+    },
+    "statusBadge": {
+      "replied": "Replied",
+      "noReply": "No reply"
+    },
+    "filters": {
+      "title": "Filters",
+      "description": "Select filters refresh automatically. Message phrases apply with Enter, +, or Apply.",
+      "activeCount": "{count} active",
+      "noActive": "No active filters",
+      "messageTextLabel": "Message text",
+      "messageTextPlaceholder": "Add keyword or exact phrase",
+      "messageTextMatchModeAria": "Message text match mode",
+      "contains": "Contains",
+      "doesNot": "Does not",
+      "conversationsLabel": "Conversations",
+      "conversationScopes": {
+        "campaign_sends": "Campaign sends",
+        "all": "All conversations",
+        "fresh": "Fresh conversations",
+        "campaign_or_fresh": "Campaign + fresh"
+      },
+      "periodLabel": "Period",
+      "templatesLabel": "Templates",
+      "templatesPlaceholder": "All templates",
+      "campaignsLabel": "Campaigns",
+      "campaignsPlaceholder": "All campaigns",
+      "excludeTemplatesLabel": "Exclude templates",
+      "excludeTemplatesAria": "Exclude template outbound messages",
+      "excludeTemplatesOn": "Excluded",
+      "excludeTemplatesOff": "Included",
+      "excludeTemplatesDisabledTooltip": "Disabled while \"Exclude templates\" is on. Turn it off to filter by templates or campaigns.",
+      "repliesLabel": "Replies",
+      "replyStatuses": {
+        "all": "All",
+        "replied": "Replied",
+        "not_replied": "Not replied"
+      },
+      "engagementLabel": "Engagement",
+      "replyWindowLabel": "Reply window",
+      "more": "More",
+      "hideMore": "Less",
+      "apply": "Apply",
+      "reset": "Reset",
+      "replyWindowOptions": {
+        "24": "24 hours",
+        "72": "72 hours",
+        "168": "7 days",
+        "336": "14 days",
+        "720": "30 days"
+      },
+      "chips": {
+        "message": "Message: {value}",
+        "excludingMessageText": "Excluding message text",
+        "conversations": "Conversations: {value}",
+        "period": "Period: {from} – {to}",
+        "periodFrom": "from",
+        "periodTo": "to",
+        "engagement": "Engagement: {value}",
+        "templates": "Templates: {count}",
+        "campaigns": "Campaigns: {value}"
+      },
+      "addPhrase": "Add",
+      "removePhrase": "Remove"
+    },
+    "summary": {
+      "acceptedSends": "Accepted sends",
+      "conversations": "Conversations",
+      "conversationsDetail": "{count} conversations",
+      "readRate": "Read rate",
+      "readCountDetail": "{count} reads",
+      "failed": "Failed",
+      "failedRateDetail": "{value} failed",
+      "replied": "Replied",
+      "replyRateDetail": "{value} reply rate",
+      "notReplied": "Not replied",
+      "inboundMessagesDetail": "{count} inbound messages",
+      "averageFirstReply": "Average first reply"
+    },
+    "funnel": {
+      "title": "Send pipeline",
+      "description": "Accepted → failed / delivered → read → replied → estimated cost for the current filters.",
+      "accepted": "Accepted",
+      "failed": "Failed",
+      "delivered": "Delivered",
+      "read": "Read",
+      "replied": "Replied",
+      "cost": "Cost",
+      "conversionOfPrevious": "{value} of previous",
+      "costPerReplyDetail": "{value} / reply",
+      "costPerReplyUnavailable": "No replies yet",
+      "costNotPriced": "Not priced",
+      "costUnpricedMessages": "{count, plural, one {# delivered message has no verified price} other {# delivered messages have no verified price}}",
+      "costNotPricedDetail": "Delivered messages have no verified price",
+      "costNotPricedNote": "Campaign cost needs verified message pricing. Missing prices are not zero cost. Account spend covers all WhatsApp messages and is available in the Account spend view.",
+      "allFailedBannerTitle": "All accepted sends failed delivery",
+      "allFailedBannerDescription": "{failed} of {accepted} sends failed after Meta accepted them. These are delivery failures, not a lack of engagement, so check the error codes below.",
+      "highFailedBannerTitle": "High delivery failure rate",
+      "highFailedBannerDescription": "{failed} of {accepted} sends failed ({rate}). Reply and read rates look low because most messages never reached the phone."
+    },
+    "outcomes": {
+      "failed": "Failed",
+      "not_delivered": "Not delivered",
+      "delivered_unread": "Delivered, no read receipt",
+      "read_no_reply": "Read, no reply",
+      "replied": "Replied"
+    },
+    "failures": {
+      "unknown": "Unknown error",
+      "codeLabel": "Error {code}"
+    },
+    "compare": {
+      "label": "Compare",
+      "previous": "Vs previous period",
+      "off": "Off",
+      "vsPrior": "{value} vs prior"
+    },
+    "empty": {
+      "title": "No conversations found",
+      "description": "Matching WhatsApp conversations will appear here after messages are written to conversations.",
+      "noSendsTitle": "No accepted sends in this period",
+      "noSendsDescription": "Bulk analytics only shows WhatsApp campaign sends Meta already accepted. Widen the date range or pick a day when a campaign actually went out.",
+      "filteredTitle": "No sends match these filters",
+      "filteredDescription": "Try clearing the campaign or template filter, or widen the period. Empty results usually mean no accepted sends for that exact selection.",
+      "futureTitle": "That date is still in the future",
+      "futureDescription": "Campaign analytics only covers sends that already happened. Pick today or an earlier date.",
+      "recentCampaignHints": "Recent campaigns in this workspace:"
+    },
+    "overviewDisabled": {
+      "title": "Conversation overview is paused",
+      "description": "Campaign-send analytics are still available. Broader conversation overview is temporarily disabled while reply attribution moves to a scalable reporting path."
+    },
+    "charts": {
+      "dailyVolumeTitle": "Daily volume",
+      "dailyVolumeDescription": "Accepted WhatsApp sends by day with replies shown in the tooltip.",
+      "dailyValueLabel": "Accepted",
+      "dailyRepliesLabel": "{count} replies",
+      "replyCategoriesTitle": "Reply categories",
+      "replyCategoriesDescription": "First inbound message classification after a bulk template.",
+      "replyCategoriesValueLabel": "Conversations",
+      "outcomesTitle": "Outcomes",
+      "outcomesDescription": "Why sends did not convert to a reply.",
+      "outcomesValueLabel": "Sends",
+      "failuresTitle": "Delivery failures",
+      "failuresDescription": "Failed sends grouped by WhatsApp error code.",
+      "failuresValueLabel": "Failures"
+    },
+    "templatesTable": {
+      "title": "Templates",
+      "description": "Performance grouped by WhatsApp template name.",
+      "aria": "Template performance",
+      "columns": {
+        "template": "Template",
+        "accepted": "Accepted",
+        "replied": "Replied",
+        "replyRate": "Reply rate",
+        "avgFirstReply": "Avg first reply",
+        "window": "Window"
+      }
+    },
+    "detectedRuns": {
+      "title": "Detected runs",
+      "description": "Hourly send clusters with 10+ accepted sends.",
+      "aria": "Detected bulk runs",
+      "columns": {
+        "hour": "Hour",
+        "template": "Template",
+        "accepted": "Accepted",
+        "replyRate": "Reply rate"
+      }
+    },
+    "topConversations": {
+      "title": "Most active replies",
+      "description": "Conversations with the highest inbound activity.",
+      "aria": "Most active reply conversations",
+      "columns": {
+        "recipient": "Recipient",
+        "template": "Template",
+        "replies": "Replies",
+        "firstReply": "First reply"
+      },
+      "attachment": "Attachment"
+    },
+    "recentTable": {
+      "titles": {
+        "conversationPool": "Conversations",
+        "acceptedSends": "Recent accepted sends"
+      },
+      "descriptions": {
+        "conversationPool": "WhatsApp conversations matching the current pool filters.",
+        "acceptedSends": "Latest accepted bulk template sends and their conversation state."
+      },
+      "refresh": "Refresh",
+      "aria": {
+        "conversationPool": "Filtered WhatsApp conversations",
+        "acceptedSends": "Recent accepted WhatsApp sends"
+      },
+      "columns": {
+        "activity": "Activity",
+        "sent": "Sent",
+        "recipient": "Recipient",
+        "template": "Template",
+        "status": "Status",
+        "engagement": "Engagement",
+        "replies": "Replies",
+        "firstReply": "First reply",
+        "matchedMessage": "Matched message"
+      },
+      "messagePrefix": "{direction}: {text}",
+      "messageDirectionFallback": "message",
+      "noMatch": "No match"
+    },
+    "header": {
+      "loadingWindow": "Loading window",
+      "badge": "WhatsApp bulk",
+      "title": "Bulk analytics",
+      "description": "Accepted template sends, replies, and keyword matches from conversations.",
+      "updated": "Updated {value}",
+      "refreshing": "Refreshing",
+      "refresh": "Refresh",
+      "saveFilter": "Save filter",
+      "exportExcel": "Export Excel",
+      "exportFailed": "Could not export Excel."
+    },
+    "export": {
+      "sheets": {
+        "summary": "Summary",
+        "templates": "Templates",
+        "daily": "Daily",
+        "outcomes": "Outcomes",
+        "failures": "Failures",
+        "runs": "Detected runs",
+        "topConversations": "Most active replies",
+        "records": "Accepted sends"
+      },
+      "columns": {
+        "metric": "Metric",
+        "current": "Current",
+        "previous": "Previous",
+        "conversationId": "Conversation ID"
+      }
+    },
+    "sendToAudience": "Send to this audience",
+    "scopeFacets": {
+      "hiddenTitle": "Send charts need Campaign sends scope",
+      "hiddenDescription": "Template and daily send charts only apply to campaign sends. Switch conversation scope to Campaign sends to see them."
+    },
+    "saveFilter": {
+      "title": "Save filter",
+      "description": "Save the current analytics filters as a reusable bulk campaign audience.",
+      "nameLabel": "Filter name",
+      "namePlaceholder": "e.g., Dormant leads",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "success": "Filter saved",
+      "error": "Failed to save filter"
+    },
+    "details": {
+      "toggle": "Charts and breakdown"
+    },
+    "operations": {
+      "deliveryFilter": "Delivery status",
+      "errorCode": "Delivery error code",
+      "anyError": "Any error",
+      "unavailable": "Unavailable",
+      "missingProof": "Receipt evidence unavailable",
+      "attemptsGrain": "Canonical provider attempts; acceptance is not delivery",
+      "ofAccepted": "{value} of accepted attempts",
+      "deliveryTitle": "Delivery evidence",
+      "deliveryDescription": "The filtered accepted-send cohort. Read is included in delivered; replies are measured separately.",
+      "diagnosticAudience": "Delivery diagnostic filters cannot be sent as an audience. Use campaign history for retries under the current sending policy.",
+      "openHistory": "Open campaign history",
+      "exportProgress": "Collecting complete export: {count} rows",
+      "cancelExport": "Cancel export",
+      "incomplete": "Incomplete evidence",
+      "incompleteDescription": "Some evidence is unavailable or outside the read limit. Totals may be incomplete; a complete export is unavailable.",
+      "healthTitle": "Campaign family health",
+      "oneFamily": "Select one campaign to inspect its original send and continuations together.",
+      "selectCampaign": "Select a campaign to see dispatch health, including recipients with no accepted send.",
+      "familyScope": "All retained original and continuation attempts. Independent of the analytics date, template and reply filters.",
+      "updating": "Updating…",
+      "refreshHealth": "Refresh evidence",
+      "healthFailed": "Unable to load campaign health. Retry the evidence refresh.",
+      "observedAt": "Observed at {value}",
+      "observedLowerBound": "Observed retained evidence only. State counts can change when omitted newer attempts become available.",
+      "distinctRecipients": "Distinct recipients",
+      "providerAttempts": "Provider attempts",
+      "nestedEvidence": "Read proof implies delivery. Counts are nested evidence measures, not sequential funnel stages.",
+      "atLeast": "Observed {count}",
+      "failureGroups": "Known failures",
+      "failureScope": "Observed campaign failures include rejected sends. Filters below inspect the accepted-send cohort; pre-acceptance failures remain in campaign history.",
+      "unknownError": "Unclassified error",
+      "noErrorDetail": "No retained error detail",
+      "filterFailures": "Inspect accepted-send failures",
+      "historyTitle": "Recipient delivery evidence",
+      "historyDescription": "Current retained outcome and prior attempts are separate. A prior delivery does not guarantee retry delivery; absent history does not prove a recipient was never contacted.",
+      "historyFailed": "Unable to load retained evidence.",
+      "latestOutcome": "Latest retained outcome",
+      "noHistory": "No matching retained attempt. This does not prove that this recipient was never sent to.",
+      "close": "Close",
+      "deliveredAt": "Delivered at",
+      "readAt": "Read at",
+      "providerRecipient": "Provider recipient",
+      "identityConflict": "Disputed recipient identity",
+      "comparisonLoading": "Loading previous period…",
+      "comparisonFailed": "Previous-period comparison is unavailable. Current results remain usable.",
+      "replyStatus": "Reply status",
+      "noFirstReply": "No reply recorded",
+      "historyAction": "View prior evidence",
+      "noResults": "No recipients match these filters.",
+      "statuses": {
+        "all": "All delivery states",
+        "accepted": "Awaiting receipts",
+        "delivered": "Delivered (includes read)",
+        "read": "Read",
+        "failed": "Failed",
+        "unknown": "Unknown evidence"
+      },
+      "metrics": {
+        "accepted": "Accepted",
+        "delivered": "Delivered",
+        "read": "Read",
+        "failed": "Failed",
+        "awaiting": "Awaiting proof"
+      },
+      "recipientMetrics": {
+        "planned": "Planned",
+        "attempted": "Attempted",
+        "accepted": "Accepted",
+        "delivered": "Delivered",
+        "read": "Read",
+        "failed": "Failed",
+        "awaitingReceipts": "Awaiting receipts",
+        "uncertain": "Uncertain outcome",
+        "untouched": "Untouched"
+      },
+      "historyStatuses": {
+        "untouched": "Not attempted",
+        "uncertain": "Uncertain outcome",
+        "accepted": "Accepted without delivery proof",
+        "delivered": "Delivered",
+        "read": "Read",
+        "failed": "Failed"
+      },
+      "evidence": {
+        "delivered": "Prior delivered proof",
+        "read": "Prior read proof",
+        "acceptedWithoutDeliveryProof": "Accepted without delivery proof",
+        "priorFailure": "Known prior failure",
+        "disputedIdentity": "Disputed recipient identity"
+      },
+      "exportUnavailable": "A complete export is unavailable because the retained observation context is missing. Refresh the report to try again.",
+      "conflictingAttempts": "{count} attempts have conflicting recipient identities. Provider delivery evidence cannot establish delivery to the displayed recipient; inspect recipient history.",
+      "batchCount": "{count, plural, one {# batch} other {# batches}}",
+      "batchDetails": "Family dispatch details",
+      "healthMetric": "Metric",
+      "batchLifecycle": "Batches and lifecycle",
+      "dispatchProgress": "{count} of {total} processed",
+      "scheduledFor": "Scheduled for {value}",
+      "dispatchExpires": "Dispatch expires {value}",
+      "dispatchStopped": "Dispatch stopped. Open campaign history for details.",
+      "dispatchStopReasons": {
+        "paused_by_operator": "Paused by an operator",
+        "workflow_cancelled": "Cancelled by an operator",
+        "provider_circuit_open": "Stopped after repeated provider errors. Acknowledgment may be required before retry.",
+        "empty_audience": "No eligible recipients remained",
+        "workflow_start_failed": "Dispatch could not start",
+        "dispatch_expired_before_start": "Dispatch expired before it started"
+      },
+      "historyTargetUnavailable": "The selected campaign is unavailable in this workspace or retained history.",
+      "returnToAllCampaigns": "Return to all campaigns"
+    },
+    "recipients": {
+      "range": "Showing {from}–{to} of {total}",
+      "rangeUnknown": "Showing {from}–{to}",
+      "page": "Page {number}",
+      "details": "Details",
+      "conversation": "Conversation",
+      "actions": "Actions",
+      "replyCount": "Replies: {count}",
+      "searchLabel": "Find recipient by phone",
+      "searchPlaceholder": "Phone number or at least 3 digits",
+      "searchApply": "Search",
+      "searchClear": "Clear",
+      "searchHelp": "Search the entire filtered audience by phone, not just this page. Names are not supported.",
+      "searchInvalid": "Enter 3–15 phone digits. Spaces, +, parentheses, dots, hyphens and wa_ are allowed; names are not supported.",
+      "detailsTitle": "Recipient attempt details",
+      "detailsDescription": "Evidence for this displayed record. Delivery and reply are separate; historical evidence is available below.",
+      "conflictDescription": "The provider recipient differs from the displayed recipient. Provider delivery evidence does not establish delivery to this recipient; inspect historical evidence.",
+      "providerMessageId": "Provider message ID",
+      "firstReplyAt": "First reply at",
+      "replyDelay": "First reply delay",
+      "matchedCount": "Matching messages",
+      "matchedAt": "First matching message at",
+      "matchedDirection": "First matching message direction",
+      "conversationStatus": "Conversation status",
+      "managerRead": "Read by manager",
+      "conversationSource": "Conversation source",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "reports": {
+      "title": "Campaign report",
+      "allCampaigns": "All campaigns",
+      "recipients": "Recipients",
+      "failures": "Failure reasons",
+      "insights": "Insights",
+      "accountSpend": "Account spend",
+      "campaignCost": "Estimated campaign cost",
+      "replyAttribution": "Within the selected reply window",
+      "attributionWindow": "Replies attributed within {hours} hours of each send",
+      "failureScope": "Failures among accepted provider attempts matching the current filters. Pre-acceptance failures and retry eligibility are in campaign history.",
+      "inspectRecipients": "Inspect recipients",
+      "noFailures": "No recorded delivery failures match these filters.",
+      "clearDelivery": "Clear delivery filter",
+      "clearSearch": "Clear phone search",
+      "errorDescriptions": {
+        "131026": "WhatsApp could not deliver the message. Inspect the attempt details; this code alone does not identify the exact cause.",
+        "131047": "The re-engagement window had expired for this send.",
+        "131049": "Meta limited delivery of this marketing message to the recipient.",
+        "131000": "The provider reported a temporary or unknown error."
+      }
+    }
+  },
+  "BulkCampaignsPage": {
+    "title": "Bulk campaigns",
+    "description": "Setup, write the message, add recipients, then send.",
+    "tabs": {
+      "campaigns": "Create",
+      "analytics": "Analytics"
+    },
+    "filters": {
+      "title": "Campaign audience",
+      "description": "Set the recipient source for this campaign.",
+      "sourceLabel": "Source",
+      "manual": "Enter recipients manually",
+      "fromAnalytics": "Current analytics audience",
+      "limitedBadge": "Limited",
+      "limitedDescription": "Some analytics conditions cannot be resolved into sendable campaign recipients.",
+      "pendingHint": "Selection not applied.",
+      "appliedHint": "This recipient source is already active.",
+      "apply": "Apply",
+      "manage": "Manage saved audiences",
+      "manageTitle": "Saved analytics audiences",
+      "activeLabel": "Active audience",
+      "activeManual": "Manual recipients",
+      "activeAnalytics": "Current analytics audience",
+      "activeSaved": "Saved audience: {name}",
+      "clear": "Clear",
+      "deleted": "Saved filter deleted",
+      "deleteFailed": "Failed to delete saved filter",
+      "deleteAria": "Delete saved filter {name}"
+    }
+  },
+  "MultiChannelCampaignBuilder": {
+    "sendSummary": {
+      "title": "Send this campaign?",
+      "description": "Check who gets the message before it goes out.",
+      "message": "Message",
+      "textMessage": "Text message",
+      "emailMessage": "Email",
+      "sender": "Sent from",
+      "recipients": "Gets the message",
+      "recipientCount": "{count, plural, one {# recipient} other {# recipients}}",
+      "skipped": "Left out",
+      "overflow": "Daily limit is {dailyLimit}. {firstWaveCount} send now, and {queuedCount} wait in a 24-hour queue until {lastWaveAt}.",
+      "confirm": "Send campaign",
+      "cancel": "Back"
+    },
+    "templatesAfterConnect": "Your approved templates appear here after you connect WhatsApp.",
+    "validationMessages": {
+      "campaignNameRequired": "Enter a campaign name",
+      "messageLimit": "The message can be up to {limit} characters",
+      "templateRequired": "Choose a WhatsApp template",
+      "messageTextRequired": "Enter the message text",
+      "emailSubjectRequired": "Enter the email subject",
+      "emailBodyRequired": "Enter the email body"
+    },
+    "pendingTemplates": {
+      "title": "Waiting for Meta review",
+      "hint": "You can send these templates once Meta approves them."
+    },
+    "refreshTemplates": "Check again",
+    "createTemplate": "Create template",
+    "connectWhatsApp": {
+      "title": "Connect WhatsApp to send campaigns",
+      "description": "Campaigns go out from your WhatsApp Business number. Connecting takes a few minutes in Meta's window.",
+      "action": "Connect WhatsApp"
+    },
+    "campaignDetails": "Campaign Details",
+    "stepSetup": "Setup",
+    "stepMessage": "Message",
+    "stepRecipients": "Recipients",
+    "stepSend": "Send",
+    "sendRecapRecipients": "{count} recipients",
+    "channel": "Channel",
+    "whatsappNumber": "WhatsApp number",
+    "emailSender": "Email sender",
+    "selectSource": "Select source",
+    "whatsappTemplates": "WhatsApp",
+    "telegramMessages": "Telegram",
+    "emailCampaigns": "Email",
+    "campaignName": "Name",
+    "campaignNamePlaceholder": "e.g., Black Friday Sale, Product Launch",
+    "whatsappTemplate": "WhatsApp Template",
+    "whatsappMessageType": "WhatsApp message type",
+    "whatsappTemplateMode": "Template",
+    "whatsappServiceText": "Service text (24h)",
+    "whatsappServiceMessage": "WhatsApp Service Message",
+    "whatsappServiceWindowHelp": "Only contacts who messaged this number in the last 24 hours can receive this.",
+    "whatsappServiceTextPlaceholder": "Write the service reply to send...",
+    "serviceCharactersLimit": "{count}/4096 characters",
+    "template": "Template",
+    "chooseTemplate": "Choose a template",
+    "templatePreview": "Template Preview:",
+    "noTemplates": "No approved templates yet. Create one, and Meta usually reviews it within minutes.",
+    "templatesUnavailable": "Meta cannot load approved templates right now. Please try again later.",
+    "savedTemplatesWarning": "Showing saved templates. Approval status may have changed; Meta will check the template when sending.",
+    "airiDraft": {
+      "title": "Airi bulk campaign draft",
+      "audience": "Audience:",
+      "approvedTemplateMatched": "Approved template selected: {template}",
+      "templateNeedsApproval": "Template {template} must be approved by Meta before this campaign can be sent.",
+      "selectApprovedTemplate": "Select an approved WhatsApp template before sending.",
+      "templateUnverified": "Template {template} isn't in the saved list, so it can't be checked now. Choose a template below."
+    },
+    "telegramMessage": "Telegram Message",
+    "telegramAudience": {
+      "manual": "Manual list",
+      "known": "Known chats",
+      "bot": "Bot",
+      "selectBot": "Select bot",
+      "loading": "Loading...",
+      "subscriberCount": "{count, plural, one {# known chat} other {# known chats}}",
+      "rateHint": "Free pacing is about 30 messages/sec. Paid Telegram broadcast can reach 1,000/sec when enabled.",
+      "serverResolves": "Server resolves eligible private chats for this bot at send time."
+    },
+    "emailContent": "Email Content",
+    "emailUsesDefaultSender": "Email campaigns use the default sender configured in Settings > Integrations > Email.",
+    "messageText": "Message Text",
+    "messageTextPlaceholder": "Enter your message... Use {exampleName}, {exampleCompany}, etc. for personalization",
+    "charactersLimit": "{count}/4096 characters · Use {exampleVariable} for personalization",
+    "campaignRecipients": "Campaign recipients",
+    "campaignSummary": "Campaign Summary",
+    "channelLabel": "Channel:",
+    "whatsappChannel": "WhatsApp",
+    "telegramChannel": "Telegram",
+    "campaignNameLabel": "Campaign Name:",
+    "notSet": "Not set",
+    "templateLabel": "Template:",
+    "messageLabel": "Message:",
+    "notSelected": "Not selected",
+    "ready": "Ready",
+    "notWritten": "Not written",
+    "recipients": "Recipients:",
+    "checkingEligibility": "Checking eligibility",
+    "riskBadge": "risk",
+    "noMatchingRecipients": "No matching recipients",
+    "noRecipientsSelected": "No recipients selected",
+    "sendingCampaign": "Sending Campaign...",
+    "sendAgain": "Send again",
+    "recentAudienceOverlap": "{intersection} of {candidate} recipients ({percent}%) were contacted recently. Choose Send again to confirm.",
+    "dispatchLifecycleStatus": "Status: {status}",
+    "dispatchAttempted": "{attempted} / {total} sent",
+    "dispatchAccepted": "{count} accepted",
+    "dispatchDelivered": "{count} delivered",
+    "dispatchRead": "{count} read",
+    "dispatchFailed": "{count} failed",
+    "cancelDispatch": "Cancel campaign",
+    "cancellingDispatch": "Cancelling...",
+    "pauseDispatch": "Pause",
+    "pausingDispatch": "Pausing...",
+    "resumeDispatch": "Resume",
+    "resumingDispatch": "Resuming...",
+    "pausedDispatch": "Paused",
+    "dispatchStatusUnavailable": "Live status unavailable: {message}",
+    "dispatchCancelFailed": "Cancellation warning: {message}",
+    "dispatchPauseFailed": "Pause warning: {message}",
+    "sendToRecipients": "Send to {count, plural, one {# recipient} other {# recipients}}",
+    "overflowQueue": {
+      "title": "This send will queue over several days",
+      "description": "{recipientCount, plural, one {# recipient} other {# recipients}} attached. Daily limit is {dailyLimit}. First {firstWaveCount} send now. Remaining {queuedCount} wait in a 24-hour queue until {lastWaveAt}.",
+      "confirm": "Queue and send",
+      "cancel": "Cancel"
+    },
+    "sendingBatches": "Sending…",
+    "whatsappAccountHealthWarningTitle": "Meta account warning",
+    "whatsappAccountHealthWarningFallback": "Meta account state: {state}.",
+    "whatsappAccountHealthWarnOnly": "Review the connection details in WhatsApp settings.",
+    "marketingOptInWarningToast": "{count, plural, one {# WhatsApp marketing recipient has} other {# WhatsApp marketing recipients have}} no recorded opt-in. Sending was allowed with policy risk.",
+    "marketingOptInWarningAlert": "{count, plural, one {# recipient has} other {# recipients have}} no recorded consent. Confirm they agreed to receive these messages.",
+    "marketingTemplateConsentNotice": "Marketing messages need the recipient’s consent. Missing consent records are shown as a warning before sending.",
+    "marketingOptInWarningInline": "No recorded consent for {count, number} of {total, plural, one {# recipient} other {# recipients}}. Confirm they agreed to receive these messages.",
+    "validation": {
+      "invalidRecipientEmails": "One or more recipient emails are invalid",
+      "uploadRecipients": "Add at least one recipient"
+    },
+    "toast": {
+      "campaignSent": "Campaign sent. {successful} of {total} messages went out.",
+      "campaignQueued": "Campaign queued! {total} messages will be sent in the background.",
+      "optInExcluded": "Excluded {count, plural, one {# recipient} other {# recipients}} without opt-in.",
+      "priorFailedExcluded": "Excluded {count, plural, one {# recipient} other {# recipients}} whose latest delivery ended in a recipient-specific failure.",
+      "serviceWindowExcluded": "Excluded {count, plural, one {# recipient} other {# recipients}} without an open 24-hour service window.",
+      "recipientFileImporting": "The recipient file is still importing. Wait for it to finish.",
+      "noRegisteredUsers": "No registered app users found.",
+      "noTelegramChats": "No known Telegram chats for this bot.",
+      "finishEmailContent": "Finish or clear the email content for {locales}.",
+      "duplicateRequestIgnored": "Already queued. The repeated request was ignored.",
+      "recipientsSkipped": "{count, plural, one {# recipient} other {# recipients}} skipped.",
+      "sendFailed": "Couldn't send the campaign",
+      "sendFailedOptInList": "{message}\n\nAdd these numbers to the opt-in list:\n{phones}",
+      "templateVariablesMissing": "Template variables are missing for {count, plural, one {# recipient} other {# recipients}}.",
+      "fillUpTemplateVariablesMissing": "Template variables are missing for {count, plural, one {# fill-up recipient} other {# fill-up recipients}}.",
+      "templateVariablesMissingMore": "...and {count} more",
+      "customValuesMissing": "Custom values are missing for {variables}."
+    },
+    "analyticsNoRecipients": "No recipients match the current analytics filter.",
+    "analyticsAudienceTitle": "Analytics Audience",
+    "analyticsAudienceChecking": "Checking filter...",
+    "analyticsAudienceSummary": "{count, plural, one {# recipient matches} other {# recipients match}} this filter.",
+    "analyticsAudienceCapped": "Audience too large (max {count}). Narrow filter.",
+    "analyticsAudienceUnavailable": "Analytics audience is unavailable.",
+    "analyticsAudienceMatched": "Matched",
+    "analyticsAudienceEligible": "Eligible",
+    "analyticsFillUpTitle": "Add more recipients",
+    "analyticsFillUpDescription": "Add contacts up to the sending limit.",
+    "analyticsFillUpRemaining": "Remaining slots",
+    "analyticsFillUpLimitUnavailable": "The official recipient limit is unavailable.",
+    "analyticsFillUpNoCapacity": "The analytics audience already fills the current official limit.",
+    "analyticsFillUpAccepted": "{count, plural, one {# fill-up recipient} other {# fill-up recipients}} will be added.",
+    "analyticsFillUpIgnored": "{count, plural, one {# duplicate or invalid fill-up recipient was} other {# duplicate or invalid fill-up recipients were}} ignored.",
+    "analyticsFillUpTruncated": "{count, plural, one {# fill-up recipient exceeds} other {# fill-up recipients exceed}} the official limit and will not be sent.",
+    "excludeRecentClientWindowLabel": "Skip active chats",
+    "excludeRecentClientWindowHint": "Skip contacts who messaged you in the last 24 hours.",
+    "excludePriorFailedBulkSendsLabel": "Skip failed recipients",
+    "excludePriorFailedBulkSendsHint": "Skip contacts whose last campaign delivery failed. Account-wide errors don't count.",
+    "priorFailedBulkSendsExcludedInline": "{count, plural, one {# recipient} other {# recipients}} will be excluded from this campaign.",
+    "priorFailedBulkSendsLookupUnavailable": "Couldn't check past deliveries. Retry to send.",
+    "priorFailedBulkSendsLoading": "Checking past deliveries…",
+    "priorFailedBulkSendsRetry": "Retry",
+    "priorFailedBulkSendsAllExcluded": "No recipients left after filtering.",
+    "priorFailedBulkSendsUnsupported": "Not available for this channel or message type.",
+    "eligibilityFrozenAtAdmission": "Eligibility is frozen at admission for this scheduled send.",
+    "eligibilityEvaluatedEachRun": "Current eligibility is evaluated at each run.",
+    "outcome": {
+      "skippedTitle": "Not sent",
+      "recentContact": "Contacted recently",
+      "marketingOptOut": "Marketing opt-out",
+      "recipientLimit": "Over the recipient limit",
+      "priorFailure": "Prior failure",
+      "ineligible": "Ineligible",
+      "serviceWindow": "Service window",
+      "unsubscribed": "Unsubscribed",
+      "missingMarketingConsent": "No marketing consent on file (doesn't block sending)"
+    },
+    "bulkLimit": {
+      "blocked": "Your Free plan's bulk recipients are used up. Upgrade to send more campaigns.",
+      "upgrade": "See plans",
+      "freeRemaining": "Free plan: {remaining, number} of {limit, number} recipients left",
+      "freeTrimmed": "Free plan: {remaining, plural, one {# recipient} other {# recipients}} left. Only the first {remaining, plural, one {one} other {#}} of {count, number} will be sent.",
+      "freeExhausted": "Free plan's {limit, number} bulk recipients are used up.",
+      "proUnlimited": "Pro plan: unlimited bulk campaigns."
+    },
+    "variablesLabel": "Variables",
+    "recipientFilters": "Recipient filters",
+    "recipientFiltersActive": "1 active",
+    "recipientFiltersOff": "Off",
+    "recipientFiltersExcluded": "−{count}"
+  },
+  "CampaignDispatchPlanCard": {
+    "readiness": {
+      "fix": {
+        "integrations": "Open WhatsApp settings",
+        "whatsappManager": "Open WhatsApp Manager"
+      },
+      "checking": "Checking…",
+      "checkingDescription": "Checking the selected WhatsApp number and audience.",
+      "ready": "Ready to send",
+      "readyDescription": "No known sending block was found. Account limits still apply, and Meta decides delivery for each recipient.",
+      "blocked": "Can't send yet",
+      "blockedDescription": "Resolve the reason below, then refresh the checks before sending.",
+      "unavailable": "Sending check unavailable",
+      "rateLimited": "Can't check the send yet",
+      "unavailableDescription": "We couldn’t complete the sending check. Retry to verify this campaign.",
+      "awaitingAudience": "Choose a message and add recipients",
+      "awaitingRecipients": "Add recipients",
+      "noRecipients": "No recipients to send to",
+      "awaitingAudienceDescription": "Choose a template and add recipients to check this campaign.",
+      "refresh": "Retry check",
+      "recheck": "Recheck",
+      "providerCode": "Meta code: {code}",
+      "cooldownEligible": "{count} recipients pass the current contact timing limits.",
+      "cooldownUntil": "Try again after {time}.",
+      "cooldownUnknown": "Refresh to check when these recipients can be contacted.",
+      "checkedAt": "Checked {time}",
+      "remainingUnknown": "WhatsApp's remaining sending capacity isn't available.",
+      "acceptedNotDelivered": "Queued or accepted messages are not confirmed deliveries. Delivery and read counts update as Meta reports results.",
+      "reasons": {
+        "meta_business_limit": "WhatsApp is limiting sends. Check WhatsApp Manager.",
+        "meta_sender_restricted": "WhatsApp has restricted sending. Check WhatsApp Manager.",
+        "meta_billing": "Fix WhatsApp billing to send.",
+        "meta_disconnected": "Reconnect this WhatsApp number in Integrations.",
+        "meta_check_unavailable": "Couldn't check WhatsApp. Try refreshing.",
+        "contact_frequency_limit": "{count, plural, one {# recipient was} other {# recipients were}} contacted too recently."
+      },
+      "errors": {
+        "meta_rate_limited": "WhatsApp is limiting requests for this account.",
+        "template_lookup_unavailable": "We couldn’t verify this template with WhatsApp.",
+        "template_unavailable": "This template isn't approved. Choose an approved template.",
+        "plan_unavailable": "The WhatsApp number isn't available. Check its connection in Integrations."
+      },
+      "details": "Details"
+    },
+    "templateCatalog": {
+      "unavailable": "Couldn't load WhatsApp templates.",
+      "rateLimited": "WhatsApp is limiting template requests."
+    },
+    "sendBlocked": {
+      "checking": "Wait for the send check to finish.",
+      "check_failed": "Send is available after a successful check.",
+      "all_excluded": "No recipients left to send to.",
+      "blocked": "Resolve the check issue before sending."
+    },
+    "lifecycleStatus": "{status, select, queued {Queued} scheduled {Scheduled} running {Running} completed {Completed} failed {Failed} expired {Expired} cancelled {Cancelled} paused {Paused} other {{status}}}",
+    "title": "Dispatch plan",
+    "description": "Server-side pacing. The UI does not set batch size directly.",
+    "credentialsUnavailable": "Connect this channel in Integrations to send.",
+    "unknown": "Unknown",
+    "unlimited": "Unlimited",
+    "unavailable": "Unavailable",
+    "messagesPerSecond": "{rate} msg/s",
+    "milliseconds": "{delay} ms",
+    "rate": "Rate",
+    "batchSize": "Batch size",
+    "delay": "Delay",
+    "source": "Source",
+    "recipientLimit": "Recipient limit",
+    "whatsappLine": "WhatsApp line",
+    "metaStatus": "Number quality",
+    "throughput": "Throughput",
+    "metaFallback": "Meta details fallback: {warning}",
+    "queuedRecipients": "Queued recipients",
+    "payloadStaging": "Payload staging",
+    "workflow": "Workflow",
+    "sources": {
+      "metaPhoneThroughput": "Meta phone throughput",
+      "metaDefaultThroughput": "Meta documented default",
+      "channelDefault": "Channel default"
+    },
+    "queuedSummary": "{count} recipients",
+    "planRestriction": {
+      "title": "Sending paused — Free plan limit reached",
+      "trial_expired": "Your Free trial has ended. Choose a paid plan to resume campaign sending.",
+      "campaign_limit": "This workspace is on Free and its bulk recipient allowance has been used. You can continue editing this campaign.",
+      "conversation_limit": "This workspace is on Free and has reached its conversation limit. You can continue editing this campaign.",
+      "details": "Usage details",
+      "recipientUsage": "Recipients sent: {used}. Free allowance: {limit} in total.",
+      "conversationUsage": "Conversations: {used}. Free limit: {limit}.",
+      "upgrade": "View Pro plan",
+      "checksPending": "Sending checks still need to pass before sending."
+    },
+    "sendUnavailable": "Send unavailable",
+    "viewSendingStatus": "View sending status",
+    "selectedRecipients": "{count, plural, one {# recipient selected} other {# recipients selected}}",
+    "otherChecks": "Other sending checks",
+    "connectionDetails": "WhatsApp connection details",
+    "inboundActivityTitle": "Incoming activity needs checking",
+    "inboundActivityDescription": "No recent incoming messages were observed. Check receiving activity in WhatsApp settings."
+  },
+  "CampaignRecipientPicker": {
+    "recipient": {
+      "title": "Campaign recipients",
+      "selectedCount": "{selected} selected / {limit}",
+      "overflowQueueHint": "{count, plural, one {# recipient exceeds} other {# recipients exceed}} today's {limit} limit. Send will queue the rest in 24-hour waves.",
+      "unlimited": "unlimited",
+      "quickAddLabel": "Add one recipient",
+      "addRecipient": "Add recipient",
+      "emailPlaceholder": "email@example.com",
+      "telegramPlaceholder": "chat ID or phone",
+      "whatsappPlaceholder": "+77001234567",
+      "contactsTitle": "Contacts",
+      "addShownContacts": "Add shown",
+      "searchContacts": "Search contacts",
+      "loadingContacts": "Loading contacts...",
+      "noContacts": "No contacts found",
+      "noTelegramContacts": "No eligible Telegram DMs. Need prior private bot contact, imported chat_id, or active Business 24h reply window. Groups excluded.",
+      "variablesTitle": "Template variables",
+      "autoFill": "Auto-fill",
+      "contactName": "Contact name",
+      "recipientIdentifier": "Recipient identifier",
+      "tableColumn": "Table column",
+      "customValue": "Custom value",
+      "selectTableColumn": "Select table column",
+      "customValuePlaceholder": "Static value for variable {variable}",
+      "selectedTable": "Selected campaign recipients",
+      "identifier": "Recipient",
+      "name": "Name",
+      "removeRecipient": "Remove recipient",
+      "attachedCount": "{count, plural, one {# recipient attached} other {# recipients attached}}",
+      "clearAll": "Clear all",
+      "clearedToast": "{count, plural, one {# recipient removed} other {# recipients removed}}",
+      "undoClear": "Undo",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "pageStatus": "Page {page} of {total}",
+      "renameColumn": "Rename column {column}",
+      "variableMatchStatus": "Variable {variable} column match",
+      "variableMatched": "Matched",
+      "variableUnmatched": "No exact column",
+      "variablePreview": "First recipient gets: {value}",
+      "variablePreviewEmpty": "First recipient gets no value",
+      "variablePhoneFallback": "{count, plural, one {# recipient without a name will get their phone number} other {# recipients without a name will get their phone number}}"
+    }
+  },
+  "LlmAnalytics": {
+    "pageTitle": "LLM Analytics",
+    "pageDescription": "Operator view of live Airi reply reliability: safe replies, grounded recovery, generic clarifications, and low-confidence understanding signals.",
+    "limitedSample": "This view is based on a truncated PostHog sample. Totals may be lower than the full production volume for the selected period.",
+    "dateRanges": {
+      "7": "Last 7 days",
+      "30": "Last 30 days",
+      "90": "Last 90 days"
+    },
+    "errors": {
+      "loadFailed": "Failed to load LLM analytics"
+    },
+    "common": {
+      "aiQuality": "AI quality",
+      "warehouseActive": "Warehouse active",
+      "waitingForEvents": "Waiting for events",
+      "manualApproval": "Manual approval",
+      "title": "LLM quality control",
+      "description": "Monitor model calls, RAG reliability, and customer-approved review items. Resolving closes a finding and can create a regression case; it does not fine-tune or change live agent behavior.",
+      "warehousePartialUnavailable": "Some warehouse metrics are temporarily unavailable.",
+      "unknown": "Unknown",
+      "unknownValue": "Unknown value ({value})",
+      "notAvailable": "N/A",
+      "technicalDetail": "Technical detail"
+    },
+    "units": {
+      "calls": "{count, plural, one {# call} other {# calls}}",
+      "tokens": "{count, plural, one {# token} other {# tokens}}",
+      "sampledEvaluations": "{count, plural, one {# sampled evaluation} other {# sampled evaluations}}",
+      "observedCalls": "{count, plural, one {# observed call} other {# observed calls}}",
+      "openFindings": "{count, plural, one {# open finding} other {# open findings}}",
+      "turns": "{count, plural, one {# turn} other {# turns}}",
+      "milliseconds": "{value} ms",
+      "seconds": "{value} s",
+      "perSecond": "{value}/s",
+      "scoreOutOf100": "{value} / 100",
+      "shareOfSpend": "{value}% of spend"
+    },
+    "operations": {
+      "items": {
+        "genericChatCompletion": "Generic chat completion",
+        "airiCoach": "Airi coach",
+        "airiChatTitle": "Airi chat: title",
+        "airiChatProductCapabilities": "Airi chat: product capabilities",
+        "airiChatWhatsAppTemplateDraft": "Airi chat: WhatsApp template draft",
+        "airiChatWhatsAppFlowDraft": "Airi chat: WhatsApp Flow draft",
+        "airiChatImageGenerationBrief": "Airi chat: image brief",
+        "airiChatOpportunityScan": "Airi chat: opportunity scan",
+        "airiChatCampaignPackage": "Airi chat: campaign package",
+        "airiChatIntentClassification": "Airi chat: intent classification",
+        "airiChatReply": "Airi chat reply",
+        "ragGenerateResponse": "RAG: generate response",
+        "ragRetrievalIntentClassifier": "RAG: retrieval intent classification",
+        "ragGroundingReflection": "RAG: grounding reflection",
+        "ragVerifier": "RAG: verifier",
+        "ragReranker": "RAG: reranker",
+        "ragHyde": "RAG: HyDE",
+        "ragQueryCleaner": "RAG: query cleanup",
+        "ragPrepareQuery": "RAG: query preparation",
+        "replyGenerate": "Customer reply: generation",
+        "replyTurnUnderstanding": "Customer reply: turn understanding",
+        "replyLoadThreadContext": "Customer reply: thread context",
+        "replyFinalGeneration": "Customer reply: final generation",
+        "replyFallbackRecoveryGeneration": "Customer reply: fallback recovery",
+        "replyAnswerCoverageJudge": "Customer reply: answer coverage judge"
+      },
+      "details": {
+        "generic": "Shared helper calls without a specific workflow key.",
+        "coach": "Coaching suggestions generated for customer conversations.",
+        "airiChat": "Airi assistant calls grouped by the product action that requested the model.",
+        "rag": "Retrieval and grounding calls made before an answer is generated.",
+        "reply": "Customer conversation reply pipeline calls.",
+        "unknown": "Traced model calls with an unknown operation key."
+      }
+    },
+    "judge": {
+      "explanationPrompt": "Judge explanation: why did this answer receive its score?",
+      "scorePrompt": "{dimension} score (0–1, leave blank to skip)",
+      "dimensions": {
+        "relevance": "Relevance",
+        "trustworthiness": "Trustworthiness",
+        "conciseness": "Conciseness",
+        "completeness": "Completeness",
+        "safety": "Safety",
+        "overall": "Overall"
+      }
+    },
+    "quality": {
+      "title": "Airi model and chat quality",
+      "description": "BigQuery-backed model quality, latency, efficiency, and panel Airi chat usage metrics.",
+      "airiChatReporting": "Airi chat reporting",
+      "cards": {
+        "airiAnswers": {
+          "title": "Airi answers",
+          "subtitle": "Persisted assistant chat turns"
+        },
+        "noContextTurns": {
+          "title": "No-context turns",
+          "subtitle": "Answers without retrieved context"
+        },
+        "airiChatSpend": {
+          "title": "Airi chat spend",
+          "subtitle": "Repriced from BigQuery traces"
+        },
+        "generationQuality": {
+          "title": "Generation quality",
+          "subtitle": "Weighted alignment score"
+        },
+        "groundedness": {
+          "title": "Groundedness",
+          "subtitle": "Turns with retrieved context"
+        },
+        "answerRelevance": {
+          "title": "Answer relevance",
+          "subtitle": "Judge and evaluation relevance score"
+        },
+        "guardrailPass": {
+          "title": "Guardrail pass",
+          "subtitle": "Safety checks passed"
+        },
+        "evalPass": {
+          "title": "Evaluation pass",
+          "subtitle": "Evaluation pass rate"
+        },
+        "answerCompleteness": {
+          "title": "Answer completeness",
+          "subtitle": "Detected asks answered"
+        },
+        "citationCoverage": {
+          "title": "Citation coverage",
+          "subtitle": "Citations over retrieved context"
+        },
+        "toxicityScore": {
+          "title": "Toxicity score",
+          "subtitle": "Lower is better"
+        },
+        "toxicOutputs": {
+          "title": "Toxic outputs",
+          "subtitle": "Boolean toxicity flags"
+        }
+      }
+    },
+    "systemPerformance": {
+      "title": "System performance",
+      "cards": {
+        "p95Latency": {
+          "title": "P95 latency",
+          "subtitle": "LLM trace latency"
+        },
+        "p99Latency": {
+          "title": "P99 latency",
+          "subtitle": "Tail latency"
+        },
+        "tokensPerSecond": {
+          "title": "Tokens / sec",
+          "subtitle": "Prompt and completion throughput"
+        },
+        "outputTokensPerSecond": {
+          "title": "Output tokens / sec",
+          "subtitle": "Completion throughput"
+        },
+        "timeToFirstToken": {
+          "title": "Time to first token",
+          "subtitle": "Requires streaming instrumentation"
+        }
+      }
+    },
+    "costEfficiency": {
+      "title": "Cost and operational efficiency",
+      "cards": {
+        "errorRate": {
+          "title": "Error rate",
+          "subtitle": "Failed model calls"
+        },
+        "promptTokenShare": {
+          "title": "Prompt token share",
+          "subtitle": "Input share of total tokens"
+        },
+        "completionTokenShare": {
+          "title": "Completion token share",
+          "subtitle": "Output share of total tokens"
+        },
+        "costPerThousandTokens": {
+          "title": "Cost / 1K tokens",
+          "subtitle": "Repriced trace cost"
+        },
+        "semanticCacheHit": {
+          "title": "Semantic cache hit",
+          "subtitle": "Observed semantic-cache calls"
+        }
+      }
+    },
+    "health": {
+      "daily": {
+        "title": "Airi chat daily health",
+        "empty": "No daily Airi chat warehouse rows yet.",
+        "series": {
+          "answers": "Answers",
+          "grounded": "Grounded",
+          "noContext": "No context"
+        }
+      },
+      "warnings": {
+        "title": "Airi chat context warnings",
+        "empty": "No Airi chat context warnings in this range.",
+        "columns": {
+          "issue": "Issue",
+          "turns": "Turns"
+        }
+      }
+    },
+    "reviewQueue": {
+      "title": "Review queue",
+      "description": "Open findings that need approval before they become regression cases.",
+      "loadFailed": "Failed to load review items.",
+      "empty": "No open AI quality review items.",
+      "columns": {
+        "finding": "Finding",
+        "evidence": "Evidence",
+        "decision": "Decision"
+      },
+      "labels": {
+        "replyExcerpt": "Reply excerpt",
+        "noReplyExcerpt": "No reply excerpt",
+        "recommendedNextStep": "Recommended next step"
+      },
+      "actions": {
+        "resolve": "Resolve",
+        "ignore": "Ignore"
+      }
+    },
+    "prompts": {
+      "resolveWithRegression": "Resolve and add a regression case",
+      "resolveWithoutRegression": "Resolve without a regression case; no input excerpt is available"
+    },
+    "toasts": {
+      "resolvedWithRegression": "Review item resolved and added to regression cases",
+      "resolved": "Review item resolved",
+      "ignored": "Review item ignored",
+      "updateFailed": "Failed to update review item"
+    },
+    "enums": {
+      "fallbackAction": {
+        "useGeneratedReply": "Use generated reply",
+        "groundedRecovery": "Grounded recovery",
+        "intentFallback": "Intent fallback",
+        "genericClarification": "Generic clarification",
+        "clarifyingGeneration": "Clarifying generation"
+      },
+      "fallbackReason": {
+        "generatedReplyComplete": "Generated reply complete",
+        "emptyGeneratedReply": "Empty generated reply",
+        "incompleteGeneratedReply": "Incomplete generated reply",
+        "hydeLeakageGuard": "HyDE leakage guard",
+        "missingAskCoverage": "Missing ask coverage",
+        "groundedContextAvailable": "Grounded context available",
+        "missingKnowledgeSignal": "Missing knowledge signal",
+        "genericUngroundedTurn": "Generic ungrounded turn",
+        "clarifyingGenerationAllowed": "Clarifying generation allowed",
+        "evidencePolicyClarify": "Evidence policy: clarify",
+        "evidencePolicyHandoff": "Evidence policy: handoff"
+      },
+      "resultType": {
+        "verifiedSnippet": "Verified snippet",
+        "suggestionWithAi": "AI-assisted suggestion",
+        "aiReply": "AI reply",
+        "fallback": "Fallback",
+        "evidenceRetrieve": "Evidence retrieval",
+        "evidenceContext": "Evidence context",
+        "noContext": "No context"
+      },
+      "turnKind": {
+        "greeting": "Greeting",
+        "presenceCheck": "Presence check",
+        "metaQuestion": "Meta question",
+        "thanks": "Thanks",
+        "farewell": "Farewell",
+        "acknowledgment": "Acknowledgment",
+        "impatience": "Impatience",
+        "dataSharing": "Data sharing",
+        "question": "Question",
+        "followupQuestion": "Follow-up question",
+        "unknown": "Unknown"
+      },
+      "channel": {
+        "whatsApp": "WhatsApp",
+        "telegram": "Telegram",
+        "email": "Email",
+        "widget": "Widget",
+        "instagram": "Instagram",
+        "facebook": "Facebook"
+      },
+      "retrievalPath": {
+        "snippet": "Snippet",
+        "knowledgeBase": "Knowledge base",
+        "blended": "Blended",
+        "none": "None"
+      },
+      "issueType": {
+        "knowledgeGap": "Knowledge gap",
+        "unsupportedAnswer": "Unsupported answer",
+        "badRetrieval": "Bad retrieval",
+        "scenarioActionMismatch": "Scenario action mismatch",
+        "escalationIssue": "Escalation issue",
+        "tonePolicyIssue": "Tone policy issue",
+        "costLatencySpike": "Cost or latency spike",
+        "other": "Other"
+      },
+      "severity": {
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "info": "Info"
+      }
+    },
+    "cards": {
+      "safeReplies": {
+        "title": "Safe conversational replies",
+        "subtitle": "Non-RAG replies like greetings and acknowledgments"
+      },
+      "ragTurns": {
+        "title": "RAG turns",
+        "subtitle": "Turns that reached grounded answer flow"
+      },
+      "groundedRecovery": {
+        "title": "Grounded recovery usage",
+        "subtitle": "Incomplete generations recovered from KB or snippets"
+      },
+      "genericClarification": {
+        "title": "Generic clarification usage",
+        "subtitle": "Ungrounded fallback replies that still need improvement"
+      },
+      "lowConfidence": {
+        "title": "Low-confidence understanding",
+        "subtitle": "Turns where turn understanding stayed uncertain"
+      },
+      "groundedRecoveryRate": {
+        "title": "Grounded recovery rate",
+        "subtitle": "Share of RAG turns that recovered from grounded context"
+      },
+      "genericClarificationRate": {
+        "title": "Generic clarification rate",
+        "subtitle": "Share of RAG turns that still ended generic"
+      },
+      "lowConfidenceRate": {
+        "title": "Low-confidence rate",
+        "subtitle": "Share of tracked understanding results marked low confidence"
+      },
+      "safeReplyShare": {
+        "title": "Safe reply share",
+        "subtitle": "Share of tracked turns handled without RAG"
+      }
+    },
+    "warehouse": {
+      "cards": {
+        "llmCalls": {
+          "title": "LLM calls",
+          "subtitle": "Warehouse-tracked model calls"
+        },
+        "errorRate": {
+          "title": "Error rate",
+          "subtitle": "Failed model calls in this period"
+        },
+        "p95Latency": {
+          "title": "P95 latency",
+          "subtitle": "Warehouse call latency"
+        },
+        "totalTokens": {
+          "title": "Total tokens",
+          "subtitle": "Prompt and completion tokens"
+        },
+        "ragIssues": {
+          "title": "RAG issues",
+          "subtitle": "Fallbacks, missing context, or failed turns"
+        }
+      },
+      "title": "Warehouse telemetry",
+      "description": "BigQuery aggregates for current workspace.",
+      "descriptionWithRefresh": "BigQuery aggregates for current workspace, refreshed {time}.",
+      "partialFailure": "Warehouse query partially failed: {message}",
+      "spend": {
+        "title": "Estimated LLM cost",
+        "description": "Cost from traced chat LLM calls in this workspace. Use it to see which AI workflows drive budget. Embeddings and media generation are not included.",
+        "footnote": "Costs are calculated from recorded token usage with the current pricing table, so use them as operational estimates rather than invoices.",
+        "cards": {
+          "totalSpend": {
+            "title": "Total spend",
+            "subtitle": "Estimated workspace cost in this period"
+          },
+          "avgCost": {
+            "title": "Avg cost / call",
+            "subtitle": "Mean estimated USD per traced call"
+          },
+          "totalTokens": {
+            "title": "Total tokens",
+            "subtitle": "Prompt and completion tokens traced"
+          },
+          "companyTotal": {
+            "title": "Company total",
+            "subtitle": "All {count} workspaces in this company"
+          }
+        },
+        "charts": {
+          "daily": "Daily spend",
+          "dailyDescription": "Daily estimated USD from traced model calls."
+        },
+        "tables": {
+          "byOperation": "Cost by AI workflow",
+          "byOperationDescription": "Which AI workflows are using the LLM budget.",
+          "byModel": "Cost by model and workflow",
+          "byModelDescription": "Model and workflow pairs from traced calls. Long identifiers wrap so the spend column stays visible."
+        },
+        "labels": {
+          "cost": "Est. cost",
+          "modelAndWorkflow": "Model and workflow",
+          "volume": "Volume"
+        },
+        "legend": {
+          "dailySpend": "Daily spend"
+        },
+        "empty": {
+          "daily": "No daily spend data for this period.",
+          "byOperation": "No operation spend data for this period."
+        }
+      }
+    },
+    "charts": {
+      "dailyTrend": "Daily reliability trend",
+      "fallbackActions": "Fallback action breakdown"
+    },
+    "tables": {
+      "fallbackReasons": "Fallback reasons",
+      "channels": "Channel breakdown",
+      "resultTypes": "RAG result types",
+      "safeReplyKinds": "Safe reply kinds",
+      "lowConfidenceKinds": "Low-confidence kinds"
+    },
+    "legend": {
+      "ragTurns": "RAG turns",
+      "groundedRecovery": "Grounded recovery",
+      "genericClarification": "Generic clarification",
+      "safeReplies": "Safe replies"
+    },
+    "labels": {
+      "events": "Events",
+      "name": "Name",
+      "count": "Count"
+    },
+    "empty": {
+      "title": "No LLM operator data yet",
+      "description": "Once live Airi auto-replies start emitting operator metrics, this page will show reliability trends and fallback breakdowns.",
+      "noFallbackActions": "No fallback actions were recorded for this period.",
+      "noFallbackReasons": "No fallback reasons were recorded for this period.",
+      "noChannels": "No channel data was recorded for this period.",
+      "noResultTypes": "No RAG result types were recorded for this period.",
+      "noSafeReplyKinds": "No safe reply kinds were recorded for this period.",
+      "noLowConfidenceKinds": "No low-confidence turn kinds were recorded for this period."
+    }
+  },
+  "CampaignHistory": {
+    "refreshError": "Updates are temporarily unavailable. Showing the last received results; reconnect or refresh to try again.",
+    "title": "History",
+    "campaignCount": "{count, plural, one {# campaign} other {# campaigns}}",
+    "campaign": "Campaign",
+    "channel": "Channel",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "email": "Email",
+    "templateMessage": "Template/Message",
+    "recipients": "Recipients",
+    "results": "Results",
+    "actions": "Actions",
+    "acceptedRate": "Accepted Rate",
+    "deliveryRate": "Delivery Rate",
+    "readRate": "Read Rate",
+    "openRate": "Open Rate",
+    "clickRate": "Click Rate",
+    "unsubscribeRate": "Unsubscribe Rate",
+    "emailOnlyMetric": "Tracked for email only, not for WhatsApp",
+    "failedOrBounceRate": "Failed / Bounce",
+    "replyRate": "Reply Rate",
+    "cost": "Cost",
+    "costPerReply": "Cost / Reply",
+    "costStatus": {
+      "notPriced": "Not priced",
+      "unpricedMessages": "{count, plural, one {# delivered message has no verified price} other {# delivered messages have no verified price}}",
+      "notPricedDetail": "Delivered messages have no verified price",
+      "notTracked": "Sent before cost tracking started",
+      "explanation": "Meta doesn't report a price per message, and there is no verified WhatsApp rate card for your market yet, so campaign cost isn't priced. The spend Meta reports for the whole WhatsApp account is shown above the campaign list."
+    },
+    "viewAnalytics": "Replies",
+    "sentAt": "Sent At",
+    "sentBy": "Sent By",
+    "sentByValue": "Sent by {name}",
+    "unknown": "Unknown",
+    "empty": {
+      "title": "No campaigns sent yet",
+      "description": "Your campaign history will appear here"
+    },
+    "failureSummary": {
+      "allFailed": "All sends failed",
+      "someFailed": "{count} failed",
+      "errorCode": "Meta error",
+      "localCooldown": "Held by airi.chat contact limits",
+      "localCooldownDescription": "airi.chat held these messages because the contact frequency limit was reached. They were not sent to Meta."
+    },
+    "summary": {
+      "accepted": "{accepted} of {total} accepted",
+      "failed": "{count} failed"
+    },
+    "operations": {
+      "status": {
+        "queued": "Queued",
+        "scheduled": "Scheduled",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "expired": "Expired",
+        "cancelled": "Cancelled",
+        "paused": "Paused"
+      },
+      "progress": "Processed",
+      "notAttempted": "Not attempted",
+      "remaining": "{count} remaining",
+      "delivery": {
+        "pending": "Pending",
+        "accepted": "Sent",
+        "delivered": "Delivered",
+        "read": "Read",
+        "failed": "Failed"
+      },
+      "cancel": {
+        "action": "Cancel",
+        "pending": "Cancelling…",
+        "success": "Campaign cancelled.",
+        "localWarning": "Cancelled here, but workflow cancellation still needs confirmation.",
+        "error": "Campaign could not be cancelled."
+      },
+      "pause": {
+        "action": "Pause",
+        "pending": "Pausing…",
+        "success": "Campaign paused. Remaining waves stay queued.",
+        "error": "Campaign could not be paused.",
+        "resume": "Resume",
+        "resuming": "Resuming…",
+        "resumeSuccess": "Campaign resumed.",
+        "resumeError": "Campaign could not be resumed."
+      },
+      "retry": {
+        "successSkippedRecent": "Failed recipients queued for retry. {count, plural, one {# recipient contacted recently was} other {# recipients contacted recently were}} left out.",
+        "action": "Retry failed ({count})",
+        "pending": "Retrying…",
+        "success": "Failed recipients queued for retry.",
+        "error": "Failed recipients could not be retried.",
+        "circuitWarning": "Provider protection is active. Confirm the provider issue is fixed before retrying.",
+        "provider": "Provider:",
+        "code": "Code:",
+        "failureCount": "Failures:",
+        "acknowledgeCircuit": "I confirm the provider issue is fixed.",
+        "cooldown": "{count} recipients are still in the airi.chat contact cooldown. The current contact policy allows this audience again from {date}. Provider restrictions must also be resolved.",
+        "cooldownUnknown": "{count} recipients are held by the airi.chat contact policy. Check the contact limits before retrying."
+      }
+    },
+    "details": {
+      "localSuppression": "Held locally",
+      "action": "Actions",
+      "show": "View details ({count})",
+      "hide": "Hide",
+      "showDeliveryDetails": "View delivery details for {count} recipients",
+      "hideDeliveryDetails": "Hide delivery details",
+      "none": "-",
+      "title": "Delivery details",
+      "description": "Channel performance and recipient-level delivery events.",
+      "recipientEvents": "Recipients",
+      "noneAvailable": "No recipient delivery events are available for this campaign.",
+      "recipient": "Recipient",
+      "status": "Status",
+      "provider": "Provider",
+      "details": "Details",
+      "updated": "Updated",
+      "metrics": {
+        "recipients": "Recipients",
+        "accepted": "Accepted",
+        "failed": "Failed",
+        "deliveryRate": "Delivery rate",
+        "readRate": "Read rate",
+        "replyRate": "Reply rate",
+        "openRate": "Open rate",
+        "clickRate": "Click rate",
+        "bounceRate": "Bounce rate",
+        "unsubscribeRate": "Unsubscribe rate",
+        "cost": "Cost",
+        "costPerReply": "Cost per reply"
+      }
+    }
+  },
+  "WhatsAppSpendSummary": {
+    "title": "WhatsApp spend reported by Meta",
+    "window": "{start} – {end} (UTC)",
+    "approximate": "Approximate, {currency}",
+    "loading": "Loading WhatsApp spend…",
+    "error": "WhatsApp spend from Meta couldn't be loaded.",
+    "retry": "Retry",
+    "retrying": "Retrying…",
+    "noSource": "Connect WhatsApp to see the spend Meta reports.",
+    "connect": "Connect WhatsApp",
+    "noSpend": "Meta reported no WhatsApp charges for this period.",
+    "reconnect": "Meta access for this WhatsApp account has expired or lacks permission, so its spend can't be read.",
+    "reconnectAction": "Reconnect WhatsApp",
+    "unavailable": "Couldn’t load spend data.",
+    "outOfRange": "Meta spend is shown only for periods within the last 365 days.",
+    "partial": "Some accounts couldn't be read, so the total covers only the accounts with an amount below.",
+    "scope": "Approximate spend Meta reports for the whole WhatsApp Business Account: campaigns, chats and every other message. It isn't the cost of any one campaign.",
+    "truncated": "Only the first 10 WhatsApp accounts are shown.",
+    "accountState": {
+      "reported": "Reported",
+      "no_activity": "No charges reported",
+      "cost_withheld": "Meta reported volume but not cost",
+      "reconnect": "No Meta access, reconnect WhatsApp",
+      "unsupported": "Not available for this account",
+      "unavailable": "Temporarily unavailable"
+    }
+  },
+  "CsvUpload": {
+    "skipped": {
+      "title": "{count, plural, one {# row was skipped} other {# rows were skipped}}",
+      "description": "These rows have no usable recipient and won't get the message.",
+      "row": "Row {row}",
+      "more": "and {count} more",
+      "download": "Download skipped rows",
+      "columns": {
+        "row": "Row",
+        "value": "Value",
+        "reason": "Reason"
+      },
+      "reasons": {
+        "missing_recipient": "No recipient",
+        "invalid_phone": "Invalid phone",
+        "invalid_email": "Invalid email"
+      }
+    },
+    "replaceFile": "Replace",
+    "uploadFile": "Upload CSV/XLSX",
+    "clearFile": "Clear uploaded file",
+    "browseFile": "Browse file",
+    "dropzoneTitle": "Upload recipients",
+    "dropzoneDescription": "Drop a CSV or XLSX file here, or click to browse.",
+    "recipientCount": "{count, plural, one {# recipient} other {# recipients}}",
+    "mergedDuplicates": "{count, plural, one {# duplicate merged} other {# duplicates merged}}",
+    "hiddenRowsSkipped": "Skipped {count, plural, one {# row} other {# rows}} hidden by an Excel filter.",
+    "truncationNotice": "Imported {original, plural, one {# recipient} other {# recipients}}. Using the first {count, number} because of the current sending limit.",
+    "csvFormat": "CSV Format:",
+    "formatExample": {
+      "whatsapp": "phone,name,company\n+77001234567,Aibek,TechCorp\n+77007654321,Samat,StartupInc",
+      "telegram": "chat_id,name,company\n123456789,Aibek,TechCorp\n987654321,Samat,StartupInc",
+      "email": "email,name,company\nalice@example.com,Alice,Acme\nbob@example.com,Bob,Beta"
+    },
+    "requirements": {
+      "firstRow": "First row must contain column headers",
+      "requiredColumn": "Required column:",
+      "phone": "phone",
+      "chatId": "chat_id",
+      "email": "email",
+      "orEquivalent": "or equivalent",
+      "additionalColumns": "Additional columns become message variables",
+      "maxRecipients": "Up to {count, number} recipients per campaign"
+    },
+    "errors": {
+      "emptyFile": "CSV file is empty",
+      "noValidRecipients": "No valid recipients found in CSV",
+      "maxRecipientsExceeded": "Maximum {count, number} recipients per campaign",
+      "whatsappMissingPhone": "CSV must have a \"phone\" or \"phone_number\" column for WhatsApp",
+      "whatsappInvalidPhone": "Invalid phone number in row {row}. Use an international phone number, for example +77001234567, and upload the file again.",
+      "invalidCsv": "Invalid CSV format. Check the separators and quotation marks, then upload the file again.",
+      "whatsappBirthdayMissingColumns": "Birthday CSV needs phone/phone_number and birthday/date_of_birth columns.",
+      "telegramBirthdayMissingColumns": "Birthday CSV needs chat_id/telegram_id and birthday/date_of_birth columns.",
+      "telegramMissingChatId": "CSV must have a \"chat_id\" or \"phone\" column for Telegram",
+      "emailMissingAddress": "CSV must have an \"email\" column for Email campaigns",
+      "failedToParseCSV": "Failed to parse CSV"
+    }
+  },
+  "WidgetAnalytics": {
+    "title": "Your Widget Analytics",
+    "subtitle": "Your workspace's website traffic and conversation insights",
+    "emptyWidget": {
+      "title": "No Widget Installed",
+      "description": "Install the Web Widget integration to start tracking website analytics and visitor behavior.",
+      "cta": "Go to Integrations"
+    },
+    "privateAnalytics": "Private Analytics",
+    "errorTitle": "Analytics failed to load",
+    "refresh": "Refresh",
+    "noDataAvailable": "No analytics data available for your workspace",
+    "noDataDescription": "Analytics data is isolated to your workspace only. If you're not seeing data, ensure your widget is installed and receiving traffic.",
+    "unknown": "Unknown",
+    "errors": {
+      "loadFailed": "Widget analytics could not be loaded."
+    },
+    "units": {
+      "seconds": "{value} sec",
+      "minutes": "{value} min",
+      "hours": "{value} hr"
+    },
+    "websiteUnavailable": {
+      "title": "Website analytics unavailable",
+      "queryFailed": "Couldn't load website metrics. Refresh to try again. Conversation metrics are still available.",
+      "description": "PostHog query credentials are not configured for this environment. Conversation metrics are still available.",
+      "metric": "Website metrics unavailable"
+    },
+    "websiteMetrics": "Website metrics (last 30 days)",
+    "conversationMetrics": "Conversation metrics (last 30 days)",
+    "stats": {
+      "pageviews": "Pageviews",
+      "sessions": "Sessions",
+      "conversations": "Conversations",
+      "chatStartRate": "Chat start rate",
+      "chatStartRateSubtitle": "Conversations per session"
+    },
+    "charts": {
+      "pageviewsTitle": "Pageviews Over Time",
+      "pageviewsDescription": "Daily pageviews (last 30 days)",
+      "trafficSourcesTitle": "Traffic Sources",
+      "trafficSourcesDescription": "Where visitors come from",
+      "deviceBreakdownTitle": "Device Breakdown",
+      "deviceBreakdownDescription": "Desktop, mobile, tablet",
+      "noTimeSeriesData": "No time series data available yet",
+      "noTrafficSourceData": "No traffic source data available yet",
+      "noDeviceData": "No device data available yet",
+      "valueLabel": "Pageviews",
+      "noData": "No chart data available"
+    },
+    "devices": {
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet"
+    },
+    "traffic": {
+      "direct": "Direct"
+    },
+    "source": {
+      "title": "Widget setup",
+      "noSource": "No widget source found",
+      "installed": "Installed",
+      "position": "Position",
+      "domains": "Allowed domains",
+      "noDomains": "No domain allowlist",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "airiEnabled": "Airi enabled",
+      "helpEnabled": "Help tab",
+      "autoOpen": "Auto-open",
+      "positions": {
+        "bottomLeft": "Bottom left",
+        "bottomRight": "Bottom right"
+      }
+    },
+    "breakdowns": {
+      "empty": "No breakdown data yet"
+    },
+    "insights": {
+      "title": "Conversation health"
+    },
+    "pages": {
+      "title": "Pages",
+      "description": "Traffic and conversations merged by URL",
+      "page": "Page",
+      "views": "Views",
+      "conversations": "Chats",
+      "startRate": "Start rate",
+      "lastActive": "Last active",
+      "empty": "No page-level activity yet"
+    },
+    "engagement": {
+      "title": "Engagement Insights (Last 30 Days)",
+      "avgResponseTime": "Avg Response Time",
+      "avgMessages": "Avg Messages/Chat",
+      "csatScore": "CSAT Score",
+      "csatResponses": "{count} responses",
+      "returningVisitors": "Returning Visitors",
+      "uniqueVisitorCount": "{count} unique visitors",
+      "statusTitle": "Conversation Status",
+      "statusDesc": "Current status of all widget conversations",
+      "sentimentTitle": "Visitor Sentiment",
+      "sentimentDesc": "Sentiment analysis from classified conversations",
+      "categoriesTitle": "Top Categories",
+      "categoriesDesc": "Most frequent conversation topics",
+      "open": "Open",
+      "inProgress": "In Progress",
+      "closed": "Closed",
+      "positive": "Positive",
+      "neutral": "Neutral",
+      "negative": "Negative"
+    },
+    "privacyBanner": {
+      "title": "Private workspace analytics",
+      "description": "All analytics shown here are exclusive to your workspace. No other companies can see your data. Website analytics are tracked automatically when visitors use your widget, combining real-time website metrics (pageviews, sessions) with conversation insights (messages, support requests). Data isolation is enforced at the query level using your workspace ID."
+    }
+  },
+  "PerformancePage": {
+    "tooLittleData": "Too little data to calculate team performance :(",
+    "collectMoreData": "To watch beautiful analytical graphs collect more data of your communications.",
+    "title": "Team Performance",
+    "description": "Observe team performance and improve it.",
+    "dateRanges": {
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "last90Days": "Last 90 days"
+    },
+    "errors": {
+      "loadFailed": "Failed to load performance data.",
+      "retry": "Retry"
+    },
+    "chart": {
+      "title": "Not enough data",
+      "collectMoreData": "Collect more conversation data to view team performance."
+    },
+    "dimensions": {
+      "empathy": "Empathy",
+      "clarity": "Clarity",
+      "scriptAdherence": "Script adherence",
+      "resolution": "Resolution"
+    },
+    "duration": {
+      "missing": "—",
+      "seconds": "{count, plural, one {{value} sec} other {{value} sec}}",
+      "minutes": "{count, plural, one {{value} min} other {{value} min}}",
+      "hours": "{count, plural, one {{value} hr} other {{value} hr}}"
+    },
+    "units": {
+      "scoreOutOfTen": "{value} / 10",
+      "scoreOutOfFive": "{value} / 5",
+      "percent": "{value}%"
+    },
+    "insights": {
+      "noTrendYet": "No trend yet",
+      "summary": {
+        "teamQaScore": "Team QA score",
+        "noPreviousPeriod": "No previous period to compare",
+        "vsPreviousPeriod": "{value} vs previous period",
+        "qaCoverage": "QA coverage",
+        "scoredOfHandled": "{count, plural, one {{scored} scored conversation} other {{scored} scored conversations}} of {handled} handled",
+        "managersNeedingSupport": "Managers needing support",
+        "managerTrends": "{improving, plural, one {# manager improving} other {# managers improving}}, {declining, plural, one {# manager declining} other {# managers declining}}",
+        "averageResponseTime": "Average response time",
+        "responseTimeDescription": "From interaction metrics across scored conversations",
+        "averageCsat": "Average CSAT",
+        "csatDescription": "Only conversations with CSAT ratings",
+        "activeManagers": "Active managers",
+        "lastDays": "{count, plural, one {Last {value} day} other {Last {value} days}}"
+      },
+      "dimensions": {
+        "title": "QA dimension health",
+        "description": "Use this to find team-wide strengths and weakest skill areas.",
+        "empty": "Not enough dimension data yet.",
+        "best": "Best",
+        "needsCoaching": "Needs coaching"
+      },
+      "coaching": {
+        "title": "Coaching priorities",
+        "description": "Highest-impact coaching opportunities by score, trend, and volume.",
+        "empty": "No coaching priorities detected in this period.",
+        "focus": "Focus",
+        "summary": "QA {score} / 10 · {count, plural, one {{countValue} scored conversation} other {{countValue} scored conversations}}",
+        "risk": "Risk"
+      }
+    },
+    "leaderboard": {
+      "title": "Agent leaderboard",
+      "agent": "Agent",
+      "dialogsProcessed": "Dialogs processed",
+      "qaCoverage": "QA coverage",
+      "avgResponse": "Average response",
+      "avgQaScore": "Average QA score",
+      "emptyTitle": "No performance data available yet.",
+      "emptyDescription": "Managers appear here once they handle scored conversations.",
+      "scoreBreakdown": "Score breakdown",
+      "csat": "CSAT",
+      "lowQaConversations": "Low-QA conversations",
+      "previousPeriodComparison": "{value} vs previous period"
+    },
+    "performanceChart": {
+      "title": "Average QA score comparison",
+      "singleAgentTitle": "One manager so far",
+      "singleAgentDescription": "Add another manager to compare performance.",
+      "description": "Team comparison with average and target QA baselines.",
+      "qaScore": "QA score",
+      "scoredConversations": "Scored conversations",
+      "conversationsShort": "{count, plural, one {{value} conversation} other {{value} conversations}}",
+      "teamAverage": "Team {value}",
+      "target": "Target {value}"
+    }
+  },
+  "AnalyticsOutcomes": {
+    "title": "Outcomes",
+    "observation": "Observation window",
+    "days": "{days} days",
+    "source": "Source",
+    "allSources": "All sources",
+    "refresh": "Refresh",
+    "tabs": {
+      "acquisition": "Acquisition",
+      "attention": "Waiting leads",
+      "delivery": "Delivery & cost",
+      "templates": "Templates",
+      "health": "WhatsApp health",
+      "flows": "Flows",
+      "retention": "Repeat purchases"
+    },
+    "unavailable": "This report is unavailable. Refresh to try again.",
+    "projectedThrough": "Entries updated through {date}",
+    "ledgerThrough": "Confirmed ledger updated through {date}",
+    "coverage": {
+      "ready": "Projection is current.",
+      "backfilling": "Historical data is still being projected. Counts are incomplete.",
+      "stale": "The projection is delayed. Recent outcomes may be missing.",
+      "unavailable": "Projection failed. These counts have incomplete coverage."
+    },
+    "truncated": "This report reached its limit; it does not cover the full population.",
+    "cohortDefinition": "Entries in the selected period; outcomes within {days} days, ending at the next entry. Refunds follow the original purchase.",
+    "qualification": "Qualification rule",
+    "qualificationHelp": "Qualifying means reaching one of these CRM stages during the observation window. Sales require confirmed ledger evidence.",
+    "save": "Save rule",
+    "saving": "Saving…",
+    "saveFailed": "Rule could not be saved. Refresh the rule and try again.",
+    "empty": "No data for this scope",
+    "emptyCohort": "New entry facts appear after the projection catches up.",
+    "entryType": "Entry",
+    "ad": "Ad",
+    "adId": "Ad",
+    "entries": "Entries",
+    "engaged": "Two-way chat",
+    "qualified": "Qualified",
+    "booked": "Confirmed bookings",
+    "paid": "Paid entries",
+    "pending": "Still observing",
+    "currency": "Currency",
+    "unknownCurrency": "Currency unavailable",
+    "netRevenue": "Net revenue",
+    "grossRevenue": "Gross revenue",
+    "refundedRevenue": "Refunded revenue",
+    "costQualified": "Cost / qualified entry",
+    "costPaid": "Cost / paid entry",
+    "roas": "Net ROAS",
+    "adEntry": "Ad entry",
+    "organic": "Organic",
+    "efficiencyHelp": "Efficiency requires mature entries, complete spend, matching currencies/time zones, one local source per ad and a verified WhatsApp destination with no ad-set update since the period began. Qualification cost also requires retained stage history throughout the period.",
+    "identityCoverage": "{count} ad entries have incomplete click, ad or source identity.",
+    "attentionScope": "Current active qualified customers, using their primary chat; as of {date}.",
+    "needsReply": "Needs reply",
+    "agedUnanswered": "Aged unanswered",
+    "stalled": "Stalled",
+    "handoff": "Waiting for takeover",
+    "emptyAttention": "No qualified leads need attention",
+    "stage": "Stage",
+    "owner": "Owner",
+    "nextAction": "Next action",
+    "chat": "Chat",
+    "openChat": "Open chat",
+    "unassigned": "Unassigned",
+    "followUp": {
+      "reply": "Reply",
+      "take_over": "Take over",
+      "review_quote": "Review quote",
+      "follow_up": "Follow up"
+    },
+    "deliveryScope": "Distinct outbound messages across AI, manual, scenario and campaign sends. Replies use the next send or a 7-day cutoff.",
+    "accepted": "Accepted",
+    "delivered": "Delivered",
+    "read": "Read",
+    "replied": "Replied",
+    "failed": "Failed",
+    "pendingDelivery": "Awaiting receipt",
+    "free": "Provider reports free",
+    "unknownPricing": "Pricing unknown",
+    "origin": "Send origin",
+    "origins": {
+      "manager": "Manager",
+      "airi": "Airi",
+      "scenario": "Scenario",
+      "campaign": "Campaign",
+      "bulk_analytics": "Campaign",
+      "system": "System",
+      "unknown": "Unclassified",
+      "manual": "Manual"
+    },
+    "latency": "Latency",
+    "medianSeconds": "Median, seconds",
+    "p95Seconds": "P95, seconds",
+    "deliveryLatency": "Send to delivery",
+    "readLatency": "Send to read",
+    "accountSpend": "WhatsApp account spend",
+    "pricingHelp": "Provider costs are approximate and cover the WhatsApp account. They are separate from phone-filtered delivery and AI usage costs. Unknown tariff coverage is not zero spend.",
+    "account": "Account",
+    "status": "Status",
+    "approximateSpend": "Reported approximate spend",
+    "fetchedAt": "Last sync",
+    "errorCode": "Provider error code",
+    "count": "Count",
+    "templateScope": "WhatsApp account metrics, collected within provider tracking eligibility. Reads and clicks are tracked for 7 days after send; unavailable values stay blank.",
+    "template": "Template",
+    "quality": "Quality",
+    "sent": "Sent",
+    "clicked": "Clicks",
+    "uniqueClicked": "Unique clicks",
+    "quickReply": "Quick replies",
+    "cost": "Reported cost",
+    "healthScope": "Current source state and last observed verification. A current snapshot cannot establish historical uptime.",
+    "phoneQuality": "Phone quality",
+    "portfolioLimit": "Portfolio limit",
+    "accountStatus": "Account state",
+    "webhook": "Webhook",
+    "templateIssues": "Template issues",
+    "tracking": "Insights tracking",
+    "lastVerified": "Last verified",
+    "activationHelp": "Insights activation is a separate irreversible provider choice. It is never enabled automatically by this report.",
+    "insights": {
+      "enable": "Enable template insights",
+      "adminOnly": "Only a workspace admin can turn on template insights.",
+      "confirmTitle": "Turn on template insights for {account}?",
+      "confirmDescription": "Meta adds insights to this WhatsApp Business Account, including link tracking on template buttons, and collects anonymized data from your chats with customers. Template sends, deliveries, reads and clicks then appear here; reads and clicks are counted for 7 days after each send.",
+      "permanent": "This is permanent: Meta doesn't let anyone turn template insights off again.",
+      "cancel": "Cancel",
+      "confirm": "Turn on permanently",
+      "enabling": "Turning on…",
+      "enabled": "Template insights are on. Template numbers appear as Meta reports them.",
+      "reconnect": "Reconnect WhatsApp",
+      "errors": {
+        "reconnect": "Meta access for this WhatsApp account has expired or lacks permission, so insights can't be turned on yet.",
+        "unsupported": "Meta doesn't offer template insights for accounts connected through the WhatsApp Business app, so they can't be turned on for this account.",
+        "busy": "Meta is busy right now. Try again in a few minutes.",
+        "forbidden": "Only a workspace admin can turn on template insights.",
+        "failed": "Template insights couldn't be turned on. Try again."
+      }
+    },
+    "activation": {
+      "enabled": "Enabled",
+      "required": "Activation required",
+      "unknown": "Unknown"
+    },
+    "webhookStatus": {
+      "healthy": "Configured",
+      "action_required": "Action required",
+      "unknown": "Not verified"
+    },
+    "provider": {
+      "available": "Available",
+      "not_connected": "Not connected",
+      "activation_required": "Insights activation required",
+      "permission_required": "Provider permission required",
+      "unsupported": "Not available for this account",
+      "unavailable": "Provider data unavailable"
+    },
+    "flowScope": "Distinct sent Flow instances, delivered/read/submitted, then confirmed outcomes after submission until the next submission or observation cutoff. Read does not measure opening; no submission does not prove cancellation.",
+    "flow": "Flow",
+    "submitted": "Submitted",
+    "retentionScope": "Customers grouped by first confirmed purchase month, with repeat purchases within {days} days. Values are separated by currency.",
+    "cohortMonth": "First purchase month",
+    "customers": "Customers",
+    "repeatCustomers": "Repeat buyers",
+    "sales": "Confirmed purchases",
+    "retentionIdentity": "{count} purchases lack a stable customer identity and are excluded from repeat-buyer counts.",
+    "pendingTrend": "Pending delivery by send day",
+    "dailyDelivery": "Daily delivery",
+    "dailyDeliveryScope": "Send-day cohorts observed now; late receipts update their original send day.",
+    "day": "Day",
+    "sourceTemplateBreakdown": "By source, phone and template",
+    "phone": "Phone",
+    "healthHistory": "Retained health observations",
+    "healthHistoryScope": "Daily observations captured by sync. Pending and failures cover the preceding seven send days; gaps are unobserved.",
+    "pending7d": "Pending, 7-day sends",
+    "failed7d": "Failed, 7-day sends",
+    "freshness": {
+      "fresh": "Verification current",
+      "stale": "Verification outdated",
+      "unknown": "Verification unknown"
+    },
+    "segments": "By source, ad and owner",
+    "viewAudience": "View these leads",
+    "clearSegment": "Clear segment",
+    "customer": "Customer",
+    "qualificationCoverage": "Qualification uses recorded CRM stage events; older stage history may be incomplete.",
+    "segment": "Segment",
+    "viewSegment": "View leads",
+    "pendingCustomers": "Still observing",
+    "unknownValues": "Unknown amounts",
+    "retentionMaturity": "Recent customer cohorts are still being observed; compare mature cohorts with the same window.",
+    "templateHistory": "Template lifecycle",
+    "templateHistoryScope": "Retained template status, quality and category events. Missing intervals were not observed.",
+    "event": "Event",
+    "category": "Category",
+    "serviceHistory": "Retained service history",
+    "serviceHistoryScope": "Confirmed resolutions, reopens and handoffs since collection began. Recovery snapshots describe current episodes and cannot reconstruct missed transitions.",
+    "resolved": "Confirmed resolutions",
+    "reopened": "Reopens",
+    "handoffStarted": "Handoffs started",
+    "handoffEnded": "Handoffs ended",
+    "unknownClosures": "Unverified closures",
+    "timeoutClosures": "Timeout closures",
+    "snapshotEvents": "Recovery snapshots",
+    "streamEvents": "Retained transitions",
+    "resolutionSeconds": "Resolution, seconds",
+    "handoffSeconds": "Handoff, seconds",
+    "measuredResolutions": "Measured resolutions",
+    "historyGap": "History gap detected: {date}",
+    "lifecycleState": {
+      "not_started": "Collection has not started",
+      "streaming": "Collection active",
+      "degraded": "Collection needs attention",
+      "history_gap": "History is incomplete"
+    },
+    "loading": "Loading…",
+    "reconciliationThrough": "Reconciled through {date}",
+    "healthObservedAt": "Health observed",
+    "deliveryObservedAt": "Delivery observed",
+    "providerWindow": "Whole WhatsApp account: {start} to {end}",
+    "readRate": "Read rate, %",
+    "clickRate": "Click rate, %",
+    "costPerDelivered": "Cost per delivered message",
+    "pricingDetails": "Cost by market, category and tier",
+    "country": "Country",
+    "billingType": "Billing type",
+    "tier": "Volume tier",
+    "volume": "Message volume",
+    "accountHealth": {
+      "healthy": "Connected",
+      "warning": "Needs attention",
+      "reconnecting": "Reconnecting",
+      "disconnected": "Disconnected",
+      "restricted": "Restricted",
+      "disabled": "Disabled",
+      "payment_required": "Payment required",
+      "inaccessible": "Access unavailable",
+      "unknown": "Unknown"
+    },
+    "qualifiedToPaid": "Qualified to paid, %",
+    "qualifiedToPaidHelp": "Qualified-to-paid counts only confirmed purchases recorded at or after a qualifying stage within the entry window. The rate requires mature cohorts and complete recorded stage history.",
+    "matureCohorts": "Use mature cohorts",
+    "cohortPeriod": "Acquisition dates: {from} to {to} (inclusive).",
+    "workspace": {
+      "title": "Your Outcomes workspace",
+      "description": "Arrange the reports you use most.",
+      "edit": "Edit layout",
+      "add": "Add report",
+      "save": "Save layout",
+      "cancel": "Cancel",
+      "reset": "Reset to default",
+      "saving": "Saving…",
+      "unsaved": "Unsaved layout",
+      "unreadable": "Your saved layout could not be opened, so the default reports are shown. Saving replaces your saved layout, including your dashboards.",
+      "libraryTitle": "Add reports",
+      "libraryDescription": "Choose the reports to show in your Outcomes workspace.",
+      "emptyTitle": "Your workspace is empty",
+      "emptyDescription": "Add a report or reset the layout.",
+      "allAdded": "All reports are already added",
+      "added": "{report} added",
+      "libraryClose": "Done",
+      "resetHint": "Changes are applied when you save.",
+      "period": "Period",
+      "observation": "Outcome window: {days} days",
+      "mature": "Mature cohorts",
+      "refreshing": "Refreshing…",
+      "refreshFailed": "Some reports could not refresh. Try again.",
+      "dateScope": "Entry dates: {from} – {to}",
+      "freshness": "Data freshness",
+      "measurement": "How this is measured",
+      "entryBreakdown": "Entries by source and ad",
+      "topEntries": "Top {count} entry groups; all groups in details.",
+      "entryDetails": "Entry and revenue details",
+      "deliveryDetails": "Delivery and cost details",
+      "qualificationIncomplete": "Qualification history is incomplete. Missing data does not mean zero.",
+      "audienceUnavailable": "Lead records are incomplete. Refresh to try again.",
+      "deliveryScope": "Messages sent in the last {days} days. Receipts observed now.",
+      "unknownRevenue": "{count} unverified amounts",
+      "leadDetails": "All leads and segments",
+      "wait": "Waiting"
+    }
+  }
+}

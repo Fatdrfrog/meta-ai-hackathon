@@ -1,0 +1,1010 @@
+{
+  "worker": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "worker",
+      "ANALYTICS_PROJECTION_ENABLED": "true",
+      "GCP_LLM_ANALYTICS_ENABLED": "true",
+      "MONGODB_APP_NAME": "icecore-temporal-worker",
+      "MONGODB_MAX_CONNECTING": "2",
+      "MONGODB_MAX_POOL_SIZE": "12",
+      "REQUESTS_PROJECTION_WRITER_ENABLED": "true",
+      "REQUESTS_PROJECTION_REALTIME_ENABLED": "true",
+      "WORKER_REALTIME_DIRECT_VALKEY_ENABLED": "false"
+    },
+    "requestsReadModelMetadata": {
+      "state": "live"
+    },
+    "requestsProjectionWriterProtocol": "sequence_v2",
+    "minimumCompatibleBuild": "requests-sequence-v2-a",
+    "rollbackDigests": [
+      "europe-west1-docker.pkg.dev/icecore-ai/airi/temporal-worker@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "vars": [
+      "UPSTASH_REDIS_REST_URL",
+      {
+        "name": "AIRI_AUTO_REPLY",
+        "optional": true
+      },
+      {
+        "name": "AIRI_AUTO_REPLY_MODE",
+        "optional": true
+      },
+      {
+        "name": "AIRI_FAST_RAG",
+        "optional": true
+      },
+      {
+        "name": "AIRI_FAST_RAG_TELEGRAM",
+        "optional": true
+      },
+      {
+        "name": "AIRI_CAMPAIGN_EMAIL_BATCH_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "ELEVENLABS_STT_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "ELEVENLABS_STT_MODEL",
+        "optional": true
+      },
+      {
+        "name": "ELEVENLABS_STT_WEBHOOK_ID",
+        "optional": true
+      },
+      {
+        "name": "ELEVENLABS_TIMEOUT_MS",
+        "optional": true
+      },
+      {
+        "name": "EMBEDDING_BATCH_CONCURRENCY",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_IMAGE_MODEL",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_IMAGE_TO_VIDEO_MODEL",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_MEDIA_HOST_ALLOWLIST",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_MEDIA_DOWNLOAD_TIMEOUT_MS",
+        "optional": true
+      },
+      {
+        "name": "GOOGLE_VIDEO_GENERATION_MODEL",
+        "optional": true
+      },
+      {
+        "name": "GOOGLE_GENERATIVE_MEDIA_HOST_ALLOWLIST",
+        "optional": true
+      },
+      {
+        "name": "ALIBABA_API_HOST",
+        "optional": true
+      },
+      {
+        "name": "WAN_S2V_MODEL",
+        "optional": true
+      },
+      {
+        "name": "WAN_I2V_MODEL",
+        "optional": true
+      },
+      {
+        "name": "WAN_S2V_DEFAULT_RESOLUTION",
+        "optional": true
+      },
+      {
+        "name": "QWEN_IMAGE_MODEL",
+        "optional": true
+      },
+      {
+        "name": "HAPPYHORSE_T2V_MODEL",
+        "optional": true
+      },
+      {
+        "name": "HAPPYHORSE_I2V_MODEL",
+        "optional": true
+      },
+      {
+        "name": "HAPPYHORSE_R2V_MODEL",
+        "optional": true
+      },
+      {
+        "name": "HAPPYHORSE_DEFAULT_RESOLUTION",
+        "optional": true
+      },
+      {
+        "name": "HAPPYHORSE_DEFAULT_RATIO",
+        "optional": true
+      },
+      {
+        "name": "AIRI_MEDIA_TASK_QUEUE",
+        "optional": true
+      },
+      {
+        "name": "AIRI_MEDIA_WORKER_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "AIRI_MEDIA_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_EXECUTIONS",
+        "optional": true
+      },
+      {
+        "name": "AIRI_MEDIA_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_POLLS",
+        "optional": true
+      },
+      {
+        "name": "AIRI_MEDIA_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_EXECUTIONS",
+        "optional": true
+      },
+      {
+        "name": "AIRI_MEDIA_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_POLLS",
+        "optional": true
+      },
+      {
+        "name": "HALYK_EPAY_ENV",
+        "optional": true
+      },
+      {
+        "name": "HALYK_EPAY_TERMINAL_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_DELIVERY_MODE",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_TEMPORAL_WORKSPACE_ALLOWLIST",
+        "optional": true
+      },
+      "GOOGLE_CLOUD_PROJECT",
+      {
+        "name": "GCP_LLM_ANALYTICS_MAX_BYTES_BILLED",
+        "optional": true
+      },
+      {
+        "name": "REALTIME_DISPATCHER_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "NEXT_PUBLIC_APP_URL",
+        "optional": true
+      },
+      {
+        "name": "NEXT_PUBLIC_META_APP_ID",
+        "optional": true
+      },
+      {
+        "name": "NEXT_PUBLIC_POSTHOG_HOST",
+        "optional": true
+      },
+      {
+        "name": "POSTHOG_PROJECT_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "NEXT_PUBLIC_POSTHOG_KEY",
+        "optional": true
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "optional": true
+      },
+      "NEXT_PUBLIC_SUPABASE_URL",
+      {
+        "name": "TEMPORAL_ADDRESS",
+        "source": "TEMPORAL_CLOUD_ADDRESS"
+      },
+      {
+        "name": "TEMPORAL_NAMESPACE",
+        "source": "TEMPORAL_CLOUD_NAMESPACE"
+      },
+      {
+        "name": "TEMPORAL_TASK_QUEUE",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_DEPLOYMENT_NAME",
+        "optional": true
+      },
+      "TEMPORAL_WORKER_BUILD_ID",
+      {
+        "name": "TEMPORAL_WORKER_IDENTITY",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_WORKFLOW_BUNDLE_PATH",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_VERSIONING_BEHAVIOR",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_REUSE_V8_CONTEXT",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_EXECUTIONS",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_MAX_CONCURRENT_WORKFLOW_TASK_POLLS",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_EXECUTIONS",
+        "optional": true
+      },
+      {
+        "name": "BULK_CAMPAIGN_DISPATCH_CONCURRENCY",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_MAX_CONCURRENT_ACTIVITY_TASK_POLLS",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_MAX_CACHED_WORKFLOWS",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_SHUTDOWN_GRACE_TIME",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_WORKER_SHUTDOWN_FORCE_TIME",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_WEBHOOK_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_WEBHOOK_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_WEBHOOK_PUBSUB_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_WEBHOOK_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_WEBHOOK_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_FAST_WEBHOOK_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_FAST_WEBHOOK_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_FAST_WEBHOOK_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_FAST_LANE_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_FAST_LANE_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_FAST_LANE_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "AIRI_WORKER_STARTUP_PROBE_PORT",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_PUBLISHING_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_WORKSPACE_ALLOWLIST",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_PUBSUB_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "CONVERSATION_CLASSIFICATION_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_PUBSUB_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_COMMAND_TIMEOUT_SECONDS",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_BUCKET",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_RETENTION_DAYS",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_EGRESS_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_FILE_TYPE",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_PIPELINE_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_PIPELINE_URL",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_RECORDING_WEBHOOK_URL",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_LOCATION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_LANGUAGE_CODES",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_LANGUAGE_CODE",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_MODEL",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_RECOGNIZER",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_DRAIN_SCHEDULE_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_DRAIN_LIMIT",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_ANALYTICS_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_ANALYTICS_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_ANALYTICS_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_URL",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_HOST",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_PORT",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_TIMEOUT_MS",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_WHATSAPP_CLOUD_API_VERSION",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_MEDIA_TOKEN_TTL_SECONDS",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_EGRESS_TOKEN_TTL_SECONDS",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_BATCH_SIZE",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_PUBSUB_FLUSH_MS",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_REPAIR_SCHEDULE_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WORKSPACE_USAGE_REPAIR_LIMIT",
+        "optional": true
+      },
+      {
+        "name": "GCS_BULK_DISPATCH_BUCKET",
+        "optional": true
+      },
+      {
+        "name": "GCS_CREATIVE_ASSETS_BUCKET",
+        "optional": true
+      },
+      {
+        "name": "LLM_WHATSAPP_FEEDBACK_PROMPT_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "LLM_WHATSAPP_FEEDBACK_TESTERS",
+        "optional": true
+      },
+      {
+        "name": "AI_CHAT_PROVIDER_ORDER",
+        "optional": true
+      },
+      {
+        "name": "ANTHROPIC_AI_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "ANTHROPIC_LIGHT_MODEL",
+        "optional": true
+      },
+      {
+        "name": "ANTHROPIC_HEAVY_MODEL",
+        "optional": true
+      },
+      {
+        "name": "ANTHROPIC_REASONING_MODEL",
+        "optional": true
+      },
+      {
+        "name": "ANTHROPIC_WORKSPACE_ID",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_AI_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_AI_LOCATION",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDING_LOCATION",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDING_MODEL",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDINGS_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDING_TIMEOUT_MS",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_FALLBACK_MODEL",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_GEMINI_LOCATION",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_GEMINI_LIGHT_MODEL",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_GEMINI_HEAVY_MODEL",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_MULTIMODAL_MODEL",
+        "optional": true
+      },
+      {
+        "name": "STORAGE_QUOTA_ROLLOUT_MODE",
+        "optional": true
+      }
+    ],
+    "secrets": [
+      {
+        "name": "OTP_HASH_SECRET",
+        "optional": true
+      },
+      "ENCRYPTION_SECRET",
+      "UPSTASH_REDIS_REST_TOKEN",
+      {
+        "name": "ELEVENLABS_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "ANTHROPIC_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "GEMINI_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "GOOGLE_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "META_APP_SECRET",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_API_SECRET",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_KEY",
+        "optional": true
+      },
+      {
+        "name": "HIGGSFIELD_WEBHOOK_SECRET",
+        "optional": true
+      },
+      {
+        "name": "BRIA_API_TOKEN",
+        "optional": true
+      },
+      {
+        "name": "ALIBABA_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "HALYK_EPAY_CLIENT_ID",
+        "optional": true
+      },
+      {
+        "name": "HALYK_EPAY_CLIENT_SECRET",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_API_KEY",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_API_SECRET",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_AUTH_TOKEN",
+        "optional": true
+      },
+      {
+        "name": "LIVEKIT_EGRESS_GCP_CREDENTIALS_JSON",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_CALL_TRANSCRIPTION_SERVICE_ACCOUNT_JSON",
+        "optional": true
+      },
+      "MONGODB_URI",
+      {
+        "name": "POSTMARK_ACCOUNT_TOKEN",
+        "optional": true
+      },
+      {
+        "name": "POSTMARK_INBOUND_TOKEN",
+        "optional": true
+      },
+      {
+        "name": "POSTMARK_SERVER_TOKEN",
+        "optional": true
+      },
+      "SUPABASE_SERVICE_ROLE_KEY",
+      {
+        "name": "TELEGRAM_BOT_TOKEN",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_API_KEY",
+        "source": "TEMPORAL_CLOUD_API_KEY"
+      },
+      {
+        "name": "WHATSAPP_VERIFY_TOKEN",
+        "optional": true
+      }
+    ]
+  },
+  "gateway": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "ai-gateway",
+      "GCP_LLM_ANALYTICS_ENABLED": "true"
+    },
+    "vars": [
+      "AI_GATEWAY_VERCEL_OIDC_ISSUER_URL",
+      "AI_GATEWAY_VERCEL_OIDC_AUDIENCE",
+      "AI_GATEWAY_VERCEL_OIDC_SUBJECTS",
+      {
+        "name": "EMBEDDING_BATCH_CONCURRENCY",
+        "optional": true
+      },
+      "GOOGLE_CLOUD_PROJECT",
+      {
+        "name": "GCP_LLM_ANALYTICS_MAX_BYTES_BILLED",
+        "optional": true
+      },
+      "NEXT_PUBLIC_SUPABASE_URL",
+      {
+        "name": "UPSTASH_REDIS_REST_URL",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_AI_LOCATION",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDING_LOCATION",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDING_MODEL",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDINGS_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "VERTEX_EMBEDDING_TIMEOUT_MS",
+        "optional": true
+      }
+    ],
+    "secrets": [
+      "MONGODB_URI",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      {
+        "name": "UPSTASH_REDIS_REST_TOKEN",
+        "optional": true
+      }
+    ]
+  },
+  "mediaApi": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "media-api"
+    },
+    "vars": [
+      "AI_GATEWAY_VERCEL_OIDC_ISSUER_URL",
+      "AI_GATEWAY_VERCEL_OIDC_AUDIENCE",
+      "AI_GATEWAY_VERCEL_OIDC_SUBJECTS",
+      "GOOGLE_CLOUD_PROJECT",
+      {
+        "name": "GCS_CREATIVE_ASSETS_BUCKET",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_ADDRESS",
+        "source": "TEMPORAL_CLOUD_ADDRESS"
+      },
+      {
+        "name": "TEMPORAL_NAMESPACE",
+        "source": "TEMPORAL_CLOUD_NAMESPACE"
+      },
+      {
+        "name": "STORAGE_QUOTA_ROLLOUT_MODE",
+        "optional": true
+      },
+      "NEXT_PUBLIC_SUPABASE_URL"
+    ],
+    "secrets": [
+      {
+        "name": "ELEVENLABS_STT_WEBHOOK_SECRET",
+        "optional": true
+      },
+      {
+        "name": "TEMPORAL_API_KEY",
+        "source": "TEMPORAL_CLOUD_API_KEY"
+      },
+      "MONGODB_URI",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ]
+  },
+  "otpWorker": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "otp-worker"
+    },
+    "vars": [
+      "GOOGLE_CLOUD_PROJECT",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_ENABLED",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_TOPIC",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_SUBSCRIPTION",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_MAX_MESSAGES",
+        "optional": true
+      }
+    ],
+    "secrets": [
+      "ENCRYPTION_SECRET",
+      "MONGODB_URI",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      {
+        "name": "OTP_HASH_SECRET",
+        "optional": true
+      }
+    ]
+  },
+  "otpApi": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "otp-api"
+    },
+    "vars": [
+      "AI_GATEWAY_VERCEL_OIDC_ISSUER_URL",
+      "AI_GATEWAY_VERCEL_OIDC_AUDIENCE",
+      "AI_GATEWAY_VERCEL_OIDC_SUBJECTS",
+      "GOOGLE_CLOUD_PROJECT",
+      "MEMORYSTORE_VALKEY_HOST",
+      {
+        "name": "MEMORYSTORE_VALKEY_PORT",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_TIMEOUT_MS",
+        "optional": true
+      },
+      "NEXT_PUBLIC_SUPABASE_URL",
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_PROJECT_ID",
+        "optional": true
+      },
+      {
+        "name": "WHATSAPP_OTP_PUBSUB_TOPIC",
+        "optional": true
+      }
+    ],
+    "secrets": [
+      "ENCRYPTION_SECRET",
+      "MONGODB_URI",
+      {
+        "name": "OTP_HASH_SECRET",
+        "optional": true
+      },
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ]
+  },
+  "realtimeGateway": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "realtime-gateway"
+    },
+    "vars": [
+      "GOOGLE_CLOUD_PROJECT",
+      "MEMORYSTORE_VALKEY_HOST",
+      {
+        "name": "MEMORYSTORE_VALKEY_PORT",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_TIMEOUT_MS",
+        "optional": true
+      }
+    ],
+    "secrets": [
+      "REALTIME_TOKEN_SECRET",
+      {
+        "name": "MEMORYSTORE_VALKEY_AUTH_TOKEN",
+        "optional": true
+      }
+    ]
+  },
+  "realtimeDispatcher": {
+    "fixedVars": {
+      "AIRI_RUNTIME_MODE": "realtime-dispatcher",
+      "MONGODB_APP_NAME": "icecore-realtime-dispatcher",
+      "MONGODB_MAX_CONNECTING": "2",
+      "MONGODB_MAX_POOL_SIZE": "12"
+    },
+    "manualInstanceCount": 1,
+    "instanceSplit": {
+      "LATEST": 100
+    },
+    "vars": [
+      "GOOGLE_CLOUD_PROJECT",
+      "MEMORYSTORE_VALKEY_HOST",
+      {
+        "name": "MEMORYSTORE_VALKEY_PORT",
+        "optional": true
+      },
+      {
+        "name": "MEMORYSTORE_VALKEY_TIMEOUT_MS",
+        "optional": true
+      }
+    ],
+    "secrets": [
+      "MONGODB_URI",
+      {
+        "name": "MEMORYSTORE_VALKEY_AUTH_TOKEN",
+        "optional": true
+      }
+    ]
+  },
+  "requestsRealtimeRelease": {
+    "schemaVersion": 1,
+    "writerProtocol": "sequence_v2",
+    "minimumCompatibleBuild": "requests-sequence-v2-a",
+    "pinnedImage": {
+      "digestImage": "europe-west1-docker.pkg.dev/icecore-ai/airi/temporal-worker@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "imageSourceCommit": "0000000000000000000000000000000000000000",
+      "buildContextSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "labels": {
+        "org.opencontainers.image.revision": "0000000000000000000000000000000000000000",
+        "airi.requests.writer-protocol": "sequence_v2",
+        "airi.build-context.sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "airi.minimum-compatible-build": "requests-sequence-v2-a"
+      }
+    },
+    "rollbackImages": [
+      {
+        "digestImage": "europe-west1-docker.pkg.dev/icecore-ai/airi/temporal-worker@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "imageSourceCommit": "0000000000000000000000000000000000000000",
+        "buildContextSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "labels": {
+          "org.opencontainers.image.revision": "0000000000000000000000000000000000000000",
+          "airi.requests.writer-protocol": "sequence_v2",
+          "airi.build-context.sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "airi.minimum-compatible-build": "requests-sequence-v2-a"
+        }
+      }
+    ],
+    "targets": {
+      "mainWorker": {
+        "kind": "workerPool",
+        "fullResourceName": "",
+        "uid": "",
+        "desiredConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "serviceAccount": "",
+        "secretReferenceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "networkConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "dispatcher": {
+        "kind": "workerPool",
+        "fullResourceName": "",
+        "uid": "",
+        "desiredConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "serviceAccount": "",
+        "secretReferenceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "networkConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "realtimeGateway": {
+        "kind": "service",
+        "fullResourceName": "",
+        "uid": "",
+        "desiredConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "serviceAccount": "",
+        "secretReferenceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "networkConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "allowedUpdaterPrincipals": {
+      "deployerServiceAccount": "",
+      "breakGlass": [],
+      "googleManagedServiceAgents": []
+    }
+  }
+}

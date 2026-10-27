@@ -1,0 +1,53 @@
+{
+  "BillingSettings": {
+    "title": "Төлем",
+    "loading": "Төлем жүктелуде",
+    "loadingPlan": "Тариф жүктелуде",
+    "planUnavailable": "Ағымдағы тарифті жүктеу мүмкін болмады",
+    "unavailable": "Төлемді жүктеу мүмкін болмады",
+    "refresh": "Жаңарту",
+    "refreshFailed": "Төлем деректері жаңартылмады. Сақталған деректер көрсетілген.",
+    "actionFailed": "Әрекетті орындау мүмкін болмады. Қайталап көріңіз.",
+    "checkoutUnavailable": "Төлем қолжетімсіз",
+    "checkoutUnavailableHint": "Кейінірек көріңіз немесе қолдау қызметіне хабарласыңыз.",
+    "subscription": "Жазылым",
+    "periodEnds": "Ағымдағы кезең аяқталады",
+    "renewal": "Ұзарту",
+    "endsAtPeriod": "Осы кезеңнен кейін аяқталады",
+    "renews": "Автоматты ұзарту",
+    "noRenewal": "Ұзарту жоспарланбаған",
+    "paymentMethod": "Төлем тәсілі",
+    "managedByPaddle": "Paddle арқылы басқарылады",
+    "notScheduled": "Жоспарланбаған",
+    "dateUnavailable": "Күні қолжетімсіз",
+    "upgrade": "Pro тарифіне өту",
+    "reactivate": "Жазылымды сақтау",
+    "cancelRenewal": "Ұзартуды тоқтату",
+    "adminOnly": "Төлемді әкімші басқарады.",
+    "invoices": "Шоттар",
+    "noInvoices": "Әзірге шоттар жоқ.",
+    "plans": {
+      "free": "Тегін тариф",
+      "pro": "Pro тарифі",
+      "enterprise": "Enterprise тарифі"
+    },
+    "status": {
+      "active": "Белсенді",
+      "trialing": "Сынақ кезеңі",
+      "past_due": "Төлем мерзімі өтті",
+      "paused": "Кідіртілген",
+      "canceled": "Тоқтатылған",
+      "cancelled": "Тоқтатылған",
+      "paid": "Төленген",
+      "pending": "Күтілуде",
+      "failed": "Қате",
+      "requires_action": "Әрекет қажет",
+      "draft": "Жоба",
+      "open": "Ашық",
+      "completed": "Аяқталған",
+      "billed": "Шот берілген",
+      "none": "Ақылы жазылым жоқ",
+      "unknown": "Күй қолжетімсіз"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "RefundPolicyPage": {
+    "metadata": {
+      "title": "Refund Policy",
+      "description": "How airi.chat handles 30-day refund requests, unused-day recalculations, and billing corrections."
+    },
+    "title": "Refund Policy",
+    "lastUpdated": "Last updated: {date}",
+    "intro": "This Refund Policy explains how airi.chat handles refunds for paid subscription fees. It supplements our <terms>Terms of Service</terms> and any applicable order form. If a signed agreement or order form states a different refund rule, that agreement controls.",
+    "window": {
+      "title": "1. 30-Day Refund Window",
+      "body": "Customers may request a refund within 30 calendar days from the date of the original transaction or renewal charge. Approved subscription refunds are recalculated based on unused days in the paid billing period, as described below.",
+      "paddle": "For purchases processed through Paddle, refund requests may also be made through the Paddle receipt or Paddle buyer support flow. Paddle may review and process refunds for Paddle-processed transactions according to Paddle buyer terms, card network rules, and applicable law."
+    },
+    "recalculation": {
+      "title": "2. Unused-Day Recalculation",
+      "body": "When a paid subscription is cancelled or downgraded during a prepaid billing period, we recalculate the eligible refund based on the days that were not used. The refund is based on the unused calendar days from the effective cancellation or downgrade date through the end of the paid billing period.",
+      "formula": "Refund amount = eligible subscription fees paid for the billing period multiplied by unused calendar days, divided by total calendar days in that billing period, minus any credits, discounts, taxes that cannot be recovered, payment costs, or amounts already refunded.",
+      "example": "For example, if a monthly subscription covers 30 calendar days and is cancelled after 10 used days, the recalculation covers the 20 unused days remaining in that billing period."
+    },
+    "eligibility": {
+      "title": "3. When Refunds Apply",
+      "items": {
+        "unusedDays": "Unused days in a prepaid subscription period after cancellation or downgrade, when requested within the 30-day refund window.",
+        "billingErrors": "Duplicate charges, billing errors, or incorrect plan charges after we verify the issue.",
+        "trialCharges": "Trial-period charges that were made by mistake before a free trial ended."
+      }
+    },
+    "exclusions": {
+      "title": "4. Amounts Excluded from Recalculation",
+      "intro": "Unless required by law or agreed in writing, the unused-day recalculation does not include:",
+      "items": {
+        "usedDays": "Subscription days that were already used.",
+        "usage": "Usage-based charges, overages, message costs, campaign costs, or third-party provider charges already incurred.",
+        "passThrough": "WhatsApp Business Platform, Meta, telecom, payment processor, bank, currency conversion, or other pass-through costs that are not returned to us.",
+        "services": "One-time setup, onboarding, consulting, custom development, or other professional service fees after the work has started or been delivered.",
+        "taxes": "Taxes or duties that cannot be recovered through the processor."
+      }
+    },
+    "request": {
+      "title": "5. How to Request a Refund",
+      "body": "To request a refund, email <mail>{email}</mail> with the account email, company or workspace name, invoice or charge date, and the reason for the request. We may ask for additional details if needed to verify the billing record.",
+      "paddle": "If the purchase was processed through Paddle, include the Paddle order number or the email address used at checkout so the billing record can be matched."
+    },
+    "processing": {
+      "title": "6. Refund Processing",
+      "body": "Approved refunds are issued to the original payment method when possible. After we submit the refund, the time for funds to appear in your account depends on the payment provider, bank, or card network.",
+      "credits": "Account credits may be offered when they are faster or more practical than a payment-method refund, but only with your agreement."
+    },
+    "cancellation": {
+      "title": "7. Cancellation and Access",
+      "body": "Cancelling a subscription stops future renewals according to the applicable billing settings or confirmed support request. Access to paid features may end on the effective cancellation or downgrade date. A refund request does not delete your account or workspace data; data handling remains governed by our <privacy>Privacy Policy</privacy>."
+    },
+    "changes": {
+      "title": "8. Changes to This Policy",
+      "body": "We may update this policy from time to time. Material changes will be communicated by updating the date above or by reasonable notice through the Service."
+    },
+    "contact": {
+      "title": "9. Contact",
+      "body": "Questions about refunds or billing? Contact us at <mail>{email}</mail>."
+    }
+  }
+}

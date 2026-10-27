@@ -1,0 +1,26 @@
+{
+  "Workspaces": {
+    "selectWorkspace": "Жұмыс кеңістігін таңдаңыз",
+    "workspaces": "Жұмыс кеңістіктері",
+    "manageWorkspaces": "Жұмыс кеңістіктерін басқару...",
+    "createWorkspace": "Жаңа кеңістік",
+    "workspaceRoutingDescription": "Командаларға, брендтерге немесе филиалдарға бөлек кеңістіктер.",
+    "createWorkspaceDescription": "Келесі жұмыс кеңістігін құрып, оның WhatsApp нөмірін қосыңыз.",
+    "nameLabel": "Атауы",
+    "namePlaceholder": "мысалы, Қолдау тобы",
+    "createButton": "Кеңістік құру",
+    "createAndConnectWhatsapp": "Құру және WhatsApp қосу",
+    "openWorkspace": "Ашу",
+    "connectWhatsapp": "WhatsApp баптау",
+    "currentWorkspace": "Ағымдағы",
+    "creating": "Құрылуда…",
+    "loadError": "Кеңістіктерді жүктеу мүмкін болмады. Бетті жаңартыңыз.",
+    "limitError": "Кеңістіктер лимитіне жеттіңіз. Тарифіңізді тексеріңіз.",
+    "permissionError": "Кеңістіктерді тек әкімшілер құра алады.",
+    "createError": "Кеңістікті құру мүмкін болмады. Қайталап көріңіз.",
+    "nameError": "Атау 2–100 таңбадан тұруы керек.",
+    "emptyWorkspaces": "Қолжетімді кеңістіктер жоқ.",
+    "openWorkspaceNamed": "{name} кеңістігін ашу",
+    "trialError": "Сынақ мерзімі аяқталды. Кеңістік құру үшін тарифіңізді тексеріңіз."
+  }
+}

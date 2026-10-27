@@ -1,0 +1,388 @@
+{
+  "MarketingPages": {
+    "common": {
+      "beta": "Beta",
+      "related": "Read next",
+      "faqTitle": "Questions and answers",
+      "codeLabel": "Configuration"
+    },
+    "delivery": {
+      "seo": {
+        "title": "WhatsApp marketing campaigns that get delivered",
+        "description": "Why WhatsApp marketing messages fail (131049, 131050, 131026, 130429) and how airi.chat sends campaigns through Meta's Marketing Messages API with pre-send checks, opt-outs and frequency limits."
+      },
+      "hero": {
+        "eyebrow": "WhatsApp campaign delivery",
+        "title": "Marketing messages that",
+        "accent": "actually arrive.",
+        "lead": "airi.chat sends WhatsApp campaigns through Meta's Marketing Messages API, checks your account and audience before every send, and tells you in plain words why a message failed."
+      },
+      "flow": {
+        "title": "What airi.chat does around every send",
+        "intro": "Delivery depends on your account, your audience and Meta's limits. These checks run without extra setup.",
+        "items": {
+          "mmApi": {
+            "title": "Marketing Messages API",
+            "body": "Once your WhatsApp Business Account is onboarded, marketing templates go through Meta's Marketing Messages API, where Meta delivers more of the messages people engage with. Service and utility messages stay on the Cloud API."
+          },
+          "readiness": {
+            "title": "Readiness check",
+            "body": "Before a campaign starts, airi.chat asks Meta whether your number can send. A blocked account, a payment problem or a business limit stops the campaign with the reason and how to fix it."
+          },
+          "audience": {
+            "title": "Clean audience",
+            "body": "People who tapped Meta's stop button are left out automatically. You can also skip everyone whose last message failed because of their number or Meta's limits."
+          },
+          "frequency": {
+            "title": "Contact frequency",
+            "body": "By default, a contact gets no more than one campaign message every 24 hours and three a week, so a busy month doesn't turn into spam."
+          },
+          "pacing": {
+            "title": "Paced sending",
+            "body": "Batches follow your messaging limit and your number's throughput. When Meta asks to slow down (130429), airi.chat waits and sends the rest."
+          },
+          "pause": {
+            "title": "Pauses on account problems",
+            "body": "If every failure in a batch has the same account-level error, the campaign pauses instead of using up your list. Fix the cause, confirm it and retry the failed messages."
+          },
+          "templates": {
+            "title": "Template health",
+            "body": "airi.chat follows Meta's quality rating and category changes for your templates, so you see a downgraded or re-categorised template before the next send."
+          }
+        }
+      },
+      "limits": {
+        "title": "What no tool can switch off",
+        "intro": "Some limits are Meta's rules. Knowing them saves money and protects your number's quality rating.",
+        "items": {
+          "perUser": {
+            "title": "Per-person marketing limit",
+            "body": "Meta limits how many marketing messages one person receives from all businesses. Over the limit, the message fails with 131049. Sending it again soon usually fails too, so airi.chat never retries these automatically."
+          },
+          "us": {
+            "title": "US numbers",
+            "body": "Meta has paused marketing templates to +1 (US) numbers since April 1, 2025. Utility and authentication templates still deliver."
+          },
+          "optIn": {
+            "title": "Opt-in",
+            "body": "Message people who agreed to hear from you on WhatsApp. Opt-outs from Meta's stop button are respected in every campaign."
+          }
+        }
+      },
+      "errors": {
+        "title": "Common WhatsApp delivery errors",
+        "intro": "What the codes in a failed campaign mean, and what happens next.",
+        "columns": {
+          "code": "Code",
+          "meaning": "What it means",
+          "action": "What airi.chat does"
+        },
+        "rows": {
+          "131049": {
+            "meaning": "The person reached Meta's limit for marketing messages from all businesses.",
+            "action": "Not retried automatically. Skipping failed recipients leaves them out of your next campaign."
+          },
+          "131050": {
+            "meaning": "The person turned off marketing messages from your business.",
+            "action": "Recorded as a recipient failure and left out when you skip failed recipients."
+          },
+          "131026": {
+            "meaning": "WhatsApp couldn't deliver to this number, for example because it isn't on WhatsApp.",
+            "action": "Recorded as a recipient failure and left out when you skip failed recipients."
+          },
+          "131047": {
+            "meaning": "More than 24 hours passed since the customer's last message, so only a template can be sent.",
+            "action": "Explained on the message. Campaigns always use approved templates."
+          },
+          "130429": {
+            "meaning": "Your number reached its sending throughput.",
+            "action": "Waits, then sends the remaining messages."
+          },
+          "131042": {
+            "meaning": "A payment problem on your WhatsApp Business Account.",
+            "action": "The readiness check stops the send and shows how to fix it."
+          },
+          "131063": {
+            "meaning": "Marketing templates are switched off on the Cloud API for your account.",
+            "action": "Treated as an account problem, so the campaign pauses. Onboarded accounts send marketing templates through the Marketing Messages API."
+          },
+          "132000": {
+            "meaning": "The template's variables don't match what was sent.",
+            "action": "Shows which parameters to fix."
+          }
+        }
+      },
+      "steps": {
+        "title": "Start in four steps",
+        "intro": "You need a WhatsApp Business Account and an approved marketing template.",
+        "items": {
+          "connect": {
+            "title": "Connect WhatsApp",
+            "body": "Connect your WhatsApp Business Account with Meta's signup in a few clicks."
+          },
+          "onboard": {
+            "title": "Turn on Marketing Messages",
+            "body": "In Settings → Integrations → WhatsApp, open Marketing campaigns and finish onboarding in WhatsApp Manager."
+          },
+          "template": {
+            "title": "Pick a template",
+            "body": "Use an approved template or start from the template gallery."
+          },
+          "send": {
+            "title": "Check and send",
+            "body": "Choose your audience, review the readiness check and send."
+          }
+        }
+      },
+      "faq": {
+        "intro": "Straight answers about Meta's limits and what airi.chat changes.",
+        "items": {
+          "bypass": {
+            "question": "Can airi.chat get around Meta's marketing limits?",
+            "answer": "No, and no tool can. The limits are Meta's. airi.chat uses the Marketing Messages API where your account supports it, keeps your audience clean and spaces out messages, so more of them arrive."
+          },
+          "mmApi": {
+            "question": "What is the Marketing Messages API?",
+            "answer": "Meta's API for marketing templates, formerly called Marketing Messages Lite. It uses your existing WhatsApp number and templates, and Meta optimises delivery for messages people engage with."
+          },
+          "cost": {
+            "question": "Are Meta's message charges included?",
+            "answer": "No. Meta bills WhatsApp messages separately, and airi.chat fees don't include them."
+          },
+          "paused": {
+            "question": "Why did my campaign pause by itself?",
+            "answer": "When every failure in a batch has the same account-level error, for example a payment problem, airi.chat pauses the campaign so the rest of your list isn't wasted. Fix the cause, confirm it and retry."
+          }
+        }
+      },
+      "cta": {
+        "title": "Send your next campaign",
+        "accent": "with confidence.",
+        "body": "Connect WhatsApp, check readiness and send from one workspace."
+      }
+    },
+    "metaAds": {
+      "seo": {
+        "title": "Meta Ads MCP in airi.chat",
+        "description": "Ask about your Meta ads in plain language. airi.chat connects to Meta's official Ads MCP server for results, benchmarks, anomalies and signal health, next to the WhatsApp chats and sales your ads started."
+      },
+      "hero": {
+        "eyebrow": "Meta Ads MCP",
+        "title": "Ask your ads",
+        "accent": "what's working.",
+        "lead": "Type @meta in Airi chat to read your ad accounts through Meta's official Ads MCP server: results, benchmarks, anomalies and signal health, next to the WhatsApp conversations and sales those ads started."
+      },
+      "ask": {
+        "title": "What you can ask",
+        "intro": "Airi reads your connected ad accounts when you ask, and answers with the numbers it used.",
+        "items": {
+          "performance": {
+            "title": "Results over time",
+            "body": "Spend, results and how they changed for any connected ad account, campaign or ad."
+          },
+          "benchmarks": {
+            "title": "Benchmarks",
+            "body": "How your results compare with similar advertisers and recent auctions."
+          },
+          "anomalies": {
+            "title": "Sudden changes",
+            "body": "What moved unexpectedly, and where to look first."
+          },
+          "signals": {
+            "title": "Signal health",
+            "body": "Whether your pixel and conversion data reach Meta properly."
+          },
+          "opportunities": {
+            "title": "Opportunities",
+            "body": "Meta's opportunity score and its recommendations for your account."
+          },
+          "history": {
+            "title": "Recent changes",
+            "body": "What changed in the account recently, and when."
+          }
+        }
+      },
+      "changes": {
+        "title": "Changes wait for your confirmation",
+        "intro": "Making changes through @meta is in beta. Reporting works without any write access.",
+        "items": {
+          "prepare": {
+            "title": "Prepared, not applied",
+            "body": "Airi can prepare up to three changes in one reply, such as a budget or status update."
+          },
+          "confirm": {
+            "title": "You confirm each one",
+            "body": "Nothing changes in your ad account until you review a change and confirm it."
+          },
+          "record": {
+            "title": "Changed it yourself?",
+            "body": "If you make the change in Ads Manager instead, record the outcome in Airi so the history stays complete."
+          }
+        }
+      },
+      "sales": {
+        "title": "From ad spend to WhatsApp sales",
+        "intro": "Ad analytics in airi.chat puts Meta ad spend next to the WhatsApp conversations and paid sales that followed, with the cost per qualified chat and per sale."
+      },
+      "steps": {
+        "title": "Connect in three steps",
+        "intro": "You need a Meta ad account and access to it through Facebook Login for Business.",
+        "items": {
+          "connect": {
+            "title": "Connect Meta Ads",
+            "body": "In Settings → Integrations → Meta Ads, sign in with Facebook Login for Business."
+          },
+          "enable": {
+            "title": "Turn on Ads MCP",
+            "body": "Choose reporting only, or reporting with confirmed changes."
+          },
+          "ask": {
+            "title": "Ask with @meta",
+            "body": "In Airi chat, type @meta followed by your question."
+          }
+        }
+      },
+      "faq": {
+        "intro": "How the Ads MCP works inside airi.chat.",
+        "items": {
+          "official": {
+            "question": "Is this Meta's official Ads MCP?",
+            "answer": "Yes. airi.chat connects to Meta's hosted Ads MCP server through Facebook Login for Business. Meta turns the Ads MCP on account by account, and @meta stays unavailable until your account has it."
+          },
+          "write": {
+            "question": "Can Airi change my ads?",
+            "answer": "Only after you confirm each change. Reporting works without write access."
+          },
+          "model": {
+            "question": "Which AI model runs @meta?",
+            "answer": "Claude, the model behind Airi chat. Workspaces that run Airi on their own Google AI key can't use @meta."
+          },
+          "whatsapp": {
+            "question": "How does it connect to WhatsApp?",
+            "answer": "Ads that open WhatsApp chats show up in airi.chat analytics next to the conversations and sales they started."
+          }
+        }
+      },
+      "cta": {
+        "title": "Bring your ads",
+        "accent": "into the conversation.",
+        "body": "Connect Meta Ads and ask your first question in Airi chat."
+      }
+    },
+    "mcp": {
+      "seo": {
+        "title": "Airi.chat MCP server for Claude Code, Codex and Cursor",
+        "description": "Read airi.chat analytics and customer conversations from Claude Code, OpenAI Codex, Cursor or any MCP client with a workspace API key. Read-only beta."
+      },
+      "hero": {
+        "eyebrow": "Airi.chat MCP server",
+        "title": "Your WhatsApp workspace,",
+        "accent": "in your AI tools.",
+        "lead": "Connect Claude Code, Codex, Cursor or another MCP client to airi.chat with a workspace API key, and ask about results and customer chats from where you already work."
+      },
+      "tools": {
+        "title": "What the server can read",
+        "intro": "Every tool is read-only and sees only the workspace that owns the key.",
+        "items": {
+          "analytics": {
+            "title": "Analytics summary",
+            "body": "Conversations by status, channel and category for the last 7, 30 or 90 days, compared with the period before."
+          },
+          "conversations": {
+            "title": "Customer conversations",
+            "body": "Recent conversations with status, channel, timestamps, a masked phone number and a link to open each one in airi.chat. Message text and media are never returned."
+          },
+          "templates": {
+            "title": "WhatsApp templates",
+            "body": "Your stored templates and their status. Turned on per key on request."
+          },
+          "scenarios": {
+            "title": "Scenarios",
+            "body": "Your automations, their triggers and step counts. Turned on per key on request."
+          }
+        }
+      },
+      "safety": {
+        "title": "Read-only by design",
+        "intro": "The server answers questions. It can't act on your account.",
+        "items": {
+          "readonly": {
+            "title": "No sending",
+            "body": "There are no tools that send messages, start campaigns or edit templates."
+          },
+          "scoped": {
+            "title": "One workspace per key",
+            "body": "Each call checks the key's permissions and your plan's limits."
+          },
+          "untrusted": {
+            "title": "Customer text is labelled",
+            "body": "Names and summaries that customers wrote come back marked as untrusted content, so agents treat them as data, not instructions."
+          }
+        }
+      },
+      "connect": {
+        "title": "Connect in two minutes",
+        "intro": "Create a key with read access in Settings → API & webhooks (admins only), then add the server to your tool.",
+        "items": {
+          "claude": {
+            "title": "Claude Code",
+            "body": "Run this in your terminal:"
+          },
+          "codex": {
+            "title": "OpenAI Codex",
+            "body": "Add this to ~/.codex/config.toml and set AIRI_API_KEY in your environment:"
+          },
+          "cursor": {
+            "title": "Cursor",
+            "body": "Add this to .cursor/mcp.json and set AIRI_API_KEY in your environment:"
+          }
+        },
+        "note": "ChatGPT and the shared ChatGPT and Codex plugin directory need an OAuth sign-in, which airi.chat doesn't offer yet. Browser-based MCP clients aren't supported."
+      },
+      "examples": {
+        "title": "Try asking",
+        "intro": "Questions the server can answer today.",
+        "items": {
+          "channels": {
+            "title": "Channels",
+            "body": "Which channel brought the most new conversations in the last 30 days?"
+          },
+          "open": {
+            "title": "Open chats",
+            "body": "List open WhatsApp conversations from this week with links."
+          },
+          "trend": {
+            "title": "Trends",
+            "body": "How did the last 90 days compare with the 90 days before?"
+          }
+        }
+      },
+      "faq": {
+        "intro": "What to know before connecting.",
+        "items": {
+          "send": {
+            "question": "Can the MCP server send WhatsApp messages?",
+            "answer": "No, it's read-only. To reply from your own code, the REST API can send a text reply within the 24-hour window with a write-enabled key."
+          },
+          "clients": {
+            "question": "Which MCP clients work?",
+            "answer": "Any client that supports Streamable HTTP with a bearer token header, such as Claude Code, Codex and Cursor."
+          },
+          "limits": {
+            "question": "Are there rate limits?",
+            "answer": "Yes. MCP calls share the key's per-minute budget with the REST API."
+          },
+          "meta": {
+            "question": "Does it call Meta?",
+            "answer": "No. It reads data already stored in airi.chat, so it never uses your Meta API limits."
+          }
+        }
+      },
+      "cta": {
+        "title": "Put your WhatsApp data",
+        "accent": "where you work.",
+        "body": "Create an API key and connect your first MCP client."
+      }
+    }
+  }
+}

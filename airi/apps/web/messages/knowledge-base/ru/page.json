@@ -1,0 +1,166 @@
+{
+  "KnowledgeBase": {
+    "title": "Усильте ответы знаниями",
+    "view": "Просмотр",
+    "edit": "Редактировать",
+    "noArticlesYet": "Статей пока нет.",
+    "createFirstArticle": "Создать статью",
+    "settings": {
+      "title": "Настройки базы знаний",
+      "description": "Настройте индексацию внешних URL для улучшенных AI-инсайтов."
+    },
+    "emptyState": {
+      "title": "Добро пожаловать в базу знаний",
+      "description": "Создайте первую статью через кнопку плюс в боковой панели.",
+      "hint": "Нажмите плюс в боковой панели, чтобы создать статью"
+    },
+    "adminTree": {
+      "untitled": "Без названия",
+      "draft": "Черновик",
+      "addSubArticle": "Добавить подстатью",
+      "rename": "Переименовать",
+      "delete": "Удалить",
+      "deleteConfirm": "Удалить эту статью?",
+      "deleteConfirmDescription": "Статья и все её переводы будут удалены навсегда.",
+      "failedToUpdate": "Не удалось обновить",
+      "failedToDelete": "Не удалось удалить",
+      "failedToReorder": "Не удалось изменить порядок",
+      "failedToLoad": "Не удалось загрузить статьи",
+      "retry": "Повторить",
+      "loadingArticles": "Загрузка статей...",
+      "openTree": "Показать список статей",
+      "expandArticle": "Развернуть статью",
+      "collapseArticle": "Свернуть статью",
+      "cancel": "Отмена"
+    },
+    "articleEditor": {
+      "publishSuccess": "Статья опубликована",
+      "publishFailed": "Не удалось опубликовать",
+      "firstPublishOnboardingTitle": "База знаний запущена",
+      "firstPublishOnboardingDescription": "Следующий шаг: включите бота Airi для всех чатов в Настройках -> Управление AI: {settingsPath}",
+      "publishing": "Публикация...",
+      "enterArticleTitle": "Введите заголовок статьи",
+      "titleRequired": "Добавьте заголовок перед публикацией",
+      "saveFirst": "Сначала сохраните статью",
+      "writeContentPlaceholder": "Напишите и отформатируйте содержимое статьи...",
+      "loadingEditor": "Загрузка редактора...",
+      "saveStatus": {
+        "saving": "Сохранение...",
+        "saved": "Сохранено",
+        "error": "Ошибка сохранения",
+        "unsaved": "Несохранённые изменения"
+      },
+      "chunkPreview": {
+        "label": "Показать границы RAG-чанков",
+        "hint": "Это только предпросмотр. Airi делит статью по заголовкам H1–H3. Текст под заголовком относится к этому чанку. Выберите «Обычный текст» в меню типа блока, чтобы строка снова стала абзацем и осталась в предыдущем разделе (в статью это не сохраняется).",
+        "headingLineHint": "Это строка заголовка, с неё начинается новый чанк для поиска. Выберите «Обычный текст», чтобы объединить её с разделом выше."
+      },
+      "published": "Опубликовано",
+      "publishToWeb": "Опубликовать в сети",
+      "publishChanges": "Опубликовать изменения",
+      "unpublishLanguage": "Снять с публикации этот язык",
+      "unpublishSuccess": "Языковая версия снята с публикации",
+      "unpublishFailed": "Не удалось снять с публикации",
+      "unpublishing": "Снимаем с публикации...",
+      "unpublishedChangesHint": "У этой языковой версии есть неопубликованные изменения.",
+      "shareLink": "Поделиться ссылкой",
+      "copyLink": "Копировать ссылку",
+      "linkCopied": "Ссылка скопирована в буфер обмена",
+      "publishMode": {
+        "title": "Режим публикации",
+        "publicWithAutoLink": "Публичная + автоссылка в ответах Airi",
+        "publicWithAutoLinkShort": "Публичная + автоссылка",
+        "publicWithAutoLinkDesc": "Любой со ссылкой может видеть; Airi может прикреплять ссылку",
+        "publicWithAutoLinkDescShort": "Любой со ссылкой видит, Airi может давать ссылку",
+        "publicNoAutoLink": "Публичная + без автоссылки в ответах Airi",
+        "publicNoAutoLinkShort": "Публичная + без автоссылки",
+        "publicNoAutoLinkDesc": "Любой со ссылкой может видеть; Airi не будет прикреплять ссылку автоматически",
+        "publicNoAutoLinkDescShort": "Публичная статья, но Airi не дает ссылку сама",
+        "aiContextOnly": "Только контекст ИИ (не публичная)",
+        "aiContextOnlyShort": "Только контекст ИИ",
+        "aiContextOnlyDesc": "Используется контекстом Airi, скрыто из публичной БЗ",
+        "aiContextOnlyDescShort": "Скрыто из БЗ и нет автоссылок в ответах",
+        "publishToAiContext": "Опубликовать в контекст ИИ",
+        "autoLinkDisabled": "Вставка автоссылок Airi отключена для этого режима публикации."
+      }
+    },
+    "search": {
+      "placeholder": "Поиск статей...",
+      "noResults": "Статьи не найдены",
+      "startTyping": "Начните вводить текст для поиска",
+      "searching": "Поиск...",
+      "failed": "Не удалось выполнить поиск",
+      "retry": "Повторить"
+    },
+    "navigation": {
+      "knowledgeBase": "База знаний",
+      "kb": "БЗ"
+    },
+    "breadcrumbs": {
+      "workspace": "Рабочее пространство",
+      "knowledgeBase": "База знаний",
+      "editArticle": "Редактировать статью",
+      "newArticle": "Новая статья"
+    },
+    "metadata": {
+      "published": "Опубликовано",
+      "readingTime": "мин на чтение"
+    },
+    "actions": {
+      "copyMarkdown": "Скопировать Markdown",
+      "copyForLLM": "Для LLM",
+      "copiedMarkdown": "Markdown скопирован",
+      "copiedForLLM": "Текст для LLM скопирован",
+      "copyFailed": "Не удалось скопировать"
+    },
+    "localeFallbackNotice": "Статья ещё не опубликована на языке {requestedLanguage}. Показана версия на {renderedLanguage}.",
+    "articleNotFound": "Статья не найдена",
+    "emptyPublicKb": "Опубликованных статей пока нет. Загляните позже.",
+    "languageControl": {
+      "articleLanguage": "Язык статьи",
+      "newTranslation": "Новый перевод",
+      "published": "Опубликовано",
+      "publishedDraft": "Опубликовано + черновик",
+      "draft": "Черновик",
+      "languageActions": "Действия с языком",
+      "duplicateFrom": "Скопировать из...",
+      "translateFrom": "Перевести из...",
+      "copyPublicLink": "Скопировать публичную ссылку",
+      "deleteTranslation": "Удалить перевод",
+      "createVersion": "Создать версию на {language}",
+      "createVersionDescription": "Создайте языковой черновик, не меняя язык интерфейса.",
+      "startEmpty": "Начать с пустого",
+      "startEmptyDesc": "Оставить текущий заголовок и написать новый текст.",
+      "copyFromCurrent": "Скопировать из текущего языка",
+      "copyFromCurrentDesc": "Дублировать текущий черновик как основу.",
+      "copyFromDefault": "Скопировать из языка по умолчанию",
+      "copyFromDefaultDesc": "Использовать {language} как основу.",
+      "translateWithAi": "Перевести ИИ с текущего языка",
+      "translateWithAiDesc": "Сохранить форматирование и ссылки.",
+      "deleteTranslationTitle": "Удалить перевод?",
+      "deleteTranslationDescription": "Будут удалены черновик, версии и эмбеддинги языка {language}. Язык по умолчанию сохранится.",
+      "cancel": "Отмена",
+      "saveFirst": "Сначала сохраните статью, чтобы добавить переводы",
+      "updateFailed": "Не удалось обновить перевод",
+      "draftReady": "Черновик на {language} готов",
+      "translationDeleted": "Перевод на {language} удалён",
+      "publicLinkCopied": "Публичная ссылка скопирована",
+      "copyPublicLinkFailed": "Не удалось скопировать ссылку",
+      "deleteFailed": "Не удалось удалить перевод"
+    },
+    "feedback": {
+      "wasHelpful": "Было ли это полезно?",
+      "yes": "Да",
+      "no": "Нет",
+      "thanks": "Спасибо за отзыв."
+    },
+    "newArticle": {
+      "title": "Создать новую статью"
+    },
+    "delete": {
+      "title": "Удалить статью",
+      "confirmation": "Вы уверены, что хотите удалить «{title}»? Это действие нельзя отменить. Статья, все ее версии, отзывы и связанные данные будут удалены навсегда.",
+      "deleting": "Удаление..."
+    }
+  }
+}

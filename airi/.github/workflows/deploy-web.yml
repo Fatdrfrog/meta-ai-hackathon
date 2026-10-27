@@ -1,0 +1,87 @@
+name: Deploy Web
+
+# Web production for main deploys only from here (apps/web/vercel.json turns off
+# Vercel's main deploys). See apps/temporal-worker/README.md#deploy-order-web-after-worker.
+on:
+  push:
+    branches:
+      - main
+  workflow_run:
+    workflows:
+      - Deploy Temporal Worker
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Full 40-character main commit SHA to deploy to web production."
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+    # GitHub-hosted on purpose: this job starts right after a worker run and must
+    # not queue behind the next worker deploy on the self-hosted DEPLOY_RUNS_ON runner.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # One web production deploy at a time, shared with the manual redeploy_web job.
+    # A newer queued deploy may replace a pending one; each run recomputes its target.
+    concurrency:
+      group: deploy-web-prod
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check out main history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Test web deployment tooling
+        run: node --test .github/scripts/deploy-vercel-production.test.mjs .github/scripts/redeploy-vercel-production.test.mjs .github/scripts/sync-vercel-runtime-env.test.mjs .github/scripts/committed-secrets.test.mjs apps/mobile/app.config.test.cjs
+
+      - name: Sync public Supabase key
+        env:
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ENV_TARGETS: production
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_NAME: ${{ vars.VERCEL_PROJECT_NAME }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          VERCEL_TEAM_SLUG: ${{ vars.VERCEL_TEAM_SLUG }}
+          AI_GATEWAY_VERCEL_OIDC_AUDIENCE: ${{ vars.AI_GATEWAY_VERCEL_OIDC_AUDIENCE }}
+          AI_GATEWAY_VERCEL_OIDC_ISSUER_URL: ${{ vars.AI_GATEWAY_VERCEL_OIDC_ISSUER_URL }}
+          AI_GATEWAY_VERCEL_OIDC_SUBJECTS: ${{ vars.AI_GATEWAY_VERCEL_OIDC_SUBJECTS }}
+        run: node .github/scripts/sync-vercel-runtime-env.mjs --public-supabase-only
+
+      - name: Deploy web production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          WEB_DEPLOY_SHA: ${{ inputs.sha }}
+          WORKER_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WORKER_RUN_EVENT: ${{ github.event.workflow_run.event }}
+          WORKER_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKER_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_NAME: ${{ vars.VERCEL_PROJECT_NAME }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          VERCEL_TEAM_SLUG: ${{ vars.VERCEL_TEAM_SLUG }}
+          AI_GATEWAY_VERCEL_OIDC_AUDIENCE: ${{ vars.AI_GATEWAY_VERCEL_OIDC_AUDIENCE }}
+          AI_GATEWAY_VERCEL_OIDC_ISSUER_URL: ${{ vars.AI_GATEWAY_VERCEL_OIDC_ISSUER_URL }}
+          AI_GATEWAY_VERCEL_OIDC_SUBJECTS: ${{ vars.AI_GATEWAY_VERCEL_OIDC_SUBJECTS }}
+        run: node .github/scripts/deploy-vercel-production.mjs

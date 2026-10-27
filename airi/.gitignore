@@ -1,0 +1,81 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local env files
+.env*
+*.env
+!.env.example
+!**/.env.example
+*.local
+
+# Local credential material
+service-account*.json
+*-service-account.json
+firebase-adminsdk*.json
+gcp-credentials*.json
+keyfile*.json
+secrets*.json
+account.json
+
+# Testing
+coverage
+
+# Expo local state
+.expo/
+
+# ESLint
+.eslintcache
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+*.tsbuildinfo
+
+# Generated data
+apps/web/data/synthetic-import/*.csv
+apps/web/data/synthetic-import/summary.json
+supabase/.temp/
+
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local scratch artifacts
+.tmp-*
+tmp-*.png
+
+# Misc
+.DS_Store
+*.pem
+gha-creds-*.json
+workerpool*.yaml
+workerpool*.json
+node_modules
+bin/
+
+
+# LLM
+./.codex*
+.codex
+/.codex*
+/.codex-logs*
+
+# Local feature worktrees
+.worktrees/

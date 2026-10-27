@@ -1,0 +1,53 @@
+{
+  "BillingSettings": {
+    "title": "Оплата",
+    "loading": "Загрузка оплаты",
+    "loadingPlan": "Загрузка тарифа",
+    "planUnavailable": "Не удалось загрузить текущий тариф",
+    "unavailable": "Не удалось загрузить оплату",
+    "refresh": "Обновить",
+    "refreshFailed": "Не удалось обновить данные оплаты. Показаны сохранённые данные.",
+    "actionFailed": "Не удалось выполнить действие. Попробуйте ещё раз.",
+    "checkoutUnavailable": "Оплата недоступна",
+    "checkoutUnavailableHint": "Попробуйте позже или обратитесь в поддержку.",
+    "subscription": "Подписка",
+    "periodEnds": "Конец текущего периода",
+    "renewal": "Продление",
+    "endsAtPeriod": "Завершится после этого периода",
+    "renews": "Автоматическое продление",
+    "noRenewal": "Продление не запланировано",
+    "paymentMethod": "Способ оплаты",
+    "managedByPaddle": "Управляется в Paddle",
+    "notScheduled": "Не запланировано",
+    "dateUnavailable": "Дата недоступна",
+    "upgrade": "Перейти на Pro",
+    "reactivate": "Сохранить подписку",
+    "cancelRenewal": "Отменить продление",
+    "adminOnly": "Оплатой управляет администратор.",
+    "invoices": "Счета",
+    "noInvoices": "Счетов пока нет.",
+    "plans": {
+      "free": "Бесплатный тариф",
+      "pro": "Тариф Pro",
+      "enterprise": "Тариф Enterprise"
+    },
+    "status": {
+      "active": "Активна",
+      "trialing": "Пробный период",
+      "past_due": "Оплата просрочена",
+      "paused": "Приостановлена",
+      "canceled": "Отменена",
+      "cancelled": "Отменена",
+      "paid": "Оплачен",
+      "pending": "Ожидание",
+      "failed": "Ошибка",
+      "requires_action": "Требуется действие",
+      "draft": "Черновик",
+      "open": "Открыт",
+      "completed": "Завершён",
+      "billed": "Выставлен",
+      "none": "Нет платной подписки",
+      "unknown": "Статус недоступен"
+    }
+  }
+}

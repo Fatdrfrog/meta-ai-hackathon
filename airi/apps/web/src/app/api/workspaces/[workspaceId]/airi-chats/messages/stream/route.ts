@@ -1,0 +1,65 @@
+import { airiChatFirstMessageBodySchema } from "@/lib/airi-chats/request-schemas";
+import {
+  admitAiriChatMessageRequest,
+  airiChatRequestFailureResponse,
+  airiChatRunActiveResponse,
+  scheduleAiriChatStudioChatQuota,
+} from "@/lib/airi-chats/route-context";
+import {
+  createAiriChatRunStreamResponse,
+  startAiriChatRun,
+} from "@/lib/airi-chats/runs";
+import { NextRequest } from "next/server";
+
+export const runtime = "nodejs";
+// A run (retrieval, generation, Meta Ads tools) can outlast the default.
+export const maxDuration = 300;
+
+type Params = { params: Promise<{ workspaceId: string }> };
+
+export async function POST(request: NextRequest, { params }: Params) {
+  let logContext: { workspaceId?: string } = {};
+  try {
+    const { workspaceId } = await params;
+    logContext = { workspaceId };
+    const admission = await admitAiriChatMessageRequest({
+      request,
+      workspaceId,
+      schema: airiChatFirstMessageBodySchema,
+    });
+    if (!admission.ok) return admission.response;
+    const { auth, body } = admission;
+
+    // The run is not tied to this request: closing the drawer only
+    // detaches the stream (resume: GET .../runs/[runId]/stream).
+    const start = await startAiriChatRun({
+      supabase: auth.supabase,
+      workspaceId,
+      userId: auth.user.id,
+      clientTurnId: body.clientTurnId,
+      content: body.content,
+      source: body.source,
+      selectedSources: body.selectedSources,
+      attachedFiles: body.attachments,
+      activeBuilder: body.activeBuilder,
+      onTurnSaved: turn => scheduleAiriChatStudioChatQuota(workspaceId, turn),
+    });
+    if (start.kind === "conflict") {
+      return airiChatRunActiveResponse(start.runId);
+    }
+    return createAiriChatRunStreamResponse({
+      runId: start.run.runId,
+      signal: request.signal,
+      supabase: auth.supabase,
+    });
+  } catch (error) {
+    // Before the stream starts a failure is a plain JSON error.
+    // Only the request's own abort is a cancellation (499).
+    return airiChatRequestFailureResponse(
+      error,
+      logContext,
+      undefined,
+      request.signal
+    );
+  }
+}

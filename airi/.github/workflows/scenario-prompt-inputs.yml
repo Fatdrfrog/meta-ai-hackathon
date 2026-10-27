@@ -1,0 +1,336 @@
+name: Scenario prompt inputs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "packages/scenario-contracts/**"
+      - "packages/airi-runtime/**"
+      - "apps/web/src/components/scenarios/**"
+      - "apps/web/src/lib/airi/**"
+      - "apps/web/src/lib/business-locations/**"
+      - "apps/web/src/app/api/workspaces/**/business-locations/**"
+      - "apps/web/src/components/settings/business-locations/**"
+      - "apps/web/src/features/panel/settings/**"
+      - "apps/web/src/features/panel/shared/routing/**"
+      - "apps/web/src/lib/spreadsheet/**"
+      - "apps/web/src/lib/geo/**"
+      - "apps/web/src/lib/workspace-feature-flags*"
+      - "apps/web/src/components/campaigns/recipient-upload-parser*"
+      - "apps/web/src/components/campaigns/csv-upload*"
+      - "apps/web/src/components/integrations/**"
+      - "apps/web/src/components/whatsapp-templates/**"
+      - "apps/web/src/app/setup/**"
+      - "apps/web/src/app/auth/complete-invite/**"
+      - "apps/web/src/app/api/sources/whatsapp/**"
+      - "apps/web/src/app/api/sources/workspace-selection.test.ts"
+      - "apps/web/src/app/api/companies/**"
+      - "apps/web/src/lib/limits/**"
+      - "apps/web/messages/settings/**"
+      - "apps/web/src/i18n/**"
+      - "apps/web/src/lib/scenarios/**"
+      - "apps/web/src/lib/meta-ads/**"
+      - "apps/web/src/lib/instagram/**"
+      - "apps/web/src/lib/whatsapp/**"
+      - "apps/web/src/app/api/whatsapp/flows/**"
+      - "apps/web/src/app/api/scenarios/**"
+      - "apps/web/src/features/panel/scenarios/**"
+      - "apps/web/src/proxy.ts"
+      - "apps/web/src/lib/supabase/**"
+      - "apps/web/src/lib/google/creative-asset-read-url*"
+      - "apps/web/src/lib/mongo.ts"
+      - "apps/web/src/models/scenario.ts"
+      - "apps/web/src/models/business-location.ts"
+      - "apps/web/src/lib/campaign/campaign-conversation-persistence*"
+      - "apps/web/src/components/campaigns/**"
+      - "apps/web/src/lib/campaign/bulk-campaign-send-gate*"
+      - "apps/web/src/lib/campaign/bulk-campaign-contracts*"
+      - "apps/web/src/app/api/campaigns/batch-plan/**"
+      - "apps/web/src/lib/campaign/bulk-recipient-policy*"
+      - "apps/web/src/lib/campaign/bulk-campaign-recipient-eligibility*"
+      - "apps/web/src/lib/campaign/customer-contact-policy*"
+      - "apps/web/src/lib/campaign/generated-bulk-preparation*"
+      - "apps/web/src/lib/campaign/bulk-campaign-admission*"
+      - "apps/web/src/lib/campaign/bulk-campaign-outcome*"
+      - "apps/web/src/app/api/campaigns/bulk-send/**"
+      - "apps/web/src/app/api/campaigns/*/retry/**"
+      - "apps/web/src/app/api/workspaces/*/analytics/bulk/audience-preview/**"
+      - "apps/web/messages/analytics/**"
+      - "apps/web/src/models/conversation.ts"
+      - "apps/web/src/types/models.ts"
+      - "apps/web/messages/scenarios/**"
+      - "apps/web/messages/*.json"
+      - "apps/web/src/components/nav/**"
+      - "apps/web/src/components/billing/**"
+      - "apps/web/src/components/limits/**"
+      - "apps/web/src/components/app-update-banner.tsx"
+      - "apps/web/src/test-support/**"
+      - "apps/web/package.json"
+      - "apps/web/jest*"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/scenario-prompt-inputs.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scenario-prompt-inputs-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  prompt-input-regressions:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: --max-old-space-size=5120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Scenario contracts tests
+        run: pnpm --filter @icecore/scenario-contracts test
+      - name: Scenario runtime regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/airi-runtime exec tsx --test
+          src/scenario-prompt-input-turn.test.ts
+          src/scenario-prompt-input-turn.safety.test.ts
+          src/scenario-state.test.ts
+          src/scenario-form-answer-turn.test.ts
+          src/scenario-location-turn.test.ts
+          src/temporal-scenario-timers/location-rescue.test.ts
+          src/temporal-scenario-timers/automation.test.ts
+          src/temporal-scenario-timers/branch-delay.test.ts
+          src/temporal-scenario-timers/plan/index.test.ts
+          src/whatsapp-webhook-runtime.test.ts
+      - name: Shared package types
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @icecore/scenario-contracts --filter @icecore/airi-runtime check-types
+      - name: Editor, Flow, extraction and template regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/components/scenarios/builders/whatsapp/service-message/service-message-prompt-inputs.test.tsx
+          src/components/scenarios/builders/whatsapp/service-message/service-message-builder.test.tsx
+          src/components/scenarios/builders/whatsapp/field-editor.test.tsx
+          src/components/scenarios/nodes/action-node/action-node.test.tsx
+          src/components/scenarios/nodes/action-node/action-node-card.test.tsx
+          src/components/scenarios/nodes/action-node/action-node-editor-sections.test.tsx
+          src/components/scenarios/nodes/action-node/action-node-generative-ai-section.test.tsx
+          src/components/scenarios/nodes/action-node/action-node-generative-state.test.ts
+          src/components/scenarios/nodes/action-node/action-node-source-controls.test.tsx
+          src/components/scenarios/nodes/action-node/action-node-whatsapp-service-message-section.test.tsx
+          src/components/scenarios/nodes/action-node/action-node-whatsapp-template-section.test.tsx
+          src/components/scenarios/nodes/action-node/use-form-answers-key-stamp.test.tsx
+          src/components/scenarios/scenario-node-labels.test.ts
+          src/components/scenarios/view/preview/utils.test.ts
+          src/components/scenarios/view/graph/flow-helpers.test.ts
+          src/components/scenarios/view/node-enrichment/action.test.ts
+          src/components/scenarios/view/node-enrichment/scenario-node-graph-index.test.ts
+          src/components/scenarios/view/node-enrichment/scenario-prompt-input-scope.test.ts
+          src/components/scenarios/view/scenario-activation-impact.test.ts
+          src/components/scenarios/view/scenario-activation-impact-flow-check.test.tsx
+          src/components/scenarios/view/scenario-form-answer-labels.test.ts
+          src/components/scenarios/view/scenario-guided-create.test.ts
+          src/components/scenarios/view/scenario-request-error-utils.test.ts
+          src/components/scenarios/view/scenarios-sidebar.test.tsx
+          src/components/scenarios/workspace/scenarios-toolbar.test.tsx
+          src/components/scenarios/workspace/use-scenario-workspace-entity.test.tsx
+          src/components/scenarios/view/scenario-source-handle-copy.test.ts
+          src/components/scenarios/view/scenario-template-utils.test.ts
+          src/components/scenarios/view/scenario-variable-groups.test.ts
+          src/components/scenarios/view/scenario-variable-inserter.test.tsx
+          src/lib/airi/__tests__/auto-reply-scenario-state.test.ts
+          src/lib/airi/__tests__/prompt-envelope.test.ts
+          src/lib/airi/__tests__/scenario-runtime-form-answers.test.ts
+          src/lib/airi/__tests__/scenario-runtime-location-routes.test.ts
+          src/lib/airi/__tests__/scenario-runtime-pending-diagnostics.test.ts
+          src/lib/airi/__tests__/scenario-runtime-whatsapp-flow.test.ts
+          src/lib/airi/__tests__/scenario-template-whatsapp-referral.test.ts
+          src/lib/airi/reply/runtime/auto-reply-scenario-state.location.test.ts
+          src/lib/airi/reply/runtime/generative-ai-execution-store.test.ts
+          src/lib/airi/reply/runtime/rag.test.ts
+          src/lib/airi/reply/runtime/scenario.customer-answers.test.ts
+          src/lib/airi/scenario/auto-reply-runtime-dependencies.form-answers.test.ts
+          src/lib/airi/scenario/auto-reply-runtime-dependencies.location.test.ts
+          src/lib/airi/scenario/auto-reply-runtime-dependencies.prompt-inputs.test.ts
+          src/lib/airi/scenario/scenario-location-route-target.test.ts
+          src/lib/airi/scenario/scenario-post-action-routing.test.ts
+          src/lib/airi/scenario/scenario-prompt-input-extraction.test.ts
+          src/lib/airi/scenario/scenario-prompt-input-extraction.safety.test.ts
+          src/lib/airi/scenario/scenario-template-prompt-inputs.test.ts
+          src/lib/airi/scenario/scenario-template.test.ts
+          src/lib/airi/scenario/timer-runtime-dependencies.location.test.ts
+          src/lib/business-locations/inbound-location-query.test.ts
+          src/lib/business-locations/store.test.ts
+          src/lib/scenarios/__tests__/branch-handle-predicates.test.ts
+          src/lib/scenarios/flow-structure-validation.test.ts
+          src/lib/scenarios/graph-validation.test.ts
+          src/lib/scenarios/prompt-optimizer.test.ts
+          src/lib/scenarios/scenario-action-routing-contract.test.ts
+          src/lib/scenarios/scenario-form-answer-checks.test.ts
+          src/lib/scenarios/scenario-funnel.test.ts
+          src/lib/scenarios/scenario-routing-compiler.test.ts
+          src/lib/scenarios/scenario-write-validation.test.ts
+          src/lib/scenarios/transition-registry.test.ts
+          src/lib/scenarios/whatsapp-flow-config.test.ts
+          src/lib/whatsapp/flows/provider-reference-service.test.ts
+          src/lib/whatsapp/flows/template-flow-health.test.ts
+          src/app/api/whatsapp/flows/provision/route.test.ts
+          src/lib/campaign/campaign-conversation-persistence.test.ts
+      - name: Offices settings regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/app/api/workspaces/[workspaceId]/business-locations/route.test.ts
+          src/components/settings/business-locations/business-location-dialog.test.tsx
+          src/components/settings/business-locations/business-locations-import-dialog.test.tsx
+          src/components/settings/business-locations/business-locations-manager.test.tsx
+          src/components/settings/business-locations/country-select.test.tsx
+          src/features/panel/settings/business-locations/route.test.tsx
+          src/features/panel/settings/layout-route.test.tsx
+          src/features/panel/settings/settings-permissions-route.test.tsx
+          src/features/panel/shared/routing/last-visited-page.test.ts
+          src/i18n/business-locations-settings.test.ts
+          src/i18n/customer-api-settings.test.ts
+          src/lib/business-locations/import.test.ts
+          src/lib/business-locations/save.test.ts
+          src/lib/business-locations/types.test.ts
+          src/lib/geo/countries.test.ts
+          src/lib/spreadsheet/download.test.ts
+          src/lib/spreadsheet/read-rows.test.ts
+          src/lib/spreadsheet/write-csv.test.ts
+          src/lib/workspace-feature-flags.test.ts
+          src/components/campaigns/recipient-upload-parser.test.ts
+          src/components/campaigns/csv-upload.test.tsx
+          src/components/analytics/bulk-analytics-export.test.ts
+          src/components/scenarios/builders/whatsapp/service-message/service-message-prompt-input-key.test.ts
+      - name: Scenario opening speed regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/features/panel/scenarios/route.test.tsx
+          src/features/panel/scenarios/source-rows.test.ts
+          src/proxy.test.ts
+          src/lib/supabase/workspace-api-access.test.ts
+          src/app/api/scenarios/[scenarioId]/route.test.ts
+          src/lib/scenarios/scenario-detail.test.ts
+          src/lib/scenarios/scenario-asset-media-enrichment.test.ts
+          src/lib/google/creative-asset-read-url-cache.test.ts
+          src/lib/google/creative-asset-read-url-media-api-adapter.test.ts
+          src/lib/scenarios/list-workspace-scenario-summaries.test.ts
+          src/lib/mongo-indexes.test.ts
+          src/lib/scenarios/client/scenario-detail-sources.test.ts
+          src/lib/scenarios/client/scenario-media-display.test.ts
+          src/lib/scenarios/client/scenario-revision-tracker.test.ts
+          src/lib/scenarios/client/resources.test.ts
+          src/components/scenarios/view/use-scenario-flow-controller.open.test.ts
+          src/components/scenarios/view/use-scenario-media-display-refresh.test.ts
+          src/components/scenarios/view/use-scenario-display-nodes.cache.test.tsx
+          src/components/scenarios/view/scenario-canvas-editors-gate.test.tsx
+          src/components/scenarios/scenario-lazy-chunk-boundary.test.tsx
+          src/components/scenarios/scenario-editor-chunks.test.ts
+          src/components/scenarios/view/action/assets-fields.test.tsx
+          src/components/scenarios/view/useScenarioWhatsAppQrEntryPoints.save-state.test.ts
+          src/components/scenarios/view/graph/canvas-edges.test.ts
+      - name: First-run translation regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/components/scenarios/view/airi-create-dialog/steps/airi-create-steps.i18n.test.tsx
+          src/components/scenarios/view/airi-create-dialog/workflow-template-dialog.canva.test.tsx
+          src/components/scenarios/view/airi-create-dialog/use-scenario-generator-wizard.voice.test.tsx
+          src/components/scenarios/view/airi-create-dialog/use-scenario-generator-wizard.voice-sdk.test.tsx
+          src/components/nav/site-header.test.tsx
+          src/components/nav/nav-user.test.tsx
+          src/components/nav/app-sidebar-content.test.tsx
+          src/components/billing/plan-upgrade-dialog.test.tsx
+      - name: Bulk campaign first-send regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/components/campaigns/multi-channel-campaign-builder.test.tsx
+          src/components/campaigns/multi-channel-campaign-builder.source-loading.test.tsx
+          src/components/campaigns/campaign-dispatch-plan-card.test.tsx
+          src/components/campaigns/bulk-campaign-limit-hint.test.tsx
+          src/components/campaigns/bulk-campaign-send-summary-dialog.test.tsx
+          src/components/campaigns/bulk-campaign-outcome-summary.test.tsx
+          src/lib/campaign/bulk-campaign-send-gate.test.ts
+          src/app/api/campaigns/batch-plan/route.test.ts
+          src/components/scenarios/nodes/bulk-root-node.test.tsx
+          src/lib/whatsapp/account/health.test.ts
+      - name: Recent-contact skip regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/lib/campaign/bulk-recipient-policy.test.ts
+          src/lib/campaign/bulk-campaign-recipient-eligibility.test.ts
+          src/lib/campaign/customer-contact-policy.test.ts
+          src/lib/campaign/generated-bulk-preparation.test.ts
+          src/lib/campaign/bulk-campaign-admission.test.ts
+          src/lib/campaign/bulk-campaign-outcome.test.ts
+          src/app/api/campaigns/bulk-send/route.test.ts
+          src/app/api/campaigns/[campaignId]/retry/route.test.ts
+          src/app/api/workspaces/[workspaceId]/analytics/bulk/audience-preview/route.test.ts
+          src/components/campaigns/campaign-history.test.tsx
+          src/components/campaigns/bulk-campaign-outcome-summary.test.tsx
+      - name: WhatsApp test-to-self regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/app/api/sources/whatsapp/test-send/route.test.ts
+          src/app/api/sources/workspace-selection.test.ts
+          src/app/api/companies/route.test.ts
+          src/components/campaigns/campaign-test-send-dialog.test.tsx
+          src/lib/whatsapp/test-send.test.ts
+          src/lib/whatsapp/templates/parameter-format.test.ts
+      - name: Campaign label routing regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/lib/scenarios/campaign-product-routing.test.ts
+          src/lib/scenarios/campaign-product-routing.review.test.ts
+          src/lib/scenarios/client-message-trigger-criteria.test.ts
+          src/lib/scenarios/incoming-message-trigger-matcher.test.ts
+          src/lib/scenarios/ingress-campaign-metadata.test.ts
+          src/lib/scenarios/ingress-campaign-metadata.review.test.ts
+          src/lib/meta-ads/meta-ad-metadata.test.ts
+          src/lib/whatsapp/referral-enrichment.test.ts
+          src/lib/airi/scenario/scenario-candidate-selection.test.ts
+          src/components/scenarios/nodes/trigger-node/campaign-product-route-editor.test.tsx
+          src/components/scenarios/nodes/trigger-node/campaign-product-route-editor.review.test.tsx
+          src/components/scenarios/nodes/trigger-node/message-trigger-editor-model.test.ts
+          src/components/scenarios/nodes/trigger-node/meta-referral-filter-editor.test.tsx
+          src/components/scenarios/nodes/trigger-node/trigger-node.test.tsx
+          src/components/scenarios/view/client-message-trigger-presentation.test.ts
+      - name: WhatsApp connect onboarding regressions
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --runInBand --runTestsByPath
+          src/components/integrations/whatsapp-integration.test.tsx
+          src/components/integrations/integrations-onboarding.test.tsx
+          src/components/integrations/embedded-signup-button.test.ts
+          src/components/integrations/embedded-signup-button.failure.test.tsx
+          src/components/integrations/embedded-signup-with-qr.test.tsx
+          src/components/integrations/integration-setup-guide.test.tsx
+          src/components/integrations/waba-selection-dialog.test.tsx
+          src/components/whatsapp-templates/templates-manager.test.tsx
+          src/app/setup/setup-wizard.test.tsx
+          src/lib/limits/channel-capacity.test.ts
+          src/lib/limits/company-limits.test.ts
+          src/features/panel/shared/routing/hrefs.test.ts
+          src/features/panel/settings/integrations/whatsapp/select/route.test.tsx
+          src/app/api/sources/whatsapp/select-waba/route.test.ts
+          src/app/api/sources/whatsapp/route.test.ts
+          src/app/api/sources/whatsapp/callback/embedded-signup-handler.test.ts
+          src/lib/whatsapp/embedded-signup-selection-session.test.ts
+          src/app/auth/complete-invite/complete-invite-schema.test.ts

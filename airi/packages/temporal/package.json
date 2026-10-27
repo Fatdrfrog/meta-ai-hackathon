@@ -1,0 +1,21 @@
+{
+  "name": "@icecore/temporal",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./airi/*": "./src/airi/*.ts"
+  },
+  "dependencies": {
+    "@icecore/scenario-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "^5.9.2"
+  }
+}

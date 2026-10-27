@@ -1,0 +1,2085 @@
+{
+  "CampaignTestSend": {
+    "open": "Өз WhatsApp-ыма тест жіберу",
+    "title": "Тест хабарлама",
+    "description": "Таратылым басталмас бұрын тексеру үшін {template} үлгісін WhatsApp-ыңызға жібереміз. Тесттер таратылым лимиттеріне есептелмейді.",
+    "phoneLabel": "Сіздің WhatsApp нөміріңіз",
+    "phonePlaceholder": "+7 700 123 45 67",
+    "valuesFromRecipient": "Айнымалылар бірінші алушыдан алынады.",
+    "valuesFromSample": "Айнымалылар үлгідегі мысалдармен толтырылады.",
+    "phoneSaved": "Нөмір келесі тест үшін сақталады.",
+    "send": "Тест жіберу",
+    "sending": "Жіберілуде…",
+    "cancel": "Бас тарту",
+    "sent": "Тест {phone} нөміріне жіберілді. Сол телефондағы WhatsApp-ты тексеріңіз.",
+    "errors": {
+      "invalid_request": "Жіберуге деректер жетіспейді. Бетті жаңартып, қайталап көріңіз.",
+      "invalid_phone": "WhatsApp нөмірін ел кодымен енгізіңіз, мысалы +7 700 123 45 67.",
+      "not_allowed": "Тестті тек менеджерлер мен әкімшілер жібере алады.",
+      "whatsapp_not_connected": "Тест жіберу үшін интеграцияларда WhatsApp-ты қосыңыз.",
+      "rate_limited": "Осы сағаттағы тест лимитіне жеттіңіз. Кейінірек қайталап көріңіз.",
+      "template_unavailable": "Бұл үлгі осы нөмір үшін мақұлданбаған. Мақұлданған үлгіні таңдаңыз.",
+      "template_variables_missing": "Бірінші алушы үшін {variables} толтырып, қайталап көріңіз.",
+      "header_media_missing": "Үлгінің тақырыбына сурет немесе файл қажет. Оны үлгіге қосып, қайталап көріңіз.",
+      "template_parameters": "WhatsApp үлгі мәндерін қабылдамады. Айнымалыларды тексеріп, қайталап көріңіз.",
+      "recipient_not_allowed": "Бұл WhatsApp аккаунты әзірге тек рұқсат етілген нөмірлерге жаза алады. Бұл нөмірді Meta-дағы WhatsApp баптауларына қосыңыз.",
+      "recipient_unreachable": "Бұл нөмірге WhatsApp хабарламасы жеткізілмейді. Нөмірді тексеріңіз.",
+      "recipient_is_sender": "Бұл бизнесіңіздің нөмірі. Жеке WhatsApp нөміріңізді енгізіңіз.",
+      "meta_billing": "WhatsApp-қа төлем әдісі қажет. Төлемді WhatsApp Manager-де баптаңыз.",
+      "meta_rate_limited": "WhatsApp бұл нөмірден жіберуді шектеп тұр. Бірнеше минуттан кейін қайталап көріңіз.",
+      "token_invalid": "WhatsApp қосылымының мерзімі өтті. Интеграцияларда WhatsApp-ты қайта қосыңыз.",
+      "send_failed": "Тест жіберілмеді. Қайталап көріңіз."
+    }
+  },
+  "BulkAnalytics": {
+    "errors": {
+      "loadFailed": "Жаппай аналитиканы жүктеу мүмкін болмады.",
+      "selectBothDates": "«Басталу» және «Аяқталу» күндерін таңдаңыз.",
+      "fromBeforeTo": "«Басталу» күні «Аяқталу» күнінен ерте болуы тиіс.",
+      "futureRange": "Бүгіннен немесе одан бұрын басталатын кезеңді таңдаңыз."
+    },
+    "periodPresets": {
+      "1": "Соңғы 24 сағат",
+      "7": "Соңғы 7 күн",
+      "14": "Соңғы 14 күн",
+      "30": "Соңғы 30 күн",
+      "90": "Соңғы 90 күн",
+      "custom": "Күндерді таңдау"
+    },
+    "period": {
+      "lastDays": "{count, plural, one {Соңғы # күн} other {Соңғы # күн}}",
+      "pickEnd": "{from} · аяқталу күнін таңдаңыз",
+      "pickDateRange": "Күндер ауқымын таңдаңыз",
+      "aria": "Кезең: {label}",
+      "title": "Күндер ауқымы",
+      "description": "Күндерді таңдап, қолданыңыз.",
+      "cancel": "Бас тарту",
+      "apply": "Қолдану"
+    },
+    "accessibility": {
+      "periodPreset": "Кезеңнің дайын аралықтары",
+      "addMessagePhrase": "Хабарлама тіркесін қосу",
+      "removeMessagePhrase": "{phrase} хабарлама тіркесін жою"
+    },
+    "units": {
+      "lessThanMinute": "1 минуттан аз",
+      "minutes": "{count, plural, one {# мин} other {# мин}}",
+      "hours": "{count, plural, one {# сағ} other {# сағ}}",
+      "percentagePoints": "{value} п.т.",
+      "notAvailable": "қ/ж"
+    },
+    "categories": {
+      "no_reply": "Жауап жоқ",
+      "flow": "Flow жауабы",
+      "deleted": "Өшірілген",
+      "audio": "Аудио",
+      "mockup": "Макет",
+      "price": "Бағасы",
+      "other": "Басқа"
+    },
+    "engagementOptions": {
+      "all": "Кез келген белсенділік",
+      "high": "Жоғары ұпай (70+)",
+      "medium": "Орташа ұпай (40-69)",
+      "low": "Төмен ұпай (1-39)",
+      "unscored": "Ұпайсыз"
+    },
+    "multiSelect": {
+      "selected": "{count} таңдалды",
+      "searchPlaceholder": "{label} бойынша іздеу",
+      "clearSelection": "Таңдауды тазалау",
+      "noMatches": "Сәйкестік табылмады"
+    },
+    "statusBadge": {
+      "replied": "Жауап берілді",
+      "noReply": "Жауап жоқ"
+    },
+    "filters": {
+      "title": "Сүзгілер",
+      "description": "Таңдау сүзгілері автоматты түрде жаңартылады. Мәтіндік сүзгілер Enter немесе «Қолдану» түймесін басқанда қолданылады.",
+      "activeCount": "{count} белсенді",
+      "noActive": "Белсенді сүзгілер жоқ",
+      "messageTextLabel": "Хабарлама мәтіні",
+      "messageTextPlaceholder": "Кілт сөз немесе нақты мәтін",
+      "messageTextMatchModeAria": "Хабарлама мәтінінің сәйкестік режимі",
+      "contains": "Құрамында бар",
+      "doesNot": "Құрамында жоқ",
+      "conversationsLabel": "Диалогтар",
+      "conversationScopes": {
+        "campaign_sends": "Науқан жіберілімдері",
+        "all": "Барлық диалогтар",
+        "fresh": "Жаңа диалогтар",
+        "campaign_or_fresh": "Науқан + жаңа"
+      },
+      "periodLabel": "Кезең",
+      "templatesLabel": "Шаблондар",
+      "templatesPlaceholder": "Барлық шаблондар",
+      "campaignsLabel": "Науқандар",
+      "campaignsPlaceholder": "Барлық науқандар",
+      "excludeTemplatesLabel": "Үлгілерді алып тастау",
+      "excludeTemplatesAria": "Үлгілер бойынша шығыс хабарларды алып тастау",
+      "excludeTemplatesOn": "Алынып тасталған",
+      "excludeTemplatesOff": "Қосылған",
+      "excludeTemplatesDisabledTooltip": "«Үлгілерді алып тастау» қосулы болғанда өшірілген. Үлгілер немесе науқандар бойынша сүзгілеу үшін оны өшіріңіз.",
+      "repliesLabel": "Жауаптар",
+      "replyStatuses": {
+        "all": "Барлығы",
+        "replied": "Жауап берілді",
+        "not_replied": "Жауап берілмеді"
+      },
+      "engagementLabel": "Белсенділік",
+      "replyWindowLabel": "Жауап терезесі",
+      "more": "Тағы",
+      "hideMore": "Жасыру",
+      "apply": "Қолдану",
+      "reset": "Қалпына келтіру",
+      "replyWindowOptions": {
+        "24": "24 сағат",
+        "72": "72 сағат",
+        "168": "7 күн",
+        "336": "14 күн",
+        "720": "30 күн"
+      },
+      "chips": {
+        "message": "Хабарлама: {value}",
+        "excludingMessageText": "Хабарлама мәтінін қоспағанда",
+        "conversations": "Диалогтар: {value}",
+        "period": "Кезең: {from} – {to}",
+        "periodFrom": "бастап",
+        "periodTo": "дейін",
+        "engagement": "Белсенділік: {value}",
+        "templates": "Шаблондар: {count}",
+        "campaigns": "Науқандар: {value}"
+      },
+      "addPhrase": "Қосу",
+      "removePhrase": "Жою"
+    },
+    "summary": {
+      "acceptedSends": "Қабылданған жіберілімдер",
+      "conversations": "Диалогтар",
+      "conversationsDetail": "{count} диалог",
+      "readRate": "Оқылу",
+      "readCountDetail": "{count} оқылым",
+      "failed": "Сәтсіз",
+      "failedRateDetail": "{value} сәтсіз",
+      "replied": "Жауап берілді",
+      "replyRateDetail": "{value} жауап беру көрсеткіші",
+      "notReplied": "Жауап берілмеді",
+      "inboundMessagesDetail": "{count} кіріс хабарлама",
+      "averageFirstReply": "Орташа алғашқы жауап уақыты"
+    },
+    "funnel": {
+      "title": "Жіберу воронкасы",
+      "description": "Қабылданды → сәтсіз / жеткізілді → оқылды → жауап берілді → бағаланған құн (ағымдағы сүзгілер).",
+      "accepted": "Қабылданды",
+      "failed": "Сәтсіз",
+      "delivered": "Жеткізілді",
+      "read": "Оқылды",
+      "replied": "Жауап берілді",
+      "cost": "Құны",
+      "conversionOfPrevious": "Алдыңғыдан {value}",
+      "costPerReplyDetail": "{value} / жауап",
+      "costPerReplyUnavailable": "Әзірге жауап жоқ",
+      "costNotPriced": "Есептелмеген",
+      "costUnpricedMessages": "{count, plural, one {Жеткізілген # хабарламаның расталған бағасы жоқ} other {Жеткізілген # хабарламаның расталған бағасы жоқ}}",
+      "costNotPricedDetail": "Жеткізілген хабарламалардың расталған бағасы жоқ",
+      "costNotPricedNote": "Тарату құнын есептеу үшін расталған хабарлама тарифтері қажет. Бағаның болмауы нөлдік құнды білдірмейді. WhatsApp жалпы шығындары «Аккаунт шығындары» бөлімінде қолжетімді.",
+      "allFailedBannerTitle": "Қабылданған жіберілімдердің бәрі жеткізуде сәтсіз болды",
+      "allFailedBannerDescription": "Meta қабылдаған {accepted} жіберілімнің {failed} жіберілімі жетпеді. Бұл жеткізу қателері, қызығушылықтың жоқтығы емес. Төмендегі қате кодтарын қараңыз.",
+      "highFailedBannerTitle": "Жеткізу қателерінің жоғары үлесі",
+      "highFailedBannerDescription": "{accepted} жіберілімнің {failed}-і сәтсіз ({rate}). Оқылу мен жауаптар төмен, себебі хабарлама телефонға жетпеді."
+    },
+    "outcomes": {
+      "failed": "Сәтсіз",
+      "not_delivered": "Жеткізілмеді",
+      "delivered_unread": "Жеткізілді, оқылғаны расталмаған",
+      "read_no_reply": "Оқылды, жауап жоқ",
+      "replied": "Жауап берілді"
+    },
+    "failures": {
+      "unknown": "Белгісіз қате",
+      "codeLabel": "Қате {code}"
+    },
+    "compare": {
+      "label": "Салыстыру",
+      "previous": "Алдыңғы кезеңмен",
+      "off": "Өшірулі",
+      "vsPrior": "{value} алдыңғыға"
+    },
+    "empty": {
+      "title": "Диалогтар табылмады",
+      "description": "Сәйкес келетін WhatsApp диалогтары хабарламалар жазылғаннан кейін осында пайда болады.",
+      "noSendsTitle": "Бұл кезеңде қабылданған жіберілім жоқ",
+      "noSendsDescription": "Масс-жіберу аналитикасы Meta қабылдаған WhatsApp жіберілімдерін ғана көрсетеді. Кезеңді кеңейтіңіз немесе кампания шынымен жіберілген күнді таңдаңыз.",
+      "filteredTitle": "Бұл сүзгілерге жіберілім жоқ",
+      "filteredDescription": "Кампания немесе шаблон сүзгісін тазалаңыз, не кезеңді кеңейтіңіз. Бос нәтиже әдетте нақты таңдауға қабылданған жіберілім жоқ дегенді білдіреді.",
+      "futureTitle": "Бұл күн әлі болашақта",
+      "futureDescription": "Кампания аналитикасы тек болған жіберілімдерді қамтиды. Бүгінді немесе ертерек күнді таңдаңыз.",
+      "recentCampaignHints": "Осы воркспейстегі соңғы кампаниялар:"
+    },
+    "overviewDisabled": {
+      "title": "Диалогтар шолуы уақытша тоқтатылды",
+      "description": "Кампания жіберілімдерінің аналитикасы қолжетімді. Кеңейтілген диалогтар шолуы жауап атрибуциясы масштабталатын есеп беру жолына көшірілгенше уақытша өшірілді."
+    },
+    "charts": {
+      "dailyVolumeTitle": "Күнделікті көлем",
+      "dailyVolumeDescription": "WhatsApp арқылы қабылданған жіберілімдер күн бойынша (жауаптар көмекші құралда көрсетіледі).",
+      "dailyValueLabel": "Қабылданды",
+      "dailyRepliesLabel": "{count} жауап",
+      "replyCategoriesTitle": "Жауап санаттары",
+      "replyCategoriesDescription": "Жаппай шаблоннан кейінгі алғашқы кіріс хабарламаны классификациялау.",
+      "replyCategoriesValueLabel": "Диалогтар",
+      "outcomesTitle": "Нәтижелер",
+      "outcomesDescription": "Неге жіберілім жауапқа айналмады.",
+      "outcomesValueLabel": "Жіберілімдер",
+      "failuresTitle": "Жеткізу сәтсіздіктері",
+      "failuresDescription": "WhatsApp қате коды бойынша сәтсіз жіберілімдер.",
+      "failuresValueLabel": "Сәтсіздіктер"
+    },
+    "templatesTable": {
+      "title": "Шаблондар",
+      "description": "WhatsApp шаблонының атауы бойынша топтастырылған тиімділік.",
+      "aria": "Шаблон тиімділігі",
+      "columns": {
+        "template": "Шаблон",
+        "accepted": "Қабылданды",
+        "replied": "Жауап берілді",
+        "replyRate": "Жауап жиілігі",
+        "avgFirstReply": "Орташа алғашқы жауап",
+        "window": "Терезе"
+      }
+    },
+    "detectedRuns": {
+      "title": "Анықталған іске қосулар",
+      "description": "Таңдалған шектен жоғары сағаттық жіберу кластерлері.",
+      "aria": "Анықталған жаппай іске қосулар",
+      "columns": {
+        "hour": "Сағат",
+        "template": "Шаблон",
+        "accepted": "Қабылданды",
+        "replyRate": "Жауап жиілігі"
+      }
+    },
+    "topConversations": {
+      "title": "Ең белсенді жауаптар",
+      "description": "Кіріс белсенділігі ең жоғары диалогтар.",
+      "aria": "Ең белсенді жауап диалогтары",
+      "columns": {
+        "recipient": "Алушы",
+        "template": "Шаблон",
+        "replies": "Жауаптар",
+        "firstReply": "Алғашқы жауап"
+      },
+      "attachment": "Тіркеме"
+    },
+    "recentTable": {
+      "titles": {
+        "conversationPool": "Диалогтар",
+        "acceptedSends": "Соңғы қабылданған жіберілімдер"
+      },
+      "descriptions": {
+        "conversationPool": "Ағымдағы пул сүзгілеріне сәйкес келетін WhatsApp диалогтары.",
+        "acceptedSends": "Соңғы қабылданған жаппай шаблон жіберілімдері және олардың диалог күйі."
+      },
+      "refresh": "Жаңарту",
+      "aria": {
+        "conversationPool": "Сүзілген WhatsApp диалогтары",
+        "acceptedSends": "Соңғы қабылданған WhatsApp жіберілімдері"
+      },
+      "columns": {
+        "activity": "Белсенділік",
+        "sent": "Жіберілді",
+        "recipient": "Алушы",
+        "template": "Шаблон",
+        "status": "Күйі",
+        "engagement": "Белсенділік",
+        "replies": "Жауаптар",
+        "firstReply": "Алғашқы жауап",
+        "matchedMessage": "Сәйкес келген хабарлама"
+      },
+      "messagePrefix": "{direction}: {text}",
+      "messageDirectionFallback": "хабарлама",
+      "noMatch": "Сәйкестік жоқ"
+    },
+    "header": {
+      "loadingWindow": "Терезе жүктелуде",
+      "badge": "WhatsApp жаппай",
+      "title": "Жаппай аналитика",
+      "description": "Диалогтардан қабылданған шаблон жіберілімдері, жауаптар және кілт сөз сәйкестіктері.",
+      "updated": "Жаңартылды: {value}",
+      "refreshing": "Жаңартылуда",
+      "refresh": "Жаңарту",
+      "saveFilter": "Фильтрді сақтау",
+      "exportExcel": "Excel-ге экспорт",
+      "exportFailed": "Excel экспортталмады."
+    },
+    "export": {
+      "sheets": {
+        "summary": "Қорытынды",
+        "templates": "Шаблондар",
+        "daily": "Күндер",
+        "outcomes": "Нәтижелер",
+        "failures": "Жеткізу қателері",
+        "runs": "Анықталған іске қосулар",
+        "topConversations": "Ең белсенді жауаптар",
+        "records": "Қабылданған жіберілімдер"
+      },
+      "columns": {
+        "metric": "Метрика",
+        "current": "Қазіргі",
+        "previous": "Алдыңғы",
+        "conversationId": "Диалог ID"
+      }
+    },
+    "sendToAudience": "Осы аудиторияға жіберу",
+    "scopeFacets": {
+      "hiddenTitle": "Жіберу графиктері «Науқан жіберілімдері» аясын қажет етеді",
+      "hiddenDescription": "Шаблон және күнделікті жіберу графиктері тек науқан жіберілімдеріне қолданылады. Оларды көру үшін диалог аясын «Науқан жіберілімдері» деп ауыстырыңыз."
+    },
+    "saveFilter": {
+      "title": "Фильтрді сақтау",
+      "description": "Ағымдағы аналитика фильтрлерін жаппай науқан аудиториясы ретінде сақтаңыз.",
+      "nameLabel": "Фильтр атауы",
+      "namePlaceholder": "мысалы, Ұйқыдағы лидтер",
+      "cancel": "Болдырмау",
+      "save": "Сақтау",
+      "saving": "Сақталуда...",
+      "success": "Фильтр сақталды",
+      "error": "Фильтрді сақтау мүмкін болмады"
+    },
+    "details": {
+      "toggle": "Графиктер мен статистика"
+    },
+    "operations": {
+      "deliveryFilter": "Жеткізу күйі",
+      "errorCode": "Жеткізу қатесінің коды",
+      "anyError": "Кез келген қате",
+      "unavailable": "Қолжетімсіз",
+      "missingProof": "Жеткізу дәлелі қолжетімсіз",
+      "attemptsGrain": "Провайдер ID бар әрекеттер; қабылдау жеткізуді білдірмейді",
+      "ofAccepted": "Қабылданған әрекеттердің {value}",
+      "deliveryTitle": "Жеткізу дәлелдері",
+      "deliveryDescription": "Сүзілген қабылданған жіберілімдер. Оқылғандар жеткізілгендерге кіреді; жауаптар бөлек саналады.",
+      "diagnosticAudience": "Жеткізу сүзгілерін жіберу аудиториясы ретінде қолдануға болмайды. Қайта жіберуді қолданыстағы саясатпен науқан тарихынан орындаңыз.",
+      "openHistory": "Науқан тарихын ашу",
+      "exportProgress": "Толық экспорт жиналуда: {count} жол",
+      "cancelExport": "Экспортты тоқтату",
+      "incomplete": "Толық емес деректер",
+      "incompleteDescription": "Кейбір деректер қолжетімсіз немесе оқу шегінен тыс. Қорытындылар толық болмауы мүмкін; толық экспорт қолжетімсіз.",
+      "healthTitle": "Науқан және жалғастыру күйі",
+      "oneFamily": "Бастапқы жіберілім мен жалғастыруларды көру үшін бір науқанды таңдаңыз.",
+      "selectCampaign": "Науқанды таңдаңыз: күйге қабылданған жіберілімі жоқ алушылар да кіреді.",
+      "familyScope": "Сақталған бастапқы және қайталама әрекеттер. Аналитика мерзімі, үлгілер және жауап сүзгілерінен тәуелсіз.",
+      "updating": "Жаңартылуда…",
+      "refreshHealth": "Деректерді жаңарту",
+      "healthFailed": "Науқан күйін жүктеу мүмкін болмады. Жаңартуды қайталаңыз.",
+      "observedAt": "Деректер уақыты: {value}",
+      "observedLowerBound": "Тек қолжетімді сақталған деректер. Жетіспейтін жаңа әрекеттер келгенде күйлер өзгеруі мүмкін.",
+      "distinctRecipients": "Бірегей алушылар",
+      "providerAttempts": "Провайдер әрекеттері",
+      "nestedEvidence": "Оқылу жеткізуді растайды. Сандар кірістірілген дәлелдер, тізбекті кезеңдер емес.",
+      "atLeast": "Бақыланғаны: {count}",
+      "failureGroups": "Белгілі қателер",
+      "failureScope": "Науқан қателеріне қабылданбаған жіберілімдер кіреді. Сүзгі қабылданған әрекеттерді тексереді; қабылдауға дейінгі қателер науқан тарихында.",
+      "unknownError": "Кодсыз қате",
+      "noErrorDetail": "Қате сипаттамасы сақталмаған",
+      "filterFailures": "Қабылданған жіберілім қателерін тексеру",
+      "historyTitle": "Алушыға жеткізу дәлелдері",
+      "historyDescription": "Соңғы сақталған нәтиже мен бұрынғы әрекеттер бөлек көрсетілген. Бұрынғы жеткізу қайталауды кепілдемейді; тарихтың жоқтығы жіберілім болмағанын дәлелдемейді.",
+      "historyFailed": "Сақталған тарихты жүктеу мүмкін болмады.",
+      "latestOutcome": "Соңғы сақталған нәтиже",
+      "noHistory": "Сәйкес сақталған әрекеттер табылмады. Бұл бұрын жіберілмегенін дәлелдемейді.",
+      "close": "Жабу",
+      "deliveredAt": "Жеткізілген уақыт",
+      "readAt": "Оқылған уақыт",
+      "providerRecipient": "Провайдердегі алушы",
+      "identityConflict": "Алушы сәйкестігі даулы",
+      "comparisonLoading": "Алдыңғы кезең жүктелуде…",
+      "comparisonFailed": "Алдыңғы кезеңмен салыстыру қолжетімсіз. Ағымдағы нәтижелер қолжетімді.",
+      "replyStatus": "Жауап күйі",
+      "noFirstReply": "Жауап тіркелмеген",
+      "historyAction": "Бұрынғы дәлелдерді көру",
+      "noResults": "Бұл сүзгілерге сәйкес алушылар жоқ.",
+      "statuses": {
+        "all": "Барлық жеткізу күйлері",
+        "accepted": "Квитанция күтілуде",
+        "delivered": "Жеткізілді (оқылғандармен)",
+        "read": "Оқылды",
+        "failed": "Қате",
+        "unknown": "Нәтиже белгісіз"
+      },
+      "metrics": {
+        "accepted": "Қабылданды",
+        "delivered": "Жеткізілді",
+        "read": "Оқылды",
+        "failed": "Қате",
+        "awaiting": "Дәлел күтілуде"
+      },
+      "recipientMetrics": {
+        "planned": "Жоспарланған",
+        "attempted": "Әрекет жасалды",
+        "accepted": "Қабылданды",
+        "delivered": "Жеткізілді",
+        "read": "Оқылды",
+        "failed": "Қате",
+        "awaitingReceipts": "Квитанция күтілуде",
+        "uncertain": "Нәтиже анықталмаған",
+        "untouched": "Әрекет жасалмады"
+      },
+      "historyStatuses": {
+        "untouched": "Әрекет жасалмады",
+        "uncertain": "Нәтиже анықталмаған",
+        "accepted": "Жеткізу дәлелінсіз қабылданды",
+        "delivered": "Жеткізілді",
+        "read": "Оқылды",
+        "failed": "Қате"
+      },
+      "evidence": {
+        "delivered": "Бұрын жеткізілгені расталған",
+        "read": "Бұрын оқылғаны расталған",
+        "acceptedWithoutDeliveryProof": "Жеткізу дәлелінсіз қабылданды",
+        "priorFailure": "Бұрынғы белгілі қате",
+        "disputedIdentity": "Алушы сәйкестігі даулы"
+      },
+      "exportUnavailable": "Толық экспорт қолжетімсіз: сақталған бақылау контексі жоқ. Есепті жаңартып, қайталап көріңіз.",
+      "conflictingAttempts": "{count} әрекетте алушының сәйкестігі даулы. Провайдердің жеткізу дәлелі көрсетілген алушыға жеткізілгенін растамайды; алушы тарихын тексеріңіз.",
+      "batchCount": "{count} жіберілім",
+      "batchDetails": "Науқан жіберілімдерінің мәліметтері",
+      "healthMetric": "Көрсеткіш",
+      "batchLifecycle": "Жіберілімдер және күйі",
+      "dispatchProgress": "{total} ішінен {count} өңделді",
+      "scheduledFor": "Жоспарланған уақыт: {value}",
+      "dispatchExpires": "Жіберу мерзімі: {value}",
+      "dispatchStopped": "Жіберілім тоқтатылды. Мәліметтерді науқан тарихынан қараңыз.",
+      "dispatchStopReasons": {
+        "paused_by_operator": "Оператор уақытша тоқтатты",
+        "workflow_cancelled": "Оператор бас тартты",
+        "provider_circuit_open": "Провайдердің қайталанған қателерінен кейін тоқтатылды. Қайталаудан бұрын растау қажет болуы мүмкін.",
+        "empty_audience": "Жарамды алушылар қалмады",
+        "workflow_start_failed": "Жіберілімді бастау мүмкін болмады",
+        "dispatch_expired_before_start": "Жіберу мерзімі басталғанға дейін аяқталды"
+      },
+      "historyTargetUnavailable": "Таңдалған науқан бұл жұмыс кеңістігінде немесе сақталған тарихта қолжетімсіз.",
+      "returnToAllCampaigns": "Барлық науқандарға оралу"
+    },
+    "recipients": {
+      "range": "{total} жазбаның {from}–{to} аралығы көрсетілген",
+      "rangeUnknown": "{from}–{to} аралығы көрсетілген",
+      "page": "{number}-бет",
+      "details": "Толығырақ",
+      "conversation": "Диалог",
+      "actions": "Әрекеттер",
+      "replyCount": "Жауаптар: {count}",
+      "searchLabel": "Алушыны телефон арқылы табу",
+      "searchPlaceholder": "Телефон нөмірі немесе кемінде 3 цифр",
+      "searchApply": "Іздеу",
+      "searchClear": "Тазалау",
+      "searchHelp": "Телефон арқылы тек осы беттен емес, бүкіл таңдалған аудиториядан іздейді. Аты бойынша іздеу қолдау көрсетілмейді.",
+      "searchInvalid": "Телефонның 3–15 цифрын енгізіңіз. Бос орын, +, жақша, нүкте, дефис және wa_ рұқсат етіледі; аты бойынша іздеу қолдау көрсетілмейді.",
+      "detailsTitle": "Жіберу әрекетінің мәліметтері",
+      "detailsDescription": "Осы жазбаның деректері. Жеткізу мен жауап бөлек көрсетіледі; растау тарихын төменнен ашуға болады.",
+      "conflictDescription": "Провайдердің алушысы көрсетілген алушыдан өзгеше. Провайдердің жеткізу растауы осы алушыға жеткізілгенін дәлелдемейді; тарихын тексеріңіз.",
+      "providerMessageId": "Провайдер хабарламасының ID",
+      "firstReplyAt": "Алғашқы жауап уақыты",
+      "replyDelay": "Алғашқы жауаптың кідірісі",
+      "matchedCount": "Сәйкес хабарламалар саны",
+      "matchedAt": "Алғашқы сәйкес хабарлама уақыты",
+      "matchedDirection": "Алғашқы сәйкес хабарлама бағыты",
+      "conversationStatus": "Диалог күйі",
+      "managerRead": "Менеджер оқыған",
+      "conversationSource": "Диалог көзі",
+      "yes": "Иә",
+      "no": "Жоқ"
+    },
+    "reports": {
+      "title": "Тарату есебі",
+      "allCampaigns": "Барлық таратулар",
+      "recipients": "Алушылар",
+      "failures": "Қате себептері",
+      "insights": "Талдау",
+      "accountSpend": "Аккаунт шығындары",
+      "campaignCost": "Тарату құнының бағасы",
+      "replyAttribution": "Таңдалған жауап мерзімі ішінде",
+      "attributionWindow": "Жауаптар жіберілгеннен кейін {hours} сағат ішінде есептеледі",
+      "failureScope": "Қазіргі сүзгілерге сәйкес провайдер қабылдаған хабарламалардың қателері. Қабылдауға дейінгі қателер мен қайта жіберу шарттары тарату тарихында қолжетімді.",
+      "inspectRecipients": "Алушыларды қарау",
+      "noFailures": "Қазіргі сүзгілерге сәйкес тіркелген жеткізу қателері жоқ.",
+      "clearDelivery": "Жеткізу сүзгісін тазалау",
+      "clearSearch": "Телефон іздеуін тазалау",
+      "errorDescriptions": {
+        "131026": "WhatsApp хабарламаны жеткізе алмады. Әрекет мәліметтерін қараңыз: кодтың өзі нақты себепті анықтамайды.",
+        "131047": "Осы жіберу үшін қайта байланысу мерзімі аяқталған.",
+        "131049": "Meta осы алушыға маркетингтік хабарламаны жеткізуді шектеді.",
+        "131000": "Провайдер уақытша немесе белгісіз қате туралы хабарлады."
+      }
+    }
+  },
+  "BulkCampaignsPage": {
+    "title": "Жаппай науқандар",
+    "description": "Баптаңыз, хабарлама жазыңыз, алушылар қосыңыз, содан кейін жіберіңіз.",
+    "tabs": {
+      "campaigns": "Құру",
+      "analytics": "Аналитика"
+    },
+    "filters": {
+      "title": "Науқан аудиториясы",
+      "description": "Осы науқан үшін алушылар көзін таңдаңыз.",
+      "sourceLabel": "Көз",
+      "manual": "Алушыларды қолмен енгізу",
+      "fromAnalytics": "Аналитикадағы ағымдағы аудитория",
+      "limitedBadge": "Шектеулі",
+      "limitedDescription": "Кейбір аналитика шарттарын хабарлама жіберуге болатын алушыларға түрлендіру мүмкін емес.",
+      "pendingHint": "Таңдау әлі қолданылған жоқ.",
+      "appliedHint": "Бұл алушылар көзі қазір белсенді.",
+      "apply": "Қолдану",
+      "manage": "Сақталған аудиторияларды басқару",
+      "manageTitle": "Сақталған аналитика аудиториялары",
+      "activeLabel": "Белсенді аудитория",
+      "activeManual": "Қолмен енгізілген алушылар",
+      "activeAnalytics": "Аналитикадағы ағымдағы аудитория",
+      "activeSaved": "Сақталған аудитория: {name}",
+      "clear": "Тазарту",
+      "deleted": "Сақталған фильтр жойылды",
+      "deleteFailed": "Сақталған фильтрді жою мүмкін болмады",
+      "deleteAria": "{name} сақталған фильтрін жою"
+    }
+  },
+  "MultiChannelCampaignBuilder": {
+    "sendSummary": {
+      "title": "Таратылымды жіберу керек пе?",
+      "description": "Жібермес бұрын хабарламаны кім алатынын тексеріңіз.",
+      "message": "Хабарлама",
+      "textMessage": "Мәтіндік хабарлама",
+      "emailMessage": "Хат",
+      "sender": "Жіберуші",
+      "recipients": "Хабарламаны алады",
+      "recipientCount": "{count} алушы",
+      "skipped": "Алмайды",
+      "overflow": "Күндік лимит — {dailyLimit}. {firstWaveCount} қазір жіберіледі, қалған {queuedCount} {lastWaveAt} дейін 24 сағаттық кезекте күтеді.",
+      "confirm": "Таратылымды жіберу",
+      "cancel": "Артқа"
+    },
+    "templatesAfterConnect": "Мақұлданған үлгілер WhatsApp қосылғаннан кейін осында шығады.",
+    "validationMessages": {
+      "campaignNameRequired": "Таратылым атауын енгізіңіз",
+      "messageLimit": "Хабарлама {limit} таңбаға дейін болуы мүмкін",
+      "templateRequired": "WhatsApp үлгісін таңдаңыз",
+      "messageTextRequired": "Хабарлама мәтінін енгізіңіз",
+      "emailSubjectRequired": "Хат тақырыбын енгізіңіз",
+      "emailBodyRequired": "Хат мәтінін енгізіңіз"
+    },
+    "pendingTemplates": {
+      "title": "Meta тексеруінде",
+      "hint": "Бұл үлгілерді Meta мақұлдағаннан кейін жіберуге болады."
+    },
+    "refreshTemplates": "Қайта тексеру",
+    "createTemplate": "Үлгі жасау",
+    "connectWhatsApp": {
+      "title": "Таратылымдарды жіберу үшін WhatsApp-ты қосыңыз",
+      "description": "Таратылымдар WhatsApp Business нөміріңізден жіберіледі. Қосылу Meta терезесінде бірнеше минут алады.",
+      "action": "WhatsApp-ты қосу"
+    },
+    "campaignDetails": "Науқан мәліметтері",
+    "stepSetup": "Баптау",
+    "stepMessage": "Хабарлама",
+    "stepRecipients": "Алушылар",
+    "stepSend": "Жіберу",
+    "sendRecapRecipients": "{count} алушы",
+    "channel": "Арна",
+    "whatsappNumber": "WhatsApp нөмірі",
+    "emailSender": "Email жіберуші",
+    "selectSource": "Дереккөзді таңдаңыз",
+    "whatsappTemplates": "WhatsApp",
+    "telegramMessages": "Telegram",
+    "emailCampaigns": "Email",
+    "campaignName": "Атауы",
+    "campaignNamePlaceholder": "мысалы, Black Friday жеңілдіктері, Өнім таныстырылымы",
+    "whatsappTemplate": "WhatsApp шаблоны",
+    "whatsappMessageType": "WhatsApp хабарлама түрі",
+    "whatsappTemplateMode": "Шаблон",
+    "whatsappServiceText": "Сервистік мәтін (24 сағ)",
+    "whatsappServiceMessage": "WhatsApp сервистік хабарламасы",
+    "whatsappServiceWindowHelp": "Соңғы 24 сағатта осы нөмірге жазғандарға ғана жіберіледі.",
+    "whatsappServiceTextPlaceholder": "Сервистік жауапты жазыңыз...",
+    "serviceCharactersLimit": "{count}/4096 таңба",
+    "template": "Шаблон",
+    "chooseTemplate": "Шаблонды таңдаңыз",
+    "templatePreview": "Шаблонды алдын ала қарау:",
+    "noTemplates": "Мақұлданған үлгілер әзірге жоқ. Үлгі жасаңыз, Meta оны әдетте бірнеше минутта тексереді.",
+    "templatesUnavailable": "Meta қазір мақұлданған шаблондарды жүктей алмайды. Кейінірек қайталап көріңіз.",
+    "savedTemplatesWarning": "Сақталған шаблондар көрсетілген. Мақұлдау күйі өзгерген болуы мүмкін; Meta жіберу кезінде шаблонды тексереді.",
+    "airiDraft": {
+      "title": "Airi bulk-науқанының нобайы",
+      "audience": "Аудитория:",
+      "approvedTemplateMatched": "Мақұлданған шаблон таңдалды: {template}",
+      "templateNeedsApproval": "{template} шаблонын бұл науқанды жібермес бұрын Meta мақұлдауы керек.",
+      "selectApprovedTemplate": "Жібермес бұрын мақұлданған WhatsApp шаблонын таңдаңыз.",
+      "templateUnverified": "{template} шаблоны сақталған тізімде жоқ, сондықтан оны қазір тексеру мүмкін емес. Төменнен шаблон таңдаңыз."
+    },
+    "telegramMessage": "Telegram хабарламасы",
+    "emailContent": "Email мазмұны",
+    "emailUsesDefaultSender": "Email науқандары Параметрлер > Интеграциялар > Email бөлімінде реттелген әдепкі жіберушіні қолданады.",
+    "messageText": "Хабарлама мәтіні",
+    "messageTextPlaceholder": "Хабарламаңызды енгізіңіз... Жекешелендіру үшін {exampleName}, {exampleCompany} т.б. қолданыңыз",
+    "charactersLimit": "{count}/4096 таңба · Жекешелендіру үшін {exampleVariable} қолданыңыз",
+    "campaignRecipients": "Кампания алушылары",
+    "campaignSummary": "Науқан қысқаша мазмұны",
+    "channelLabel": "Арна:",
+    "whatsappChannel": "WhatsApp",
+    "telegramChannel": "Telegram",
+    "campaignNameLabel": "Науқан атауы:",
+    "notSet": "Орнатылмаған",
+    "templateLabel": "Шаблон:",
+    "messageLabel": "Хабарлама:",
+    "notSelected": "Таңдалмаған",
+    "ready": "Дайын",
+    "notWritten": "Жазылмаған",
+    "recipients": "Алушылар:",
+    "noRecipientsSelected": "Алушылар таңдалмаған",
+    "sendingCampaign": "Науқан жіберілуде...",
+    "sendAgain": "Қайта жіберу",
+    "recentAudienceOverlap": "{candidate} алушының {intersection}-іне ({percent}%) жақында хабарласқансыз. Қайта жіберуді растаңыз.",
+    "dispatchLifecycleStatus": "Күйі: {status}",
+    "dispatchAttempted": "{attempted} / {total} жіберілді",
+    "dispatchAccepted": "{count} қабылданды",
+    "dispatchDelivered": "{count} жеткізілді",
+    "dispatchRead": "{count} оқылды",
+    "dispatchFailed": "{count} сәтсіз",
+    "cancelDispatch": "Кампаниядан бас тарту",
+    "cancellingDispatch": "Бас тартылуда...",
+    "pauseDispatch": "Тоқтата тұру",
+    "pausingDispatch": "Тоқтатыла тұруда...",
+    "resumeDispatch": "Жалғастыру",
+    "resumingDispatch": "Жалғасуда...",
+    "pausedDispatch": "Тоқтатыла тұрды",
+    "dispatchStatusUnavailable": "Нақты уақыттағы күй қолжетімсіз: {message}",
+    "dispatchCancelFailed": "Бас тарту ескертуі: {message}",
+    "dispatchPauseFailed": "Тоқтата тұру ескертуі: {message}",
+    "sendToRecipients": "{count} алушыға жіберу",
+    "overflowQueue": {
+      "title": "Жіберу бірнеше күнге кезекке қойылады",
+      "description": "{recipientCount} алушы бекітілді. Күндік шек {dailyLimit}. Қазір {firstWaveCount} жіберіледі. Қалған {queuedCount} әр 24 сағат сайын {lastWaveAt} дейін жіберіледі.",
+      "confirm": "Кезекке қойып жіберу",
+      "cancel": "Бас тарту"
+    },
+    "sendingBatches": "Жіберілуде…",
+    "whatsappAccountHealthWarningTitle": "Meta ескертуі",
+    "whatsappAccountHealthWarningFallback": "Meta аккаунт күйі: {state}.",
+    "whatsappAccountHealthWarnOnly": "WhatsApp баптауларындағы қосылым мәліметтерін тексеріңіз.",
+    "marketingOptInWarningToast": "{count} WhatsApp marketing алушысының opt-in келісімі тіркелмеген. Жіберуге рұқсат, бірақ саясат тәуекелі бар.",
+    "marketingOptInWarningAlert": "{count, number} алушыда келісім жазбасы жоқ. Олардың хабарлама алуға келіскенін тексеріңіз.",
+    "marketingTemplateConsentNotice": "Маркетингтік хабарламалар үшін алушының келісімі қажет. Келісім тіркелмесе, жіберу алдында ескерту көрсетіледі.",
+    "marketingOptInWarningInline": "{total, number} алушының {count, number}-ында келісім жазбасы жоқ. Олардың хабарлама алуға келіскенін тексеріңіз.",
+    "telegramAudience": {
+      "manual": "Қолмен тізім",
+      "known": "Белгілі чаттар",
+      "bot": "Бот",
+      "selectBot": "Ботты таңдаңыз",
+      "loading": "Жүктелуде...",
+      "subscriberCount": "{count, number} белгілі чат",
+      "rateHint": "Тегін қарқын шамамен 30 хабар/с. Қосылған болса, ақылы Telegram таратуы 1 000/с дейін жетеді.",
+      "serverResolves": "Сервер жіберу кезінде осы ботқа жарамды жеке чаттарды анықтайды."
+    },
+    "checkingEligibility": "Жарамдылық тексерілуде",
+    "riskBadge": "тәуекел",
+    "noMatchingRecipients": "Сәйкес алушылар жоқ",
+    "validation": {
+      "invalidRecipientEmails": "Бір немесе бірнеше алушының электрондық поштасы жарамсыз",
+      "uploadRecipients": "Кемінде бір алушы қосыңыз"
+    },
+    "toast": {
+      "campaignSent": "Науқан жіберілді. Жіберілген хабарламалар: {successful}/{total}.",
+      "campaignQueued": "Науқан кезекке қойылды! {total} хабарлама фонда жіберіледі.",
+      "optInExcluded": "Келісім бермеген {count} алушы алынып тасталды.",
+      "priorFailedExcluded": "Соңғы жаппай жеткізуі нақты алушыға қатысты қатемен аяқталған {count} алушы алынып тасталды.",
+      "serviceWindowExcluded": "24 сағаттық сервистік терезесі ашық емес {count} алушы алынып тасталды.",
+      "recipientFileImporting": "Алушылар файлы әлі жүктелуде. Аяқталғанын күтіңіз.",
+      "noRegisteredUsers": "Қолданбаның тіркелген пайдаланушылары табылмады.",
+      "noTelegramChats": "Бұл боттың белгілі Telegram чаттары жоқ.",
+      "finishEmailContent": "Хат мәтінін толтырыңыз немесе тазартыңыз: {locales}.",
+      "duplicateRequestIgnored": "Кезекте тұр. Қайталанған сұрау еленбеді.",
+      "recipientsSkipped": "{count, number} алушы өткізілді.",
+      "sendFailed": "Науқанды жіберу мүмкін болмады",
+      "sendFailedOptInList": "{message}\n\nБұл нөмірлерді келісім тізіміне қосыңыз:\n{phones}",
+      "templateVariablesMissing": "Шаблон айнымалылары жетіспейтін алушылар: {count, number}.",
+      "fillUpTemplateVariablesMissing": "Шаблон айнымалылары жетіспейтін қосымша алушылар: {count, number}.",
+      "templateVariablesMissingMore": "...және тағы {count, number}",
+      "customValuesMissing": "Тұрақты мәндер толтырылмаған: {variables}."
+    },
+    "analyticsNoRecipients": "Ағымдағы аналитика сүзгісіне сәйкес келетін алушылар жоқ.",
+    "analyticsAudienceTitle": "Аналитика аудиториясы",
+    "analyticsAudienceChecking": "Сүзгі тексерілуде...",
+    "analyticsAudienceSummary": "Бұл сүзгіге {count, number} алушы сәйкес келеді.",
+    "analyticsAudienceCapped": "Аудитория тым үлкен (макс {count}). Сүзгіні тарылтыңыз.",
+    "analyticsAudienceUnavailable": "Аналитика аудиториясы қолжетімсіз.",
+    "analyticsAudienceMatched": "Сәйкес келді",
+    "analyticsAudienceEligible": "Жіберуге болады",
+    "excludeRecentClientWindowLabel": "Белсенді чаттарды өткізу",
+    "excludeRecentClientWindowHint": "Соңғы 24 сағатта жазған контактілерді өткізу.",
+    "excludePriorFailedBulkSendsLabel": "Жеткізілмеген алушыларды өткізу",
+    "excludePriorFailedBulkSendsHint": "Соңғы хабарламасы жеткізілмеген контактілерді өткізу. Аккаунттың жалпы қателері есептелмейді.",
+    "priorFailedBulkSendsExcludedInline": "Осы науқаннан {count, number} алушы алынып тасталады.",
+    "priorFailedBulkSendsLookupUnavailable": "Жеткізуді тексеру мүмкін болмады. Қайталаңыз.",
+    "priorFailedBulkSendsLoading": "Жеткізу тексерілуде…",
+    "priorFailedBulkSendsRetry": "Қайталау",
+    "priorFailedBulkSendsAllExcluded": "Сүзгіден кейін алушылар қалмады.",
+    "priorFailedBulkSendsUnsupported": "Бұл арна немесе хабар түрі үшін қолжетімсіз.",
+    "eligibilityFrozenAtAdmission": "Осы жоспарланған жіберу үшін жарамдылық қабылдау кезінде бекітіледі.",
+    "eligibilityEvaluatedEachRun": "Ағымдағы жарамдылық әр іске қосу кезінде бағаланады.",
+    "outcome": {
+      "skippedTitle": "Жіберілмеді",
+      "recentContact": "Жуырда хабарлама алған",
+      "marketingOptOut": "Маркетингтен бас тарту",
+      "recipientLimit": "Алушы лимитінен тыс",
+      "priorFailure": "Алдыңғы қате",
+      "ineligible": "Жарамсыз",
+      "serviceWindow": "Сервис терезесі",
+      "unsubscribed": "Жазылымнан шықты",
+      "missingMarketingConsent": "Маркетинг келісімі белгіленбеген (жіберуді тоқтатпайды)"
+    },
+    "analyticsFillUpTitle": "Алушылар қосу",
+    "analyticsFillUpDescription": "Лимит шегінде контактілер қосыңыз.",
+    "analyticsFillUpRemaining": "Қалған орындар",
+    "analyticsFillUpLimitUnavailable": "Ресми алушы лимиті қолжетімсіз.",
+    "analyticsFillUpNoCapacity": "Аналитика аудиториясы ағымдағы ресми лимитті толтырды.",
+    "analyticsFillUpAccepted": "{count, number} қосымша алушы қосылады.",
+    "analyticsFillUpIgnored": "{count, number} қайталанған немесе жарамсыз алушы өткізіліп жіберілді.",
+    "analyticsFillUpTruncated": "Ресми лимиттен асатын {count, number} алушы жіберілмейді.",
+    "bulkLimit": {
+      "blocked": "Free тарифіндегі тарату алушылары таусылды. Көбірек жіберу үшін тарифті жаңартыңыз.",
+      "upgrade": "Тарифтерді көру",
+      "freeRemaining": "Free: {limit, number} алушының {remaining, number}-і қалды",
+      "freeTrimmed": "Free: {remaining, number} алушы қалды. {count, number} алушының алғашқы {remaining, number}-іне ғана жіберіледі.",
+      "freeExhausted": "Free тарифіндегі {limit, number} тарату алушысы таусылды.",
+      "proUnlimited": "Pro жоспары: bulk-кампанияларға лимит жоқ."
+    },
+    "variablesLabel": "Айнымалылар",
+    "recipientFilters": "Алушылар сүзгісі",
+    "recipientFiltersActive": "1 сүзгі қосулы",
+    "recipientFiltersOff": "Өшірулі",
+    "recipientFiltersExcluded": "−{count}"
+  },
+  "CampaignDispatchPlanCard": {
+    "readiness": {
+      "fix": {
+        "integrations": "WhatsApp баптауларын ашу",
+        "whatsappManager": "WhatsApp Manager ашу"
+      },
+      "checking": "Тексерілуде…",
+      "checkingDescription": "Таңдалған WhatsApp нөмірі мен аудитория тексерілуде.",
+      "ready": "Жіберуге дайын",
+      "readyDescription": "Жіберуге белгілі тыйым табылмады. Аккаунт лимиттері әлі де қолданылады, ал әр алушыға жеткізуді Meta анықтайды.",
+      "blocked": "Әзірге жіберу мүмкін емес",
+      "blockedDescription": "Төмендегі себепті түзетіп, жіберер алдында қайта тексеріңіз.",
+      "unavailable": "Жіберу тексеруі қолжетімсіз",
+      "rateLimited": "Жіберуді әзірге тексеру мүмкін емес",
+      "unavailableDescription": "Жіберуді тексеруді аяқтай алмадық. Бұл таратуды тексеру үшін қайталап көріңіз.",
+      "awaitingAudience": "Хабарламаны таңдап, алушыларды қосыңыз",
+      "awaitingRecipients": "Алушыларды қосыңыз",
+      "noRecipients": "Жіберетін алушы жоқ",
+      "awaitingAudienceDescription": "Үлгіні таңдап, алушыларды қосыңыз.",
+      "refresh": "Қайта тексеру",
+      "recheck": "Қайта тексеру",
+      "providerCode": "Meta коды: {code}",
+      "cooldownEligible": "{count} алушы ағымдағы байланыс жиілігі шектеулерінен өтеді.",
+      "cooldownUntil": "{time} кейін қайталаңыз.",
+      "cooldownUnknown": "Қашан жіберуге болатынын білу үшін тексеруді жаңартыңыз.",
+      "checkedAt": "Тексерілді: {time}",
+      "remainingUnknown": "WhatsApp-та қалған жіберу лимиті белгісіз.",
+      "acceptedNotDelivered": "Кезектегі немесе жіберуге қабылданған хабарлар әлі жеткізілген болып саналмайды. Жеткізу мен оқу көрсеткіштері Meta деректерімен жаңартылады.",
+      "reasons": {
+        "meta_business_limit": "WhatsApp жіберуді шектеп отыр. WhatsApp Manager-ді тексеріңіз.",
+        "meta_sender_restricted": "WhatsApp жіберуге тыйым салды. WhatsApp Manager-ді тексеріңіз.",
+        "meta_billing": "Жіберу үшін WhatsApp төлемдерін тексеріңіз.",
+        "meta_disconnected": "WhatsApp нөмірін интеграцияларда қайта қосыңыз.",
+        "meta_check_unavailable": "WhatsApp-ты тексеру мүмкін болмады. Жаңартып көріңіз.",
+        "contact_frequency_limit": "{count} алушыға жақында хабарласқансыз."
+      },
+      "errors": {
+        "meta_rate_limited": "WhatsApp бұл аккаунттың сұрауларын уақытша шектеді.",
+        "template_lookup_unavailable": "Бұл үлгіні WhatsApp арқылы тексере алмадық.",
+        "template_unavailable": "Бұл үлгі мақұлданбаған. Мақұлданған үлгіні таңдаңыз.",
+        "plan_unavailable": "WhatsApp нөмірі қолжетімсіз. Интеграциялардағы қосылымды тексеріңіз."
+      },
+      "details": "Толығырақ"
+    },
+    "templateCatalog": {
+      "unavailable": "WhatsApp үлгілерін жүктеу мүмкін болмады.",
+      "rateLimited": "WhatsApp үлгі сұрауларын уақытша шектеді."
+    },
+    "sendBlocked": {
+      "checking": "Тексеру аяқталғанша күтіңіз.",
+      "check_failed": "Сәтті тексеруден кейін жіберуге болады.",
+      "all_excluded": "Жіберетін алушы қалмады.",
+      "blocked": "Жібермес бұрын тексерудегі мәселені шешіңіз."
+    },
+    "lifecycleStatus": "{status, select, queued {Кезекте} scheduled {Жоспарланған} running {Орындалуда} completed {Аяқталды} failed {Сәтсіз аяқталды} expired {Мерзімі өтті} cancelled {Тоқтатылды} paused {Тоқтатыла тұрды} other {{status}}}",
+    "title": "Жіберу жоспары",
+    "description": "Қарқын серверде басқарылады. Интерфейс пакет өлшемін тікелей орнатпайды.",
+    "credentialsUnavailable": "Жіберу үшін бұл арнаны интеграцияларда қосыңыз.",
+    "unknown": "Белгісіз",
+    "unlimited": "Шектеусіз",
+    "unavailable": "Қолжетімсіз",
+    "messagesPerSecond": "{rate} хабар/с",
+    "milliseconds": "{delay} мс",
+    "rate": "Қарқын",
+    "batchSize": "Пакет өлшемі",
+    "delay": "Кідіріс",
+    "source": "Дереккөз",
+    "recipientLimit": "Алушы лимиті",
+    "whatsappLine": "WhatsApp желісі",
+    "metaStatus": "Нөмір сапасы",
+    "throughput": "Өткізу қабілеті",
+    "metaFallback": "Meta резерв дерегі: {warning}",
+    "queuedRecipients": "Кезектегі алушылар",
+    "payloadStaging": "Payload сақтау",
+    "workflow": "Workflow",
+    "sources": {
+      "metaPhoneThroughput": "Meta телефон өткізу қабілеті",
+      "metaDefaultThroughput": "Meta құжатталған стандарты",
+      "channelDefault": "Арна стандарты"
+    },
+    "queuedSummary": "{count} алушы",
+    "planRestriction": {
+      "title": "Жіберу кідіртілді — Free тарифінің лимиті бітті",
+      "trial_expired": "Free сынақ мерзімі аяқталды. Таратуды жалғастыру үшін ақылы тарифті таңдаңыз.",
+      "campaign_limit": "Бұл жұмыс кеңістігі Free тарифінде, ал тарату алушыларының лимиті біткен. Осы таратуды өңдеуді жалғастыра аласыз.",
+      "conversation_limit": "Бұл жұмыс кеңістігі Free тарифінде және диалогтар лимитіне жеткен. Осы таратуды өңдеуді жалғастыра аласыз.",
+      "details": "Пайдалану мәліметтері",
+      "recipientUsage": "Есепке алынған алушылар: {used}. Free тарифіндегі жалпы лимит: {limit}.",
+      "conversationUsage": "Диалогтар: {used}. Free тарифіндегі лимит: {limit}.",
+      "upgrade": "Pro тарифін көру",
+      "checksPending": "Жібермес бұрын тексерулер сәтті аяқталуы керек."
+    },
+    "sendUnavailable": "Жіберу қолжетімсіз",
+    "viewSendingStatus": "Жіберу күйін көру",
+    "selectedRecipients": "{count, plural, other {# алушы таңдалды}}",
+    "otherChecks": "Жіберуге қатысты басқа тексерулер",
+    "connectionDetails": "WhatsApp қосылымының мәліметтері",
+    "inboundActivityTitle": "Кіріс белсенділігін тексеру қажет",
+    "inboundActivityDescription": "Соңғы уақытта кіріс хабарламалар байқалмады. WhatsApp баптауларында хабарламалардың келуін тексеріңіз."
+  },
+  "CampaignRecipientPicker": {
+    "recipient": {
+      "title": "Кампания алушылары",
+      "selectedCount": "{selected} таңдалды / {limit}",
+      "overflowQueueHint": "{count} алушы бүгінгі {limit} шегінен көп. Қалғаны 24 сағаттық кезекпен жіберіледі.",
+      "unlimited": "шектеусіз",
+      "quickAddLabel": "Бір алушы қосу",
+      "addRecipient": "Алушыны қосу",
+      "emailPlaceholder": "email@example.com",
+      "telegramPlaceholder": "чат ID немесе телефон",
+      "whatsappPlaceholder": "+77001234567",
+      "contactsTitle": "Контактілер",
+      "addShownContacts": "Қосу",
+      "searchContacts": "Контактілерді іздеу",
+      "loadingContacts": "Контактілер жүктелуде...",
+      "noContacts": "Контактілер табылмады",
+      "noTelegramContacts": "Жарамды Telegram DM жоқ. Ботпен бұрынғы жеке байланыс, импортталған chat_id немесе белсенді Business 24 сағ терезе керек. Топтар кірмейді.",
+      "variablesTitle": "Шаблон айнымалылары",
+      "autoFill": "Автоматты толтыру",
+      "contactName": "Контакт аты",
+      "recipientIdentifier": "Алушы идентификаторы",
+      "tableColumn": "Кесте бағаны",
+      "customValue": "Тұрақты мән",
+      "selectTableColumn": "Кесте бағанын таңдаңыз",
+      "customValuePlaceholder": "{variable} айнымалысы үшін тұрақты мән",
+      "selectedTable": "Таңдалған кампания алушылары",
+      "identifier": "Алушы",
+      "name": "Аты",
+      "removeRecipient": "Алушыны өшіру",
+      "attachedCount": "{count, number} алушы бекітілген",
+      "clearAll": "Барлығын тазалау",
+      "clearedToast": "{count, plural, other {# алушы өшірілді}}",
+      "undoClear": "Қайтару",
+      "previousPage": "Артқа",
+      "nextPage": "Алға",
+      "pageStatus": "{page}/{total} бет",
+      "renameColumn": "{column} бағанын өзгерту",
+      "variableMatchStatus": "{variable} айнымалысы үшін баған сәйкестігі",
+      "variableMatched": "Сәйкес",
+      "variableUnmatched": "Дәл баған жоқ",
+      "variablePreview": "Бірінші алушы көреді: {value}",
+      "variablePreviewEmpty": "Бірінші алушыда мән жоқ",
+      "variablePhoneFallback": "{count, plural, other {Аты жоқ # алушы телефон нөмірін алады}}"
+    }
+  },
+  "LlmAnalytics": {
+    "pageTitle": "LLM аналитикасы",
+    "pageDescription": "Airi автожауаптарының сенімділігін операторлық шолу: қауіпсіз жауаптар, контексттен қалпына келтіру, жалпы нақтылаулар және сенімділігі төмен сигналдар.",
+    "limitedSample": "Бұл көрініс PostHog-тың қысқартылған деректеріне негізделген. Таңдалған кезең үшін жалпы көлем толық өндірістік деректерден аз болуы мүмкін.",
+    "dateRanges": {
+      "7": "Соңғы 7 күн",
+      "30": "Соңғы 30 күн",
+      "90": "Соңғы 90 күн"
+    },
+    "errors": {
+      "loadFailed": "LLM аналитикасын жүктеу сәтсіз аяқталды"
+    },
+    "common": {
+      "aiQuality": "ЖИ сапасы",
+      "warehouseActive": "Қойма белсенді",
+      "waitingForEvents": "Оқиғалар күтілуде",
+      "manualApproval": "Қолмен растау",
+      "title": "LLM сапасын бақылау",
+      "description": "Модель шақыруларын, RAG сенімділігін және пайдаланушы растайтын ескертулерді бақылаңыз. Шешу ескертуді жабады және регрессиялық жағдай жасай алады, бірақ модельді қайта оқытпайды және агент әрекетін өзгертпейді.",
+      "warehousePartialUnavailable": "Қойманың кейбір метрикалары уақытша қолжетімсіз.",
+      "unknown": "Белгісіз",
+      "unknownValue": "Белгісіз мән ({value})",
+      "notAvailable": "Дерек жоқ",
+      "technicalDetail": "Техникалық мәлімет"
+    },
+    "units": {
+      "calls": "{count, plural, one {# шақыру} other {# шақыру}}",
+      "tokens": "{count, plural, one {# токен} other {# токен}}",
+      "sampledEvaluations": "{count, plural, one {# іріктемелік бағалау} other {# іріктемелік бағалау}}",
+      "observedCalls": "{count, plural, one {# бақыланған шақыру} other {# бақыланған шақыру}}",
+      "openFindings": "{count, plural, one {# ашық ескерту} other {# ашық ескерту}}",
+      "turns": "{count, plural, one {# қадам} other {# қадам}}",
+      "milliseconds": "{value} мс",
+      "seconds": "{value} с",
+      "perSecond": "{value}/с",
+      "scoreOutOf100": "100-ден {value}",
+      "shareOfSpend": "Шығынның {value}%"
+    },
+    "operations": {
+      "items": {
+        "genericChatCompletion": "Чаттағы жалпы генерация",
+        "airiCoach": "Airi жаттықтырушысы",
+        "airiChatTitle": "Airi чаты: тақырып",
+        "airiChatProductCapabilities": "Airi чаты: өнім мүмкіндіктері",
+        "airiChatWhatsAppTemplateDraft": "Airi чаты: WhatsApp үлгісінің нобайы",
+        "airiChatWhatsAppFlowDraft": "Airi чаты: WhatsApp Flow нобайы",
+        "airiChatImageGenerationBrief": "Airi чаты: суретке арналған бриф",
+        "airiChatOpportunityScan": "Airi чаты: мүмкіндіктерді іздеу",
+        "airiChatCampaignPackage": "Airi чаты: науқан пакеті",
+        "airiChatIntentClassification": "Airi чаты: ниетті жіктеу",
+        "airiChatReply": "Airi чатындағы жауап",
+        "ragGenerateResponse": "RAG: жауап жасау",
+        "ragRetrievalIntentClassifier": "RAG: іздеу ниетін жіктеу",
+        "ragGroundingReflection": "RAG: негізділікті тексеру",
+        "ragVerifier": "RAG: тексеруші",
+        "ragReranker": "RAG: қайта сұрыптау",
+        "ragHyde": "RAG: HyDE",
+        "ragQueryCleaner": "RAG: сұрауды тазалау",
+        "ragPrepareQuery": "RAG: сұрауды дайындау",
+        "replyGenerate": "Клиентке жауап: генерация",
+        "replyTurnUnderstanding": "Клиентке жауап: қадамды түсіну",
+        "replyLoadThreadContext": "Клиентке жауап: диалог контексі",
+        "replyFinalGeneration": "Клиентке жауап: соңғы генерация",
+        "replyFallbackRecoveryGeneration": "Клиентке жауап: жауапты қалпына келтіру",
+        "replyAnswerCoverageJudge": "Клиентке жауап: толықтықты бағалау"
+      },
+      "details": {
+        "generic": "Жеке жұмыс ағыны кілті жоқ жалпы көмекші шақырулары.",
+        "coach": "Клиенттермен диалогтарға арналған оператор ұсыныстары.",
+        "airiChat": "Модельді сұраған өнім әрекеті бойынша топтастырылған Airi көмекшісінің шақырулары.",
+        "rag": "Жауап жасалғанға дейінгі іздеу және негіздеу шақырулары.",
+        "reply": "Клиент диалогына жауап беру тізбегінің шақырулары.",
+        "unknown": "Белгісіз операция кілті бар модель шақырулары."
+      }
+    },
+    "judge": {
+      "explanationPrompt": "Бағалаушы түсіндірмесі: жауап неге осындай баға алды?",
+      "scorePrompt": "«{dimension}» бағасы (0–1, өткізіп жіберу үшін бос қалдырыңыз)",
+      "dimensions": {
+        "relevance": "Сәйкестік",
+        "trustworthiness": "Сенімділік",
+        "conciseness": "Қысқалық",
+        "completeness": "Толықтық",
+        "safety": "Қауіпсіздік",
+        "overall": "Жалпы баға"
+      }
+    },
+    "quality": {
+      "title": "Airi моделі мен чатының сапасы",
+      "description": "BigQuery жүйесіндегі модель сапасы, кідіріс, тиімділік және Airi чатын пайдалану метрикалары.",
+      "airiChatReporting": "Airi чатының есебі",
+      "cards": {
+        "airiAnswers": {
+          "title": "Airi жауаптары",
+          "subtitle": "Сақталған көмекші чат қадамдары"
+        },
+        "noContextTurns": {
+          "title": "Контекссіз қадамдар",
+          "subtitle": "Табылған контекссіз жауаптар"
+        },
+        "airiChatSpend": {
+          "title": "Airi чатының шығыны",
+          "subtitle": "BigQuery трассалары бойынша қайта есептелген"
+        },
+        "generationQuality": {
+          "title": "Генерация сапасы",
+          "subtitle": "Сәйкестіктің салмақталған бағасы"
+        },
+        "groundedness": {
+          "title": "Негізділік",
+          "subtitle": "Табылған контексті бар қадамдар"
+        },
+        "answerRelevance": {
+          "title": "Жауап сәйкестігі",
+          "subtitle": "Бағалаушының сәйкестік бағасы"
+        },
+        "guardrailPass": {
+          "title": "Қауіпсіздік тексерістері",
+          "subtitle": "Өткен қауіпсіздік тексерістері"
+        },
+        "evalPass": {
+          "title": "Сәтті бағалаулар",
+          "subtitle": "Сәтті өткен бағалаулар үлесі"
+        },
+        "answerCompleteness": {
+          "title": "Жауап толықтығы",
+          "subtitle": "Жауап берілген анықталған сұрақтар"
+        },
+        "citationCoverage": {
+          "title": "Дәйексөздермен қамту",
+          "subtitle": "Табылған контекстегі дәйексөздер"
+        },
+        "toxicityScore": {
+          "title": "Уыттылық бағасы",
+          "subtitle": "Төмен болғаны жақсы"
+        },
+        "toxicOutputs": {
+          "title": "Уытты жауаптар",
+          "subtitle": "Уыттылық жалаушасының іске қосылуы"
+        }
+      }
+    },
+    "systemPerformance": {
+      "title": "Жүйе өнімділігі",
+      "cards": {
+        "p95Latency": {
+          "title": "P95 кідірісі",
+          "subtitle": "LLM трассасының кідірісі"
+        },
+        "p99Latency": {
+          "title": "P99 кідірісі",
+          "subtitle": "Шеткі кідіріс"
+        },
+        "tokensPerSecond": {
+          "title": "Токен / с",
+          "subtitle": "Промпт пен аяқтау өткізу қабілеті"
+        },
+        "outputTokensPerSecond": {
+          "title": "Шығыс токендері / с",
+          "subtitle": "Аяқтау өткізу қабілеті"
+        },
+        "timeToFirstToken": {
+          "title": "Алғашқы токенге дейінгі уақыт",
+          "subtitle": "Ағындық құралдандыруды қажет етеді"
+        }
+      }
+    },
+    "costEfficiency": {
+      "title": "Шығын және операциялық тиімділік",
+      "cards": {
+        "errorRate": {
+          "title": "Қате үлесі",
+          "subtitle": "Сәтсіз модель шақырулары"
+        },
+        "promptTokenShare": {
+          "title": "Промпт токендерінің үлесі",
+          "subtitle": "Барлық токендегі кіріс үлесі"
+        },
+        "completionTokenShare": {
+          "title": "Жауап токендерінің үлесі",
+          "subtitle": "Барлық токендегі шығыс үлесі"
+        },
+        "costPerThousandTokens": {
+          "title": "1 мың токен бағасы",
+          "subtitle": "Трассалардың қайта есептелген құны"
+        },
+        "semanticCacheHit": {
+          "title": "Семантикалық кэш сәйкестігі",
+          "subtitle": "Бақыланған семантикалық кэш шақырулары"
+        }
+      }
+    },
+    "health": {
+      "daily": {
+        "title": "Airi чатының күнделікті күйі",
+        "empty": "Airi чатының күнделікті күйі туралы дерек әлі жоқ.",
+        "series": {
+          "answers": "Жауаптар",
+          "grounded": "Негізделген",
+          "noContext": "Контекссіз"
+        }
+      },
+      "warnings": {
+        "title": "Airi чаты контексінің ескертулері",
+        "empty": "Осы кезеңде Airi чатының контексі туралы ескерту жоқ.",
+        "columns": {
+          "issue": "Мәселе",
+          "turns": "Қадамдар"
+        }
+      }
+    },
+    "reviewQueue": {
+      "title": "Тексеру кезегі",
+      "description": "Регрессиялық жағдайға айналмас бұрын растауды қажет ететін ашық ескертулер.",
+      "loadFailed": "Тексеру ескертулерін жүктеу мүмкін болмады.",
+      "empty": "ЖИ сапасы бойынша ашық ескерту жоқ.",
+      "columns": {
+        "finding": "Ескерту",
+        "evidence": "Дәлел",
+        "decision": "Шешім"
+      },
+      "labels": {
+        "replyExcerpt": "Жауап үзіндісі",
+        "noReplyExcerpt": "Жауап үзіндісі жоқ",
+        "recommendedNextStep": "Ұсынылатын келесі қадам"
+      },
+      "actions": {
+        "resolve": "Шешу",
+        "ignore": "Елемеу"
+      }
+    },
+    "prompts": {
+      "resolveWithRegression": "Шешіп, регрессиялық жағдай қосу",
+      "resolveWithoutRegression": "Регрессиялық жағдайсыз шешу: кіріс үзіндісі жоқ"
+    },
+    "toasts": {
+      "resolvedWithRegression": "Ескерту шешіліп, регрессиялық жағдайларға қосылды",
+      "resolved": "Ескерту шешілді",
+      "ignored": "Ескерту еленбеді",
+      "updateFailed": "Ескертуді жаңарту мүмкін болмады"
+    },
+    "enums": {
+      "fallbackAction": {
+        "useGeneratedReply": "Жасалған жауапты пайдалану",
+        "groundedRecovery": "Контекстен қалпына келтіру",
+        "intentFallback": "Ниет бойынша қосалқы жауап",
+        "genericClarification": "Жалпы нақтылау",
+        "clarifyingGeneration": "Нақтылауды генерациялау"
+      },
+      "fallbackReason": {
+        "generatedReplyComplete": "Жасалған жауап аяқталған",
+        "emptyGeneratedReply": "Жасалған жауап бос",
+        "incompleteGeneratedReply": "Жасалған жауап аяқталмаған",
+        "hydeLeakageGuard": "HyDE ағып кетуінен қорғау",
+        "missingAskCoverage": "Барлық сұрақ қамтылмаған",
+        "groundedContextAvailable": "Негізделген контекст қолжетімді",
+        "missingKnowledgeSignal": "Білім жетіспеуі сигналы",
+        "genericUngroundedTurn": "Негізделмеген жалпы қадам",
+        "clarifyingGenerationAllowed": "Нақтылауды генерациялауға рұқсат",
+        "evidencePolicyClarify": "Дәлел саясаты: нақтылау",
+        "evidencePolicyHandoff": "Дәлел саясаты: операторға беру"
+      },
+      "resultType": {
+        "verifiedSnippet": "Тексерілген үзінді",
+        "suggestionWithAi": "ЖИ көмегімен ұсыныс",
+        "aiReply": "ЖИ жауабы",
+        "fallback": "Қосалқы жауап",
+        "evidenceRetrieve": "Дәлелдерді іздеу",
+        "evidenceContext": "Дәлелдер контексі",
+        "noContext": "Контекссіз"
+      },
+      "turnKind": {
+        "greeting": "Сәлемдесу",
+        "presenceCheck": "Қатысуды тексеру",
+        "metaQuestion": "Мета-сұрақ",
+        "thanks": "Алғыс",
+        "farewell": "Қоштасу",
+        "acknowledgment": "Растау",
+        "impatience": "Асығыстық",
+        "dataSharing": "Дерек бөлісу",
+        "question": "Сұрақ",
+        "followupQuestion": "Қосымша сұрақ",
+        "unknown": "Белгісіз"
+      },
+      "channel": {
+        "whatsApp": "WhatsApp",
+        "telegram": "Telegram",
+        "email": "Электрондық пошта",
+        "widget": "Виджет",
+        "instagram": "Instagram",
+        "facebook": "Facebook"
+      },
+      "retrievalPath": {
+        "snippet": "Үзінді",
+        "knowledgeBase": "Білім базасы",
+        "blended": "Аралас іздеу",
+        "none": "Жоқ"
+      },
+      "issueType": {
+        "knowledgeGap": "Білім олқылығы",
+        "unsupportedAnswer": "Расталмаған жауап",
+        "badRetrieval": "Нашар іздеу",
+        "scenarioActionMismatch": "Сценарий әрекетіне сәйкессіздік",
+        "escalationIssue": "Эскалация мәселесі",
+        "tonePolicyIssue": "Үн саясатының бұзылуы",
+        "costLatencySpike": "Шығын немесе кідіріс секірісі",
+        "other": "Басқа"
+      },
+      "severity": {
+        "critical": "Өте маңызды",
+        "high": "Жоғары",
+        "medium": "Орташа",
+        "low": "Төмен",
+        "info": "Ақпарат"
+      }
+    },
+    "cards": {
+      "safeReplies": {
+        "title": "Қауіпсіз жауаптар",
+        "subtitle": "RAG-сыз жауаптар: сәлемдесулер мен растаулар"
+      },
+      "ragTurns": {
+        "title": "RAG қадамдары",
+        "subtitle": "Контексттен жауап генерациясына жеткен қадамдар"
+      },
+      "groundedRecovery": {
+        "title": "Контексттен қалпына келтіру",
+        "subtitle": "БЗ немесе сниппеттерден қалпына келтірілген толық емес генерациялар"
+      },
+      "genericClarification": {
+        "title": "Жалпы нақтылаулар",
+        "subtitle": "Әлі жақсартуды қажет ететін жалпы жауаптар"
+      },
+      "lowConfidence": {
+        "title": "Төмен сенімділік",
+        "subtitle": "Ниетті түсіну белгісіз болып қалған қадамдар"
+      },
+      "groundedRecoveryRate": {
+        "title": "Контексттен қалпына келтіру үлесі",
+        "subtitle": "Контексттен қалпына келтірілген RAG қадамдарының пайызы"
+      },
+      "genericClarificationRate": {
+        "title": "Жалпы нақтылаулар үлесі",
+        "subtitle": "Жалпы жауаппен аяқталған RAG қадамдарының пайызы"
+      },
+      "lowConfidenceRate": {
+        "title": "Төмен сенімділік үлесі",
+        "subtitle": "Төмен сенімділікпен белгіленген бақыланатын қадамдардың пайызы"
+      },
+      "safeReplyShare": {
+        "title": "Қауіпсіз жауаптар үлесі",
+        "subtitle": "RAG-сыз өңделген қадамдардың пайызы"
+      }
+    },
+    "charts": {
+      "dailyTrend": "Күнделікті сенімділік трендісі",
+      "fallbackActions": "Қосалқы әрекеттер бойынша бөлу"
+    },
+    "tables": {
+      "fallbackReasons": "Қосалқы жауаптардың себептері",
+      "channels": "Арналар бойынша бөлу",
+      "resultTypes": "RAG нәтижелерінің түрлері",
+      "safeReplyKinds": "Қауіпсіз жауаптардың түрлері",
+      "lowConfidenceKinds": "Төмен сенімділік түрлері"
+    },
+    "legend": {
+      "ragTurns": "RAG қадамдары",
+      "groundedRecovery": "Контексттен қалпына келтіру",
+      "genericClarification": "Жалпы нақтылаулар",
+      "safeReplies": "Қауіпсіз жауаптар"
+    },
+    "labels": {
+      "events": "Оқиғалар",
+      "name": "Атауы",
+      "count": "Саны"
+    },
+    "empty": {
+      "title": "LLM оператор деректері әлі жоқ",
+      "description": "Airi автожауаптары оператор метрикаларын жібере бастағанда, мұнда сенімділік трендтері мен қосалқы жауаптар бөлінісі көрсетіледі.",
+      "noFallbackActions": "Бұл кезеңде қосалқы әрекеттер тіркелмеді.",
+      "noFallbackReasons": "Бұл кезеңде қосалқы жауаптардың себептері тіркелмеді.",
+      "noChannels": "Бұл кезеңде арналар бойынша деректер тіркелмеді.",
+      "noResultTypes": "Бұл кезеңде RAG нәтижелерінің түрлері тіркелмеді.",
+      "noSafeReplyKinds": "Бұл кезеңде қауіпсіз жауаптардың түрлері тіркелмеді.",
+      "noLowConfidenceKinds": "Бұл кезеңде төмен сенімділік түрлері тіркелмеді."
+    },
+    "warehouse": {
+      "title": "Warehouse телеметриясы",
+      "description": "Ағымдағы жұмыс кеңістігіне арналған BigQuery агрегаттары.",
+      "descriptionWithRefresh": "Ағымдағы жұмыс кеңістігіне арналған BigQuery агрегаттары, {time} жаңартылды.",
+      "partialFailure": "Warehouse сұрауы ішінара сәтсіз аяқталды: {message}",
+      "cards": {
+        "llmCalls": {
+          "title": "LLM шақырулары",
+          "subtitle": "Warehouse бақылайтын модель шақырулары"
+        },
+        "errorRate": {
+          "title": "Қате үлесі",
+          "subtitle": "Осы кезеңдегі сәтсіз модель шақырулары"
+        },
+        "p95Latency": {
+          "title": "P95 кідіріс",
+          "subtitle": "Warehouse шақыру кідірісі"
+        },
+        "totalTokens": {
+          "title": "Барлық токендер",
+          "subtitle": "Сұрау және жауап токендері"
+        },
+        "ragIssues": {
+          "title": "RAG мәселелері",
+          "subtitle": "Fallback, контекст жоқтығы немесе сәтсіз turn-дар"
+        }
+      },
+      "spend": {
+        "title": "LLM шығыны",
+        "description": "Осы жұмыс кеңістігіндегі чат LLM-нің бағаланған құны (эмбеддингтер мен медиа қосылмайды).",
+        "footnote": "Токендер × жарияланған модель тарифтері бойынша бағалау; ескі трейстер сұрау кезінде қайта бағаланады.",
+        "cards": {
+          "totalSpend": {
+            "title": "Жалпы шығын",
+            "subtitle": "Кезеңдегі жұмыс кеңістігінің LLM құны"
+          },
+          "avgCost": {
+            "title": "Орташа құн / шақыру",
+            "subtitle": "Трассаланған шақыруға орташа USD"
+          },
+          "totalTokens": {
+            "title": "Жалпы токендер",
+            "subtitle": "Сұрау және жауап токендері"
+          },
+          "companyTotal": {
+            "title": "Компания бойынша",
+            "subtitle": "Компаниядағы жұмыс кеңістіктері: {count}"
+          }
+        },
+        "charts": {
+          "daily": "Күнделікті шығын",
+          "dailyDescription": "Модельдің бақыланған шақыруларынан күн сайынғы болжамды USD шығыны."
+        },
+        "tables": {
+          "byOperation": "Құны бойынша топ операциялар",
+          "byOperationDescription": "Қай ЖИ жұмыс ағындары LLM бюджетін пайдаланып жатқанын көрсетеді.",
+          "byModel": "Құны бойынша топ модельдер",
+          "byModelDescription": "Бақыланған шақырулардағы модель мен жұмыс ағыны жұптары. Шығын бағаны көрінуі үшін ұзын идентификаторлар тасымалданады."
+        },
+        "labels": {
+          "cost": "Құны",
+          "modelAndWorkflow": "Модель және жұмыс ағыны",
+          "volume": "Көлем"
+        },
+        "legend": {
+          "dailySpend": "Күнделікті шығын"
+        },
+        "empty": {
+          "daily": "Кезең үшін күнделікті шығын деректері жоқ.",
+          "byOperation": "Кезең үшін операция бойынша шығын деректері жоқ."
+        }
+      }
+    }
+  },
+  "CampaignHistory": {
+    "refreshError": "Жаңартулар уақытша қолжетімсіз. Соңғы алынған нәтижелер көрсетілген; қосылымды қалпына келтіріңіз немесе бетті жаңартыңыз.",
+    "title": "Тарих",
+    "campaignCount": "{count} науқан",
+    "campaign": "Науқан",
+    "channel": "Арна",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "email": "Email",
+    "templateMessage": "Шаблон/Хабарлама",
+    "recipients": "Алушылар",
+    "results": "Нәтижелер",
+    "actions": "Әрекеттер",
+    "acceptedRate": "Қабылдау деңгейі",
+    "deliveryRate": "Жеткізу деңгейі",
+    "readRate": "Оқылу деңгейі",
+    "openRate": "Ашылу деңгейі",
+    "clickRate": "Шерту деңгейі",
+    "unsubscribeRate": "Жазылудан бас тарту деңгейі",
+    "emailOnlyMetric": "Тек email үшін есептеледі, WhatsApp үшін емес",
+    "failedOrBounceRate": "Қате / кері қайту",
+    "replyRate": "Жауап беру",
+    "cost": "Құны",
+    "costPerReply": "Құн / жауап",
+    "costStatus": {
+      "notPriced": "Есептелмеген",
+      "unpricedMessages": "{count, plural, one {Жеткізілген # хабарламаның расталған бағасы жоқ} other {Жеткізілген # хабарламаның расталған бағасы жоқ}}",
+      "notPricedDetail": "Жеткізілген хабарламалардың расталған бағасы жоқ",
+      "notTracked": "Құнды есепке алу басталғанға дейін жіберілген",
+      "explanation": "Meta әр хабарламаның бағасын хабарламайды, ал сіздің нарығыңыз үшін расталған WhatsApp тарифі әзірге жоқ, сондықтан науқан құны есептелмейді. Meta хабарлаған бүкіл WhatsApp аккаунтының шығыны науқандар тізімінің үстінде көрсетілген."
+    },
+    "viewAnalytics": "Жауаптар",
+    "sentAt": "Жіберілген уақыты",
+    "sentBy": "Жіберген",
+    "sentByValue": "Жіберген: {name}",
+    "unknown": "Белгісіз",
+    "empty": {
+      "title": "Науқандар әлі жіберілмеген",
+      "description": "Науқан тарихыңыз осында көрінеді"
+    },
+    "failureSummary": {
+      "allFailed": "Барлық жіберулер сәтсіз аяқталды",
+      "someFailed": "{count} сәтсіз",
+      "errorCode": "Meta қатесі",
+      "localCooldown": "airi.chat байланыс шектеуімен тоқтатылды",
+      "localCooldownDescription": "Байланыс жиілігі шектеуіне байланысты airi.chat бұл хабарламаларды тоқтатты. Олар Meta-ға жіберілмеді."
+    },
+    "summary": {
+      "accepted": "Қабылданды: {accepted}/{total}",
+      "failed": "Сәтсіз: {count}"
+    },
+    "operations": {
+      "status": {
+        "queued": "Кезекте",
+        "scheduled": "Жоспарланған",
+        "running": "Орындалуда",
+        "completed": "Аяқталды",
+        "failed": "Сәтсіз аяқталды",
+        "expired": "Мерзімі өтті",
+        "cancelled": "Тоқтатылды",
+        "paused": "Тоқтатыла тұрды"
+      },
+      "progress": "Өңделді",
+      "notAttempted": "Әрекет жасалмады",
+      "remaining": "{count} қалды",
+      "delivery": {
+        "pending": "Күтуде",
+        "accepted": "Жіберілді",
+        "delivered": "Жеткізілді",
+        "read": "Оқылды",
+        "failed": "Сәтсіз"
+      },
+      "cancel": {
+        "action": "Тоқтату",
+        "pending": "Тоқтатылуда…",
+        "success": "Науқан тоқтатылды.",
+        "localWarning": "Науқан осы жерде тоқтатылды, бірақ жұмыс процесінің тоқтауы әлі расталмады.",
+        "error": "Науқанды тоқтату мүмкін болмады."
+      },
+      "pause": {
+        "action": "Тоқтата тұру",
+        "pending": "Тоқтатыла тұруда…",
+        "success": "Науқан тоқтатыла тұрды. Қалған толқындар кезекте қалады.",
+        "error": "Науқанды тоқтата тұру мүмкін болмады.",
+        "resume": "Жалғастыру",
+        "resuming": "Жалғасуда…",
+        "resumeSuccess": "Науқан жалғасты.",
+        "resumeError": "Науқанды жалғастыру мүмкін болмады."
+      },
+      "retry": {
+        "successSkippedRecent": "Сәтсіз алушылар қайта жіберуге кезекке қойылды. Жуырда хабарлама алған {count} алушы өткізіп жіберілді.",
+        "action": "Сәтсіздерін қайталау ({count})",
+        "pending": "Қайта жіберілуде…",
+        "success": "Сәтсіз алушылар қайта жіберу кезегіне қосылды.",
+        "error": "Сәтсіз алушыларға қайта жіберу мүмкін болмады.",
+        "circuitWarning": "Провайдер ақауларынан қорғау іске қосылды. Қайталау алдында ақаудың түзетілгенін растаңыз.",
+        "provider": "Провайдер:",
+        "code": "Код:",
+        "failureCount": "Ақаулар:",
+        "acknowledgeCircuit": "Провайдер ақауы түзетілгенін растаймын.",
+        "cooldown": "{count} алушы үшін airi.chat байланыстары арасындағы үзіліс әлі аяқталмады. Қазіргі саясат бұл аудиторияға {date} бастап қайта жіберуге рұқсат береді. Провайдер шектеулері де жойылуы керек.",
+        "cooldownUnknown": "{count} алушыға airi.chat байланыс шектеуі қолданылады. Қайта жібермес бұрын шектеулерді тексеріңіз."
+      }
+    },
+    "details": {
+      "localSuppression": "airi.chat ішінде тоқтатылды",
+      "action": "Әрекеттер",
+      "show": "Толығырақ ({count})",
+      "hide": "Жасыру",
+      "showDeliveryDetails": "{count} алушының жеткізу деректерін көрсету",
+      "hideDeliveryDetails": "Жеткізу деректерін жасыру",
+      "none": "-",
+      "title": "Жеткізу деректері",
+      "description": "Арна көрсеткіштері және алушылар бойынша жеткізу оқиғалары.",
+      "recipientEvents": "Алушылар",
+      "noneAvailable": "Бұл науқан үшін алушылардың жеткізу оқиғалары жоқ.",
+      "recipient": "Алушы",
+      "status": "Күй",
+      "provider": "Провайдер",
+      "details": "Детальдар",
+      "updated": "Жаңартылды",
+      "metrics": {
+        "recipients": "Алушылар",
+        "accepted": "Қабылданды",
+        "failed": "Сәтсіз",
+        "deliveryRate": "Жеткізу",
+        "readRate": "Оқу",
+        "replyRate": "Жауаптар",
+        "openRate": "Ашу",
+        "clickRate": "Басу",
+        "bounceRate": "Қайтару",
+        "unsubscribeRate": "Жазылымнан бас тарту",
+        "cost": "Құны",
+        "costPerReply": "Жауап құны"
+      }
+    }
+  },
+  "WhatsAppSpendSummary": {
+    "title": "Meta хабарлаған WhatsApp шығыны",
+    "window": "{start} – {end} (UTC)",
+    "approximate": "Шамамен, {currency}",
+    "loading": "WhatsApp шығыны жүктелуде…",
+    "error": "Meta-дан WhatsApp шығынын жүктеу мүмкін болмады.",
+    "retry": "Қайталау",
+    "retrying": "Қайталануда…",
+    "noSource": "Meta хабарлаған шығынды көру үшін WhatsApp қосыңыз.",
+    "connect": "WhatsApp қосу",
+    "noSpend": "Meta бұл кезеңде WhatsApp төлемдерін хабарламады.",
+    "reconnect": "Бұл WhatsApp аккаунтына Meta қолжетімділігінің мерзімі өтті немесе рұқсаты жеткіліксіз, сондықтан шығынды оқу мүмкін емес.",
+    "reconnectAction": "WhatsApp-ты қайта қосу",
+    "unavailable": "Шығындар туралы деректерді жүктеу мүмкін болмады.",
+    "outOfRange": "Meta шығыны тек соңғы 365 күн ішіндегі кезеңдер үшін көрсетіледі.",
+    "partial": "Кейбір аккаунттарды оқу мүмкін болмады, сондықтан жиынтық тек төменде сомасы көрсетілген аккаунттарды қамтиды.",
+    "scope": "Meta бүкіл WhatsApp Business аккаунты бойынша хабарлаған шамамен шығын: науқандар, чаттар және басқа барлық хабарламалар. Бұл жеке науқанның құны емес.",
+    "truncated": "Алғашқы 10 WhatsApp аккаунты ғана көрсетілген.",
+    "accountState": {
+      "reported": "Деректер бар",
+      "no_activity": "Төлем жоқ",
+      "cost_withheld": "Meta көлемді хабарлады, бірақ құнын емес",
+      "reconnect": "Meta қолжетімділігі жоқ, WhatsApp-ты қайта қосыңыз",
+      "unsupported": "Бұл аккаунтта қолжетімсіз",
+      "unavailable": "Уақытша қолжетімсіз"
+    }
+  },
+  "CsvUpload": {
+    "skipped": {
+      "title": "{count} жол өткізіп жіберілді",
+      "description": "Бұл жолдарда жарамды алушы жоқ, оларға хабарлама жіберілмейді.",
+      "row": "{row}-жол",
+      "more": "тағы {count}",
+      "download": "Өткізілген жолдарды жүктеу",
+      "columns": {
+        "row": "Жол",
+        "value": "Мәні",
+        "reason": "Себебі"
+      },
+      "reasons": {
+        "missing_recipient": "Алушы жоқ",
+        "invalid_phone": "Нөмір қате",
+        "invalid_email": "Email қате"
+      }
+    },
+    "replaceFile": "Ауыстыру",
+    "uploadFile": "CSV/XLSX жүктеу",
+    "clearFile": "Жүктелген файлды тазарту",
+    "browseFile": "Файлды таңдау",
+    "dropzoneTitle": "Алушыларды жүктеу",
+    "dropzoneDescription": "CSV немесе XLSX файлын осы жерге тастаңыз немесе таңдаңыз.",
+    "recipientCount": "{count, number} алушы",
+    "mergedDuplicates": "{count, number} қайталау біріктірілді",
+    "hiddenRowsSkipped": "Excel сүзгісі жасырған жолдар өткізілді: {count, number}.",
+    "truncationNotice": "Импортталған алушылар: {original, number}. Ағымдағы жіберу лимитіне байланысты алғашқы {count, number} алушы қолданылады.",
+    "csvFormat": "CSV форматы:",
+    "formatExample": {
+      "whatsapp": "phone,name,company\n+77001234567,Aibek,TechCorp\n+77007654321,Samat,StartupInc",
+      "telegram": "chat_id,name,company\n123456789,Aibek,TechCorp\n987654321,Samat,StartupInc",
+      "email": "email,name,company\nalice@example.com,Alice,Acme\nbob@example.com,Bob,Beta"
+    },
+    "requirements": {
+      "firstRow": "Бірінші жолда баған тақырыптары болуы керек",
+      "requiredColumn": "Қажетті баған:",
+      "phone": "phone",
+      "chatId": "chat_id",
+      "email": "email",
+      "orEquivalent": "немесе баламасы",
+      "additionalColumns": "Қосымша бағандар хабарлама айнымалыларына айналады",
+      "maxRecipients": "Бір науқанға {count, number} алушыға дейін"
+    },
+    "errors": {
+      "emptyFile": "CSV файлы бос",
+      "noValidRecipients": "CSV файлында жарамды алушылар табылмады",
+      "maxRecipientsExceeded": "Бір науқанға ең көбі {count, number} алушы",
+      "whatsappMissingPhone": "WhatsApp үшін CSV файлында \"phone\" немесе \"phone_number\" бағаны болуы керек",
+      "whatsappInvalidPhone": "{row}-жолдағы телефон нөмірі жарамсыз. Нөмірді халықаралық форматта жазыңыз, мысалы +77001234567, содан кейін файлды қайта жүктеңіз.",
+      "invalidCsv": "CSV форматы жарамсыз. Бөлгіштер мен тырнақшаларды тексеріп, файлды қайта жүктеңіз.",
+      "whatsappBirthdayMissingColumns": "Туған күндер үшін phone/phone_number және birthday/date_of_birth бағандары керек.",
+      "telegramBirthdayMissingColumns": "Туған күндер үшін chat_id/telegram_id және birthday/date_of_birth бағандары керек.",
+      "telegramMissingChatId": "Telegram үшін CSV файлында \"chat_id\" немесе \"phone\" бағаны болуы керек",
+      "emailMissingAddress": "Email науқандары үшін CSV файлында \"email\" бағаны болуы керек",
+      "failedToParseCSV": "CSV файлын талдау сәтсіз аяқталды"
+    }
+  },
+  "WidgetAnalytics": {
+    "title": "Виджет аналитикаңыз",
+    "subtitle": "Жұмыс кеңістігіңіздің веб-сайт трафигі және диалог инсайттары",
+    "emptyWidget": {
+      "title": "Виджет орнатылмаған",
+      "description": "Сайт аналитикасын және келушілер әрекетін бақылау үшін Web Widget интеграциясын орнатыңыз.",
+      "cta": "Интеграцияларға өту"
+    },
+    "privateAnalytics": "Жеке аналитика",
+    "errorTitle": "Аналитика жүктелмеді",
+    "refresh": "Жаңарту",
+    "noDataAvailable": "Жұмыс кеңістігіңіз үшін аналитикалық деректер жоқ",
+    "noDataDescription": "Аналитикалық деректер тек сіздің жұмыс кеңістігіңізге оқшауланған. Егер деректерді көрмесеңіз, виджетіңіз орнатылғанын және трафик қабылдап жатқанын тексеріңіз.",
+    "unknown": "Белгісіз",
+    "errors": {
+      "loadFailed": "Виджет аналитикасын жүктеу мүмкін болмады."
+    },
+    "units": {
+      "seconds": "{value} с",
+      "minutes": "{value} мин",
+      "hours": "{value} сағ"
+    },
+    "websiteUnavailable": {
+      "title": "Веб-аналитика қолжетімсіз",
+      "queryFailed": "Сайт көрсеткіштерін жүктеу мүмкін болмады. Қайталау үшін бетті жаңартыңыз. Диалог көрсеткіштері қолжетімді.",
+      "description": "Бұл ортада PostHog сұрау деректері бапталмаған. Диалог метрикалары қолжетімді.",
+      "metric": "Веб-метрикалар қолжетімсіз"
+    },
+    "websiteMetrics": "Веб-сайт көрсеткіштері (соңғы 30 күн)",
+    "conversationMetrics": "Диалог көрсеткіштері (соңғы 30 күн)",
+    "stats": {
+      "pageviews": "Қаралымдар",
+      "sessions": "Сессиялар",
+      "conversations": "Диалогтар",
+      "chatStartRate": "Чат басталу үлесі",
+      "chatStartRateSubtitle": "Сессияға шаққандағы диалогтар"
+    },
+    "charts": {
+      "pageviewsTitle": "Уақыт бойынша қаралымдар",
+      "pageviewsDescription": "Күнделікті қаралымдар (соңғы 30 күн)",
+      "trafficSourcesTitle": "Трафик көздері",
+      "trafficSourcesDescription": "Келушілер қайдан келеді",
+      "deviceBreakdownTitle": "Құрылғы бөлінісі",
+      "deviceBreakdownDescription": "Десктоп, мобильді, планшет",
+      "noTimeSeriesData": "Уақыт сериясы деректері әлі жоқ",
+      "noTrafficSourceData": "Трафик көзі деректері әлі жоқ",
+      "noDeviceData": "Құрылғы деректері әлі жоқ",
+      "valueLabel": "Қаралымдар",
+      "noData": "График деректері жоқ"
+    },
+    "devices": {
+      "desktop": "Десктоп",
+      "mobile": "Мобильді",
+      "tablet": "Планшет"
+    },
+    "traffic": {
+      "direct": "Тікелей"
+    },
+    "source": {
+      "title": "Виджет баптауы",
+      "noSource": "Виджет көзі табылмады",
+      "installed": "Орнатылған",
+      "position": "Орналасуы",
+      "domains": "Рұқсат етілген домендер",
+      "noDomains": "Домен тізімі бос",
+      "statusActive": "Белсенді",
+      "statusInactive": "Белсенді емес",
+      "airiEnabled": "Airi қосулы",
+      "helpEnabled": "Көмек қойындысы",
+      "autoOpen": "Автоашылу",
+      "positions": {
+        "bottomLeft": "Төменгі сол жақ",
+        "bottomRight": "Төменгі оң жақ"
+      }
+    },
+    "breakdowns": {
+      "empty": "Бөлу деректері әлі жоқ"
+    },
+    "insights": {
+      "title": "Диалог денсаулығы"
+    },
+    "pages": {
+      "title": "Парақшалар",
+      "description": "URL бойынша біріктірілген трафик пен диалогтар",
+      "page": "Парақша",
+      "views": "Қаралымдар",
+      "conversations": "Чаттар",
+      "startRate": "Чат басталуы",
+      "lastActive": "Соңғы белсенділік",
+      "empty": "Парақша деңгейіндегі белсенділік әлі жоқ"
+    },
+    "engagement": {
+      "title": "Қатысу талдаулары (30 күн)",
+      "avgResponseTime": "Орташа жауап уақыты",
+      "avgMessages": "Диалогтағы хабарлар",
+      "csatScore": "CSAT бағасы",
+      "csatResponses": "{count} жауап",
+      "returningVisitors": "Қайталама келушілер",
+      "uniqueVisitorCount": "{count} бірегей келуші",
+      "statusTitle": "Диалог күйі",
+      "statusDesc": "Барлық виджет диалогтарының ағымдағы күйі",
+      "sentimentTitle": "Келуші көңіл-күйі",
+      "sentimentDesc": "Жіктелген диалогтардан сезім талдауы",
+      "categoriesTitle": "Топ санаттар",
+      "categoriesDesc": "Ең жиі кездесетін диалог тақырыптары",
+      "open": "Ашық",
+      "inProgress": "Орындалуда",
+      "closed": "Жабық",
+      "positive": "Жағымды",
+      "neutral": "Бейтарап",
+      "negative": "Жағымсыз"
+    },
+    "privacyBanner": {
+      "title": "Жеке жұмыс кеңістігі аналитикасы",
+      "description": "Мұнда көрсетілген барлық аналитика тек сіздің жұмыс кеңістігіңізге арналған. Басқа компаниялар деректеріңізді көре алмайды. Веб-сайт аналитикасы келушілер виджетті қолданғанда автоматты түрде қадағаланады, бұл нақты уақыттағы веб-сайт көрсеткіштерін (қаралымдар, сессиялар) диалог инсайттарымен (хабарламалар, қолдау сұраулары) біріктіреді. Деректерді оқшаулау сіздің жұмыс кеңістігіңіздің ID-ін қолдана отырып сұрау деңгейінде орындалады."
+    }
+  },
+  "PerformancePage": {
+    "tooLittleData": "Команда өнімділігін есептеу үшін деректер тым аз :(",
+    "collectMoreData": "Әдемі аналитикалық графиктерді көру үшін коммуникацияларыңыздың көбірек деректерін жинаңыз.",
+    "title": "Команда өнімділігі",
+    "description": "Команда өнімділігін бақылаңыз және жақсартыңыз.",
+    "dateRanges": {
+      "last7Days": "Соңғы 7 күн",
+      "last30Days": "Соңғы 30 күн",
+      "last90Days": "Соңғы 90 күн"
+    },
+    "errors": {
+      "loadFailed": "Өнімділік деректерін жүктеу мүмкін болмады.",
+      "retry": "Қайталау"
+    },
+    "chart": {
+      "title": "Деректер жеткіліксіз",
+      "collectMoreData": "Команда өнімділігін көру үшін диалогтар туралы көбірек дерек жинаңыз."
+    },
+    "dimensions": {
+      "empathy": "Эмпатия",
+      "clarity": "Айқындық",
+      "scriptAdherence": "Скриптті сақтау",
+      "resolution": "Мәселені шешу"
+    },
+    "duration": {
+      "missing": "—",
+      "seconds": "{count, plural, one {{value} сек.} other {{value} сек.}}",
+      "minutes": "{count, plural, one {{value} мин.} other {{value} мин.}}",
+      "hours": "{count, plural, one {{value} сағ.} other {{value} сағ.}}"
+    },
+    "units": {
+      "scoreOutOfTen": "{value} / 10",
+      "scoreOutOfFive": "{value} / 5",
+      "percent": "{value}%"
+    },
+    "insights": {
+      "noTrendYet": "Әзірге тренд жоқ",
+      "summary": {
+        "teamQaScore": "Команданың QA бағасы",
+        "noPreviousPeriod": "Салыстыру үшін алдыңғы кезең жоқ",
+        "vsPreviousPeriod": "{value} алдыңғы кезеңмен салыстырғанда",
+        "qaCoverage": "QA қамтуы",
+        "scoredOfHandled": "{handled} өңделген диалогтың {count, plural, one {{scored} диалогы бағаланды} other {{scored} диалогы бағаланды}}",
+        "managersNeedingSupport": "Қолдауды қажет ететін менеджерлер",
+        "managerTrends": "{improving, plural, one {# менеджердің нәтижесі жақсаруда} other {# менеджердің нәтижесі жақсаруда}}, {declining, plural, one {# менеджердің нәтижесі төмендеуде} other {# менеджердің нәтижесі төмендеуде}}",
+        "averageResponseTime": "Орташа жауап беру уақыты",
+        "responseTimeDescription": "Бағаланған диалогтардағы өзара әрекеттесу метрикалары бойынша",
+        "averageCsat": "Орташа CSAT",
+        "csatDescription": "Тек CSAT бағасы бар диалогтар",
+        "activeManagers": "Белсенді менеджерлер",
+        "lastDays": "{count, plural, one {Соңғы {value} күн} other {Соңғы {value} күн}}"
+      },
+      "dimensions": {
+        "title": "QA көрсеткіштерінің күйі",
+        "description": "Команданың мықты тұстары мен дамыту керек дағдыларын көріңіз.",
+        "empty": "Көрсеткіштер бойынша деректер әзірге жеткіліксіз.",
+        "best": "Үздік нәтиже",
+        "needsCoaching": "Коучинг қажет"
+      },
+      "coaching": {
+        "title": "Коучинг басымдықтары",
+        "description": "Баға, тренд және көлем бойынша ең ықпалды даму мүмкіндіктері.",
+        "empty": "Бұл кезеңде коучинг басымдықтары анықталмады.",
+        "focus": "Фокус",
+        "summary": "QA {score} / 10 · {count, plural, one {{countValue} бағаланған диалог} other {{countValue} бағаланған диалог}}",
+        "risk": "Тәуекел"
+      }
+    },
+    "leaderboard": {
+      "title": "Менеджерлер рейтингі",
+      "agent": "Менеджер",
+      "dialogsProcessed": "Өңделген диалогтар",
+      "qaCoverage": "QA қамтуы",
+      "avgResponse": "Орташа жауап",
+      "avgQaScore": "Орташа QA бағасы",
+      "emptyTitle": "Өнімділік деректері әзірге жоқ.",
+      "emptyDescription": "Менеджерлер бағаланған диалогтарды өңдегеннен кейін осында көрінеді.",
+      "scoreBreakdown": "Бағаның бөлінісі",
+      "csat": "CSAT",
+      "lowQaConversations": "QA бағасы төмен диалогтар",
+      "previousPeriodComparison": "{value} алдыңғы кезеңмен салыстырғанда"
+    },
+    "performanceChart": {
+      "title": "QA бағаларын салыстыру",
+      "singleAgentTitle": "Әзірге бір менеджер",
+      "singleAgentDescription": "Салыстыру үшін тағы бір менеджер қосыңыз.",
+      "description": "Команданы орташа және мақсатты QA деңгейлерімен салыстыру.",
+      "qaScore": "QA бағасы",
+      "scoredConversations": "Бағаланған диалогтар",
+      "conversationsShort": "{count, plural, one {{value} диалог} other {{value} диалог}}",
+      "teamAverage": "Команда {value}",
+      "target": "Мақсат {value}"
+    }
+  },
+  "AnalyticsOutcomes": {
+    "title": "Нәтижелер",
+    "observation": "Бақылау мерзімі",
+    "days": "{days} күн",
+    "source": "Дереккөз",
+    "allSources": "Барлық дереккөздер",
+    "refresh": "Жаңарту",
+    "tabs": {
+      "acquisition": "Тарту",
+      "attention": "Жауап күткен клиенттер",
+      "delivery": "Жеткізу және құн",
+      "templates": "Үлгілер",
+      "health": "WhatsApp күйі",
+      "flows": "Flows",
+      "retention": "Қайталама сатып алулар"
+    },
+    "unavailable": "Есеп қолжетімсіз. Қайта жүктеп көріңіз.",
+    "projectedThrough": "Өтініштер {date} дейін жаңартылды",
+    "ledgerThrough": "Расталған операциялар {date} дейін жаңартылды",
+    "coverage": {
+      "ready": "Деректер өзекті.",
+      "backfilling": "Тарихи деректер әлі жүктелуде. Сандар толық емес.",
+      "stale": "Жаңарту кешігуде. Соңғы нәтижелер болмауы мүмкін.",
+      "unavailable": "Жаңарту сәтсіз аяқталды. Деректер толық емес."
+    },
+    "truncated": "Есеп шегіне жетті; таңдаудың бір бөлігі көрсетілді.",
+    "cohortDefinition": "Таңдалған кезеңдегі өтініштер; келесі өтінішке дейінгі {days} күн ішіндегі нәтижелер. Қайтарым бастапқы сатып алуға қатысты.",
+    "qualification": "Біліктілік ережесі",
+    "qualificationHelp": "Біліктілік — бақылау мерзімінде осы CRM сатыларының біріне өту. Сату расталған операцияны талап етеді.",
+    "save": "Ережені сақтау",
+    "saving": "Сақталуда…",
+    "saveFailed": "Ереже сақталмады. Жаңартып, қайталаңыз.",
+    "empty": "Бұл таңдау үшін деректер жоқ",
+    "emptyCohort": "Жаңарту аяқталғаннан кейін жаңа өтініштер пайда болады.",
+    "entryType": "Өтініш",
+    "ad": "Жарнама",
+    "adId": "Жарнама",
+    "entries": "Өтініштер",
+    "engaged": "Екіжақты чат",
+    "qualified": "Біліктілік",
+    "booked": "Расталған жазбалар",
+    "paid": "Төлем жасалған өтініштер",
+    "pending": "Бақылау жалғасуда",
+    "currency": "Валюта",
+    "unknownCurrency": "Валюта белгісіз",
+    "netRevenue": "Таза түсім",
+    "grossRevenue": "Қайтарымға дейінгі түсім",
+    "refundedRevenue": "Қайтарымдар",
+    "costQualified": "Құн / біліктілік",
+    "costPaid": "Құн / төлем",
+    "roas": "Таза ROAS",
+    "adEntry": "Жарнамадан",
+    "organic": "Органикалық",
+    "efficiencyHelp": "Тиімділік үшін жетілген кірістер, толық шығын, сәйкес валюта мен уақыт белдеуі, әр жарнамаға бір дереккөз және кезең басталғаннан өзгермеген расталған WhatsApp бағыты қажет. Біліктілік құны үшін бүкіл кезеңдегі сақталған тарих қажет.",
+    "identityCoverage": "{count} жарнама кірісінің басу, жарнама немесе дереккөз сәйкестігі толық емес.",
+    "attentionScope": "{date} күнгі белсенді білікті клиенттер және олардың негізгі чаты.",
+    "needsReply": "Жауап қажет",
+    "agedUnanswered": "Көптен жауапсыз",
+    "stalled": "Сатыда тоқтаған",
+    "handoff": "Қосылуды күтуде",
+    "emptyAttention": "Назар аударуды қажет ететін білікті клиент жоқ",
+    "stage": "Саты",
+    "owner": "Жауапты",
+    "nextAction": "Келесі әрекет",
+    "chat": "Чат",
+    "openChat": "Чатты ашу",
+    "unassigned": "Тағайындалмаған",
+    "followUp": {
+      "reply": "Жауап беру",
+      "take_over": "Қосылу",
+      "review_quote": "Ұсынысты тексеру",
+      "follow_up": "Еске салу"
+    },
+    "deliveryScope": "ИИ, менеджер, сценарий және науқанның бірегей шығыс хабарламалары. Жауаптар келесі жіберуге дейін не 7 күн ішінде есептеледі.",
+    "accepted": "Қабылданды",
+    "delivered": "Жеткізілді",
+    "read": "Оқылды",
+    "replied": "Жауап берілді",
+    "failed": "Қателер",
+    "pendingDelivery": "Түбіртек күтуде",
+    "free": "Түбіртекте тегін",
+    "unknownPricing": "Бағасы белгісіз",
+    "origin": "Жіберу көзі",
+    "origins": {
+      "manager": "Менеджер",
+      "airi": "Airi",
+      "scenario": "Сценарий",
+      "campaign": "Науқан",
+      "bulk_analytics": "Науқан",
+      "system": "Жүйе",
+      "unknown": "Анықталмаған",
+      "manual": "Қолмен"
+    },
+    "latency": "Кідіріс",
+    "medianSeconds": "Медиана, секунд",
+    "p95Seconds": "P95, секунд",
+    "deliveryLatency": "Жіберуден жеткізуге дейін",
+    "readLatency": "Жіберуден оқуға дейін",
+    "accountSpend": "WhatsApp аккаунт шығыны",
+    "pricingHelp": "Провайдер шығыны шамамен беріліп, WhatsApp аккаунтына қатысты. Ол нөмір бойынша жеткізу мен ИИ құнынан бөлек. Белгісіз тариф нөлдік шығынды білдірмейді.",
+    "account": "Аккаунт",
+    "status": "Күй",
+    "approximateSpend": "Провайдер көрсеткен шығын",
+    "fetchedAt": "Соңғы синхрондау",
+    "errorCode": "Провайдер қатесінің коды",
+    "count": "Саны",
+    "templateScope": "WhatsApp аккаунт метрикалары қолжетімді бақылауға тәуелді. Оқу мен басу жіберуден кейін 7 күн бақыланады; қолжетімсіз мәндер бос.",
+    "template": "Үлгі",
+    "quality": "Сапа",
+    "sent": "Жіберілді",
+    "clicked": "Басулар",
+    "uniqueClicked": "Бірегей басулар",
+    "quickReply": "Жылдам жауаптар",
+    "cost": "Провайдер құны",
+    "healthScope": "Дереккөздердің ағымдағы күйі және соңғы тексеру. Ағымдағы күй тарихи қолжетімділікті дәлелдемейді.",
+    "phoneQuality": "Нөмір сапасы",
+    "portfolioLimit": "Портфель шегі",
+    "accountStatus": "Аккаунт күйі",
+    "webhook": "Webhook",
+    "templateIssues": "Үлгі мәселелері",
+    "tracking": "Insights жинау",
+    "lastVerified": "Соңғы тексеру",
+    "activationHelp": "Insights қосу — провайдердегі бөлек қайтымсыз шешім. Есеп оны автоматты қоспайды.",
+    "insights": {
+      "enable": "Шаблондар үшін Insights қосу",
+      "adminOnly": "Шаблондар Insights-ын тек жұмыс кеңістігінің әкімшісі қоса алады.",
+      "confirmTitle": "{account} үшін шаблондар Insights-ын қосасыз ба?",
+      "confirmDescription": "Meta осы WhatsApp Business аккаунтына Insights қосады, оның ішінде шаблон түймелеріндегі сілтемелерді бақылауды, және клиенттермен чаттарыңыздан анонимделген деректерді жинайды. Мұнда шаблондардың жіберілуі, жеткізілуі, оқылуы және басылуы көрсетіледі; оқу мен басу жіберілгеннен кейін 7 күн бойы есептеледі.",
+      "permanent": "Бұл қайтымсыз: Meta шаблондар Insights-ын өшіруге мүмкіндік бермейді.",
+      "cancel": "Бас тарту",
+      "confirm": "Біржола қосу",
+      "enabling": "Қосылуда…",
+      "enabled": "Шаблондар Insights-ы қосылды. Деректер Meta хабарлаған сайын пайда болады.",
+      "reconnect": "WhatsApp-ты қайта қосу",
+      "errors": {
+        "reconnect": "Бұл WhatsApp аккаунтына Meta қолжетімділігінің мерзімі өтті немесе рұқсаты жеткіліксіз, сондықтан Insights-ты әзірге қосу мүмкін емес.",
+        "unsupported": "Meta WhatsApp Business қосымшасы арқылы қосылған аккаунттарға шаблондар Insights-ын бермейді, сондықтан бұл аккаунтта оларды қосу мүмкін емес.",
+        "busy": "Meta қазір бос емес. Бірнеше минуттан кейін қайталап көріңіз.",
+        "forbidden": "Шаблондар Insights-ын тек жұмыс кеңістігінің әкімшісі қоса алады.",
+        "failed": "Шаблондар Insights-ын қосу мүмкін болмады. Қайталап көріңіз."
+      }
+    },
+    "activation": {
+      "enabled": "Қосылған",
+      "required": "Қосу қажет",
+      "unknown": "Белгісіз"
+    },
+    "webhookStatus": {
+      "healthy": "Бапталған",
+      "action_required": "Әрекет қажет",
+      "unknown": "Тексерілмеген"
+    },
+    "provider": {
+      "available": "Қолжетімді",
+      "not_connected": "Қосылмаған",
+      "activation_required": "Insights қосу қажет",
+      "permission_required": "Провайдер рұқсаты қажет",
+      "unsupported": "Бұл аккаунтта қолжетімсіз",
+      "unavailable": "Провайдер деректері қолжетімсіз"
+    },
+    "flowScope": "Жеке Flow жіберулері, жеткізу, оқу және форманы жіберу; содан кейінгі расталған нәтижелер келесі формаға немесе терезе соңына дейін. Оқу ашылуды өлшемейді; жібермеу бас тартуды дәлелдемейді.",
+    "flow": "Flow",
+    "submitted": "Форма жіберілді",
+    "retentionScope": "Алғашқы расталған сатып алу айы бойынша клиенттер және {days} күн ішіндегі қайталама сатып алулар. Сомалар валюта бойынша бөлек.",
+    "cohortMonth": "Алғашқы сатып алу айы",
+    "customers": "Клиенттер",
+    "repeatCustomers": "Қайта сатып алғандар",
+    "sales": "Расталған сатып алулар",
+    "retentionIdentity": "{count} сатып алуда тұрақты клиент ID жоқ; олар қайталама сатып алуға кірмейді.",
+    "pendingTrend": "Жіберу күні бойынша жеткізуді күту",
+    "dailyDelivery": "Күнделікті жеткізу",
+    "dailyDeliveryScope": "Жіберу күні бойынша ағымдағы түбіртектер; кеш түбіртек бастапқы күнді жаңартады.",
+    "day": "Күн",
+    "sourceTemplateBreakdown": "Дереккөз, нөмір және үлгі бойынша",
+    "phone": "Нөмір",
+    "healthHistory": "Сақталған күй бақылаулары",
+    "healthHistoryScope": "Синхрондау сақтаған күнделікті бақылаулар. Күту мен қателер алдыңғы жеті күнге қатысты; бос аралық бақыланбаған.",
+    "pending7d": "Күту, 7 күндегі жіберулер",
+    "failed7d": "Қате, 7 күндегі жіберулер",
+    "freshness": {
+      "fresh": "Тексеру өзекті",
+      "stale": "Тексеру ескірген",
+      "unknown": "Тексеру белгісіз"
+    },
+    "segments": "Дереккөз, жарнама және жауапты бойынша",
+    "viewAudience": "Осы клиенттерді көрсету",
+    "clearSegment": "Сегментті тазалау",
+    "customer": "Клиент",
+    "qualificationCoverage": "Біліктілік сақталған CRM оқиғаларына негізделген; бұрынғы кезең тарихы толық болмауы мүмкін.",
+    "segment": "Сегмент",
+    "viewSegment": "Клиенттерді көрсету",
+    "pendingCustomers": "Әлі бақылануда",
+    "unknownValues": "Белгісіз сомалар",
+    "retentionMaturity": "Жаңа когорталар әлі бақылануда; жетілген когорталарды бірдей терезеде салыстырыңыз.",
+    "templateHistory": "Үлгілер тарихы",
+    "templateHistoryScope": "Үлгі күйі, сапасы және санатының сақталған оқиғалары. Бос аралықтар бақыланбаған.",
+    "event": "Оқиға",
+    "category": "Санат",
+    "serviceHistory": "Сақталған қызмет тарихы",
+    "serviceHistoryScope": "Жинау басталғаннан бергі расталған шешімдер, қайта ашу және беру. Қалпына келтіру суреттері ағымдағы эпизодты сипаттайды, өткізіп алған ауысуды қалпына келтірмейді.",
+    "resolved": "Расталған шешімдер",
+    "reopened": "Қайта ашу",
+    "handoffStarted": "Беру басталды",
+    "handoffEnded": "Беру аяқталды",
+    "unknownClosures": "Расталмаған жабу",
+    "timeoutClosures": "Уақыт біткенде жабу",
+    "snapshotEvents": "Қалпына келтіру суреттері",
+    "streamEvents": "Сақталған ауысулар",
+    "resolutionSeconds": "Шешім, секунд",
+    "handoffSeconds": "Беру, секунд",
+    "measuredResolutions": "Өлшенген шешімдер",
+    "historyGap": "Тарих бос аралығы анықталды: {date}",
+    "lifecycleState": {
+      "not_started": "Жинау әлі басталмады",
+      "streaming": "Жинау белсенді",
+      "degraded": "Жинауға назар керек",
+      "history_gap": "Тарих толық емес"
+    },
+    "loading": "Жүктелуде…",
+    "reconciliationThrough": "{date} дейін салыстырылды",
+    "healthObservedAt": "Күй тексерілді",
+    "deliveryObservedAt": "Жеткізу тексерілді",
+    "providerWindow": "Бүкіл WhatsApp есептік жазбасы: {start} — {end}",
+    "readRate": "Оқу үлесі, %",
+    "clickRate": "Басу үлесі, %",
+    "costPerDelivered": "Жеткізілген хабарлама құны",
+    "pricingDetails": "Ел, санат және деңгей бойынша шығын",
+    "country": "Ел",
+    "billingType": "Төлем түрі",
+    "tier": "Көлем деңгейі",
+    "volume": "Хабарлама көлемі",
+    "accountHealth": {
+      "healthy": "Қосылған",
+      "warning": "Назар керек",
+      "reconnecting": "Қайта қосылуда",
+      "disconnected": "Ажыратылған",
+      "restricted": "Шектелген",
+      "disabled": "Өшірілген",
+      "payment_required": "Төлем қажет",
+      "inaccessible": "Қол жеткізу мүмкін емес",
+      "unknown": "Белгісіз"
+    },
+    "qualifiedToPaid": "Білікті өтініштен төлемге, %",
+    "qualifiedToPaidHelp": "Төлемге өту тарту кезеңінде білікті сатыға жеткеннен кейінгі расталған сатып алуларды ғана есептейді. Үлес бақылауы аяқталған және сатылар тарихы толық когорттар үшін көрсетіледі.",
+    "matureCohorts": "Бақылауы аяқталған когорттар",
+    "cohortPeriod": "Тарту күндері: {from} бастап {to} дейін, екі күн де қамтылады.",
+    "workspace": {
+      "title": "Нәтижелер жұмыс кеңістігіңіз",
+      "description": "Қажетті есептерді өзіңізге ыңғайлы орналастырыңыз.",
+      "edit": "Орналасуды өзгерту",
+      "add": "Есеп қосу",
+      "save": "Сақтау",
+      "cancel": "Бас тарту",
+      "reset": "Орналасуды қалпына келтіру",
+      "saving": "Сақталуда…",
+      "unsaved": "Сақталмаған өзгерістер бар",
+      "unreadable": "Сақталған орналасу ашылмады, сондықтан әдепкі есептер көрсетілді. Сақтау бүкіл сақталған орналасуды, соның ішінде дашбордтарыңызды да ауыстырады.",
+      "libraryTitle": "Есептер қосу",
+      "libraryDescription": "Жұмыс кеңістігіңізге қажетті есептерді таңдаңыз.",
+      "emptyTitle": "Әзірге есептер жоқ",
+      "emptyDescription": "Есеп қосыңыз немесе орналасуды қалпына келтіріңіз.",
+      "allAdded": "Барлық есептер қосылған",
+      "added": "{report} қосылды",
+      "libraryClose": "Дайын",
+      "resetHint": "Өзгерістер сақтағаннан кейін қолданылады.",
+      "period": "Кезең",
+      "observation": "Нәтиже терезесі: {days} күн",
+      "mature": "Бақылауы аяқталған топтар",
+      "refreshing": "Жаңартылуда…",
+      "refreshFailed": "Кейбір есептер жаңармады. Қайта көріңіз.",
+      "dateScope": "Өтініш күндері: {from} – {to}",
+      "freshness": "Деректердің өзектілігі",
+      "measurement": "Қалай есептейміз",
+      "entryBreakdown": "Дереккөз және жарнама бойынша өтініштер",
+      "topEntries": "Алғашқы {count} топ; барлық топтар егжей-тегжейде.",
+      "entryDetails": "Өтініш пен түсім мәліметтері",
+      "deliveryDetails": "Жеткізу және құн мәліметтері",
+      "qualificationIncomplete": "Біліктілік тарихы толық емес. Деректің жоқтығы нөлді білдірмейді.",
+      "audienceUnavailable": "Лидтер тізімі толық емес. Жаңартып көріңіз.",
+      "deliveryScope": "Соңғы {days} күнде жіберілген хабарлар. Жеткізу күйі — қазір.",
+      "unknownRevenue": "Расталмаған сомалар: {count}",
+      "leadDetails": "Барлық лидтер мен сегменттер",
+      "wait": "Күту"
+    }
+  }
+}

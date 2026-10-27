@@ -1,0 +1,96 @@
+{
+  "TaxonomyManager": {
+    "infoTitle": "Conversation taxonomy",
+    "infoDescription": "Labels Airi uses to classify conversations for requests, analytics, scenarios, and reports.",
+    "usedIn": "Used in:",
+    "usedInList": "Classification, quick replies, insights, campaign segments, reports",
+    "logicTitle": "Classification rules",
+    "logicDescription": "The classifier stores one label per conversation:",
+    "logicStep1": "Airi analyzes the conversation and picks one label from this taxonomy.",
+    "logicStep2": "If the AI's confidence is below your Confidence Threshold, the category is set to \"Other\" instead.",
+    "logicStep3": "If the AI returns a label that does not exactly match a taxonomy label, it falls back to \"Other\".",
+    "logicStep4": "The assigned category is stored as classification.category and used for filtering, analytics, scenarios, and campaigns.",
+    "logicNote": "Each conversation stores which taxonomy version was used (taxonomy_id) for audit and consistency.",
+    "classificationLabels": "Topics",
+    "labelsDescription": "One topic per conversation. Other is the fallback.",
+    "labelPlaceholder": "Topic {number}",
+    "addLabel": "Add topic",
+    "guidelines": "Instructions",
+    "guidelinesDescription": "Tell the classifier when each label should be used.",
+    "guidelinesPlaceholder": "e.g., Use discrete, mutually exclusive categories. Prefer specific business intents over generic when obvious. Default to Other if unclear.",
+    "fewShotTitle": "Examples",
+    "fewShotDescription": "Show which topic fits a customer message.",
+    "example": "Example {number}",
+    "exampleText": "Example Text",
+    "exampleTextPlaceholder": "e.g., How much is the pro plan? Do you have annual billing?",
+    "expectedLabel": "Expected Label",
+    "chooseLabel": "Choose a label",
+    "addExample": "Add Training Example",
+    "advancedSettings": "Advanced Settings",
+    "confidenceThreshold": "Confidence Threshold",
+    "confidenceDescription": "From 0 to 1. Higher values send more conversations to Other.",
+    "resetToDefaults": "Use defaults",
+    "saveTaxonomy": "Save",
+    "saving": "Saving...",
+    "validation": {
+      "minLabels": "Add at least one topic.",
+      "duplicateLabels": "Duplicate labels found. Each label must be unique.",
+      "resetConfirm": "Reset to default taxonomy? This will discard your changes.",
+      "examples": "Complete each example and choose a current topic, or remove it.",
+      "confidence": "Enter a confidence between 0 and 1.",
+      "maxExamples": "Use up to 24 examples."
+    },
+    "toast": {
+      "saved": "Taxonomy saved",
+      "resetSuccess": "Reset to defaults",
+      "savedDescription": "Taxonomy saved! New classifications will use these categories."
+    },
+    "removeLabel": "Remove topic {number}",
+    "removeExample": "Remove example {number}",
+    "saveFailed": "Could not save classification settings. Try again.",
+    "manualTagsDescription": "Team and scenario tags. These are separate from AI topics.",
+    "loadTagsFailed": "Could not load team tags.",
+    "retry": "Retry"
+  },
+  "TaxonomiesPage": {
+    "title": "Taxonomies",
+    "description": "Manage conversation classification labels and guidelines."
+  },
+  "IndexedUrlsManager": {
+    "title": "Public URLs",
+    "description": "Index public pages that Airi can use as context.",
+    "urlPlaceholder": "https://example.com/help/getting-started",
+    "reindex": "Re-index",
+    "delete": "Delete",
+    "indexedAgo": "Indexed {time}",
+    "error": "Error:",
+    "status": {
+      "indexed": "indexed",
+      "pending": "pending",
+      "failed": "failed"
+    },
+    "empty": {
+      "title": "No external URLs indexed yet",
+      "description": "Add public website pages for Airi context"
+    },
+    "validation": {
+      "enterUrl": "Please enter a URL",
+      "invalidUrl": "Invalid URL format"
+    },
+    "toast": {
+      "loadFailed": "Failed to load indexed URLs",
+      "indexSuccess": "Indexed: {title}",
+      "addFailed": "Failed to add URL",
+      "reindexSuccess": "Re-indexed: {title}",
+      "reindexFailed": "Failed to re-index URL",
+      "deleteSuccess": "URL deleted",
+      "deleteFailed": "Failed to delete URL"
+    },
+    "deleteConfirm": "Are you sure you want to delete:\n{url}\n\nThis will remove it from AI insights.",
+    "limitReached": "Maximum limit reached (5 URLs). Delete an existing URL to add a new one.",
+    "info": {
+      "title": "How it works:",
+      "description": "Airi searches indexed pages for relevant context and policies when drafting insights."
+    }
+  }
+}

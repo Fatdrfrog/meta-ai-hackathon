@@ -1,0 +1,9 @@
+{
+  "noScore": true,
+  "diff": false,
+  "blocking": "error",
+  "supplyChain": {
+    "severity": "warning"
+  },
+  "serverAuthFunctionNames": ["verifyAccess"]
+}

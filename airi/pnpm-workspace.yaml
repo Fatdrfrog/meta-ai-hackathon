@@ -1,0 +1,48 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# @hookform/resolvers publishes its Zod adapter with a static `zod/v4/core`
+# import but omits Zod from the root package metadata used by pnpm.
+packageExtensions:
+  "@hookform/resolvers@5.2.2":
+    peerDependencies:
+      zod: "^3.25.0 || ^4.0.0"
+
+allowBuilds:
+  "@google/genai": true
+  "@parcel/watcher": true
+  "@swc/core": true
+  "@tailwindcss/oxide": true
+  core-js: true
+  esbuild: true
+  msw: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - "@expo/cli@56.1.15"
+  - "@expo/log-box@56.0.13"
+  - "@expo/metro-config@56.0.14"
+  - "@expo/metro-runtime@56.0.15"
+  - "@expo/ui@56.0.17"
+  - babel-preset-expo@56.0.15
+  - expo-asset@56.0.17
+  - expo-constants@56.0.18
+  - expo-file-system@56.0.8
+  - expo-font@56.0.6
+  - expo-linking@56.0.14
+  - expo-modules-core@56.0.16
+  - expo-modules-jsi@56.0.9
+  - expo-router@56.2.10
+  - expo@56.0.11
+  - '@posthog/core@1.55.1'
+  - '@posthog/types@1.412.4'
+  - '@upstash/redis@1.39.0'
+  - icu-minify@4.14.6
+  - next-intl-swc-plugin-extractor@4.14.6
+  - next-intl@4.14.6
+  - posthog-js@1.434.4
+  - posthog-node@5.52.5
+  - use-intl@4.14.6

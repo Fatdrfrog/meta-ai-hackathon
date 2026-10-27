@@ -1,0 +1,53 @@
+{
+  "name": "@icecore/temporal-worker",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build:workflow-bundle": "node ./scripts/build-workflow-bundle.mjs",
+    "check:startup-import": "tsx scripts/check-worker-startup-import.ts",
+    "backfill:usage-snapshots": "tsx src/backfill-usage-snapshots.ts",
+    "compact:whatsapp-webhook-events": "tsx src/compact-whatsapp-webhook-events.ts",
+    "dev": "tsx watch src/main.ts",
+    "export:replay-histories": "tsx src/export-replay-histories.ts",
+    "migrate:creative-assets-gcs": "tsx src/migrate-creative-assets-gcs.ts",
+    "purge:workspace-chat-data": "tsx src/purge-workspace-chat-data.ts",
+    "replay:histories": "tsx src/replay-histories.ts",
+    "replay:histories:strict": "tsx src/replay-histories.ts --strict",
+    "replay:whatsapp-webhook-events": "tsx src/replay-whatsapp-webhook-events.ts",
+    "test": "tsx --test \"src/**/*.test.ts\" \"../../packages/airi-runtime/src/**/*.test.ts\" \"../../packages/temporal/src/**/*.test.ts\" \"../../packages/otp-runtime/src/**/*.test.ts\"",
+    "start": "tsx src/main.ts",
+    "start:gateway": "tsx src/gateway.ts",
+    "start:media-api": "tsx src/media-api.ts",
+    "start:otp-api": "tsx src/otp-api.ts",
+    "start:otp-worker": "tsx src/otp-worker.ts",
+    "start:worker": "tsx src/worker.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^5.3.0",
+    "@google-cloud/storage": "7.21.0",
+    "@icecore/otp-runtime": "workspace:*",
+    "@icecore/airi-runtime": "workspace:*",
+    "@icecore/shared": "workspace:*",
+    "@icecore/temporal": "workspace:*",
+    "@icecore/whatsapp": "workspace:*",
+    "@temporalio/activity": "~1.24.0",
+    "@temporalio/client": "~1.24.0",
+    "@temporalio/worker": "~1.24.0",
+    "@temporalio/workflow": "~1.24.0",
+    "dotenv": "^17.3.1",
+    "jose": "^6.1.0",
+    "mongoose": "^8.24.4",
+    "redis": "^5.10.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.19.17",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2"
+  }
+}

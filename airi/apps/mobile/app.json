@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "airi.chat",
+    "slug": "airi-chat-mobile",
+    "scheme": "airichat",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "chat.airi.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "chat.airi.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F172A"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "mobile": {
+        "apiBaseUrl": "http://localhost:3000",
+        "supabaseUrl": "",
+        "supabaseAnonKey": ""
+      },
+      "eas": {
+        "projectId": "23cc3809-e707-4189-a4b7-6aff9f3f21eb"
+      }
+    }
+  }
+}

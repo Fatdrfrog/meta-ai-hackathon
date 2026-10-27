@@ -1,0 +1,43 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        IMAGE_URI="${_IMAGE_URI}"
+        CACHE_IMAGE_URI="$${IMAGE_URI%:*}:build-cache"
+
+        if ! docker pull "$${CACHE_IMAGE_URI}"; then
+          echo "Worker build cache is unavailable; continuing with a cold build."
+        fi
+
+        docker build \
+          --cache-from "$${CACHE_IMAGE_URI}" \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          -f apps/temporal-worker/Dockerfile \
+          -t "${_IMAGE_URI}" \
+          -t "$${CACHE_IMAGE_URI}" \
+          --label "org.opencontainers.image.revision=${_IMAGE_SOURCE_COMMIT}" \
+          --label "airi.requests.writer-protocol=${_REQUESTS_WRITER_PROTOCOL}" \
+          --label "airi.build-context.sha256=${_BUILD_CONTEXT_SHA256}" \
+          --label "airi.minimum-compatible-build=${_MINIMUM_COMPATIBLE_BUILD}" \
+          .
+        docker push "${_IMAGE_URI}"
+
+        if ! docker push "$${CACHE_IMAGE_URI}"; then
+          echo "Worker build cache could not be published; release image remains available."
+        fi
+
+images:
+  - $_IMAGE_URI
+
+options:
+  logging: GCS_ONLY
+substitutions:
+  _IMAGE_SOURCE_COMMIT: unknown
+  _BUILD_CONTEXT_SHA256: unknown
+  _REQUESTS_WRITER_PROTOCOL: sequence_v2
+  _MINIMUM_COMPATIBLE_BUILD: requests-sequence-v2-a

@@ -1,0 +1,1888 @@
+{
+  "DashboardPage": {
+    "header": {
+      "title": "Аналитика тақтасы",
+      "description": "Қолдау өтініштері мен негізгі үрдістерге шолу."
+    },
+    "filters": {
+      "allChannels": "Барлық арналар",
+      "allCategories": "Барлық санаттар",
+      "allLabels": "Барлық белгілер",
+      "allManagers": "Барлық менеджерлер",
+      "label": "Сүзгілер",
+      "channelCount": "{count, plural, one {# арна} other {# арна}}",
+      "categoryCount": "{count, plural, one {# санат} other {# санат}}",
+      "labelCount": "{count, plural, one {# белгі} other {# белгі}}",
+      "managerCount": "{count, plural, one {# менеджер} other {# менеджер}}",
+      "channels": "Арналар",
+      "noChannels": "Арналар жоқ",
+      "categories": "Санаттар",
+      "noCategories": "Санаттар жоқ",
+      "internalLabels": "Ішкі белгілер",
+      "noInternalLabels": "Ішкі белгілер жоқ",
+      "managers": "Менеджерлер",
+      "noManagers": "Менеджерлер жоқ",
+      "sheetTitle": "Аналитика сүзгілері",
+      "sheetDescription": "Бұл сүзгілер дашбордтың барлық бөлімдеріне және екі кезеңге де қолданылады.",
+      "apply": "Сүзгілерді қолдану",
+      "clearSelection": "Таңдауды тазарту"
+    },
+    "presets": {
+      "label": "Сүзгі жинақтары",
+      "empty": "Сақталған жинақтар жоқ",
+      "delete": "Жою: {name}",
+      "save": "Ағымдағы сүзгілерді сақтау",
+      "saveTitle": "Сүзгі жинағын сақтау",
+      "saveDescription": "Осы таңдауды кейін қайта қолдану үшін сақтаңыз.",
+      "nameLabel": "Жинақ атауы",
+      "namePlaceholder": "Мысалы, Қолдау жетекшілері",
+      "cancel": "Бас тарту",
+      "confirmSave": "Жинақты сақтау",
+      "apply": "{name} жинағын қолдану",
+      "deleteAria": "{name} жинағын жою",
+      "deleteTitle": "Сүзгі жинағы жойылсын ба?",
+      "deleteDescription": "{name} жинағы қайтарымсыз жойылады.",
+      "deleteCancel": "Жинақты қалдыру",
+      "deleteConfirm": "Жинақты жою",
+      "deleteAction": "Жою"
+    },
+    "actions": {
+      "export": "Экспорт"
+    },
+    "export": {
+      "all": "БАРЛЫҒЫ",
+      "filters": "Сүзгілер",
+      "comparisonPeriods": "Салыстыру кезеңдері",
+      "categoryComparisons": "Санаттарды салыстыру",
+      "dailyCountsOverall": "Күндер бойынша динамика (барлық дерек)",
+      "messageActivityByHour": "Сағаттар бойынша хабарлама белсенділігі",
+      "topCategoriesVisible": "Үздік санаттар (көрінетін)",
+      "categoriesByChannelVisible": "Арналар бойынша санаттар (көрінетін)",
+      "statsOverall": "Көрсеткіштер (барлық дерек)",
+      "advertisement": "Жарнама",
+      "metaAdsManagerDaily": "Meta Ads Manager күндер бойынша",
+      "metaAdsManagerTopAds": "Meta Ads Manager үздік жарнамалары",
+      "advertisementSources": "Жарнама көздері",
+      "internalLabels": "Ішкі белгілер",
+      "managers": "Менеджерлер",
+      "internalLabelBreakdown": "Ішкі белгілер бойынша бөлу",
+      "metaAdsCurrencies": "Meta шығыны валюта бойынша",
+      "metaAdsAccounts": "Meta аккаунт метрикалары",
+      "conversionFeedback": "Meta нәтижелері туралы кері байланыс",
+      "conversionFeedbackReasons": "Жеткізу күйінің себептері"
+    },
+    "advertisement": {
+      "title": "Meta жарнамасы",
+      "description": "Ads Manager нәтижелері және Airi тіркеген WhatsApp жарнама өтініштері.",
+      "sourceTypes": {
+        "metaAds": "Meta жарнамасы",
+        "instagramPosts": "Instagram жазбалары",
+        "unknown": "Белгісіз дереккөз"
+      },
+      "sourceTypeCount": "{type}: {count}",
+      "tiles": {
+        "metaResults": "Meta нәтижелері",
+        "spend": "Шығын",
+        "costPerResult": "Нәтиже құны",
+        "airiCaptured": "Airi тіркеген",
+        "capturedStarts": "Тіркелген өтініштер",
+        "responded": "Жауап берілген",
+        "closed": "Жабылған",
+        "trackedSources": "Бақыланатын дереккөздер"
+      },
+      "selectedAdAccount": "Таңдалған жарнама аккаунты",
+      "spendScope": "Аккаунттағы барлық жарнама · {account}",
+      "uniqueSources": "{count, plural, one {# бірегей дереккөз} other {# бірегей дереккөз}}",
+      "ofMetaResults": "Meta нәтижелерінің {percent}",
+      "responseRate": "Жауап үлесі {percent}",
+      "closeRate": "Жабылу үлесі {percent}",
+      "topSourcesShown": "Негізгі дереккөздер төменде көрсетілген",
+      "captureGap": "{count, plural, one {{countValue} Meta нәтижесі осы кезеңде Airi тіркеген жарнама өтінішіне айналмады.} other {{countValue} Meta нәтижесі осы кезеңде Airi тіркеген жарнама өтінішіне айналмады.}}",
+      "metaByDay": {
+        "title": "Meta нәтижелері күндер бойынша",
+        "description": "Ads Manager хабар алмасу нәтижелері мен шығыны."
+      },
+      "dateRange": "{start} – {end}",
+      "capturedByDay": {
+        "title": "Airi тіркеген өтініштер",
+        "description": "Meta жарнамасынан түскен өтініштер күндер бойынша."
+      },
+      "dayCount": "{count, plural, one {# күн} other {# күн}}",
+      "metaResultTooltip": "{date}: {count}, {spend}",
+      "capturedStartTooltip": "{date}: {count}",
+      "topAds": {
+        "ad": "Meta жарнамасы",
+        "results": "Нәтижелер",
+        "spend": "Шығын",
+        "costPerResult": "Нәтиже құны"
+      },
+      "sources": {
+        "source": "Airi дереккөзі",
+        "starts": "Өтініштер",
+        "responded": "Жауап берілген",
+        "closed": "Жабылған",
+        "latest": "Соңғысы",
+        "empty": "Бұл кезең үшін дереккөздер бойынша бөлініс жоқ."
+      },
+      "sourceId": "Дереккөз ID: {id}",
+      "openSource": "Жарнама дереккөзін ашу",
+      "sales": {
+        "unknownCurrency": "Валюта белгісіз",
+        "title": "Тіркелген сатылымдар",
+        "scope": "Таңдалған күндердегі жұмыс кеңістігінің барлық сатылымдары. Арна, санат, белгі және менеджер сүзгілері қолданылмайды.",
+        "customerScope": "«Белгілі сатып алушылар» байланыстырылған клиент профильдерін санайды, «Төлемі бар диалогтар» сатылым тіркелген чаттарды санайды. Бір сатып алушы бірнеше жарнама тобына кіруі мүмкін.",
+        "currencyGroup": "{currency} валютасындағы сатылымдар",
+        "adColumn": "Жарнама / науқан",
+        "ad": "Жарнама: {id}",
+        "unattributed": "Атрибуциясыз",
+        "payingCustomers": "Белгілі сатып алушылар",
+        "paidConversations": "Төлемі бар диалогтар",
+        "sales": "Сатылымдар",
+        "refunds": "Қайтарымдар",
+        "gross": "Түсім",
+        "refunded": "Қайтарылған сома",
+        "net": "Қайтарымнан кейінгі түсім",
+        "empty": "Таңдалған күндерде тіркелген сатылымдар немесе қайтарымдар жоқ.",
+        "error": "Сатылымдарды жүктеу мүмкін болмады. Панельді жаңартып, қайталап көріңіз.",
+        "dateRangeError": "Сатылымдарды көру үшін 366 күннен аспайтын аралықты таңдаңыз.",
+        "truncated": "Алғашқы 200 жарнама және валюта тобы көрсетілген. Толығырақ есеп үшін қысқа аралықты таңдаңыз.",
+        "recent": "Meta-ға соңғы жіберілімдер ({count})",
+        "deliveryScope": "Meta оқиғаны қабылдауы жарнамалық атрибуцияны растамайды. Сәйкес WhatsApp жарнама диалогы жоқ оқиғалар сатылым есебінде қалады.",
+        "unknownHelp": "Қайта жібермес бұрын бұл оқиғаларды Meta Events Manager ішінде тексеріңіз. Жеткізілуі белгісіз; автоматты қайталау өшірілген.",
+        "sale": "Сатылым",
+        "refund": "Қайтарым",
+        "testCode": "Сынақ коды",
+        "preparationFailed": "Жіберу мүмкін болмады",
+        "statuses": {
+          "pending": "Жіберуді күтуде",
+          "queued": "Кезекте",
+          "delivery_unknown": "Жеткізілуі белгісіз",
+          "sent": "Meta қабылдады",
+          "rejected": "Meta қабылдамады",
+          "not_eligible": "Жіберуге жарамсыз"
+        }
+      },
+      "filterScope": "Таңдалған күндер. Өтініш сүзгілері тіркелген чаттарға әсер етеді; Meta нәтижелері мен шығындары сүзілмейді.",
+      "diagnostics": {
+        "allMessaging": "Meta нәтижелері барлық хабарлама бағыттарын қамтиды; бұл airi.chat WhatsApp чаттарының саны емес.",
+        "reportTime": "Нәтижелер конверсия күні бойынша; жарнама тобының атрибуция баптаулары.",
+        "fetchedAt": "Жаңартылды {date}",
+        "partial": "Есеп толық емес. Тиімділік бағасы қолжетімсіз.",
+        "coverage": "Нәтижелер {reported} жолда бар; {missing} жолда жоқ.",
+        "spendCoverage": "Шығындар {reported} жолда бар; {missing} жолда жоқ.",
+        "currency": "Валюта",
+        "unknownCurrency": "Белгісіз валюта",
+        "impressions": "Көрсетілімдер",
+        "linkClicks": "Сілтемені басу",
+        "ctr": "Сілтеме CTR",
+        "cpc": "Сілтеме CPC",
+        "account": "Аккаунт",
+        "reach": "Қамту",
+        "frequency": "Жиілік",
+        "timeZone": "Уақыт белдеуі",
+        "currencyBreakdown": "Валюта бойынша шығындар",
+        "accountSummary": "Таңдалған күндердегі аккаунт қорытындысы. Қамту мен жиілік жарнамалар немесе күндер бойынша қосылмайды.",
+        "warnings": {
+          "sources_truncated": "Дереккөз шегіне жетті",
+          "accounts_truncated": "Аккаунт шегіне жетті",
+          "credentials_unavailable": "Тіркелгі деректері қолжетімсіз",
+          "accounts_unavailable": "Аккаунттар қолжетімсіз",
+          "insights_unavailable": "Insights қолжетімсіз",
+          "account_summary_unavailable": "Аккаунт қорытындысы қолжетімсіз",
+          "rows_truncated": "Жол шегіне жетті",
+          "invalid_paging": "Провайдер беттері толық емес",
+          "currency_unavailable": "Валюта қолжетімсіз",
+          "timezone_scope": "Аккаунт уақыт белдеуі есептен өзгеше",
+          "results_not_reported": "Таңдалған нәтиже берілмеген",
+          "multiple_currencies": "Валюталар бөлек есептеледі",
+          "ads_truncated": "Жарнама кестесі толық емес",
+          "spend_not_reported": "Шығын берілмеген",
+          "report_timeout": "Провайдер есебінің уақыты аяқталды",
+          "sources_unavailable": "Дереккөз тізімі қолжетімсіз"
+        },
+        "currentDestination": "Ағымдағы бағыт: {destination}",
+        "destinationWhatsApp": "WhatsApp",
+        "destinationOther": "Басқа немесе бірнеше бағыт",
+        "destinationUnknown": "Тексерілмеген",
+        "destinationUpdatedAt": "Жарнама тобы {date} жаңартылды",
+        "currentDestinationHelp": "Бағыт деректері жарнама тобының ағымдағы баптауын сипаттайды. Соңғы өзгеріс уақыты таңдалған кезеңді сақтықпен тексеруге қолданылады."
+      },
+      "feedback": {
+        "title": "Meta нәтижелері туралы кері байланыс",
+        "scope": "Осы кезеңдегі сатулар мен қайтарымдар; чат сүзгілері кері байланыс жеткізуін өзгертпейді. Қабылдау түсім атрибуциясын білдірмейді.",
+        "recorded": "Тіркелді",
+        "eligible": "Жіберуге жарамды",
+        "pending": "Күтуде",
+        "accepted": "Meta қабылдады",
+        "rejected": "Қабылданбады",
+        "unknown": "Жеткізу белгісіз",
+        "ineligible": "Жарамсыз",
+        "oldestPending": "Ең ерте күткен: {date}",
+        "unknownHelp": "Белгісіз жеткізу автоматты қайталанбайды; Meta қабылдауы жарнама атрибуциясын дәлелдемейді.",
+        "empty": "Бұл кезеңде тіркелген нәтиже жоқ",
+        "unavailable": "Кері байланыс қолжетімсіз",
+        "reasonsTitle": "Жеткізу күйінің себептері",
+        "status": "Күй",
+        "reason": "Себеп",
+        "count": "Саны",
+        "truncated": "Себептер бөлінісі толық емес.",
+        "reasons": {
+          "missing_attributable_click": "Атрибуция үшін басу жоқ",
+          "transaction_id_missing": "Транзакция ID жоқ",
+          "feedback_not_enabled": "Кері байланыс қосылмаған",
+          "whatsapp_source_unavailable": "WhatsApp дереккөзі қолжетімсіз",
+          "whatsapp_account_changed": "WhatsApp аккаунты өзгерді",
+          "delivery_destination_changed": "Жеткізу бағыты өзгерді",
+          "event_too_old": "Оқиға тым ескі",
+          "pre_dispatch_failure": "Жіберуге дейінгі қате",
+          "dispatch_started": "Жіберу басталды",
+          "original_purchase_not_sent": "Бастапқы сатып алу жіберілмеді",
+          "invalid_value": "Қате сома",
+          "invalid_currency": "Қате валюта",
+          "invalid_event_time": "Қате оқиға уақыты",
+          "event_in_future": "Болашақтағы оқиға",
+          "missing_snapshot": "Жіберу жазбасы жоқ",
+          "missing_whatsapp_source": "WhatsApp дереккөзі жоқ",
+          "unsupported_outcome": "Қолдау жоқ нәтиже",
+          "invalid_ctwa_clid": "Қате click ID",
+          "invalid_dataset_id": "Қате деректер жиыны",
+          "invalid_waba_id": "Қате WhatsApp аккаунты",
+          "other": "Провайдердің басқа себебі",
+          "purchase_not_eligible": "Бастапқы сатып алу жарамсыз",
+          "purchase_destination_changed": "Бастапқы сатып алу бағыты өзгерді",
+          "invalid_snapshot": "Қате жіберу жазбасы",
+          "invalid_source_id": "Қате дереккөз ID",
+          "invalid_event_name": "Қате оқиға атауы",
+          "invalid_test_event_code": "Қате тест коды",
+          "invalid_event_id": "Қате оқиға ID",
+          "invalid_access_token": "Рұқсат токені жарамсыз",
+          "transport_error": "Байланыс қатесі",
+          "unconfirmed_http_error": "Расталмаған провайдер жауабы",
+          "missing_acceptance": "Қабылдау расталмаған",
+          "provider_response_timeout": "Провайдер жауабының уақыты бітті",
+          "provider_response_too_large": "Провайдер жауабы тым үлкен",
+          "meta": "Meta қатесі {code}"
+        }
+      }
+    },
+    "internalLabels": {
+      "title": "Ішкі белгілер",
+      "description": "Өтініш саны мен өңдеу күйі бойынша жұмыс кеңістігінің белгілері.",
+      "labeled": "{percent} белгіленген",
+      "tiles": {
+        "tagged": "Белгіленген",
+        "unlabeled": "Белгісіз",
+        "uniqueLabels": "Бірегей белгілер",
+        "topLabels": "Негізгі белгілер"
+      },
+      "coverageDetail": "Өтініштердің {percent}",
+      "noLabelAttached": "Ішкі белгі тағайындалмаған",
+      "assignmentCount": "{count, plural, one {{countValue} тағайындау} other {{countValue} тағайындау}}",
+      "shownBelow": "Төмендегі кестеде көрсетілген",
+      "table": {
+        "label": "Белгі",
+        "conversations": "Өтініштер",
+        "open": "Ашық",
+        "inProgress": "Орындалуда",
+        "closed": "Жабылған",
+        "responded": "Жауап берілген",
+        "latest": "Соңғысы"
+      },
+      "view": "Ашу"
+    },
+    "managerResponse": {
+      "title": "Менеджер жауаптары",
+      "description": "Клиенттің алғашқы хабарламасынан кейінгі қызметкер жауабының медианасы.",
+      "table": {
+        "manager": "Менеджер",
+        "handled": "Өңделген",
+        "medianFirstResponse": "Алғашқы жауап медианасы",
+        "p90": "P90",
+        "replies": "Жауаптар"
+      },
+      "help": {
+        "ariaLabel": "«{metric}» нені білдіреді",
+        "medianFirstResponse": "Бұл менеджердің алғашқы жауаптарының жартысы осы уақыттан тезірек, жартысы баяуырақ. Медиана орташадан гөрі сирек ұзақ жауаптарға төзімдірек.",
+        "p90": "Бұл менеджердің алғашқы жауаптарының 90%-ы осы уақытқа дейін болды. Қалған 10% ұзағырақ күтті. Бұл клиенттер жиі байқайтын кідірістерді көрсетеді."
+      },
+      "genericManager": "менеджер"
+    },
+    "serviceTruth": {
+      "title": "Адам қызметінің деректері",
+      "description": "Адамның алғашқы жауабы, жауапсыз чаттар және расталған шешім уақыты.",
+      "eligible": "Алғашқы кіріс чаттары",
+      "answered": "Адам жауап берді",
+      "unanswered": "Адам жауабы жоқ",
+      "coverage": "Жауап үлесі",
+      "oldestUnanswered": "Ең ерте жауапсыз",
+      "medianResolution": "Шешім уақытының медианасы",
+      "unknownClosures": "Шешім дерегі жоқ жабулар",
+      "timeouts": "Уақыт біткенде жабылғандар",
+      "managerFilterNotice": "Алғаш жауап берген бойынша сүзгі жауапсыз чаттың жауаптысын анықтамайды; олардың жалпы саны қолжетімсіз.",
+      "knownResolutions": "{count} өлшенген шешім",
+      "resolutionNotice": "Шешім тұрақты өмірлік цикл уақытына негізделеді. Жаңарту мен таймаут шешімді білдірмейді.",
+      "empty": "Қызмет деректері жоқ",
+      "partialCoverage": "Уақыт, күй және менеджер деректері осы кезеңдегі ең жаңа {limit} чатқа қатысты. Барлық хабарлама көлемі бөлек есептеледі.",
+      "cohortNotice": "Жауаптар осы кезеңдегі алғашқы кірісі бар чаттарға қатысты. Жабу деректері осы кезеңдегі белсенді чаттарға қатысты; тарихи ауысулар бөлек қамтылады."
+    }
+  },
+  "DateRangeControl": {
+    "last7Days": "Соңғы 7 күн",
+    "last30Days": "Соңғы 30 күн",
+    "last90Days": "Соңғы 90 күн",
+    "thisWeek": "Осы апта",
+    "last12Months": "Соңғы 12 ай",
+    "allTime": "Барлық уақыт",
+    "select": "Кезеңді таңдаңыз",
+    "customRange": "Ерікті кезең",
+    "previousMonth": "Алдыңғы ай",
+    "nextMonth": "Келесі ай"
+  },
+  "DashboardClientPage": {
+    "board": {
+      "title": "Аналитика",
+      "description": "Сұраныс пен қызмет көрсету сапасын түсініңіз.",
+      "conversationScope": "Күндер мен сүзгілер өтініштер санына қолданылады. ЖИ және таратылым қорытындылары өздерінің 30 күндік кезеңін қамтиды. Жарнама метрикалары мен расталған сатылымдардың өз ауқымы бар.",
+      "view": "Дашборд",
+      "new": "Жаңа дашборд",
+      "newTitle": "Дашборд құру",
+      "newDescription": "Бастапқы орналасуды таңдаңыз. Сақтау алдында карточкаларды қосуға, жоюға және өлшемін өзгертуге болады.",
+      "name": "Дашборд атауы",
+      "namePlaceholder": "Мысалы, Апталық қолдау",
+      "edit": "Орналасуды өзгерту",
+      "editHint": "Карточкаларды жылжытыңыз немесе өлшемін өзгерту және жою үшін карточка баптауларын ашыңыз. Дайын болғанда өзгерістерді сақтаңыз.",
+      "save": "Өзгерістерді сақтау",
+      "saving": "Сақталуда…",
+      "cancel": "Бас тарту",
+      "delete": "Дашбордты жою",
+      "viewLimit": "12 дашбордқа дейін сақтауға болады. Жаңасын құру үшін бар дашбордты жойыңыз.",
+      "addCard": "Карточка қосу",
+      "libraryTitle": "Карточкалар қосу",
+      "libraryDescription": "Дашбордқа қосылатын карточкаларды таңдаңыз. Әр карточканы бір рет қосуға болады.",
+      "allCardsAdded": "Барлық қолжетімді карточкалар қосылған.",
+      "emptyTitle": "Дашборд бос",
+      "emptyDescription": "Бастау үшін карточка қосыңыз.",
+      "grid": "Дашборд карточкалары",
+      "drag": "Жылжыту: {card}",
+      "dragInstructions": "Карточканы таңдау үшін бос орын пернесін басыңыз. Бағыттауыштармен жылжытыңыз, бос орынмен орналастырыңыз немесе Escape арқылы бас тартыңыз.",
+      "dragStarted": "«{card}» карточкасы таңдалды.",
+      "dragPosition": "«{card}» карточкасы {position}-орында.",
+      "dragDropped": "«{card}» карточкасы {position}-орынға орналастырылды.",
+      "dragCancelled": "«{card}» карточкасын жылжыту тоқтатылды.",
+      "settings": "Баптаулар: {card}",
+      "width": "Ені",
+      "height": "Биіктігі",
+      "widthChoices": {
+        "1": "1 баған",
+        "2": "2 баған",
+        "3": "3 баған",
+        "4": "4 баған"
+      },
+      "heightChoices": {
+        "1": "1 жол",
+        "2": "2 жол",
+        "3": "3 жол"
+      },
+      "sizeHint": "Өлшемдер кең экранда қолданылады. Телефонда карточка биіктігі мазмұнына сай өзгереді.",
+      "earlier": "Алға жылжыту",
+      "later": "Кейін жылжыту",
+      "remove": "Карточканы жою",
+      "loading": "Дашборд баптаулары жүктелуде…",
+      "loadFailed": "Дашбордтар жүктелмеді. Сақталған көріністерді ашу үшін қайталап көріңіз.",
+      "saveFailed": "Дашборд сақталмады. Өзгерістер жоба күйінде қалды; қайта сақтап көріңіз.",
+      "conflict": "Дашборд басқа жерде өзгертілген. Өңдеуді жалғастыру үшін сақталған нұсқаны жүктеңіз. Сақталмаған өзгерістер жоғалады.",
+      "reloadFailed": "Сақталған дашборд жүктелмеді. Сақталмаған өзгерістер жоба күйінде қалды.",
+      "reload": "Сақталған нұсқаны жүктеу",
+      "retry": "Қайталау",
+      "noCardData": "Таңдалған кезеңде бұл карточка үшін деректер жоқ.",
+      "comparisonUnavailable": "Өзгерістерді көру үшін салыстыруға болатын кезеңді таңдаңыз.",
+      "templates": {
+        "starter": {
+          "title": "Жұмысты бастау",
+          "description": "Өтініш көлемі, жауап беру уақыты және клиенттер хабарласатын тақырыптар.",
+          "question": "Сұраныс қалай өзгеріп жатыр?"
+        },
+        "sales": {
+          "title": "Өсу",
+          "description": "Өтініш көздері, қайталама байланыстар және таратылымдарға жауаптар.",
+          "question": "Қай көздер өтініштер мен жауаптар әкеледі?"
+        },
+        "support": {
+          "title": "Клиенттерді қолдау",
+          "description": "Қызмет деңгейі, клиенттердің қанағаттануы және команданың жауап беру уақыты.",
+          "question": "Клиенттер уақтылы көмек алып жатыр ма?"
+        },
+        "operations": {
+          "title": "Команда жұмысы",
+          "description": "Жүктеме, қарбалас уақыт және ЖИ қолданылуы бойынша ресурстарды жоспарлау.",
+          "question": "Командаға қай жерде қосымша ресурс қажет?"
+        }
+      },
+      "cards": {
+        "total": "Барлық өтініштер",
+        "new": "Жаңа өтініштер",
+        "resolved": "Шешілген өтініштер",
+        "first_response": "Алғашқы жауап уақыты",
+        "in_progress": "Жұмыс барысында",
+        "sla": "SLA бұзушылықтары",
+        "repeat": "Қайталама өтініштер",
+        "csat": "Клиенттердің қанағаттануы",
+        "ttr": "Шешу уақыты",
+        "volume": "Өтініш көлемі",
+        "category_comparison": "Санаттарды салыстыру",
+        "period_summary": "Кезең қорытындысы",
+        "categories": "Өтініш санаттары",
+        "channels": "Арналар",
+        "team": "Команда жүктемесі",
+        "activity": "Қарбалас уақыт",
+        "advertisements": "Жарнама көздері",
+        "labels": "Ішкі белгілер",
+        "ai_usage": "ЖИ қолданылуы",
+        "campaigns": "Таратылым нәтижелері"
+      },
+      "domain": {
+        "window": "Соңғы 30 күн",
+        "aiScope": "Барлық ЖИ шақырулары",
+        "campaignScope": "Таратылымның барлық алушылары",
+        "campaignReplyWindow": "Әр жіберілімнен кейінгі 7 күн ішіндегі жауаптар",
+        "openReport": "Толық есепті ашу",
+        "loading": "Жиынтық жүктелуде…",
+        "unavailable": "Жиынтық қолжетімсіз",
+        "emptyAi": "Бұл кезеңде ЖИ белсенділігі жоқ",
+        "emptyCampaigns": "Бұл кезеңде қабылданған таратылым жіберілімдері жоқ",
+        "loadFailed": "Жиынтық жүктелмеді",
+        "retry": "Қайталау",
+        "notAvailable": "Қолжетімсіз",
+        "aiErrors": "ЖИ шақыру қателері"
+      },
+      "done": "Дайын",
+      "close": "Жабу",
+      "move": "Жылжыту",
+      "cardSettings": "Карточка баптаулары",
+      "nameRequired": "Сақтау немесе басқа дашборд жасау алдында дашборд атауын енгізіңіз.",
+      "invalidLayout": "Өзгерістерді сақтамас бұрын дашборд атауларын тексеріңіз.",
+      "librarySearch": "Карточканы табу",
+      "librarySearchPlaceholder": "Метрика, тақырып немесе есеп ауқымы бойынша іздеу",
+      "libraryNoResults": "Карточкалар табылмады. Басқа сөзбен іздеп көріңіз.",
+      "groups": {
+        "conversations": "Өтініштерге шолу",
+        "service": "Қызмет көрсету сапасы",
+        "sources": "Тақырыптар мен көздер",
+        "team": "Команда жүктемесі",
+        "automation": "ЖИ және таратылымдар"
+      },
+      "scopes": {
+        "conversation": "Таңдалған кезең және өтініш сүзгілері",
+        "ai": "Соңғы 30 күн · барлық ЖИ шақырулары",
+        "campaigns": "Соңғы 30 күн · барлық таратылым алушылары",
+        "advertising": "Таңдалған күндер. Өтініш сүзгілері чат санына әсер етеді; жарнама метрикалары мен расталған сатылымдардың өз ауқымы бар."
+      },
+      "nav": {
+        "dashboards": "Дашбордтар",
+        "conversations": "Өтініштер",
+        "campaigns": "Таратылымдар",
+        "ai": "ЖИ қолданылуы",
+        "performance": "Тиімділік",
+        "widget": "Веб-виджет",
+        "outcomes": "Нәтижелер"
+      },
+      "cardDescriptions": {
+        "total": "Таңдалған кезеңдегі өтініштер саны.",
+        "new": "«Ашық» мәртебесіндегі өтініштер.",
+        "resolved": "«Шешілген» мәртебесіндегі өтініштер.",
+        "first_response": "Алғашқы жауап уақытының медианасы, орташа мәні және P90.",
+        "in_progress": "Қазір өңделіп жатқан өтініштер.",
+        "sla": "Үш күннен артық шешілмеген ашық немесе өңделіп жатқан өтініштер.",
+        "repeat": "Осы кезеңде тағы бір өтініш бастаған клиенттер.",
+        "csat": "Таңдалған кезеңдегі клиенттердің орташа бағасы.",
+        "ttr": "Өтініштің ашылуынан шешілуіне дейінгі орташа уақыт.",
+        "volume": "Күнделікті өтініштер саны және кезеңдерді салыстыру.",
+        "category_comparison": "Ағымдағы және алдыңғы кезеңдегі өтініш тақырыптарын салыстыру.",
+        "period_summary": "Алдыңғы кезеңмен салыстырғандағы өзгерістерге қысқаша шолу.",
+        "categories": "Өтініштердің тақырып бойынша таралуы.",
+        "channels": "Клиенттердің сізге хабарласатын арналары.",
+        "team": "Менеджерлердің жүктемесі мен жауап беру уақыты.",
+        "activity": "Өтініш ең көп түсетін күндер мен сағаттар.",
+        "advertisements": "Жарнама көздері және өтініш нәтижелері.",
+        "labels": "Белгіленген өтініштер мен олардың мәртебелері.",
+        "ai_usage": "Соңғы 30 күндегі ЖИ шақырулары, қолданылуы және қателері.",
+        "campaigns": "Соңғы 30 күндегі қабылданған жіберілімдер және алушылардың жауаптары."
+      },
+      "unsavedChanges": "Сақталмаған өзгерістер",
+      "libraryAdded": "«{card}» карточкасы қосылды.",
+      "dashboardCount": "{count, plural, one {# дашборд} other {# дашборд}}",
+      "dashboardsTitle": "Сіздің дашбордтарыңыз",
+      "dashboardsDescription": "Дашбордты ашыңыз, атын өзгертіңіз, жойыңыз немесе жаңасын құрыңыз.",
+      "viewSummary": "{count, plural, one {# карточка} other {# карточка}} · Үлгі: {template}",
+      "rename": "Атын өзгерту",
+      "deleteShort": "Жою",
+      "deletePending": "{count, plural, =1 {{names} дашборды өзгерістерді сақтағанда жойылады.} other {Өзгерістерді сақтағанда мына дашбордтар жойылады: {names}.}}",
+      "deletePendingName": "«{name}»",
+      "recommended": "Жұмыс кеңістігіңізге ұсынылады",
+      "recommendationReasons": {
+        "new_workspace": "Жұмыс кеңістігі жақында құрылды — өтініш көлемі мен жауап беру уақытынан бастаңыз.",
+        "low_volume": "Өтініштер әзірге аз — олардың көлемі мен жауап беру уақытынан бастаңыз.",
+        "ads_connected": "Meta Ads қосылған — қай көздер өтініш әкелетінін бақылаңыз.",
+        "recent_campaigns": "Жақында WhatsApp таратылымдары жіберілді — көздер мен жауаптарды бақылаңыз.",
+        "team_size": "Клиенттерге бірнеше қызметкер жауап береді — жүктеме мен қарбалас уақытты бақылаңыз.",
+        "support_default": "Өтініштер тұрақты түседі — қызмет деңгейі мен клиенттердің қанағаттануын бақылаңыз."
+      },
+      "unreadable": "Сақталған орналасу ашылмады, сондықтан бастапқы дашборд көрсетілді. Өзгерістерді сақтағанда ол ауыстырылады.",
+      "resizeHint": "Өлшемін өзгерту үшін сүйреңіз. Өлшемді карточка баптауларынан да өзгертуге болады.",
+      "resizePreview": "{width} × {height}"
+    },
+    "tabs": {
+      "label": "Дашборд бөлімдері",
+      "overview": "Шолу",
+      "categories": "Санаттар",
+      "team": "Команда және жүктеме",
+      "sources": "Дереккөздер және белгілер"
+    },
+    "conversationVolume": {
+      "title": "Өтініштер саны",
+      "description": "Таңдалған кезеңдегі клиенттердің бірегей өтініштері күндер бойынша."
+    },
+    "comparison": {
+      "label": "Кезеңдерді салыстыру",
+      "enabled": "Алдыңғы кезеңмен салыстыру",
+      "disabled": "Тек ағымдағы кезең",
+      "unavailable": "Бұл аралық үшін салыстыру қолжетімсіз",
+      "currentPeriod": "Ағымдағы: {range}",
+      "previousPeriod": "Алдыңғы: {range}",
+      "previousValue": "Алдыңғы: {value}"
+    },
+    "activeFilters": {
+      "label": "Белсенді сүзгілер",
+      "count": "Белсенді сүзгілер: {count}",
+      "clearAll": "Барлығын тазалау",
+      "remove": "{value} мәнін жою",
+      "removeAction": "Алып тастау"
+    },
+    "categoryComparison": {
+      "title": "Санаттарды салыстыру",
+      "description": "Таңдалған кезеңдердегі санаттар бойынша өтініштер саны.",
+      "currentOnlyDescription": "Таңдалған кезеңдегі санаттар бойынша өтініштер саны.",
+      "caption": "Ағымдағы және алдыңғы кезеңдегі санаттар бойынша өтініштер саны",
+      "currentOnlyCaption": "Ағымдағы кезеңдегі санаттар бойынша өтініштер саны",
+      "views": {
+        "all": "Барлығы",
+        "increased": "Өскен",
+        "decreased": "Азайған",
+        "new": "Жаңа",
+        "noLongerActive": "Белсенді емес"
+      },
+      "table": {
+        "category": "Санат",
+        "current": "Ағымдағы",
+        "previous": "Алдыңғы",
+        "difference": "Айырма",
+        "change": "Өзгеріс",
+        "total": "Барлығы",
+        "totalAllCategories": "Барлық санаттар бойынша"
+      },
+      "mobile": {
+        "current": "Ағымдағы",
+        "previous": "Алдыңғы",
+        "difference": "Айырма",
+        "rate": "Қарқын"
+      },
+      "changeKinds": {
+        "increase": "Өсті",
+        "decrease": "Азайды",
+        "unchanged": "Өзгеріссіз",
+        "new": "Жаңа",
+        "noLongerActive": "Белсенді емес"
+      },
+      "viewAll": "Барлығын көру",
+      "empty": "Бұл көрініске сәйкес санаттар жоқ."
+    },
+    "notableChanges": {
+      "title": "Елеулі өзгерістер",
+      "description": "Санат бойынша өтініштер санындағы ең үлкен өзгеріс.",
+      "increase": "{category} санатындағы өтініштер саны {delta}-ге өсті.",
+      "decrease": "{category} санатындағы өтініштер саны {delta}-ге азайды.",
+      "new": "Жаңа санат: {category}, өтініштер саны {delta}.",
+      "noLongerActive": "{category} санаты енді белсенді емес, өзгеріс: {delta} өтініш.",
+      "unchanged": "Санаттар бойынша өтініштер саны өзгерген жоқ."
+    },
+    "moreMetrics": "Қосымша көрсеткіштер",
+    "showInactiveManagers": "Белсенді емес менеджерлерді көрсету",
+    "empty": {
+      "dashboard": "Бұл кезеңде белсенділік жоқ.",
+      "chart": "Бұл кезеңде өтініштер жоқ."
+    },
+    "accessibility": {
+      "comparisonControl": "Кезеңдерді салыстыруды таңдаңыз",
+      "categoryViews": "Санаттарды өзгерісі бойынша сүзу",
+      "currentValue": "Ағымдағы мән",
+      "previousValue": "Алдыңғы мән",
+      "differenceValue": "Айырма",
+      "changeRate": "Өзгеріс қарқыны"
+    },
+    "failedToLoadData": "Дашборд деректерін жүктеу сәтсіз аяқталды.",
+    "topGrowingCategories": "Ең жылдам өсіп келе жатқан санаттар",
+    "topDecliningCategories": "Ең көп төмендеп жатқан санаттар",
+    "conversationActivityTitle": "Пик сағаттар",
+    "conversationActivityDescription": "Хабарламалар ең көп болатын уақыт. Уақыт {timeZone} белдеуімен көрсетілген.",
+    "conversationActivityPeakLabel": "Пик:",
+    "conversationActivityPeakValue": "{day}, {hour} ({count} хабарлама)",
+    "conversationActivityTotal": "{count} хабарлама",
+    "conversationActivityEmpty": "Бұл кезеңде хабарлама белсенділігі жоқ.",
+    "conversationActivityGridLabel": "Хабарлама белсенділігі күндер мен сағаттар бойынша",
+    "conversationActivityCellLabel": "{day}, {hour}: {count} хабарлама",
+    "conversationActivityLegendLow": "Аз",
+    "conversationActivityLegendHigh": "Көп",
+    "conversationActivityDayMon": "Дс",
+    "conversationActivityDayTue": "Сс",
+    "conversationActivityDayWed": "Ср",
+    "conversationActivityDayThu": "Бс",
+    "conversationActivityDayFri": "Жм",
+    "conversationActivityDaySat": "Сб",
+    "conversationActivityDaySun": "Жс",
+    "topInsight": "Негізгі қорытынды",
+    "viewMore": "Толығырақ",
+    "complaintInsight": "«Шағым» санаты көбіне «{tag}» тақырыбымен байланысты.",
+    "noComplaintTrends": "Шағымдар бойынша елеулі үрдістер табылмады.",
+    "insufficientDataForPeak": "Ең жоғары жүктемені анықтау үшін дерек жеткіліксіз.",
+    "peakTimeInsight": "Хабарламалар ең көп {dayOfWeek} күні, {startHour}:00-ден {endHour}:00-ге дейін келеді.",
+    "uncategorized": "Санатсыз",
+    "unknown": "Белгісіз",
+    "missingValue": "—",
+    "retry": "Қайталау",
+    "metricDefinition": "Анықтама"
+  },
+  "ChannelBreakdown": {
+    "title": "Арналар бойынша санаттар",
+    "description": "Әртүрлі арналардағы чаттар санын салыстыру.",
+    "category": "Санат",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "insight": "Инсайт:",
+    "total": "Барлығы"
+  },
+  "CategoryDistributionChart": {
+    "title": "Топ санаттар",
+    "description": "Негізгі санаттар бойынша чаттардың таралуы.",
+    "uncategorized": "Санатталмаған чаттар:",
+    "previousValue": "Алдыңғы: {value}"
+  },
+  "SectionCards": {
+    "noChange": "Өзгеріссіз",
+    "previousValue": "Алдыңғы: {value}",
+    "comparisonNotes": {
+      "liveStatus": "Қазіргі күй · салыстырусыз",
+      "notCompared": "Алдыңғы кезеңмен салыстырылмайды"
+    },
+    "metrics": {
+      "total": "Барлық чаттар",
+      "new": "Ашық",
+      "inProgress": "Орындалуда",
+      "resolved": "Шешілді",
+      "slaBreached": "SLA бұзылды",
+      "repeatRequests": "Қайталанған чаттар",
+      "avgCsat": "Орташа баға (CSAT)",
+      "medianFirstManagerResponseTime": "Менеджердің алғашқы жауабы",
+      "avgResolutionTime": "Орташа шешу уақыты"
+    },
+    "duration": {
+      "missing": "—",
+      "lessThanMinute": "Бір минуттан аз",
+      "seconds": "{count, plural, one {{value} сек.} other {{value} сек.}}",
+      "minutes": "{count, plural, one {{value} мин.} other {{value} мин.}}",
+      "hours": "{count, plural, one {{value} сағ.} other {{value} сағ.}}",
+      "days": "{count, plural, one {{value} күн} other {{value} күн}}",
+      "noChange": "Өзгеріссіз"
+    },
+    "firstManagerResponseInsight": "Жауаптар: {countValue}. Орташа: {average}, P90: {p90}",
+    "help": {
+      "ariaLabel": "«{metric}» нені білдіреді",
+      "firstResponse": "Үлкен сан медиананы көрсетеді: алғашқы жауаптардың жартысы тезірек, жартысы баяуырақ. Төменде жауап саны, орташа мән және P90 (жауаптардың 90%-ы осы уақытқа дейін берілген) көрсетілген. Сирек ұзақ жауаптардың әсерінен орташа мән мен P90 көбіне медианадан жоғары болады.",
+      "sla": "Назар терезесінен ұзақ ашық чаттар; бұл жауап SLA емес, кезектің жасы.",
+      "repeat": "Таңдалған топта бірнеше белсенді чаты бар клиенттер. Расталған қайталама сатып алулар Нәтижелерде көрсетіледі.",
+      "csat": "Таңдалған кезеңдегі клиент бағаларының орташасы.",
+      "ttr": "Шешілген чаттар үшін ашылғаннан жабылғанға дейінгі орташа уақыт."
+    },
+    "view": "Ашу",
+    "openRequestQueue": "Өтініштер кезегін ашу"
+  },
+  "KeyMomentsNavigator": {
+    "title": "Негізгі сәттер",
+    "price_inquiry": "Баға сұрауы",
+    "objection": "Қарсылық",
+    "positive_feedback": "Оң пікір",
+    "negative_feedback": "Теріс пікір",
+    "upsell_attempt": "Upsell әрекеті"
+  },
+  "ConversionDialog": {
+    "sourceMessageNotLoaded": "Бұл хабарлама жүктелген тарихтан бұрын орналасқан. Оны тексеру үшін бұрынғы хабарламаларды жүктеңіз.",
+    "recordSale": "Сатылымды тіркеу",
+    "saleDescription": "Төлемнің түскенін тексергеннен кейін сатылымды тіркеңіз.",
+    "paymentConfirmationDescription": "Түбіртек немесе төлем туралы хабарлама ақшаның түскенін растамайды. Төлемді тексеріп, сома мен валютаны растаңыз.",
+    "saleAmount": "Сатылым сомасы",
+    "transactionId": "Төлем операциясының идентификаторы (міндетті емес)",
+    "transactionIdRequired": "Төлем операциясының идентификаторы *",
+    "transactionIdHelp": "Тапсырыс нөмірін емес, төлем провайдерінің операция идентификаторын енгізіңіз. Онсыз сатылым тек airi.chat ішінде сақталады және Meta-ға жіберілмейді.",
+    "transactionIdRequiredHelp": "Тапсырыс нөмірін емес, төлем провайдерінің операция идентификаторын енгізіңіз. Сатылымдарды автоматты импорттау қосылғанда, бір төлемді екі рет есептемеу үшін ол міндетті.",
+    "transactionIdMissing": "Сатылымды тіркеу үшін төлем операциясының идентификаторын енгізіңіз.",
+    "currency": "Валюта",
+    "confirmSale": "Сатылымды растау",
+    "salesTitle": "Сатылымдар",
+    "salesActions": "Сатылымдар мен еске салулар",
+    "paymentSuggestions": "Төлемдерді тексеру",
+    "noPaymentSuggestions": "Тексерілетін төлемдер әлі жоқ.",
+    "loadingPayments": "Төлем ұсыныстары жүктелуде",
+    "paymentsError": "Төлем ұсыныстарын жүктеу мүмкін болмады.",
+    "retry": "Қайталау",
+    "receiptSuggested": "Ықтимал төлем түбіртегі",
+    "paymentClaimSuggested": "Клиент төлем туралы хабарлады",
+    "amountUnknown": "Сома анықталмады",
+    "currencyUnknown": "Валюта анықталмады",
+    "needsConfirmation": "Растау қажет",
+    "viewMessage": "Хабарлама",
+    "saleRecorded": "Сатылым тіркелді",
+    "reviewPayment": "Тексеру",
+    "merchantConfirmed": "Командаңыз растады",
+    "title": "Конверсияны бақылау",
+    "description": "ROI мен агент өнімділігін қадағалау үшін осы диалогтың бизнес нәтижесін тіркеңіз.",
+    "conversionType": "Конверсия түрі *",
+    "conversionTypes": {
+      "sale": "Сату немесе сатып алу",
+      "signup": "✍️ Тіркелу / Жазылу",
+      "booking": "Брондау немесе кездесу",
+      "retention": "Ұстап қалу немесе ұзарту",
+      "custom": "⭐ Арнайы конверсия"
+    },
+    "conversionValue": "Конверсия құны (міндетті емес)",
+    "valuePlaceholder": "0.00",
+    "currencies": {
+      "USD": "USD - АҚШ доллары",
+      "EUR": "EUR - Еуро",
+      "KZT": "KZT - Қазақстан теңгесі",
+      "RUB": "RUB - Ресей рублі",
+      "UZS": "UZS - Өзбекстан сомы"
+    },
+    "notes": "Ескертпелер (міндетті емес)",
+    "notesPlaceholder": "Бұл конверсия туралы қосымша мәнмәтін қосыңыз...",
+    "cancel": "Болдырмау",
+    "trackConversion": "Конверсияны бақылау",
+    "tracking": "Бақылануда...",
+    "toast": {
+      "success": "Конверсия тіркелді",
+      "error": "Конверсияны бақылау сәтсіз аяқталды. Қайталап көріңіз."
+    },
+    "compactSale": "Сату",
+    "compactEvent": "Оқиға",
+    "compactPayments": "Төлемдер"
+  },
+  "HelpPage": {
+    "title": "Көмек және қолдау",
+    "description": "Жиі қойылатын сұрақтарға жауап табыңыз және қолдау алыңыз.",
+    "gettingStartedTitle": "Жұмысты бастау",
+    "contactSupportTitle": "Қолдау қызметіне хабарласу",
+    "contactSupportBody": "Көмек керек пе? Біздің қолдау тобына хабарласыңыз.",
+    "quickLinks": "Жалпы тапсырмаларға жылдам сілтемелер",
+    "connectNewSource": "Жаңа дерек көзін қосу",
+    "inviteTeamMembers": "Команда мүшелерін шақыру",
+    "configureAiContext": "AI басқаруын баптау",
+    "documentation": "Құжаттама",
+    "documentationDescription": "Airi.chat-ты тиімді пайдалануды үйреніңіз",
+    "emailSupport": "Email қолдау",
+    "telegramSupport": "Telegram қолдау"
+  },
+  "CreativeAssetsWorkspace": {
+    "storageLoading": "Компания қоймасы тексерілуде…",
+    "storageUnavailable": "Компания қоймасы туралы деректер уақытша қолжетімсіз.",
+    "storagePreparing": "Компания қоймасы дайындалуда. Дайын болған соң жаңа файлдарды жүктеуге болады.",
+    "storageRecording": "Жаңа жүктеулер: {limit} ГиБ ішінен {stored} ГиБ сақталды + {reserved} ГиБ резервтелді. Бұрынғы файлдар әлі есептелуде.",
+    "storageUsage": "Компания қоймасы: {stored} ГиБ сақталған + {reserved} ГиБ күтілуде / {limit} ГиБ.",
+    "storageFull": "Қойма лимиті толды.",
+    "title": "Материалдар",
+    "subtitle": "Кампаниялар, үлгілер және Airi Create үшін суреттер, бейнелер, аудио және жазбалар",
+    "studioTab": "Студия",
+    "libraryTab": "Кітапхана",
+    "avatarPortraitUpload": "Портрет жүктеу",
+    "loadingAssets": "Материалдар жүктелуде",
+    "noAssetsFound": "Материалдар табылмады",
+    "emptyAssetsTitle": "Әзірге материалдар жоқ",
+    "emptyAssetsDescription": "Медиа жүктеңіз, файлдарды осы бетке тастаңыз немесе кампанияға дайын суреттер мен бейнелерді жасаңыз.",
+    "emptySearchDescription": "Басқа іздеу сөзі, медиа түрі немесе күй сүзгісін қолданып көріңіз.",
+    "clearSearch": "Іздеуді тазалау",
+    "searchAssets": "Материалдарды іздеу",
+    "uploadAsset": "Жүктеу",
+    "assetUploaded": "Материал жүктелді",
+    "assetUploadTooLarge": "Файл креатив ассеттер үшін ағымдағы жүктеу лимитінен үлкен.",
+    "assetUrlCopied": "Материал сілтемесі көшірілді",
+    "assetUrlCopyFailed": "Ассет сілтемесін көшіру мүмкін болмады.",
+    "assetsLoadFailed": "Ассеттерді жүктеу мүмкін болмады.",
+    "retry": "Қайталау",
+    "sourceImagesLoading": "Бастапқы суреттер жүктелуде...",
+    "sourceImagesLoadFailed": "Бастапқы суреттерді жаңарту мүмкін болмады. Бұрынғы таңдаулар қолжетімді.",
+    "sourceMediaLoading": "Бастапқы медиа жүктелуде...",
+    "sourceMediaLoadFailed": "Кейбір бастапқы медианы жаңарту мүмкін болмады. Бұрынғы таңдаулар қолжетімді.",
+    "mediaKind": "Медиа түрі",
+    "assetStatus": "Күйі",
+    "justNow": "Дәл қазір",
+    "minutesAgo": "{count} мин бұрын",
+    "hoursAgo": "{count} сағ бұрын",
+    "daysAgo": "{count} күн бұрын",
+    "characterReferenceUpload": "Үлгі суретті жүктеу",
+    "uploadInProgressDescription": "Жүктеп салу жүріп жатыр. Осы бетті ашық ұстаңыз.",
+    "removeSourceImage": "Суретті жою",
+    "replaceAvatarPortrait": "Портретті ауыстыру",
+    "removeAvatarPortrait": "Портретті жою",
+    "studioSkillSetupRequired": "Оны пайдалану үшін осы дағдыны баптаңыз.",
+    "studioGenerationBlockerSetupRequired": "Бұл ассетті жасау үшін қажетті провайдерді баптаңыз.",
+    "studioGenerationBlockerPromptRequired": "Жасамас бұрын сипаттама қосыңыз.",
+    "studioGenerationBlockerSourceImageRequired": "Жасамас бұрын бастапқы суретті таңдаңыз.",
+    "studioGenerationBlockerSourceMediaRequired": "Жалғастыру үшін бастапқы медианы таңдаңыз.",
+    "studioGenerationBlockerCharacterReferenceRequired": "Кемінде бір кейіпкердің үлгі суретін қосыңыз.",
+    "studioGenerationBlockerMorphFramesRequired": "Бірінші және соңғы кадрларды таңдаңыз.",
+    "studioGenerationBlockerMorphFramesMustDiffer": "Бірінші және соңғы кадрлар әртүрлі болуы керек.",
+    "studioGenerationBlockerDurationInvalid": "Дұрыс ұзақтықты таңдаңыз.",
+    "studioGenerationBlockerAvatarPortraitRequired": "Аватар үшін портрет суретін таңдаңыз.",
+    "studioGenerationBlockerAvatarAudioRequired": "Аватар үшін сөйлеу аудиосын таңдаңыз.",
+    "studioGenerationBlockerAvatarVoiceRequired": "Аватар дауысын жасау үшін ElevenLabs қосыңыз.",
+    "dropToUpload": "Жүктеу үшін тастаңыз",
+    "refreshAssets": "Материалдарды жаңарту",
+    "summaryReady": "Дайын: {count}",
+    "summaryGenerating": "Жасалуда: {count}",
+    "summaryVideos": "Бейне: {count}",
+    "shownCount": "{total} ішінен {shown} көрсетілді",
+    "allMedia": "Барлық медиа",
+    "images": "Суреттер",
+    "videos": "Бейнелер",
+    "audio": "Аудио",
+    "textAssets": "Мәтін",
+    "allStates": "Барлық күйлер",
+    "complete": "Дайын",
+    "queued": "Кезекте",
+    "inProgress": "Орындалуда",
+    "failed": "Қате",
+    "nsfw": "NSFW",
+    "imageKind": "сурет",
+    "videoKind": "бейне",
+    "audioKind": "аудио",
+    "textKind": "мәтін",
+    "sourceUpload": "Жүктеу",
+    "sourceHiggsfield": "Higgsfield",
+    "sourceGoogle": "Google",
+    "sourceElevenLabs": "ElevenLabs",
+    "sourceWan": "Wan Avatar",
+    "sourceHappyHorse": "HappyHorse",
+    "sourceAlibaba": "Alibaba",
+    "sourceEdited": "Өңделген",
+    "videoTextToVideoHint": "Сурет жоқ → text-to-video (9:16). Image-to-video үшін сурет қосыңыз.",
+    "imageTab": "Сурет",
+    "bannerTab": "Баннер",
+    "videoTab": "Бейне",
+    "characterTab": "Кейіпкер",
+    "audioTab": "Дауыс",
+    "avatarTab": "Аватар",
+    "studioSkillsGroup": "Дағдылар",
+    "studioSkillsEmpty": "Дағдылар табылмады.",
+    "studioSkillAlreadySelected": "Белсенді",
+    "studioSkillImageDescription": "Мәтіннен сурет генерациялау",
+    "studioSkillBannerDescription": "Жарнамалық баннерлер: пропорция және мәтінге орын",
+    "studioSkillVideoDescription": "Қосылған Google AI немесе Higgsfield көзі арқылы бейне жасаңыз",
+    "studioSkillCharacterDescription": "1–9 референс арқылы кейіпкер/өнім үйлесімділігі (HappyHorse r2v)",
+    "studioSkillVoiceDescription": "Дауыс, SFX, транскрипт, субтитр немесе дубляж",
+    "studioSkillAvatarDescription": "Портрет + скрипт/аудио talking avatar (Wan)",
+    "providerStatusImage": "Сурет: {provider}",
+    "providerStatusVideo": "Бейне: {provider}",
+    "providerStatusCharacter": "Кейіпкер: {provider}",
+    "providerStatusMorph": "Морф: {provider}",
+    "providerStatusAvatar": "Аватар: {provider}",
+    "sourceCanva": "Canva",
+    "openEditor": "Редакторды ашу",
+    "avatarPortraitUploaded": "Портрет жүктелді",
+    "bannerAspectRatio": "Пропорция",
+    "bannerPromptPlaceholder": "Баннерді сипаттаңыз: ұсыныс, өнім, орналасу. Дағдылар үшін @ жазыңыз.",
+    "generateBanner": "Баннер жасау",
+    "bannerGenerationQueued": "Баннер кезекке қойылды",
+    "characterPromptPlaceholder": "Сахнаны сипаттаңыз және рефтерді [Image 1], [Image 2] деп көрсетіңіз. Дағдылар үшін @.",
+    "characterRatio": "Пропорция",
+    "characterAddFromLibrary": "Референс қосу",
+    "characterReferenceHint": "{count}/{max} референс",
+    "characterImageLabel": "Img {n}",
+    "characterMoveLeft": "Солға",
+    "characterMoveRight": "Оңға",
+    "characterRemoveReference": "Референсті өшіру",
+    "characterReferenceUploaded": "Референс жүктелді",
+    "generateCharacter": "Кейіпкер бейнесін жасау",
+    "characterGenerationQueued": "Кейіпкер бейнесі кезекте",
+    "characterGenerationFailed": "Кейіпкер бейнесін бастау сәтсіз",
+    "characterUnavailableTitle": "Reference-to-video қолжетімсіз",
+    "characterUnavailableDescription": "Бұл құрал әзірше жеке кілттерді қолдамайды. Қосылған Google AI немесе Higgsfield арқылы сурет не видео жасаңыз.",
+    "morphTab": "Морф",
+    "studioSkillMorphDescription": "Бірінші және соңғы кадрдан before/after морф (Wan i2v)",
+    "morphPromptPlaceholder": "Before мен after арасындағы өтуді сипаттаңыз. Дағдылар үшін @.",
+    "morphFirstFrame": "Бірінші кадр (before)",
+    "morphLastFrame": "Соңғы кадр (after)",
+    "morphUploadFirst": "Before жүктеу",
+    "morphUploadLast": "After жүктеу",
+    "morphReplaceFirst": "Before ауыстыру",
+    "morphReplaceLast": "After ауыстыру",
+    "generateMorph": "Морф жасау",
+    "morphGenerationQueued": "Морф бейнесі кезекте",
+    "morphGenerationFailed": "Морф бейнесін бастау сәтсіз",
+    "morphUnavailableTitle": "Морф бейнесі қолжетімсіз",
+    "morphUnavailableDescription": "Бұл құрал әзірше жеке кілттерді қолдамайды. Қосылған Google AI немесе Higgsfield арқылы сурет не видео жасаңыз.",
+    "studioProductSlot": "Өнім",
+    "avatarMode": "Аватар режимі",
+    "avatarModeScript": "Сурет + скрипт (TTS)",
+    "avatarModeAudio": "Сурет + аудио",
+    "avatarPortrait": "Портрет",
+    "avatarAudio": "Сөз аудиосы",
+    "avatarSelectAudio": "15 с-тан аз аудио таңдаңыз",
+    "avatarAudioLimitHint": "Wan 2.7 анық сөз аудиосын қажет етеді (WAV/MP3, 2–30 с). Бейне 15 с-пен шектеледі.",
+    "avatarScript": "Скрипт",
+    "avatarScriptPlaceholder": "Аватар айтатын қысқа мәтін жазыңыз.",
+    "avatarNeedsElevenLabs": "Скрипт режимі TTS үшін ElevenLabs қажет.",
+    "avatarResolution": "Ажыратымдылық",
+    "avatarUnavailableTitle": "Wan talking avatars қолжетімсіз",
+    "avatarUnavailableDescription": "Бұл құрал әзірше жеке кілттерді қолдамайды. Қосылған Google AI немесе Higgsfield арқылы сурет не видео жасаңыз.",
+    "generateAvatar": "Talking avatar жасау",
+    "avatarGenerationQueued": "Talking avatar кезекте",
+    "avatarGenerationFailed": "Talking avatar іске қосылмады",
+    "prompt": "Промпт",
+    "motion": "Қозғалыс",
+    "seconds": "Сек",
+    "imagePromptPlaceholder": "Соңғы суретті сипаттаңыз: өнім, көрініс, жарық, стиль және композиция.",
+    "videoPromptPlaceholder": "Камера қозғалысын, объект қозғалысын, темп пен көңіл-күйді сипаттаңыз.",
+    "generateImage": "Сурет жасау",
+    "generateVideo": "Бейне жасау",
+    "sourceImageDropTitle": "Бастапқы суретті осы жерге тастаңыз",
+    "sourceImageDropDescription": "Бірінші кадр ретінде пайдалану үшін суретті жүктеңіз немесе тастаңыз.",
+    "uploadSourceImage": "Сурет жүктеу",
+    "replaceSourceImage": "Суретті ауыстыру",
+    "selectLibraryImage": "Кітапханадан таңдау",
+    "sourceImageSelected": "Бейне үшін сурет таңдалды",
+    "sourceImageOnly": "Бейне көзі ретінде пайдалану үшін сурет жүктеңіз.",
+    "sourceImageUploaded": "Бастапқы сурет жүктелді",
+    "sourceImageReady": "Бейнеге дайын",
+    "useForVideo": "Бейнеде пайдалану",
+    "selectedForVideo": "Бейне үшін таңдалды",
+    "makeGreenScreen": "Жасыл фон жасау",
+    "greenScreenAlreadyExistsTooltip": "Жасыл фон көшірмесі бұрыннан бар. Жаңасын жасамас бұрын сол көшірмені қайталаңыз немесе жойыңыз.",
+    "greenScreenQueued": "Жасыл фон өңдеуі кезекке қойылды",
+    "greenScreenFailed": "Жасыл фон өңдеуін кезекке қою мүмкін болмады",
+    "copyUrl": "Сілтемені көшіру",
+    "tryAgain": "Қайта көру",
+    "retryQueued": "Қайталау кезекке қойылды",
+    "retryUnavailable": "Бұл материалды қайта жасау мүмкін емес.",
+    "retryPossibleDuplicateTitle": "Қайталау екінші ақылы видеоны жасауы мүмкін",
+    "retryPossibleDuplicateDescription": "Провайдер бастапқы тапсырманы қабылдаған болуы мүмкін. Қайталау екінші ақылы видеоны жасауы мүмкін. Осы тәуекелді қабылдасаңыз ғана жалғастырыңыз.",
+    "retryPossibleDuplicateCancel": "Күтуді жалғастыру",
+    "retryPossibleDuplicateConfirm": "Бәрібір қайталау",
+    "deleteAsset": "Материалды жою",
+    "deleteAssetConfirm": "Бұл материалды жою керек пе?",
+    "assetDeleted": "Материал жойылды",
+    "deleteFailed": "Жою сәтсіз аяқталды",
+    "imageGenerationQueued": "Сурет жасау кезекке қойылды",
+    "videoGenerationQueued": "Бейне жасау кезекке қойылды",
+    "higgsfieldProvider": "Higgsfield дереккөзі",
+    "higgsfieldSourceConnected": "Жасау үшін қосылған Higgsfield дереккөзіңіз пайдаланылады.",
+    "higgsfieldSourceRequiredTitle": "Жалғастыру үшін генерация дереккөзін қосыңыз",
+    "higgsfieldSourceRequiredDescription": "Сурет пен видео жасау үшін Баптаулар > Интеграциялар бөлімінде өз Google AI немесе Higgsfield кілттеріңізді қосыңыз.",
+    "generationUnavailableTitle": "Сурет генерациясы қолжетімсіз",
+    "generationUnavailableDescription": "Сурет пен видео жасау үшін Баптаулар > Интеграциялар бөлімінде өз Google AI немесе Higgsfield кілттеріңізді қосыңыз. Провайдер төлемді сіздің тіркелгіңізден алады.",
+    "openIntegrations": "Интеграцияларды ашу",
+    "openElevenLabsIntegration": "ElevenLabs қосу",
+    "elevenLabsConnectHint": "Дауыстау, дыбыс әсерлері, субтитрлер, транскрипттер және дубляж жасау үшін ElevenLabs қосыңыз.",
+    "elevenLabsMode": "ElevenLabs әрекеті",
+    "elevenLabsVoiceover": "Дауыстау",
+    "elevenLabsSoundEffect": "Дыбыс әсері",
+    "elevenLabsTranscript": "Транскрипт",
+    "elevenLabsSubtitles": "Субтитрлер",
+    "elevenLabsDub": "Дубляж",
+    "elevenLabsScript": "Сценарий",
+    "elevenLabsPrompt": "Дыбыс промпты",
+    "elevenLabsScriptPlaceholder": "Жасалуы керек қысқа дауыстау мәтінін жазыңыз.",
+    "elevenLabsPromptPlaceholder": "Дыбыс әсерін, атмосфераны, уақытты және стильді сипаттаңыз.",
+    "elevenLabsSourceMedia": "Бастапқы медиа",
+    "elevenLabsSelectSourceMedia": "Аудио немесе бейне таңдаңыз",
+    "sourceMediaReady": "Дайын",
+    "elevenLabsTargetLanguage": "Мақсатты тіл",
+    "elevenLabsUnavailableTitle": "Дауыс құралдарын пайдалану үшін ElevenLabs қосыңыз",
+    "elevenLabsUnavailableDescription": "Баптаулар > Интеграциялар бөлімінде өз ElevenLabs API кілтіңізді қосыңыз. Провайдер төлемді сіздің тіркелгіңізден алады.",
+    "elevenLabsGenerate": "Жасау",
+    "elevenLabsGenerationQueued": "ElevenLabs материалы кезекке қойылды",
+    "elevenLabsGenerationFailed": "ElevenLabs материалын жасау сәтсіз аяқталды",
+    "canvaConnectHint": "Бренд үлгілерін осы жерде көрсету үшін Canva-ны Интеграциялар бөлімінде қосыңыз.",
+    "canvaTemplatesTitle": "Canva бренд үлгілері",
+    "canvaTemplatesDescription": "Қосылған Canva дереккөзіндегі WhatsApp follow-up-тарына шабыт бере алатын үлгілер.",
+    "openCanvaTemplate": "Canva-да ашу",
+    "airiDraftTitle": "Airi креатив черновигі",
+    "airiDraftDescription": "Airi дайындаған черновикті қарап, материал жасаңыз немесе сәйкес құралды ашыңыз.",
+    "airiDraftProvider": "Провайдер: {provider}",
+    "airiDraftUse": "Қолдану",
+    "airiDraftActive": "Белсенді",
+    "marketingTemplatesTitle": "Маркетинг үлгілері",
+    "marketingTemplatesDescription": "Дайын үлгіден бастаңыз.",
+    "marketingTemplatesCount": "{count} үлгі",
+    "marketingTemplatesUse": "Қолдану",
+    "marketingTemplatesApplied": "«{title}» Studio-ға жүктелді",
+    "marketingTemplatesCategoryAll": "Барлығы",
+    "marketingTemplatesCategoryUgc": "UGC",
+    "marketingTemplatesCategoryProduct": "Өнім",
+    "marketingTemplatesCategoryAvatar": "Аватар",
+    "marketingTemplatesCategoryVoice": "Дауыс",
+    "marketingTemplatesCategoryStory": "Сторис",
+    "marketingTemplatesCollectionAiri": "airi.chat үлгілері",
+    "marketingTemplatesCollectionTikTok": "TikTok идеялары",
+    "marketingTemplatesCollectionNew": "Жаңа",
+    "marketingTemplatesTikTokTitle": "TikTok идеялары",
+    "marketingTemplatesTikTokCount": "{count} сілтеме",
+    "marketingTemplatesTikTokReferenceNotice": "Жалпыға ашық TikTok жазбалары тек идея үшін берілген, оларды дайын материал ретінде қайта қолдануға болмайды. Пайдалану құқықтарын TikTok-та тексеріңіз.",
+    "marketingTemplatesTikTokMarketLabel": "Нарық",
+    "marketingTemplatesTikTokCategoryLabel": "Сала",
+    "marketingTemplatesTikTokSearch": "Іздеу",
+    "marketingTemplatesTikTokNoResults": "Нәтиже жоқ",
+    "marketingTemplatesTikTokLoading": "TikTok сілтемелері жүктелуде",
+    "marketingTemplatesTikTokRefreshing": "TikTok сілтемелері жаңартылуда",
+    "marketingTemplatesTikTokUnavailableTitle": "TikTok идеялары қолжетімсіз",
+    "marketingTemplatesTikTokTemporaryTitle": "TikTok идеялары уақытша қолжетімсіз",
+    "marketingTemplatesTikTokEmptyTitle": "Сілтемелер табылмады",
+    "marketingTemplatesTikTokRetryableErrorTitle": "TikTok сілтемелерін жүктеу мүмкін болмады",
+    "marketingTemplatesTikTokNonretryableErrorTitle": "TikTok идеялары қолжетімсіз",
+    "marketingTemplatesTikTokRetry": "Қайталау",
+    "marketingTemplatesTikTokResetFilters": "Сүзгілерді қалпына келтіру",
+    "marketingTemplatesTikTokStaleWarning": "TikTok қолжетімсіз болғандықтан, сақталған сілтемелер көрсетілуде.",
+    "marketingTemplatesTikTokOpenReference": "{title} материалын TikTok-та ашу (жаңа қойындыда ашылады)",
+    "marketingTemplatesTikTokViewReference": "TikTok-та көру",
+    "marketingTemplatesTikTokImageUnavailable": "Алдын ала қарау қолжетімсіз",
+    "marketingTemplatesTikTokPresetPending": "Промпт үлгісі кейін қосылады",
+    "marketingTemplatesTikTokCategoryAll": "Барлық салалар",
+    "marketingTemplatesTikTokCategoryApparelAndAccessories": "Киім және аксессуарлар",
+    "marketingTemplatesTikTokCategoryBabyKidsAndMaternity": "Балалар тауарлары және анаға арналған өнімдер",
+    "marketingTemplatesTikTokCategoryBeautyAndPersonalCare": "Сұлулық және жеке күтім",
+    "marketingTemplatesTikTokCategoryBusinessServices": "Бизнес қызметтері",
+    "marketingTemplatesTikTokCategoryEducation": "Білім",
+    "marketingTemplatesTikTokCategoryFinancialServices": "Қаржылық қызметтер",
+    "marketingTemplatesTikTokCategoryFoodAndBeverage": "Тағам және сусындар",
+    "marketingTemplatesTikTokCategoryGames": "Ойындар",
+    "marketingTemplatesTikTokCategoryHealth": "Денсаулық",
+    "marketingTemplatesTikTokCategoryHomeImprovement": "Үйді абаттандыру",
+    "marketingTemplatesTikTokCategoryHouseholdProducts": "Тұрмыстық тауарлар",
+    "marketingTemplatesTikTokCategoryLifeServices": "Тұрмыстық қызметтер",
+    "marketingTemplatesTikTokCategoryNewsAndEntertainment": "Жаңалықтар және ойын-сауық",
+    "marketingTemplatesTikTokCategoryPets": "Үй жануарлары",
+    "marketingTemplatesTikTokCategorySportsAndOutdoor": "Спорт және белсенді демалыс",
+    "marketingTemplatesTikTokCategoryTechnology": "Технология",
+    "marketingTemplatesTikTokCategoryTravel": "Саяхат",
+    "marketingTemplatesTikTokCategoryVehicleAndTransportation": "Көлік және тасымалдау",
+    "referenceVideoUseIdea": "Осы идеяны қолдану",
+    "referenceVideoOpenPlanner": "Өз материалдарымнан видео",
+    "referenceVideoTitle": "Видео жоспары",
+    "referenceVideoDescription": "Монтаж пішімін таңдап, фото не клиптерді қосыңыз да, жасамас бұрын жоспарды тексеріңіз.",
+    "referenceVideoReviewTitle": "Видео жоспарын тексеріңіз",
+    "referenceVideoResultTitle": "Сіздің видеоңыз",
+    "referenceVideoReferenceLabel": "TikTok үлгісі",
+    "referenceVideoReferenceNotice": "Осы үлгіге сүйеніп монтаж құрылымын таңдаңыз. Біз TikTok видеосын автоматты түрде талдамаймыз және қайта жасамаймыз.",
+    "referenceVideoFormat": "Монтаж пішімі",
+    "referenceVideoBusinessTitle": "Бизнес немесе ұсыныс атауы",
+    "referenceVideoBusinessPlaceholder": "Мысалы: «Тал» кафесіндегі жұма түскі асы",
+    "referenceVideoStoryboard": "Кадрлар жоспары",
+    "referenceVideoDuration": "{seconds} с · Тік 9:16",
+    "referenceVideoPreviewNotice": "Жоспар реттілікті, уақытты және жазуларды көрсетеді. Бастапқы пропорциялар сақталады; қажет болса қара жиектер қосылады.",
+    "referenceVideoScenePreview": "{number}-көріністің алдын ала көрінісі",
+    "referenceVideoEmptyScene": "Фото немесе видео таңдаңыз",
+    "referenceVideoChooseSceneAsset": "{number}-көрініске материал таңдау",
+    "referenceVideoChangeAsset": "Материалды ауыстыру",
+    "referenceVideoChooseAsset": "Материал таңдау",
+    "referenceVideoCaption": "{number}-көрініс жазуы",
+    "referenceVideoSourceStart": "{number}-көрініс: басталуы (секунд)",
+    "referenceVideoReviewedTrim": "{start} секундтан бастап {seconds} секунд алу",
+    "referenceVideoReviewedPhoto": "Фотоны {seconds} секунд көрсету",
+    "referenceVideoNoAiCharge": "AI-генерация үшін ақы алынбайды",
+    "referenceVideoAudioNotice": "Клиптердің бастапқы дыбысы сақталады. Фотолар дыбыссыз. Музыка қосылмайды.",
+    "referenceVideoClipLengthNotice": "Әр көрініске ұзақтығы жеткілікті клип таңдаңыз. Қысқа клиптер өңделмейді.",
+    "referenceVideoApprovalNotice": "Жинауды бастау үшін осы кадрлар жоспарын растаңыз. Жоспар өзгерсе, қайта тексеру керек.",
+    "referenceVideoMissingAssets": "Тағы {count} көрініске материал таңдаңыз.",
+    "referenceVideoClose": "Жабу",
+    "referenceVideoEdit": "Жоспарды өзгерту",
+    "referenceVideoReview": "Жоспарды тексеру",
+    "referenceVideoApprove": "Растау және видео жасау",
+    "referenceVideoPreparing": "Тексеруге дайындалуда…",
+    "referenceVideoStarting": "Видео жасау басталуда…",
+    "referenceVideoComplete": "Видео дайын",
+    "referenceVideoFailed": "Видео жасалмады",
+    "referenceVideoRendering": "Расталған видео жиналуда…",
+    "referenceVideoRefreshFailed": "Күйі уақытша қолжетімсіз. Тексеруді жалғастырамыз.",
+    "referenceVideoFailedDescription": "Бастапқы клиптерді тексеріп, жаңа жоспар жасаңыз.",
+    "referenceVideoOutputPreview": "Дайын видеоны алдын ала көру",
+    "referenceVideoDownload": "Видеоны ашу / жүктеу",
+    "referenceVideoSavedToAssets": "Нәтиже материалдар кітапханасына сақталады.",
+    "referenceVideoInvalidResponse": "Сервер жауабын тексеру мүмкін болмады. Қайталап көріңіз.",
+    "referenceVideoTimeout": "Күту уақыты аяқталды. Сол растауды тексеру үшін сұрауды қайталаңыз.",
+    "referenceVideoRequestFailed": "Сұрау орындалмады. Қайталап көріңіз.",
+    "referenceVideoRecipes": {
+      "product-reveal": {
+        "title": "Өнімді таныстыру",
+        "description": "Өнімді таныстырып, бөлшектерін көрсетіңіз және келесі қадамды ұсыныңыз.",
+        "scenes": {
+          "hook": {
+            "label": "Алғашқы көрініс",
+            "caption": "Жаңа сүйіктіңізбен танысыңыз"
+          },
+          "details": {
+            "label": "Өнім бөлшектері",
+            "caption": "Жақынырақ қараңыз"
+          },
+          "cta": {
+            "label": "Әрекетке шақыру",
+            "caption": "Коллекцияны ашыңыз"
+          }
+        }
+      },
+      "before-after": {
+        "title": "Дейін және кейін",
+        "description": "Бастапқы жағдайды, жұмысты және нақты нәтижені көрсетіңіз.",
+        "scenes": {
+          "before": {
+            "label": "Дейін",
+            "caption": "Дейін"
+          },
+          "process": {
+            "label": "Процесс",
+            "caption": "Өзгеріс қалай болды"
+          },
+          "after": {
+            "label": "Кейін",
+            "caption": "Кейін"
+          },
+          "cta": {
+            "label": "Әрекетке шақыру",
+            "caption": "Командамызға хабарласыңыз"
+          }
+        }
+      },
+      "three-details": {
+        "title": "Үш ерекшелік",
+        "description": "Өнім не қызметтің үш ерекшелігін есте сақтауға көмектесіңіз.",
+        "scenes": {
+          "hook": {
+            "label": "Жалпы көрініс",
+            "caption": "Бар мәні бөлшектерде"
+          },
+          "first": {
+            "label": "Бірінші ерекшелік",
+            "caption": "Жақынырақ қараңыз"
+          },
+          "second": {
+            "label": "Екінші ерекшелік",
+            "caption": "Басқа қырынан"
+          },
+          "third": {
+            "label": "Үшінші ерекшелік",
+            "caption": "Соңғы толықтыру"
+          },
+          "cta": {
+            "label": "Әрекетке шақыру",
+            "caption": "Толығырақ біліңіз"
+          }
+        }
+      },
+      "how-it-works": {
+        "title": "Бұл қалай жұмыс істейді",
+        "description": "Қарапайым процесті үш қадаммен түсіндіріңіз.",
+        "scenes": {
+          "first": {
+            "label": "Бірінші қадам",
+            "caption": "1-қадам"
+          },
+          "second": {
+            "label": "Екінші қадам",
+            "caption": "2-қадам"
+          },
+          "third": {
+            "label": "Үшінші қадам",
+            "caption": "3-қадам"
+          },
+          "cta": {
+            "label": "Әрекетке шақыру",
+            "caption": "Байқап көруге дайынсыз ба?"
+          }
+        }
+      },
+      "offer-spotlight": {
+        "title": "Сіздің ұсынысыңыз",
+        "description": "Ұсынысты, оның шарттарын және тапсырыс жолын көрсетіңіз.",
+        "scenes": {
+          "hook": {
+            "label": "Ұсыныс",
+            "caption": "Сізге арналған ұсыныс"
+          },
+          "details": {
+            "label": "Ұсыныс шарттары",
+            "caption": "Толығырақ танысыңыз"
+          },
+          "cta": {
+            "label": "Тапсырыс беру",
+            "caption": "Тапсырыс үшін жазыңыз"
+          }
+        }
+      },
+      "menu-picks": {
+        "title": "Мәзірден таңдау",
+        "description": "Үш тағам не тауар арасынан таңдауға көмектесіңіз.",
+        "scenes": {
+          "first": {
+            "label": "Бірінші таңдау",
+            "caption": "Біздің мәзірде"
+          },
+          "second": {
+            "label": "Екінші таңдау",
+            "caption": "Дәмін татып көріңіз"
+          },
+          "third": {
+            "label": "Үшінші таңдау",
+            "caption": "Сіз нені таңдайсыз?"
+          },
+          "cta": {
+            "label": "Келу немесе тапсырыс",
+            "caption": "Бүгін бізге келіңіз"
+          }
+        }
+      },
+      "space-tour": {
+        "title": "Орынға шолу",
+        "description": "Кіреберісті, интерьерді және сүйікті бұрышты көрсетіңіз.",
+        "scenes": {
+          "entrance": {
+            "label": "Кіреберіс",
+            "caption": "Қош келдіңіз"
+          },
+          "inside": {
+            "label": "Ішкі көрініс",
+            "caption": "Айналаға қараңыз"
+          },
+          "detail": {
+            "label": "Сүйікті бұрыш",
+            "caption": "Өз үйіңіздегідей болыңыз"
+          },
+          "cta": {
+            "label": "Келуді жоспарлау",
+            "caption": "Келуіңізді жоспарлаңыз"
+          }
+        }
+      },
+      "behind-scenes": {
+        "title": "Сахна сыртында",
+        "description": "Дайын жұмыстың артындағы адамдар мен ұқыптылықты көрсетіңіз.",
+        "scenes": {
+          "team": {
+            "label": "Адамдар",
+            "caption": "Командамен танысыңыз"
+          },
+          "process": {
+            "label": "Жұмыс үстінде",
+            "caption": "Сахна сыртына көз салыңыз"
+          },
+          "result": {
+            "label": "Дайын жұмыс",
+            "caption": "Қамқорлықпен жасалған"
+          },
+          "cta": {
+            "label": "Әрекетке шақыру",
+            "caption": "Басқа жұмыстарымызды көріңіз"
+          }
+        }
+      },
+      "collection": {
+        "title": "Коллекцияға шолу",
+        "description": "Шағын коллекцияны бірізді визуалды стильде таныстырыңыз.",
+        "scenes": {
+          "first": {
+            "label": "Бірінші тауар",
+            "caption": "Коллекцияны ашыңыз"
+          },
+          "second": {
+            "label": "Екінші тауар",
+            "caption": "Өз стиліңізді табыңыз"
+          },
+          "third": {
+            "label": "Үшінші тауар",
+            "caption": "Сүйіктіңізді таңдаңыз"
+          },
+          "cta": {
+            "label": "Әрекетке шақыру",
+            "caption": "Толық коллекцияны көріңіз"
+          }
+        }
+      },
+      "service-story": {
+        "title": "Қызмет хикаясы",
+        "description": "Клиент қажеттілігін, қызметіңізді және келесі қадамды байланыстырыңыз.",
+        "scenes": {
+          "need": {
+            "label": "Клиент қажеттілігі",
+            "caption": "Бастайық"
+          },
+          "service": {
+            "label": "Сіздің қызметіңіз",
+            "caption": "Қалай көмектесе аламыз"
+          },
+          "result": {
+            "label": "Нақты жұмыс",
+            "caption": "Жұмыстарымызды көріңіз"
+          },
+          "cta": {
+            "label": "Жазылу немесе байланыс",
+            "caption": "Бізге хабарласыңыз"
+          }
+        }
+      }
+    }
+  },
+  "WidgetBrandingPage": {
+    "title": "Виджет брендингі",
+    "description": "Веб-виджетіңіздің түстерін, мәтінін және жеңіл макет әрекетін баптаңыз.",
+    "empty": {
+      "title": "Виджет орнатылмаған",
+      "description": "Бұл бөлімде брендингті баптау үшін Web Widget интеграциясын орнатыңыз.",
+      "cta": "Интеграцияларға өту"
+    }
+  },
+  "PlanUpgradeDialog": {
+    "gateTrialExpired": "14 күндік тегін сынақ мерзіміңіз аяқталды. Осы жұмыс кеңістігін қайта ашу үшін ақылы тарифке өтіңіз.",
+    "gateConversationLimit": "Ағымдағы тарифке байланысты {hiddenCount} диалог жасырылған. Ақылы тарифке өткенше жаңа диалогтар сақталмайды.",
+    "gateConversationLimitReached": "Бұл жұмыс кеңістігі тариф шегіне жетті. Ақылы тарифке өткенше жаңа диалогтар сақталмайды.",
+    "gateFeatureLimit": "Осы жұмыс кеңістігінде «{featureLabel}» мүмкіндігін ашу үшін ақылы тарифке өтіңіз.",
+    "gateDefault": "Бұл жұмыс кеңістігі тариф шегіне жетті.",
+    "title": "Тарифті жаңартыңыз",
+    "checkoutFailed": "Төлемді ашу мүмкін болмады",
+    "unlimited": "Шектеусіз:",
+    "billingCycle": "Төлем кезеңін таңдаңыз",
+    "monthly": "Ай сайын",
+    "annual": "Жылына",
+    "proDescription": "Клиенттермен белсенді жұмыс үшін.",
+    "upgradeToPro": "Pro-ға өту",
+    "openingCheckout": "Төлем ашылуда...",
+    "billingDisabled": "Бұл ортада төлем қосылмаған.",
+    "enterpriseDescription": "Үлкен командаларға арналған жеке лимиттер.",
+    "contactSales": "Сату бөлімімен байланысу",
+    "features": {
+      "conversations": "диалогтар",
+      "bulkCampaigns": "жаппай науқандар",
+      "seats": "командадағы орындар",
+      "workspaces": "жұмыс кеңістіктері",
+      "oneSeat": "Командада 1 орын",
+      "oneWorkspace": "1 жұмыс кеңістігі",
+      "oneWhatsAppNumber": "1 WhatsApp нөмірі",
+      "allIntegrations": "Барлық интеграциялар, әрқайсысына бір қосылым",
+      "voiceReplies": "WhatsApp-тағы дауыстық жауаптар (ElevenLabs аккаунтыңыз)",
+      "proAiUsage": "ЖИ қолданысы 5 есе көп",
+      "proScenarios": "50 сценарий",
+      "enterpriseAiUsage": "ЖИ қолданысы 20 есе көп",
+      "whatsAppCapacity": "WhatsApp нөмірлерінің жеке саны",
+      "integrationCapacity": "Интеграциялардың жеке саны"
+    }
+  },
+  "WhatsAppReconnectBanner": {
+    "warningTitle": "WhatsApp қосылымын қалпына келтіріңіз",
+    "expiredTitle": "WhatsApp қосылымын қалпына келтіріңіз",
+    "removedTitle": "WhatsApp ажыратылды",
+    "body": "Қосылымды қалпына келтіру үшін WhatsApp қолжетімділігін растаңыз.",
+    "bodyWithPhone": "WhatsApp қосылымын қалпына келтіру үшін {phone} нөміріне қолжетімділікті растаңыз.",
+    "removedBody": "Бұл WhatsApp Business аккаунты енді airi.chat қызметіне қосылмаған. Cloud API хабарлары уақытша тоқтатылды.",
+    "removedBodyWithPhone": "{phone} нөмірі енді airi.chat қызметіне қосылмаған. Cloud API хабарлары уақытша тоқтатылды.",
+    "cta": "Қайта қосу",
+    "dismiss": "Жасыру",
+    "dismissWorkspace": "Осы жұмыс кеңістігіндегі барлығы үшін жасыру",
+    "dismissError": "Ескертуді жасыру мүмкін болмады. Қайталап көріңіз."
+  },
+  "WhatsAppSubscribers": {
+    "page": {
+      "title": "WhatsApp жазылушылары",
+      "description": "Жазылу сілтемелері, келісім оқиғалары, QR-кодтар және хабарлама клиент базалары."
+    },
+    "connectRequired": {
+      "title": "Алдымен WhatsApp қосыңыз",
+      "description": "Жазылу сілтемелері мен келісімді бақылау үшін қосылған WhatsApp Business аккаунты қажет.",
+      "action": "WhatsApp қосу"
+    },
+    "stats": {
+      "links": "Сілтемелер",
+      "optedIn": "Келісім бергендер",
+      "customerBases": "Клиент базалары"
+    },
+    "tabs": {
+      "links": "Сілтемелер",
+      "subscribers": "Жазылушылар",
+      "bases": "Клиент базалары"
+    },
+    "createLink": {
+      "title": "WhatsApp-та жазылу сілтемесін жасау",
+      "description": "Келісімдер маркетинг хабарламаларына жарамдылық үшін бақыланады."
+    },
+    "defaults": {
+      "signupMessage": "WhatsApp-та жаңартулар алу үшін жазылыңыз.",
+      "confirmationMessage": "Сіз жазылдыңыз."
+    },
+    "fields": {
+      "displayName": "Ішкі атау",
+      "privacyPolicyUrl": "Құпиялылық саясатының URL",
+      "signupMessage": "Келісім алдындағы хабарлама",
+      "confirmationMessage": "Растау хабарламасы",
+      "websiteUrl": "Сайт URL",
+      "promoCode": "Промокод",
+      "productLine": "Өнім желісі",
+      "shop": "Дүкен",
+      "campaign": "Кампания",
+      "landingPage": "Лендинг",
+      "ad": "Жарнама",
+      "checkoutFlow": "Төлем сценарийі",
+      "baseName": "Клиент базасының атауы"
+    },
+    "placeholders": {
+      "displayName": "Жазғы іске қосу",
+      "baseName": "Жазғы жазылушылар"
+    },
+    "actions": {
+      "refresh": "Жаңарту",
+      "createLink": "Сілтеме жасау",
+      "creatingLink": "Жасалуда...",
+      "copyLink": "Сілтемені көшіру",
+      "copyEmbed": "Кодты көшіру",
+      "qr": "QR",
+      "disable": "Өшіру",
+      "createBase": "Жасау",
+      "creatingBase": "Жасалуда...",
+      "setDefault": "Негізгі ету"
+    },
+    "copyLabels": {
+      "link": "Сілтеме",
+      "embed": "Код"
+    },
+    "empty": {
+      "links": "Жазылу сілтемелері әлі жоқ.",
+      "subscribers": "Келісім оқиғалары әлі жоқ.",
+      "bases": "Клиент базалары әлі синхрондалмаған.",
+      "attribution": "Атрибуция жоқ",
+      "value": "-"
+    },
+    "toasts": {
+      "signupCreated": "Жазылу сілтемесі жасалды",
+      "baseCreated": "Клиент базасы жасалды",
+      "signupDisabled": "Жазылу сілтемесі өшірілді",
+      "defaultBaseUpdated": "Негізгі клиент базасы жаңартылды",
+      "copied": "{label} көшірілді"
+    },
+    "errors": {
+      "load": "WhatsApp жазылушыларын жүктеу сәтсіз аяқталды",
+      "createSignup": "Жазылу сілтемесін жасау сәтсіз аяқталды",
+      "createBase": "Клиент базасын жасау сәтсіз аяқталды",
+      "disableSignup": "Жазылу сілтемесін өшіру сәтсіз аяқталды",
+      "setDefaultBase": "Негізгі клиент базасын орнату сәтсіз аяқталды"
+    },
+    "created": "Жасалды: {date}",
+    "embedCta": "WhatsApp-та жазылу",
+    "qrAlt": "WhatsApp жазылу QR-коды",
+    "subscribers": {
+      "title": "Жазылушы келісімі",
+      "description": "WhatsApp-тан алынған соңғы жазылу және бас тарту оқиғалары."
+    },
+    "table": {
+      "user": "Пайдаланушы",
+      "status": "Күйі",
+      "source": "Дереккөз",
+      "attribution": "Атрибуция",
+      "eventTime": "Оқиға уақыты",
+      "name": "Атауы",
+      "metaId": "Meta ID",
+      "default": "Негізгі",
+      "action": "Әрекет"
+    },
+    "status": {
+      "optedIn": "Келісім берді",
+      "optedOut": "Бас тартты",
+      "default": "Негізгі",
+      "no": "Жоқ"
+    },
+    "bases": {
+      "defaultHint": "Негізгі клиент базасы WABA деңгейінде орнатылады. Жергілікті сегменттер өнім, дүкен, кампания, лендинг, жарнама және төлем таргетингі үшін негізгі дерек көзі болып қалады.",
+      "createTitle": "Клиент базасын жасау"
+    }
+  },
+  "WhatsAppWelcomeSequences": {
+    "page": {
+      "title": "Сәлемдесу sequence-тері",
+      "description": "Click-to-WhatsApp жарнамалары үшін Partner App sequence жасаңыз. Meta sequence ID мәнін Ads Manager ішінде немесе болашақ CTWA creative баптауында қолданыңыз."
+    },
+    "connectRequired": {
+      "title": "Алдымен WhatsApp қосыңыз",
+      "description": "Welcome message sequences жасау үшін WhatsApp Business account қосыңыз.",
+      "action": "WhatsApp қосу"
+    },
+    "summary": "{count} sequences Meta-дан синхрондалды",
+    "actions": {
+      "sync": "Meta-дан синхрондау",
+      "create": "Жасау",
+      "edit": "Өзгерту",
+      "save": "Сақтау",
+      "delete": "Жою",
+      "copyId": "Sequence ID көшіру",
+      "cancel": "Болдырмау"
+    },
+    "badges": {
+      "usedInAd": "Жарнамада қолданылады"
+    },
+    "fields": {
+      "text": "Мәтін",
+      "autofill": "Автотолтыру",
+      "iceBreakers": "FAQ",
+      "empty": "Орнатылмаған"
+    },
+    "empty": {
+      "title": "Welcome sequences әлі жоқ",
+      "description": "Sequence жасап, оны жарнама creative ішінде Partner App ретінде таңдаңыз."
+    },
+    "dialog": {
+      "createTitle": "Welcome sequence жасау",
+      "editTitle": "Welcome sequence өзгерту",
+      "description": "Клиент Click-to-WhatsApp жарнамасын ашқанда Meta осы sequence жібереді."
+    },
+    "form": {
+      "name": "Атауы",
+      "namePlaceholder": "Driver sign-up",
+      "text": "Welcome text",
+      "textPlaceholder": "Сәлем! Қалай көмектесейік?",
+      "autofill": "Клиенттің дайын хабарламасы",
+      "autofillPlaceholder": "Сәлем! Толығырақ ақпарат алғым келеді.",
+      "iceBreakers": "FAQ батырмалары",
+      "iceBreakerPlaceholder": "Quick reply {index}"
+    },
+    "preview": {
+      "title": "Алдын ала қарау",
+      "empty": "Sequence preview үшін контент қосыңыз.",
+      "emptyText": "Welcome text орнатылмаған."
+    },
+    "alerts": {
+      "loadFailed": "Welcome message sequences жүктелмеді",
+      "createFailed": "Welcome message sequence жасалмады",
+      "updateFailed": "Welcome message sequence жаңартылмады",
+      "deleteFailed": "Welcome message sequence жойылмады",
+      "created": "Welcome sequence жасалды",
+      "updated": "Welcome sequence жаңартылды",
+      "deleted": "Welcome sequence жойылды",
+      "copied": "Sequence ID көшірілді",
+      "deleteConfirm": "{name} welcome sequence жою керек пе?",
+      "usedInAdDeleteBlocked": "Бұл sequence белсенді жарнамаға байланысқан, сондықтан оны жою мүмкін емес."
+    }
+  },
+  "WhatsAppQr": {
+    "page": {
+      "title": "WhatsApp Chat QR кодтары",
+      "description": "Клиенттерге нөміріңізді термей немесе сақтамай WhatsApp чатын бастауға көмектесіңіз. Олар қарап, жібере алатын міндетті емес дайын хабарлама қосыңыз."
+    },
+    "source": {
+      "requiredTitle": "QR кодтарын жасау үшін WhatsApp-ты қосыңыз",
+      "requiredDescription": "Чатқа арналған QR кодын және сілтемені жасау немесе барын қосу үшін WhatsApp нөмірін қосыңыз.",
+      "connectAction": "WhatsApp-ты қосу",
+      "loadErrorTitle": "WhatsApp көздерін жүктеу мүмкін болмады",
+      "loadErrorDescription": "Бұл бос жұмыс кеңістігі емес, көздерді жүктеу қатесі. Интеграцияларды өзгертпес бұрын қайталап көріңіз."
+    },
+    "actions": {
+      "create": "Чат QR кодын жасау",
+      "import": "Бар кодты импорттау",
+      "saveDraft": "Жобаны сақтау",
+      "cancel": "Бас тарту",
+      "retry": "Қайталау",
+      "refresh": "Жаңарту",
+      "filter": "Сүзгі",
+      "clearFilter": "Сүзгіні алып тастау",
+      "clearFilters": "Сүзгілерді тазалау",
+      "previous": "Алдыңғы",
+      "next": "Келесі"
+    },
+    "form": {
+      "sourceLabel": "WhatsApp көзі",
+      "sourcePlaceholder": "Көзді таңдаңыз",
+      "sourceDescription": "Осы QR коды тиесілі WhatsApp нөмірі.",
+      "placementLabel": "Орналастыру атауы",
+      "placementDescription": "Басып шығарылған QR коды орналасатын жерді анықтайтын атауды пайдаланыңыз.",
+      "messageLabel": "Алдын ала толтырылған хабарлама",
+      "optional": "(міндетті емес)",
+      "messageDescription": "{count}/{maximum}. Бұл міндетті емес дайын хабарлама WhatsApp ішінде ашылады, клиент оны қарап, жібереді. Автоматтандыру тек жіберілгеннен кейін басталады.",
+      "errors": {
+        "chooseSource": "Қосылған WhatsApp көзін таңдаңыз.",
+        "enterPlacementName": "Орналастыру атауын енгізіңіз.",
+        "enterDesiredMessage": "Клиент жіберуі тиіс хабарламаны енгізіңіз.",
+        "maxCharacters": "{maximum} таңбадан асырмаңыз."
+      }
+    },
+    "manager": {
+      "columns": {
+        "asset": "QR коды",
+        "readiness": "Дайындық",
+        "scenario": "Сценарий",
+        "updated": "Жаңартылды"
+      },
+      "searchLabel": "QR кодтарын іздеу",
+      "searchPlaceholder": "Орналастыру атауы бойынша іздеу",
+      "loading": "QR кодтары жүктелуде",
+      "loadErrorTitle": "QR кодтарын жүктеу мүмкін болмады",
+      "refreshErrorTitle": "Соңғы өзгерістерді жүктеу мүмкін болмады",
+      "refreshing": "Жаңартылуда",
+      "firstEmptyTitle": "WhatsApp чатын бастауды жеңілдетіңіз",
+      "firstEmptyDescription": "Қаптамаға, түбіртекке, маңдайшаға, баспа немесе цифрлық арналарға арналған QR кодын және чат сілтемесін жасаңыз. Клиенттер нөміріңізді термей немесе сақтамай сканерлей алады.",
+      "filteredEmptyTitle": "Бұл сүзгілерге сәйкес QR коды жоқ",
+      "filteredEmptyDescription": "Басқа атауды қолданып көріңіз немесе белсенді сүзгіні алып тастаңыз.",
+      "paginationLabel": "QR код беттері"
+    },
+    "filter": {
+      "all": "Барлық QR кодтары",
+      "source": "Көз",
+      "status": "Күй",
+      "assignment": "Тағайындау",
+      "assigned": "Тағайындалған",
+      "unassigned": "Тағайындалмаған",
+      "activeSource": "Көз: {value}",
+      "activeStatus": "Күй: {value}",
+      "activeAssignment": "Тағайындау: {value}"
+    },
+    "status": {
+      "DRAFT": "Жоба",
+      "ACTIVE": "Белсенді",
+      "DETACHED": "Ажыратылған"
+    },
+    "readiness": {
+      "ready": "Дайын",
+      "draft": "Баптау қажет",
+      "reconciling": "Синхрондалуда",
+      "detached": "Ажыратылған",
+      "unhealthy": "Назар аудару қажет"
+    },
+    "providerState": {
+      "PENDING": "Провайдер күтілуде",
+      "ACTIVE": "Провайдерде белсенді",
+      "DELETED": "Провайдерден жойылған",
+      "RECONCILING": "Провайдермен синхрондалуда"
+    },
+    "routingState": {
+      "ENABLED": "Бағыттау қосулы",
+      "DISABLED": "Бағыттау өшірулі",
+      "RECONCILING": "Бағыттау синхрондалуда"
+    },
+    "assignment": {
+      "unassigned": "Тағайындалмаған",
+      "status": {
+        "draft": "Сценарий жобасы",
+        "active": "Белсенді сценарий"
+      }
+    },
+    "card": {
+      "sourceUnavailable": "WhatsApp көзі қолжетімсіз",
+      "message": "Алдын ала толтырылған хабарлама",
+      "noMessage": "Хабарлама әлі берілмеген",
+      "assignment": "Сценарийге тағайындау",
+      "updated": "Соңғы жаңарту",
+      "provider": "{state}",
+      "routing": "{state}",
+      "linkCopied": "WhatsApp сілтемесі көшірілді",
+      "copyFailed": "WhatsApp сілтемесін көшіру мүмкін болмады",
+      "copyLink": "WhatsApp сілтемесін көшіру",
+      "downloadPng": "PNG суретін жүктеу",
+      "moreActions": "Қосымша әрекеттер",
+      "openDetails": "Толық мәліметті ашу",
+      "testLink": "WhatsApp сілтемесін тексеру",
+      "recoveryTitle": "Бұл QR коды назар аударуды қажет етеді",
+      "openRecovery": "Қалпына келтіру мәліметін ашу",
+      "recovery": {
+        "ready": "Провайдер операциясы әлі синхрондалуда.",
+        "draft": "QR кодын тағайындамас бұрын провайдерді баптауды аяқтаңыз.",
+        "reconciling": "Провайдер операциясы әлі синхрондалуда.",
+        "detached": "QR кодын қолданар алдында провайдер байланысын тексеріңіз.",
+        "unhealthy": "QR кодын қолданар алдында бағыттау мен провайдер күйін тексеріңіз."
+      },
+      "openArtwork": "{name} ашу",
+      "artworkAlt": "{name} үшін QR суреті",
+      "artworkUnavailable": "QR суреті қолжетімсіз"
+    },
+    "dialog": {
+      "createTitle": "QR кодын жасау",
+      "importTitle": "QR кодын импорттау",
+      "description": "Чатқа міндетті емес дайын хабарлама қосып, QR кодын WhatsApp ішінде қазір жасаңыз немесе жобаны сақтап, кейін аяқтаңыз.",
+      "intentLabel": "Не істегіңіз келеді?",
+      "createIntent": "QR кодын WhatsApp ішінде жасау",
+      "createIntentDescription": "WhatsApp-ты міндетті емес дайын хабарламамен ашатын жаңа QR кодын және чат сілтемесін жасау.",
+      "importIntent": "Бар QR кодын қосу",
+      "importIntentDescription": "Қазір пайдаланып жүрген QR кодын және чат сілтемесін қосу.",
+      "importMethodLabel": "Импорттау тәсілі",
+      "methodProvider": "WhatsApp-тан",
+      "methodLink": "Сілтемеден",
+      "methodImage": "Суреттен",
+      "providerCodeLabel": "Meta QR коды",
+      "providerCodePlaceholder": "Жүктелген кодты таңдаңыз",
+      "providerCodeDescription": "Таңдалған WhatsApp нөмірінің QR кодтарын жүктеңіз.",
+      "loadProviderCodes": "Кодтарды жүктеу",
+      "linkLabel": "WhatsApp QR сілтемесі",
+      "linkDescription": "Бар QR кодымен байланысты wa.me сілтемесін енгізіңіз.",
+      "imageLabel": "QR суреті",
+      "chooseImageAction": "Суретті таңдау",
+      "imageDescription": "QR коды бар PNG, JPEG немесе WebP суретін жүктеңіз.",
+      "operationFailedTitle": "QR кодының әрекетін орындау мүмкін болмады",
+      "openDraft": "Сақталған жобаны ашу",
+      "errors": {
+        "chooseProviderCode": "Ағымдағы көз бетінен кодты жүктеп, таңдаңыз.",
+        "enterLink": "Бар WhatsApp QR сілтемесін енгізіңіз.",
+        "chooseImage": "QR коды бар суретті таңдаңыз."
+      }
+    },
+    "placementState": {
+      "CURRENT": "Ағымдағы орналастыру",
+      "HISTORICAL": "Тарихи орналастыру",
+      "DETACHED": "Орналастыру ажыратылған"
+    },
+    "operationKind": {
+      "CREATE": "код жасау",
+      "CONNECT": "кодты қосу",
+      "APPLY_MESSAGE": "хабарламаны жаңарту",
+      "REPLACE": "ауыстыру",
+      "MOVE": "жылжыту",
+      "SET_ROUTING": "бағыттауды жаңарту",
+      "DELETE": "жою",
+      "SYNC_PROVIDER": "Meta күйін тексеру",
+      "RECONCILE": "салыстырып тексеру"
+    },
+    "detail": {
+      "source": {
+        "notConnected": "Қосылмаған",
+        "linkedUnavailable": "Осы QR кодымен байланысқан WhatsApp көзі енді бұл жұмыс кеңістігінде қолжетімсіз.",
+        "chooseRequired": "Провайдер кодын жасамас немесе өзгертпес бұрын қосылған WhatsApp көзін таңдаңыз.",
+        "unavailableDescription": "{reason} Бапталған көз қолжетімді болғанша провайдердегі өзгерістер өшірілді. Жергілікті мәліметтер мен қолжетімді суреттер ашық қалады."
+      },
+      "artwork": {
+        "title": "QR суреті мен сілтемесі",
+        "description": "Ағымдағы суретті жүктеп алыңыз немесе нақты WhatsApp сілтемесін ашыңыз.",
+        "previewOnManager": "Суретті алдын ала қарау Manager бетінде қолжетімді.",
+        "previewUnavailable": "Суретті алу үшін провайдер кодын жасаңыз немесе қосыңыз.",
+        "deepLinkUnavailable": "Тікелей сілтеме қолжетімсіз"
+      },
+      "settings": {
+        "title": "Параметрлер",
+        "description": "Орналастыру атауын өзгертіп, клиенттің алдын ала толтырылған хабарламасын басқарыңыз.",
+        "save": "Параметрлерді сақтау",
+        "applyMessage": "Дайын хабарламаны WhatsApp ішінде жаңарту",
+        "createProviderCode": "QR кодын WhatsApp ішінде жасау"
+      },
+      "assignment": {
+        "title": "Сценарийге тағайындау",
+        "description": "Тағайындау QR триггерінің таңдау терезесінде өзгертіледі.",
+        "meta": "Триггер {nodeId} · нұсқа {revision}",
+        "unassignedDescription": "Дайын болғанда осы QR кодын сақталған сценарий триггерінен таңдаңыз."
+      },
+      "health": {
+        "title": "Күйі",
+        "description": "Ресурстың сақталған күйі, Meta-дағы соңғы белгілі күй, орналастыру және бағыттау.",
+        "resource": "Ресурс: {state}",
+        "source": "Көз: {source}",
+        "provider": "Провайдер: {state}",
+        "routing": "Бағыттау: {state}",
+        "placement": "Орналастыру: {state}",
+        "missingCode": "Провайдер коды: жоқ",
+        "lastKnownDescription": "Жоғарыда airi.chat ішінде сақталған Meta-ның соңғы күйі көрсетілген.",
+        "checkProvider": "Meta күйін тексеру"
+      },
+      "history": {
+        "title": "Ауыстыру және кодтар тарихы",
+        "description": "Басып шығарылған тарихи нұсқалар осы тұрақты кіру нүктесіне байланысқан күйде қалады.",
+        "current": "Ағымдағы",
+        "historical": "Тарихи",
+        "empty": "Ағымдағы провайдер коды жоқ.",
+        "moreTitle": "Қосымша тарих сақталған",
+        "moreDescription": "Бұл көрініс әрекет жасауға болатын тарих бөлігін көрсетеді. Ескі жазбалар жергілікті түрде сақталады.",
+        "createReplacement": "Ауыстыру кодын жасау",
+        "codeMeta": "{codeId} · {providerState} · {routingState}",
+        "disableRouting": "Бағыттауды өшіру",
+        "enableRouting": "Бағыттауды қосу",
+        "delete": "Жою"
+      },
+      "recovery": {
+        "title": "Қалпына келтіру",
+        "description": "Ажыратылған жергілікті күйді қалпына келтіріңіз немесе сақталған провайдер операциясын салыстырып тексеріңіз.",
+        "recover": "Ажыратылған кіру нүктесін қалпына келтіру",
+        "reconcile": "Салыстырып тексеру: {kind}"
+      },
+      "danger": {
+        "title": "Қауіпті аймақ",
+        "description": "Meta-дан жою жергілікті кіру нүктесі мен оның тарихын сақтайды.",
+        "activeTitle": "Белсенді сценарийге тағайындалған",
+        "activeDescription": "Ағымдағы провайдер кодын жоймас бұрын «{scenarioName}» сценарийін өшіріңіз.",
+        "historyTitle": "Алдымен тарихи кодтарды жойыңыз",
+        "historyDescription": "Ағымдағы кодты жоймас бұрын тарих тізіміндегі барлық сақталған провайдер кодтарын жойыңыз.",
+        "deleteCurrent": "Ағымдағы кодты Meta-дан жою"
+      },
+      "actionFailedTitle": "Әрекет орындалмады",
+      "draft": {
+        "title": "Жергілікті Chat QR жобасын дайындаңыз",
+        "description": "Жобаны сақтау Meta-да ештеңе жасамайды және өзгертпейді."
+      },
+      "load": {
+        "notFoundTitle": "Chat QR коды табылмады",
+        "notFoundDescription": "Бұл QR коды жойылған немесе басқа жұмыс кеңістігіне тиесілі болуы мүмкін. QR Manager-ге оралып, қолжетімді кодты таңдаңыз.",
+        "errorTitle": "Бұл Chat QR кодын жүктеу мүмкін болмады",
+        "refreshErrorTitle": "Соңғы күйді жаңарту мүмкін болмады",
+        "loadingLabel": "Chat QR коды жүктелуде",
+        "loadingDescription": "QR кодының соңғы сақталған күйі жүктелуде."
+      }
+    },
+    "deleteDialog": {
+      "title": "Бұл QR кодын Meta-дан жою керек пе?",
+      "codeIdentity": "{referenceCode} ({codeId})",
+      "currentDescription": "{code} провайдер коды жойылады. Жергілікті кіру нүктесі мен код тарихы сақталады. Ағымдағы код жойылғанда ресурс қайта қолданылатын жоба күйіне оралады.",
+      "historicalDescription": "{code} провайдер коды жойылады. Жергілікті кіру нүктесі мен код тарихы сақталады. Тарихи кодты жою ағымдағы кодты немесе ресурс күйін өзгертпейді.",
+      "activeTitle": "Алдымен тағайындалған сценарийді өшіріңіз",
+      "activeDescription": "Бұл QR белсенді «{scenarioName}» сценарийіне тағайындалған. Провайдер кодын жоймас бұрын оны ашып, өшіріңіз.",
+      "acknowledgement": "Басып шығарылған кодтың бұл Chat QR-ды ашпайтынын түсінемін.",
+      "confirm": "Meta-дан жою"
+    },
+    "controller": {
+      "status": {
+        "draftSaved": "Жоба сақталды",
+        "codeCreated": "QR коды жасалды",
+        "codeConnected": "QR коды қосылды",
+        "messageUpdated": "Алдын ала толтырылған хабарлама жаңартылды",
+        "replacementCreated": "Ауыстыру QR коды жасалды",
+        "routingEnabled": "Бағыттау қосылды",
+        "routingDisabled": "Бағыттау өшірілді",
+        "codeDeleted": "QR коды Meta-дан жойылды",
+        "entryPointRecovered": "QR кіру нүктесі қалпына келтірілді",
+        "providerChecked": "Meta күйі сақталған QR кодына сәйкес келеді",
+        "providerReconciled": "Провайдер күйі салыстырып тексерілді",
+        "pngDownloaded": "PNG жүктелді",
+        "svgDownloaded": "SVG жүктелді"
+      },
+      "errors": {
+        "ownerChanged": "Әрекет аяқталғанға дейін бұл Chat QR өзгерді.",
+        "requestFailed": "Сұрауды орындау мүмкін болмады.",
+        "indexMigrationRequired": "QR кодын сақтау уақытша қолжетімсіз. Бірнеше минуттан кейін қайталап көріңіз.",
+        "providerDriftDetected": "Meta күйі сақталған QR кодына енді сәйкес келмейді. Қалпына келтіру бөлімін ашыңыз.",
+        "providerCheckUnavailable": "Қазір Meta күйін тексеру мүмкін емес. Кейінірек қайталап көріңіз.",
+        "providerRequestFailed": "WhatsApp провайдер сұрауын орындай алмады. Қайталап көріңіз.",
+        "operationBusy": "Басқа QR операциясы орындалып жатыр.",
+        "stateChanged": "Әрекет аяқталғанша QR коды өзгерді. Бетті жаңартып, қайталап көріңіз.",
+        "withOperationId": "{message} (операция {operationId})",
+        "placementNameLength": "1 мен {maximum} таңба аралығындағы орналастыру атауын енгізіңіз.",
+        "entryPointNotLoaded": "Сұралған Chat QR кіру нүктесі әлі жүктелмеді.",
+        "currentCodeUnavailable": "Ағымдағы QR коды қолжетімсіз.",
+        "sourceUnavailable": "WhatsApp көзі қолжетімсіз.",
+        "codeVersionUnavailable": "Бұл QR кодының нұсқасы қолжетімсіз.",
+        "entryPointUnavailable": "QR кіру нүктесі қолжетімсіз.",
+        "reconciliationUnavailable": "Салыстырып тексеру операциясы қолжетімсіз.",
+        "artworkUnavailable": "Ағымдағы QR суреті қолжетімсіз."
+      }
+    }
+  },
+  "MessengersSection": {
+    "title": "WhatsApp менеджері",
+    "templates": "WhatsApp шаблондары",
+    "flows": "WhatsApp сценарийлері",
+    "welcomeSequences": "Welcome Sequences",
+    "qrCodes": "WhatsApp QR кодтары",
+    "subscribers": "WhatsApp жазылушылары",
+    "catalog": "Каталог",
+    "officialBadge": "Ресми белгі"
+  }
+}

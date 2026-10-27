@@ -1,0 +1,54 @@
+## Context Focus
+
+- Prioritize files under `src/app/**`, `src/components/**`, `src/lib/**`, `src/models/**`, `src/types/**`, and `src/hooks/**`.
+- De-prioritize large assets under `public/**` and any generated artifacts (`.next`, `dist`, `coverage`).
+
+## Path Aliases
+
+- Use `@/` to reference `src/` (e.g., `@/lib/mongoose`, `@/components/ui/button`).
+
+## API Route Patterns (Next.js App Router)
+
+- Handlers live in `src/app/api/**/route.ts` and export HTTP methods.
+- Authentication:
+  - Server Components: use `createReadOnlyClient()` for read-only auth context.
+  - API Routes / Server Actions: use `createClient()` for full read/write.
+  - Server-only ops: use `supabaseAdmin` (service role) and never expose to client.
+- Error handling: return `NextResponse.json({ error }, { status })` with clear codes.
+
+## Data Architecture
+
+- MongoDB Atlas stores raw conversations/messages.
+- Supabase (Postgres) stores aggregated insights, metrics, and auth.
+- Common utilities:
+  - `@/lib/mongoose` for Mongo connection (ensure connection before queries).
+  - `@/lib/mongo` for health/index utilities.
+  - `@/lib/supabase/*` for Supabase client helpers.
+
+## UI Component Conventions
+
+- Styling: TailwindCSS + `@shadcn/ui`.
+- Prefer Shadcn components for inputs, dialogs, tables, date-picker.
+- Loading state: `Skeleton`; Error state: `Alert`; purposeful empty state with CTA.
+
+## Realtime & Jobs
+
+- Pusher for realtime UI updates.
+- Upstash Queue for background jobs and retries (cron and processing).
+
+## Internationalization
+
+- `next-intl` via `src/i18n/request.ts`; messages in `messages/*.json`.
+- Supported locales: `en`, `ru`, `kz`.
+
+## Security & Quality
+
+- Validate inputs on API boundaries; add rate limiting where appropriate.
+- Avoid leaking secrets to the client; use service role only on server.
+- TypeScript: prefer explicit function signatures for exported APIs.
+
+## Notes for Assistants
+
+- When editing code, keep imports aligned with the alias and project structure.
+- Avoid introducing new libraries unless necessary; follow existing patterns.
+- Prefer incremental edits that match the current style and formatting.

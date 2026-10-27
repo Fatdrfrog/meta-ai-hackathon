@@ -1,0 +1,660 @@
+.marketplace {
+  min-height: 100svh;
+}
+.content {
+  max-width: 1280px;
+  margin: auto;
+  padding: 28px 32px 0;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.back:hover {
+  color: var(--ink);
+}
+.detailNavigation,
+.languageLinks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.languageLinks {
+  margin-top: 48px;
+  font-size: 14px;
+}
+.languageLinks a[aria-current="page"] {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.detailLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+  max-width: 1040px;
+}
+.detailInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.detailInfo h2,
+.related h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.detailInfo p,
+.related p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.detailProperties {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  padding-block: 20px;
+  border-block: 1px solid var(--line);
+}
+.detailProperties > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  font-size: 14px;
+}
+.detailProperties dt {
+  color: var(--muted);
+}
+.detailProperties dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.detailInfo .detailNote {
+  font-size: 13px;
+}
+.related {
+  margin-top: 64px;
+}
+.related ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  padding-block: 24px;
+  list-style: none;
+}
+.related li > a {
+  font-size: 18px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.related li > p {
+  margin-top: 12px;
+}
+.related > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.cardContent h2 a:hover,
+.related a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.intro {
+  padding: clamp(42px, 6vw, 80px) 0 36px;
+  max-width: 880px;
+}
+.intro h1 {
+  margin: 0;
+  max-width: 860px;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1.03;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.intro > p:where(:not(:first-child)) {
+  max-width: 670px;
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  padding: 24px 0;
+  border-block: 1px solid var(--line);
+}
+.search,
+.filterField {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+}
+.search > div {
+  display: flex;
+  gap: 8px;
+}
+.search {
+  grid-column: 1 / -1;
+}
+.search input,
+.filterField select {
+  background: var(--sheet);
+  border-color: var(--line-strong);
+  box-shadow: none;
+  min-width: 0;
+}
+.filterField select {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 14px;
+}
+.filterField select:focus-visible {
+  outline: 2px solid var(--rose-ink);
+  outline-offset: 3px;
+}
+.resultsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 72px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.catalog {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 38px 28px;
+}
+.templateCard {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cardContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 22px 0 0;
+}
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.cardMeta span + span::before {
+  content: "·";
+  margin-right: 8px;
+}
+.cardContent h2 {
+  margin: 12px 0 8px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.cardContent > p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.cardContent > button {
+  margin-top: auto;
+}
+.requestButton {
+  background: var(--rose-ink);
+  color: white;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.requestButton:hover {
+  background: var(--ink);
+  color: white;
+}
+.previewAction {
+  border-color: var(--line-strong);
+  background: transparent;
+  box-shadow: none;
+}
+.availability {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.preview {
+  background: var(--chat);
+  border-radius: 14px;
+  padding: 20px;
+  min-height: 0;
+  color: var(--chat-text);
+}
+.compact {
+  min-height: 290px;
+  display: flex;
+  flex-direction: column;
+}
+.previewBrand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.previewBrand > span {
+  background: var(--sheet);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 11px;
+}
+.previewBrand > svg {
+  margin-left: auto;
+  color: var(--green-ink);
+}
+.previewMessage {
+  min-width: 0;
+  max-width: 330px;
+  margin-left: auto;
+  width: 100%;
+}
+.previewMessage > div {
+  max-width: 100%;
+}
+.previewMessage > div > p,
+.carouselCard > div > p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.previewMedia {
+  position: relative;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1672 / 941;
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 5px;
+}
+.previewMedia img {
+  object-fit: contain;
+}
+.carouselViewport {
+  scroll-snap-type: x mandatory;
+}
+.previewCarousel {
+  margin-top: 8px;
+}
+.carouselCard {
+  flex: 0 0 86%;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+.previewCarousel .carouselNavigation {
+  width: 44px;
+  height: 44px;
+}
+.mediaPlaceholder {
+  min-height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--paper-2);
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+.previewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 12px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background: var(--bubble-out);
+  color: #027eb5;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--chip-shadow);
+}
+.previewButton svg {
+  flex-shrink: 0;
+}
+.previewButton span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.previewCode {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+}
+.formattedMessage {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.previewMessageFooter {
+  display: block;
+  margin-top: 9px;
+  color: var(--chat-meta);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.documentAttachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 5px;
+  border-radius: 8px;
+  background: var(--bubble-out);
+  color: var(--chat-text);
+}
+.documentAttachment > svg {
+  flex-shrink: 0;
+  color: var(--rose-ink);
+}
+.documentAttachment > span {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.documentAttachment small,
+.locationDetails small {
+  color: var(--chat-meta);
+  font-size: 10px;
+}
+a.documentAttachment:hover {
+  text-decoration: underline;
+}
+a.documentAttachment:focus-visible {
+  outline: 2px solid var(--rose-ink);
+  outline-offset: 3px;
+}
+.previewVideo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 5px;
+  border-radius: 8px;
+  background: var(--ink);
+  object-fit: contain;
+}
+.locationAttachment {
+  overflow: hidden;
+  margin-bottom: 5px;
+  border-radius: 8px;
+  background: var(--bubble-out);
+}
+.locationMap {
+  display: grid;
+  place-items: center;
+  height: 116px;
+  color: var(--rose-ink);
+  background-color: var(--paper-2);
+  background-image:
+    linear-gradient(
+      35deg,
+      transparent 45%,
+      var(--sheet) 45%,
+      var(--sheet) 52%,
+      transparent 52%
+    ),
+    linear-gradient(
+      105deg,
+      transparent 35%,
+      var(--sheet) 35%,
+      var(--sheet) 41%,
+      transparent 41%
+    );
+}
+.locationDetails {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.previewNote {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--chat-meta);
+}
+.dialog {
+  width: calc(100% - 2rem);
+  max-width: 800px !important;
+  max-height: 90svh;
+  overflow: hidden;
+  background: var(--sheet);
+  color: var(--ink);
+  border-radius: 16px;
+  padding: 28px;
+}
+.dialogHeader {
+  flex-shrink: 0;
+}
+.dialogLayout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "preview request";
+  gap: 28px;
+  align-items: start;
+  align-content: start;
+  touch-action: pan-y;
+}
+.dialogLayout > .preview {
+  grid-area: preview;
+}
+.dialogLayout > .form,
+.dialogLayout > .notice {
+  grid-area: request;
+}
+.form {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.field {
+  display: grid;
+  gap: 7px;
+}
+.field input {
+  background: white;
+  box-shadow: none;
+}
+.field > p,
+.privacy {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.consent button {
+  margin-top: 3px;
+}
+.consent label {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.privacy a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+}
+.notice h3,
+.empty h2 {
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+.notice p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.processing {
+  padding: 12px;
+  background: var(--paper);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.processing p {
+  margin-top: 4px;
+  color: var(--muted);
+}
+.error {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--rose-ink);
+}
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.empty {
+  padding: 80px 24px;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+.empty p {
+  color: var(--muted);
+  font-size: 15px;
+}
+.footer {
+  border-top: 1px solid var(--line);
+  margin-top: 80px;
+  padding: 28px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.footer span {
+  margin-right: auto;
+  font-weight: 600;
+  color: var(--ink);
+}
+.marketplace a:focus-visible {
+  outline: 2px solid var(--rose-ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+@media (max-width: 1023px) {
+  .catalog {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .search {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 639px) {
+  .detailLayout,
+  .related ul {
+    grid-template-columns: 1fr;
+  }
+  .content {
+    padding-inline: 20px;
+  }
+  .catalog {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .filters {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .search {
+    grid-column: auto;
+  }
+  .intro {
+    padding-top: 40px;
+  }
+  .intro h1 {
+    font-size: clamp(28px, 6vw, 40px);
+  }
+  .intro > p:where(:not(:first-child)) {
+    font-size: 16px;
+  }
+  .dialog {
+    padding: 24px 20px;
+    width: 100%;
+  }
+  .dialogLayout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "request" "preview";
+    gap: 20px;
+  }
+  .dialogLayout > .preview {
+    padding: 14px;
+  }
+  .previewNote {
+    display: none;
+  }
+  .compact {
+    min-height: 250px;
+  }
+}

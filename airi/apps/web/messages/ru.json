@@ -1,0 +1,2361 @@
+{
+  "WhatsAppHistorySync": {
+    "standardAllowance": "Стандартный лимит импорта компании — {messages, number} сообщений или {mib, number} МиБ. Для большего объёма обратитесь в поддержку.",
+    "rangeDays": "Период истории (дни)",
+    "pausedTitle": "Импорт истории приостановлен",
+    "pausedDescription": "Лимит импорта истории компании исчерпан. Полученная история сохранена. Обратитесь в поддержку для увеличения лимита и продолжения импорта.",
+    "pausedPlanDescription": "Импорт истории приостановлен из-за вашего тарифа. Ещё не импортированная история продолжит загружаться автоматически примерно в течение часа после перехода на платный тариф.",
+    "idleTitle": "История не запрошена",
+    "idleDescription": "Обмен историей доступен при подключении номера из приложения WhatsApp Business.",
+    "requestingTitle": "Запрашиваем историю",
+    "requestingDescription": "Ждём подтверждения запроса от Meta. Повторный запрос недоступен.",
+    "requestUnknownTitle": "Проверяем запрос истории",
+    "requestUnknownDescription": "Meta могла принять запрос. Мы проверяем его статус; не переподключайте номер только ради повтора.",
+    "requestedTitle": "Ожидаем историю WhatsApp",
+    "requestedDescription": "Meta приняла запрос. Подтвердите передачу истории в приложении WhatsApp Business. Сообщения появятся после сохранения.",
+    "receivingTitle": "Получаем историю WhatsApp",
+    "receivingDescription": "WhatsApp передаёт историю. Сохранённые сообщения уже доступны, остальные ещё обрабатываются.",
+    "savingTitle": "Сохраняем историю WhatsApp",
+    "savingDescription": "WhatsApp завершил передачу истории. Оставшиеся сообщения ещё сохраняются.",
+    "completedTitle": "История сохранена",
+    "completedDescription": "Все полученные сообщения истории обработаны.",
+    "planSkippedTitle": "Часть диалогов не импортирована",
+    "planSkippedDescription": "Из-за ограничений тарифа часть диалогов не импортирована. Перейдите на платный тариф и напишите в поддержку, чтобы импортировать их.",
+    "unverifiedTitle": "Предыдущая передача истории",
+    "unverifiedDescription": "Предыдущее подключение сообщило о завершении передачи. Количество сохранённых сообщений не проверено.",
+    "declinedTitle": "Передача истории отклонена",
+    "declinedDescription": "Передача истории отклонена в WhatsApp Business. Этот запрос нельзя повторить.",
+    "errorTitle": "История требует внимания",
+    "errorDescription": "Часть истории не удалось сохранить. Обновите статус, чтобы проверить изменения. Новый запрос в Meta отправлен не будет.",
+    "staleTitle": "История давно не обновлялась",
+    "staleDescription": "Свежих обновлений истории нет. Обновите статус для проверки. Исходный запрос нельзя повторить.",
+    "savedCount": "Доступно сообщений: {count}",
+    "pendingCount": "Ожидают обработки: {count}",
+    "failedCount": "Требуют внимания: {count}",
+    "planSkippedCount": "Не импортировано из-за тарифа: {count}",
+    "providerProgress": "Передача WhatsApp: {progress}%",
+    "refreshStatus": "Обновить статус",
+    "statusUnavailable": "Не удалось обновить статус. Показан последний известный результат.",
+    "onboardingRequired": "Импорт истории доступен только при новом подключении WhatsApp. История существующих подключений не будет импортирована повторно.",
+    "windowExpired": "Срок запроса истории для этого подключения истёк. Запустить запрос здесь нельзя.",
+    "navLabel": "История WhatsApp: {status}",
+    "manageHistory": "Настроить историю чатов"
+  },
+  "CustomerBehavior": {
+    "title": "Поведение клиента",
+    "journey": "Цепочка",
+    "beforeDue": "До срока",
+    "delay": "Задержка после события",
+    "unit": "Единица",
+    "minutes": "Минуты",
+    "hours": "Часы",
+    "days": "Дни",
+    "segments": "Фильтры покупок и расходов",
+    "minPurchases": "Минимум покупок",
+    "maxPurchases": "Максимум покупок",
+    "minDaysSincePurchase": "Не менее дней с покупки",
+    "maxDaysSincePurchase": "Не более дней с покупки",
+    "minNetSpend": "Минимум расходов",
+    "maxNetSpend": "Максимум расходов",
+    "currency": "Валюта расходов",
+    "invalidConfig": "Проверьте диапазоны и выберите валюту для фильтра расходов.",
+    "triggerHint": "Запускается по новым записанным событиям. Первым действием подключите одобренный шаблон WhatsApp. Для повторных событий включите повторный запуск в настройках сценария. Нужно согласие на маркетинг; новая покупка останавливает напоминания.",
+    "stopsOnPurchase": "Останавливается после новой покупки",
+    "contactPolicy": "Лимиты контактов между кампаниями",
+    "policyHint": "Действуют для маркетинговых кампаний WhatsApp и автоматических цепочек этого пространства. Попытки с неизвестным результатом тоже учитываются.",
+    "intervalHours": "Часов между контактами",
+    "maxPerWeek": "Максимум за 7 дней",
+    "savePolicy": "Сохранить лимиты пространства",
+    "recordEvent": "События для напоминаний",
+    "eventHint": "Запишите реальное оформление заказа или дату продления/обслуживания. При закрытии или изменении используйте тот же номер. Оплату подтверждайте через «Записать продажу».",
+    "eventType": "Событие клиента",
+    "reference": "Номер заказа или услуги",
+    "dueDate": "Срок (ваше местное время)",
+    "saveEvent": "Записать событие",
+    "eventSaved": "Событие записано. Подходящие активные цепочки скоро будут запланированы.",
+    "recentJourneys": "Последние цепочки",
+    "empty": "Цепочек пока нет. Настройте триггер «Поведение клиента» в сценариях и запишите подходящее событие.",
+    "loading": "Загрузка…",
+    "retry": "Повторить",
+    "saving": "Сохранение…",
+    "error": "Не удалось сохранить или загрузить. Повторите попытку.",
+    "presets": {
+      "abandoned_cart": "Брошенная корзина",
+      "abandoned_checkout": "Брошенное оформление",
+      "purchase_completed": "Завершённая покупка",
+      "replenishment": "Напоминание о пополнении",
+      "second_purchase": "Вторая покупка",
+      "win_back": "Возврат клиента",
+      "upcoming_renewal": "Скорое продление",
+      "overdue_service": "Просроченное обслуживание"
+    },
+    "presetDescriptions": {
+      "abandoned_cart": "Запускается, когда известный покупатель оставил товары в корзине сайта и не начал оформление.",
+      "abandoned_checkout": "Запускается, когда покупатель начал оформление, но не завершил покупку."
+    },
+    "recoveryTemplateHint": "В одобренном шаблоне WhatsApp используйте cart.recovery_token как нумерованное динамическое значение кнопки. Также доступны cart.recovery_url, cart.total, cart.currency, cart.items и cart.item_count.",
+    "events": {
+      "checkout_started": "Начато оформление",
+      "checkout_closed": "Оформление закрыто",
+      "renewal_scheduled": "Запланировано продление",
+      "renewal_completed": "Продление завершено",
+      "service_scheduled": "Запланировано обслуживание",
+      "service_completed": "Обслуживание завершено"
+    },
+    "status": {
+      "pending": "Запланировано",
+      "signaled": "В очереди",
+      "contacted": "Попытка контакта",
+      "cancelled": "Отменено",
+      "skipped": "Остановлено"
+    },
+    "reasons": {
+      "converted": "Новая покупка остановила цепочку.",
+      "event_superseded": "Данные заказа или срок изменились.",
+      "marketing_consent_required": "Нужно согласие на маркетинговые сообщения.",
+      "marketing_opt_out": "Клиент отказался от маркетинговых сообщений.",
+      "contact_frequency_limit": "Достигнут лимит контактов рабочего пространства.",
+      "scenario_changed": "Сценарий изменён или приостановлен.",
+      "another_scenario_active": "Уже запущен другой сценарий.",
+      "manual_handoff_active": "Диалог ведёт менеджер.",
+      "purchase_segment_changed": "Клиент больше не соответствует фильтрам покупок.",
+      "not_first_purchase": "У клиента уже больше одной покупки.",
+      "journey_expired": "Срок отправки напоминания истёк.",
+      "unavailable": "Продолжить цепочку не удалось."
+    }
+  },
+  "Onboarding": {
+    "welcomeToast": "Подключите WhatsApp, чтобы отправить первую рассылку.",
+    "integrationSuccessToast": "Подключено. Канал готов к работе.",
+    "whatsappConnectedToast": "WhatsApp подключён. Дальше: создайте первый шаблон сообщения.",
+    "createTemplateAction": "Создать шаблон"
+  },
+  "AppSidebar": {
+    "airiChat": "Чат Airi",
+    "requests": "Чаты с клиентами",
+    "settings": "Настройки",
+    "integrations": "Интеграции",
+    "help": "Помощь",
+    "defaultUserName": "Пользователь",
+    "knowledgeBase": "База знаний",
+    "scenarios": "Сценарии",
+    "bulkCampaigns": "Массовые рассылки",
+    "limits": {
+      "exhaustedTitle": "Лимит разговоров исчерпан",
+      "remaining": "Осталось {remaining} из {limit}",
+      "textAi": {
+        "loading": "Загружаем расход ИИ",
+        "unavailable": "Данные об использовании ИИ временно недоступны. Повторите попытку позже.",
+        "remaining": "Осталось {remaining} из {limit} включённых текстовых ИИ-действий",
+        "shared": "Общий лимит всех рабочих пространств за всё время существования компании.",
+        "lifetime": "Продление подписки и новые рабочие пространства не обновляют лимит.",
+        "customerReady": "Ваш ключ Google начнёт использоваться после исчерпания включённого лимита.",
+        "customerActive": "Текстовый ИИ использует ваш ключ Google. Расходы оплачивает ваш проект Google.",
+        "exhausted": "Включённый лимит текстовых ИИ-действий исчерпан. Подключите свой ключ для продолжения.",
+        "spendLimit": "Достигнут лимит включённых расходов компании на ИИ. Подключите свой ключ, чтобы продолжить работу с ИИ.",
+        "connect": "Подключить Google AI"
+      },
+      "freePlan": "У вас бесплатный тариф.",
+      "freePlanUpgrade": "У вас бесплатный тариф: <link>улучшить</link>"
+    },
+    "messengers": {
+      "title": "Менеджер WhatsApp"
+    },
+    "analytics": {
+      "title": "Аналитика",
+      "dashboard": "Дашборд",
+      "llm": "LLM",
+      "performance": "Эффективность"
+    },
+    "widget": {
+      "title": "Веб-виджет",
+      "analytics": "Аналитика",
+      "branding": "Брендинг"
+    },
+    "onboarding": {
+      "label": "Настройка",
+      "progress": "{percent}%",
+      "steps": {
+        "company_profile": {
+          "title": "Профиль компании"
+        },
+        "test_airi": {
+          "title": "Проверить Airi"
+        },
+        "connect_integration": {
+          "title": "Подключить канал"
+        },
+        "create_scenario": {
+          "title": "Запустить сценарий"
+        },
+        "publish_knowledge": {
+          "title": "Опубликовать знания"
+        },
+        "verify_answers": {
+          "title": "Проверить ответы"
+        }
+      }
+    },
+    "customers": "Лиды",
+    "email": "Email",
+    "assets": "Медиатека"
+  },
+  "PanelError": {
+    "title": "Страница не загрузилась",
+    "description": "Что-то пошло не так при загрузке этого экрана.",
+    "hint": "Нажмите «Повторить», чтобы продолжить. Данные этого рабочего пространства сохранены.",
+    "retry": "Повторить"
+  },
+  "LoginPage": {
+    "productIntroLabel": "Об airi.chat",
+    "productIntroTitle": "Продолжайте общение с клиентами.",
+    "productIntroDescription": "Рассылки WhatsApp, ответы клиентам и повторные обращения в одном рабочем пространстве.",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль",
+    "signUpErrorInvalidEmail": "Введите корректный email.",
+    "signUpErrorWeakPassword": "Используйте пароль длиной не менее 6 символов.",
+    "signUpErrorRateLimited": "Слишком много попыток. Подождите несколько минут и попробуйте снова.",
+    "signUpErrorSignupDisabled": "Регистрация сейчас недоступна. Попробуйте позже.",
+    "signUpErrorUnknown": "Сейчас не удалось создать аккаунт. Попробуйте ещё раз через минуту.",
+    "googleSignInError": "Не удалось подключиться к Google. Попробуйте снова или используйте email и пароль.",
+    "termsLink": "Условия использования",
+    "privacyLink": "Конфиденциальность",
+    "welcomeTitle": "Войдите в свой аккаунт",
+    "welcomeDescription": "Войдите с email и паролем или продолжите через Google.",
+    "signInButton": "Войти",
+    "or": "Или",
+    "signinTab": "Вход",
+    "signupTab": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "signingIn": "Вход...",
+    "createAccount": "Создать аккаунт",
+    "fillFormToStart": "Создайте аккаунт с email и паролем.",
+    "creating": "Создание...",
+    "signUp": "Зарегистрироваться",
+    "signupPendingTitle": "Проверьте почту",
+    "signupPendingDescription": "Откройте ссылку в письме, чтобы продолжить.",
+    "signupUnconfirmedDescription": "У этого email уже есть неподтвержденный аккаунт, например после прошлого приглашения. Мы отправили на него новую ссылку.",
+    "signupRecentlySentDescription": "Мы отправили письмо на этот адрес меньше минуты назад. Откройте ссылку из письма, чтобы продолжить.",
+    "emailPlaceholder": "m@example.com",
+    "passwordPlaceholder": "Введите надежный пароль",
+    "forgotPassword": "Забыли пароль?",
+    "wrongEmail": "Неверный email? Попробуйте еще раз",
+    "checkInboxTitle": "Письмо отправлено",
+    "checkInboxHint": "Откройте ссылку в письме, чтобы завершить настройку и перейти в рабочее пространство.",
+    "unconfirmedAccountHint": "Введенный пароль не сохранился. Откройте ссылку из письма, чтобы войти и продолжить.",
+    "checkSpamHint": "Нет письма? Проверьте спам или отправьте его повторно.",
+    "existingAccountHint": "Аккаунт уже есть? Войдите с этим email.",
+    "signInWithThisEmail": "Войти с этим email",
+    "resendVerificationEmail": "Отправить письмо повторно",
+    "resendingVerificationEmail": "Отправляем...",
+    "verificationEmailResent": "Письмо отправлено повторно. Проверьте почту.",
+    "failedToResendVerificationEmail": "Не удалось отправить письмо повторно.",
+    "emailRecentlySent": "Мы отправили письмо на этот адрес меньше минуты назад. Проверьте входящие и папку со спамом.",
+    "sendAgainIn": "Отправить снова через {seconds} с",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "existingAccountTitle": "У вас уже есть аккаунт",
+    "existingAccountDescription": "Чтобы продолжить, войдите с паролем от вашего аккаунта. Email уже заполнен.",
+    "passwordRequirements": "Минимум 6 символов",
+    "signUpWithGoogle": "Продолжить через Google",
+    "inAppBrowserGoogleTitle": "Откройте страницу в браузере",
+    "inAppBrowserGoogleDescription": "Вход через Google заблокирован во встроенных браузерах приложений, например Threads, Instagram, Facebook, Telegram, TikTok и LinkedIn. Откройте эту страницу в Chrome, Safari или браузере по умолчанию и попробуйте снова.",
+    "inviteTitle": "Вас пригласили в {workspace}",
+    "inviteSubtitle": "Уже есть аккаунт? Войдите. Новый пользователь? Выберите регистрацию. Затем подтвердите приглашение в {workspace}.",
+    "inviteGenericSubtitle": "Уже есть аккаунт? Войдите. Новый пользователь? Выберите регистрацию. Затем подтвердите приглашение в рабочее пространство.",
+    "inviteSignInTitle": "Войдите, чтобы принять приглашение",
+    "inviteSignInDescription": "Используйте email аккаунта airi.chat. После входа подтвердите приглашение в {workspace}.",
+    "inviteSignUpTitle": "Создайте аккаунт, чтобы присоединиться",
+    "inviteSignUpDescription": "Создайте аккаунт airi.chat. После подтверждения email подтвердите приглашение в {workspace}.",
+    "inviteSignInButton": "Войти и продолжить",
+    "inviteSignUpButton": "Создать аккаунт и продолжить",
+    "inviteInvalidTitle": "Не удалось проверить ссылку приглашения",
+    "inviteInvalidDescription": "Попросите администратора отправить новую ссылку или войдите без принятия этого приглашения.",
+    "inviteSignInLinkHint": "Нет пароля? Отправьте себе безопасную ссылку для входа, и приглашение продолжится после входа.",
+    "sendInviteSignInLink": "Отправить ссылку для входа",
+    "sendingInviteSignInLink": "Отправляем...",
+    "inviteSignInLinkSent": "Ссылка для входа отправлена. Откройте ее, чтобы принять приглашение.",
+    "failedToSendInviteSignInLink": "Не удалось отправить ссылку для входа.",
+    "inviteEmailRequired": "Сначала введите email выше.",
+    "signInErrorInvalidCredentials": "Неверный email или пароль.",
+    "signInErrorRateLimited": "Слишком много попыток входа. Подождите минуту и попробуйте снова.",
+    "signInErrorUnknown": "Сейчас не удалось войти. Попробуйте ещё раз через минуту.",
+    "signInRecoveryHint": "Проверьте email и пароль. Регистрировались через Google? Нажмите «Продолжить через Google» ниже. Вас удалили из рабочего пространства команды? Попросите администратора пригласить вас снова.",
+    "resetPassword": "Сбросить пароль",
+    "signinUnconfirmedDescription": "Email этого аккаунта ещё не подтверждён. Откройте ссылку из письма или отправьте новую.",
+    "confirmEmailTitle": "Подтвердите email",
+    "signInConnectionErrorTitle": "Вход не выполнен",
+    "signInConnectionErrorDescription": "Не удалось связаться с airi.chat. Проверьте интернет или VPN и попробуйте снова.",
+    "signInPageErrorTitle": "На странице входа произошла ошибка",
+    "signInPageErrorDescription": "Попробуйте снова. Если ошибка повторится, перезагрузите страницу.",
+    "tryAgain": "Попробовать снова",
+    "reloadPage": "Перезагрузить страницу"
+  },
+  "LandingPage": {
+    "cookieConsent": {
+      "description": "Мы используем аналитические файлы cookie, чтобы понимать, как вы пользуетесь сайтом, и улучшать airi.chat.",
+      "decline": "Отклонить",
+      "accept": "Принять cookie"
+    },
+    "header": {
+      "openWorkspace": "Открыть рабочее пространство"
+    }
+  },
+  "SiteHeader": {
+    "toggleTheme": "Сменить тему",
+    "lightTheme": "Светлая тема",
+    "darkTheme": "Темная тема",
+    "systemTheme": "Системные настройки",
+    "toggleSidebar": "Переключить боковую панель",
+    "upgrade": "Улучшить тариф",
+    "openAiriChat": "Открыть чат Airi"
+  },
+  "LanguageSwitcher": {
+    "changeLanguage": "Сменить язык",
+    "english": "English",
+    "russian": "Русский",
+    "kazakh": "Қазақша"
+  },
+  "NavMain": {
+    "overview": "Обзор"
+  },
+  "NavUser": {
+    "logout": "Выйти",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "theme": "Тема",
+    "whatsNew": "Что нового",
+    "copyWorkspaceId": "Скопировать ID пространства"
+  },
+  "AiContextManager": {
+    "title": "Контекстные теги",
+    "description": "Добавьте теги, чтобы направлять поиск контекста.",
+    "placeholder": "Добавьте тег (например, «Продление enterprise-контрактов»)...",
+    "salesGrowth": "Рост продаж",
+    "customerRetention": "Удержание клиентов",
+    "competitorAnalysis": "Анализ конкурентов",
+    "productFeedback": "Отзывы о продукте",
+    "serviceQuality": "Качество обслуживания",
+    "saving": "Сохранение...",
+    "saveChanges": "Сохранить теги",
+    "failedToSave": "Не удалось сохранить изменения.",
+    "unknownError": "Произошла неизвестная ошибка.",
+    "contextUpdated": "Теги контекста обновлены.",
+    "infoText": "Используйте небольшой набор точных тегов.",
+    "tagsCountOne": "Настроен 1 тег",
+    "tagsCountOther": "Настроено тегов: {count}",
+    "unsavedChanges": "У вас есть несохраненные изменения",
+    "botSettings": {
+      "title": "Поведение",
+      "description": "Управляйте автоответом, коучингом, защитой и расширенными настройками.",
+      "loading": "Загрузка настроек бота...",
+      "loadFailed": "Не удалось загрузить настройки бота Airi",
+      "coverage": "Автоответ включён в {enabled} из {total} чатов.",
+      "enabledHint": "Новые чаты стартуют с автоответом.",
+      "disabledHint": "Новые чаты стартуют без автоответа.",
+      "enableButton": "Включить бота для всех чатов",
+      "enabledButton": "Включено для всех чатов",
+      "enableSuccess": "Бот Airi включен для всех чатов",
+      "enableFailed": "Не удалось включить бота Airi для всех чатов",
+      "disableButton": "Выключить бота для всех чатов",
+      "disableSuccess": "Бот Airi выключен для всех чатов",
+      "disableFailed": "Не удалось выключить бота Airi для всех чатов",
+      "scenarioTitle": "Сценарии",
+      "scenarioDescription": "Запускайте сценарии независимо от обычных автоответов.",
+      "scenarioCoverage": "Сценарии включены в {enabled} из {total} чатов.",
+      "scenarioEnabledHint": "Новые чаты могут запускать сценарии.",
+      "scenarioDisabledHint": "Новые чаты не будут запускать сценарии.",
+      "scenarioEnableSuccess": "Сценарии включены для всех чатов.",
+      "scenarioEnableFailed": "Не удалось включить сценарии для всех чатов.",
+      "scenarioDisableSuccess": "Сценарии выключены для всех чатов.",
+      "scenarioDisableFailed": "Не удалось выключить сценарии для всех чатов.",
+      "coachTitle": "Коучинг",
+      "coachDescription": "Включите или отключите коучинг для этого пространства.",
+      "coachCoverage": "Коучинг включён в {enabled} из {total} чатов.",
+      "coachEnabledHint": "Новые чаты стартуют с коучингом.",
+      "coachDisabledHint": "Новые чаты стартуют без коучинга.",
+      "coachEnableSuccess": "Коучинг Airi включён для всех чатов",
+      "coachEnableFailed": "Не удалось включить коучинг Airi для всех чатов",
+      "coachDisableSuccess": "Коучинг Airi выключен для всех чатов",
+      "coachDisableFailed": "Не удалось выключить коучинг Airi для всех чатов",
+      "onboardingTitle": "База знаний готова",
+      "onboardingDescription": "Вы опубликовали первую статью. Включите автоответ, если хотите, чтобы Airi использовала её в чатах.",
+      "saveControlsFailed": "Не удалось сохранить параметр.",
+      "elevenlabsAgentIdLabel": "ID агента ElevenLabs",
+      "elevenlabsAgentIdPlaceholder": "agent_xxxxxxxxxxxxxxxx",
+      "elevenlabsAgentIdHint": "Необязательный ID агента для этого пространства.",
+      "retrievalModeLabel": "Режим поиска",
+      "retrievalModeHint": "Адаптивный режим добавляет недавний контекст к коротким follow-up сообщениям. Режим последнего сообщения использует только последнее сообщение.",
+      "retrievalModeAdaptiveOption": "Адаптивный (рекомендуется)",
+      "retrievalModeLastMessageOption": "Только последнее сообщение",
+      "languageBiasLabel": "Языковой приоритет",
+      "languageBiasHint": "Используйте это только если большинство чатов идёт на одном языке.",
+      "languageBiasNone": "Без смещения",
+      "languageBiasKazakh": "Предпочитать казахский",
+      "languageBiasRussian": "Предпочитать русский",
+      "languageBiasUzbek": "Предпочитать узбекский",
+      "historyToggleLabel": "Использовать недавнюю историю чата",
+      "historyToggleHint": "Добавляет недавние сообщения в поиск. Может увеличить расход токенов.",
+      "kbLinksToggleLabel": "Отправлять ссылки БЗ",
+      "kbLinksToggleHint": "Также отправляет публичные ссылки БЗ в клиентские каналы, если они используются в ответе.",
+      "autoSaveHint": "Сохраняется автоматически.",
+      "savingControls": "Сохранение параметра...",
+      "controlsSaved": "Параметр сохранён."
+    }
+  },
+  "OnboardingProductStep": {
+    "websitesLabel": "Ваши сайты",
+    "websitesHelp": "Мы просканируем эти страницы, чтобы изучить ваш продукт и сформировать знания Airi.",
+    "websiteInputLabel": "Сайт {number}",
+    "websiteInvalid": "Введите корректный публичный сайт, например https://example.com.",
+    "websitePlaceholder": "https://example.com",
+    "addWebsite": "Добавить ещё сайт",
+    "removeWebsite": "Удалить сайт",
+    "removeWebsiteLabel": "Удалить сайт {number}",
+    "instagramLabel": "Instagram",
+    "instagramConnected": "Подключено",
+    "instagramInclude": "Использовать мою биографию и последние посты в Instagram для знаний Airi.",
+    "trainingNeedsSource": "Добавьте сайт или выберите подключённый канал. Обучение можно пропустить и подключить источники позже в Интеграциях.",
+    "trainingOptional": "Обучение необязательно. Можно продолжить и подключить источники в Интеграциях.",
+    "trainingLoading": "Загружаем состояние обучения...",
+    "trainingLoadError": "Не удалось загрузить состояние обучения.",
+    "tryAgain": "Повторить",
+    "whatsappLabel": "WhatsApp",
+    "whatsappHelp": "Подключите через Cloud API или режим сосуществования с WhatsApp Business. В режиме сосуществования можно импортировать недавнюю историю чатов для обучения Airi.",
+    "whatsappConnected": "Подключено",
+    "whatsappIncludeHistory": "Импортировать недавнюю историю WhatsApp для обучения Airi.",
+    "whatsappIncludeCloud": "Использовать этот канал WhatsApp как подключённый источник для Airi.",
+    "whatsappHistoryRequested": "История запрошена. Сообщения станут доступны после передачи из WhatsApp и сохранения в airi.chat.",
+    "whatsappHistoryError": "История WhatsApp требует внимания. Откройте Настройки, чтобы проверить статус.",
+    "trainingProgressWhatsapp": "Импортируем историю WhatsApp и готовим контекст…",
+    "testChatLocked": "Добавьте источник и запустите обучение, чтобы протестировать Airi",
+    "testChatLockedHelp": "Добавьте источник и начните обучение, прежде чем проверять Airi.",
+    "learningReadyTitle": "У Airi уже есть контекст",
+    "learningReadyDescription": "Задайте ниже один реальный вопрос клиента. Первый полезный ответ завершит активацию.",
+    "trainingError": "Не удалось запустить обучение. Попробуйте ещё раз.",
+    "trainingLimitError": "Достигнут лимит источников сайтов и Instagram. Удалите источник в Интеграциях и повторите попытку.",
+    "trainingStart": "Начать обучение Airi",
+    "trainingRestart": "Обучить Airi заново",
+    "trainingProgressTitle": "Прогресс индексации",
+    "trainingProgressPending": "Индексируем ваши источники…",
+    "trainingBackgroundTitle": "Обучение продолжается в фоне",
+    "trainingBackgroundDescription": "Можно перейти в Интеграции и проверить прогресс здесь позже.",
+    "checkAgain": "Проверить снова",
+    "statusIndexed": "Проиндексировано",
+    "statusFailed": "Ошибка",
+    "statusPending": "Индексация…",
+    "statusFailedNoContent": "Не найдено содержимое, доступное для чтения.",
+    "statusFailedTimeout": "Время индексации истекло.",
+    "statusFailedGeneric": "Не удалось проиндексировать источник. Повторите попытку.",
+    "retrySource": "Повторить: {source}",
+    "testChatHeading": "Проверьте, чему научилась Airi",
+    "testChatHelp": "Спросите Airi о вашем продукте, чтобы убедиться, что она поняла контекст.",
+    "testChatTitle": "Тестовый чат с Airi",
+    "openAiriChat": "Открыть чат Airi"
+  },
+  "AddCompanyForm": {
+    "registerCompany": "Зарегистрируйте свою компанию",
+    "lastStepDescription": "Создайте профиль рабочего пространства, обучите Airi вашему продукту и начните с реального вопроса к Airi.",
+    "stepLabel": "Шаг {number}",
+    "requiredBadge": "Обязательно",
+    "requiredStepTab": "Профиль компании",
+    "requiredStepTitle": "Создайте рабочее пространство",
+    "requiredStepDescription": "Введите название компании, чтобы создать рабочее пространство.",
+    "continueToProductStep": "Продолжить",
+    "productStepTab": "Обучить Airi",
+    "productStepTitle": "Обучите Airi вашему продукту",
+    "productStepDescription": "Добавьте сайт, чтобы Airi узнала о вашем продукте, затем протестируйте её ниже. Уже подключённые каналы можно добавить автоматически.",
+    "productBadge": "Рекомендуем",
+    "companyName": "Название компании",
+    "companyNamePlaceholder": "например, «ООО Цветы и праздники»",
+    "phoneNumber": "Номер телефона (необязательно)",
+    "phoneNumberPlaceholder": "+7 701 234 56 78",
+    "referralSource": "Откуда вы узнали о нас? (необязательно)",
+    "referralSourcePlaceholder": "Выберите источник",
+    "referralSourceGoogle": "Поиск Google",
+    "referralSourceLinkedIn": "LinkedIn",
+    "referralSourceInstagram": "Instagram",
+    "referralSourceFacebook": "Facebook",
+    "referralSourceTikTok": "TikTok",
+    "referralSourceYouTube": "YouTube",
+    "referralSourceReferral": "Друг или коллега",
+    "referralSourceEvent": "Мероприятие или конференция",
+    "referralSourceProductHunt": "Product Hunt",
+    "referralSourceOther": "Другое",
+    "referralSourceOtherLabel": "Уточните источник",
+    "referralSourceOtherPlaceholder": "Подкаст, сообщество, партнёр и т. д.",
+    "creating": "Создание...",
+    "registerCompanyButton": "Зарегистрировать компанию",
+    "continueToIntegrations": "Перейти к интеграциям",
+    "requiredStepLockedHint": "Ваше рабочее пространство уже создано. Эти данные можно изменить позже в Настройках.",
+    "httpError": "Ошибка HTTP! статус:",
+    "unknownError": "Произошла неизвестная ошибка",
+    "privacyAgreement": "Я согласен с <privacy>Политикой конфиденциальности</privacy> и <terms>Условиями</terms>.",
+    "setupErrorTitle": "Страница не загрузилась",
+    "setupErrorDescription": "Что-то пошло не так при загрузке настройки компании.",
+    "setupErrorHint": "Ваш прогресс мог уже сохраниться. Нажмите «Повторить», чтобы продолжить.",
+    "setupErrorRetry": "Повторить"
+  },
+  "Command": {
+    "commandPalette": "Командная палитра",
+    "searchCommand": "Найдите команду для запуска..."
+  },
+  "Dialog": {
+    "close": "Закрыть"
+  },
+  "Sheet": {
+    "close": "Закрыть"
+  },
+  "TagInput": {
+    "placeholder": "Добавьте тег и нажмите Enter...",
+    "recommendations": "Рекомендации:",
+    "removeTag": "Удалить {tag}"
+  },
+  "Sidebar": {
+    "mobileSidebarTitle": "Боковая панель",
+    "mobileSidebarDescription": "Отображает мобильную боковую панель.",
+    "toggleSidebar": "Переключить панель"
+  },
+  "FinishProfilePage": {
+    "title": "Имя в профиле",
+    "description": "Пожалуйста, используйте ваше настоящее имя",
+    "fullNameLabel": "Полное имя",
+    "fullNamePlaceholder": "Иван Иванов",
+    "continueButton": "Продолжить"
+  },
+  "Auth": {
+    "completeInvite": {
+      "title": "Завершите настройку рабочего пространства",
+      "description": "Укажите имя и задайте пароль для входа по email.",
+      "fullNameLabel": "Полное имя",
+      "fullNamePlaceholder": "Айгерим Нурланова",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Придумайте надёжный пароль",
+      "passwordHint": "Этот пароль нужен только для входа по email.",
+      "confirmPasswordLabel": "Подтвердите пароль",
+      "confirmPasswordPlaceholder": "Введите пароль ещё раз",
+      "showPassword": "Показать пароль",
+      "hidePassword": "Скрыть пароль",
+      "strengthLabel": "Надёжность пароля: <value>{strength}</value>",
+      "strength": {
+        "weak": "низкая",
+        "fair": "средняя",
+        "good": "хорошая",
+        "strong": "высокая"
+      },
+      "submit": "Завершить настройку",
+      "submitting": "Завершаем настройку…",
+      "submitted": "Настройка завершена",
+      "legal": "Создавая аккаунт, вы соглашаетесь с <terms>Условиями использования</terms> и <privacy>Политикой конфиденциальности</privacy>.",
+      "validation": {
+        "nameTooShort": "Имя должно содержать не менее 2 символов",
+        "nameTooLong": "Имя слишком длинное",
+        "nameInvalid": "Используйте только буквы, пробелы, дефисы и апострофы",
+        "passwordTooShort": "Пароль должен содержать не менее 8 символов",
+        "passwordTooLong": "Пароль слишком длинный",
+        "passwordLowercase": "Добавьте хотя бы одну строчную букву",
+        "passwordUppercase": "Добавьте хотя бы одну заглавную букву",
+        "passwordNumber": "Добавьте хотя бы одну цифру",
+        "passwordMismatch": "Пароли не совпадают"
+      },
+      "toast": {
+        "successTitle": "Настройка завершена",
+        "redirecting": "Открываем рабочее пространство…",
+        "alreadySetUpTitle": "Вы уже всё настроили",
+        "failedTitle": "Не удалось завершить настройку",
+        "failedFallback": "Попробуйте ещё раз через минуту."
+      }
+    },
+    "unauthorizedTitle": "Доступ запрещен",
+    "unauthorizedDescription": "У вас нет доступа к этой странице.",
+    "authErrorTitle": "Ошибка аутентификации",
+    "unknownAuthError": "Неизвестная ошибка аутентификации",
+    "goToLogin": "Перейти ко входу",
+    "goBack": "Вернуться назад",
+    "authCodeError": {
+      "descriptionPkce": "Контекст проверки для этой ссылки недоступен.",
+      "descriptionLinkInvalid": "Ваша ссылка для входа больше не действительна.",
+      "descriptionGeneric": "Произошла ошибка при аутентификации.",
+      "showTechnicalDetails": "Показать технические детали",
+      "verificationSessionMismatch": "Несоответствие сессии проверки",
+      "verificationContextHint": "Ссылки для проверки зависят от контекста регистрации/входа. Смена хоста, очистка cookies, другой браузер или предзагрузка ссылки могут нарушить этот контекст.",
+      "linkAlreadyUsed": "Эта ссылка уже использовалась.",
+      "linkExpired": "Срок действия ссылки истёк.",
+      "linkInvalidOrExpired": "Ссылка недействительна или истекла.",
+      "hintAlreadyUsed": "Войдите или запросите новое письмо для подтверждения.",
+      "hintExpired": "Запросите новое письмо для подтверждения или войдите, если у вас уже есть аккаунт.",
+      "magicLinkLabel": "Отправить новую ссылку для входа (рекомендуется)",
+      "magicLinkHint": "Ссылка для входа работает в любом браузере и позволяет завершить регистрацию или вход, если контекст проверки потерян.",
+      "emailPlaceholder": "Введите ваш email",
+      "magicLinkSent": "Ссылка для входа отправлена. Проверьте почту и перейдите по ссылке.",
+      "requestVerificationEmail": "Запросить новое письмо для подтверждения",
+      "verificationEmailSent": "Письмо отправлено! Проверьте почту.",
+      "logIn": "Войти",
+      "tryRecovery": "Попробовать восстановление",
+      "contactSupportHint": "Если проблема сохраняется, обратитесь в поддержку",
+      "tryAutomaticRecovery": "Попробовать автоматическое восстановление",
+      "invalidEmail": "Введите корректный email",
+      "failedToSendEmail": "Не удалось отправить письмо. Попробуйте снова.",
+      "unexpectedError": "Произошла непредвиденная ошибка. Попробуйте снова.",
+      "failedToSendMagicLink": "Не удалось отправить ссылку для входа"
+    },
+    "callbackRecovery": {
+      "noSessionError": "Активная сессия не найдена. Обычно это происходит, когда ссылка открыта из другого браузера, приложения, домена или после очистки cookies.",
+      "redirecting": "Перенаправление...",
+      "checkingAuth": "Проверка аутентификации...",
+      "sessionFound": "Сессия найдена! Перенаправляем в панель.",
+      "pleaseWait": "Подождите, пока мы проверим вашу сессию.",
+      "verificationLinkIssue": "Проблема с сессией ссылки проверки",
+      "authRecovery": "Восстановление аутентификации",
+      "pkceDescription": "Не удалось восстановить контекст проверки. Запросите новую ссылку для входа, чтобы завершить аутентификацию.",
+      "genericDescription": "Не удалось автоматически проверить сессию. Попробуйте один из вариантов ниже.",
+      "linkExpiredFallback": "Ссылка могла истечь или уже использована.",
+      "sendMagicLinkLabel": "Отправить новую ссылку для входа на email",
+      "magicLinkHintShort": "Ссылка для входа работает в любом браузере и позволяет завершить регистрацию или вход.",
+      "invalidEmail": "Введите корректный email",
+      "failedToSendMagicLink": "Не удалось отправить ссылку для входа",
+      "unexpectedError": "Произошла непредвиденная ошибка. Попробуйте снова.",
+      "magicLinkSent": "Ссылка для входа отправлена. Проверьте почту и перейдите по ссылке.",
+      "emailPlaceholder": "Введите ваш email"
+    }
+  },
+  "EnhancedMarkdownEditor": {
+    "placeholder": "Напишите содержимое статьи на Markdown...",
+    "format": "Формат",
+    "bold": "Жирный",
+    "italic": "Курсив",
+    "link": "Ссылка",
+    "image": "Изображение",
+    "heading1": "Заголовок 1",
+    "heading2": "Заголовок 2",
+    "heading3": "Заголовок 3",
+    "quote": "Цитата",
+    "bulletList": "Маркированный список",
+    "numberedList": "Нумерованный список",
+    "uploadImage": "Загрузить изображение",
+    "uploadingImage": "Загрузка изображения...",
+    "importMarkdown": "Импортировать Markdown",
+    "importingMarkdown": "Импорт Markdown...",
+    "importMarkdownSuccess": "Markdown импортирован",
+    "code": "код",
+    "linkText": "текст ссылки",
+    "altText": "описание изображения",
+    "alignLeft": "По левому краю",
+    "alignCenter": "По центру",
+    "alignRight": "По правому краю",
+    "alignJustify": "По ширине",
+    "table": "Таблица",
+    "tableActions": "Действия с таблицей",
+    "insertTable": "Вставить таблицу",
+    "addRowBefore": "Добавить строку выше",
+    "addRowAfter": "Добавить строку ниже",
+    "deleteRow": "Удалить строку",
+    "deleteRowShort": "Удалить строку",
+    "addColumnBefore": "Добавить столбец слева",
+    "addColumnAfter": "Добавить столбец справа",
+    "deleteColumn": "Удалить столбец",
+    "deleteColumnShort": "Удалить столбец",
+    "addAbove": "Добавить выше",
+    "addBelow": "Добавить ниже",
+    "addLeft": "Добавить слева",
+    "addRight": "Добавить справа",
+    "toggleHeaderRow": "Заголовочная строка",
+    "toggleHeaderColumn": "Заголовочный столбец",
+    "toggleHeaderCell": "Заголовочная ячейка",
+    "mergeCells": "Объединить ячейки",
+    "splitCell": "Разделить ячейку",
+    "deleteTable": "Удалить таблицу",
+    "linkDialogDescription": "Введите URL и при необходимости измените текст ссылки.",
+    "linkUrl": "URL",
+    "linkTextPlaceholder": "Текст ссылки",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "editorToolbar": "Панель форматирования текста",
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "normalText": "Обычный текст",
+    "blockType": "Тип блока",
+    "blockTypeHint": "Абзац или заголовок. Горячие клавиши: Ctrl/Cmd+Alt+0 для обычного текста, Ctrl/Cmd+Alt+1–3 для заголовков.",
+    "contextMenuLabel": "Вставить блок",
+    "draftTable": "Черновая таблица",
+    "divider": "Разделитель",
+    "resetImageSize": "Сбросить",
+    "resizeImage": "Изменить размер изображения",
+    "fontFamily": "Шрифт",
+    "searchFonts": "Поиск шрифтов...",
+    "noFontsFound": "Шрифты не найдены",
+    "defaultFont": "Шрифт по умолчанию",
+    "gridLayout": "Сетка",
+    "gridColumns": "{columns} колонки",
+    "gridMode": "Режим сетки",
+    "gridBorderSubtle": "Тонкая граница",
+    "gridBorderSolid": "Сплошная граница",
+    "gridBorderDashed": "Пунктирная граница",
+    "gridBorderNone": "Без границы",
+    "gridBorderColor": "Цвет границы",
+    "gridBorderWidth": "Граница {width}px",
+    "editGridBorder": "Изменить границу сетки",
+    "selectGrid": "Выделить всю сетку",
+    "deleteGrid": "Удалить сетку",
+    "textColor": "Цвет текста",
+    "highlightColor": "Цвет подсветки",
+    "resetTextColor": "Сбросить цвет текста",
+    "resetHighlightColor": "Сбросить подсветку",
+    "customColor": "Свой цвет"
+  },
+  "ForgotPasswordDialog": {
+    "title": "Сброс пароля",
+    "description": "Введите ваш email, и мы отправим ссылку для восстановления пароля.",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "sendResetLink": "Отправить ссылку",
+    "sending": "Отправка...",
+    "close": "Закрыть",
+    "successMessage": "Письмо для сброса пароля отправлено! Проверьте почту и папку спам.",
+    "errorMessage": "Не удалось отправить письмо"
+  },
+  "LandingDemo": {
+    "header": {
+      "signIn": "Войти",
+      "startFree": "Начать бесплатно",
+      "bookDemo": "Записаться на демо",
+      "navigation": "Возможности airi.chat",
+      "openMenu": "Открыть меню",
+      "nav": {
+        "features": "Рассылки",
+        "videos": "Инструкции",
+        "integrations": "Каналы",
+        "fit": "Для бизнеса",
+        "about": "О нас",
+        "team": "Команда"
+      },
+      "resources": "Меню",
+      "close": "Закрыть",
+      "openResources": "Открыть меню",
+      "closeResources": "Закрыть меню"
+    },
+    "about": {
+      "title": "О нас",
+      "caption": "Web Summit 2025 в Лиссабоне, в шапках Чоппера и Эйса из One Piece.",
+      "images": {
+        "heroAlt": "Основатели Airi.chat на Web Summit 2025",
+        "productAlt": "Продуктовый дашборд Airi.chat"
+      },
+      "links": {
+        "linkedin": "LinkedIn"
+      },
+      "teamInfo": {
+        "title": "Информация о команде",
+        "intro": "Airi.chat делает небольшая команда. Мы занимаемся официальными рассылками в WhatsApp, ответами с помощью ИИ и повторными касаниями. Ключевые участники:",
+        "aisulu": {
+          "nameRole": "Aisulu Kalshabekova (Co-Founder & CEO)",
+          "description": "Соосновательница, отвечает за работу с клиентами. Проблему она увидела в крупном казахстанском банке, где больше 50 аналитиков вручную разбирали жалобы и заводили тикеты."
+        },
+        "samat": {
+          "nameRole": "Samat Kalshabekov (Co-Founder & CTO)",
+          "description": "Сооснователь, отвечает за UX продукта, удобство для разработчиков и надёжность системы."
+        },
+        "pmf": "Мы ещё в начале пути и работаем в тесном контакте с клиентами, пока ищем product-market fit."
+      },
+      "products": {
+        "title": "Что делает Airi.chat",
+        "intro": "Airi.chat помогает бизнесу продавать через WhatsApp. Вы отправляете рассылки через официальную WhatsApp Business Platform, отвечаете клиентам сами или с помощью ИИ и возвращаетесь к тем, кто ответил. Шаблоны, WhatsApp Flows, списки клиентов и аналитика продаж уже встроены, а Instagram, Telegram, email и веб-чат работают в том же рабочем пространстве.",
+        "problemsLabel": "Проблемы, которые мы решаем:",
+        "problems": {
+          "overwhelmed": "Рассылки в WhatsApp уходят из разных сервисов, а на ответы клиентов не успевают вовремя отреагировать.",
+          "visibility": "Ответы, согласия на рассылку и сигналы о покупке теряются между разными чатами и почтой.",
+          "manualAnalysis": "Ручная сегментация и разбор ответов тормозят следующую рассылку.",
+          "audienceCompanies": "Интернет-магазины, SaaS, финтех, образование и сервисные компании, которые общаются с клиентами в WhatsApp.",
+          "audienceTeams": "Команды маркетинга и продаж, которые отправляют крупные рассылки в WhatsApp и хотят автоматизацию, при которой человек может подключиться к диалогу."
+        },
+        "closing": "С Airi.chat рассылка не заканчивается на отправке. Вы видите, кто ответил, делите аудиторию по ответам и продолжаете диалог с учётом контекста."
+      },
+      "ourTeam": {
+        "title": "Наша команда",
+        "join": "Присоединиться к команде"
+      },
+      "faq": {
+        "what": {
+          "question": "Что такое Airi.chat?",
+          "answer": "Airi.chat помогает отправлять официальные рассылки в WhatsApp и работать с ответами клиентов. Команда отвечает сама или с помощью ИИ и возвращается к тем, кто откликнулся."
+        },
+        "founders": {
+          "question": "Кто основал Airi.chat?",
+          "answer": "Airi.chat основали Aisulu Kalshabekova (Co-Founder & CEO) и Samat Kalshabekov (Co-Founder & CTO)."
+        },
+        "problems": {
+          "question": "Какие проблемы решает Airi.chat?",
+          "answer": "Airi.chat заменяет разрозненные сервисы для рассылок и рискованные неофициальные способы отправки, а ответы и сигналы о покупке после рассылки больше не теряются."
+        },
+        "audience": {
+          "question": "Для кого Airi.chat?",
+          "answer": "Для команд маркетинга и продаж в интернет-магазинах, SaaS, финтехе, образовании и сервисных компаниях, которые отправляют рассылки в WhatsApp и работают с ответами."
+        }
+      }
+    },
+    "hero": {
+      "officialTechProviders": "Meta Tech Provider",
+      "title": "Продавайте больше",
+      "titleAccent": "в WhatsApp.",
+      "subtitle": "Запускайте рассылки в WhatsApp, отвечайте клиентам сами или с помощью ИИ и отслеживайте продажи.",
+      "subtitleSecondary": "Рассылки, диалоги и аналитика продаж в airi.chat.",
+      "startFree": "Начать бесплатно",
+      "connectWaba": "Подключить WhatsApp Business",
+      "workEmail": "Рабочий email",
+      "bookDemo": "Записаться на демо",
+      "invalidEmail": "Введите корректный рабочий email",
+      "demoSuccess": "Спасибо! Мы свяжемся с вами.",
+      "demoError": "Что-⁠то пошло не так. Попробуйте ещё раз."
+    },
+    "featureCards": {
+      "scrollUp": "Прокрутить вверх",
+      "scrollDown": "Прокрутить вниз",
+      "scrollHint": "Листайте примеры",
+      "label": "От выбора товара до продажи.",
+      "example": "Пример · Forma Home",
+      "pause": "Остановить прокрутку",
+      "play": "Возобновить прокрутку",
+      "explore": "Посмотреть все возможности",
+      "explorerTitle": "Как работает airi.chat",
+      "explorerDescription": "Выберите задачу и попробуйте интерактивный пример.",
+      "previous": "Предыдущий пример",
+      "next": "Следующий пример",
+      "progress": "{current} из {total}",
+      "workflowLabel": "Выберите задачу",
+      "previewLabel": "Интерактивный пример",
+      "imageAlt": "Кремовая и терракотовая настольные лампы на полке рядом с дубовым подносом",
+      "imageUnavailable": "Изображение товара недоступно",
+      "learnMore": "Посмотреть пример",
+      "reviewNote": "Это пример. Сообщения не отправляются.",
+      "cards": {
+        "interactive": {
+          "badge": "Товары в WhatsApp",
+          "title": "Товары в WhatsApp.",
+          "subtitle": "Клиент листает карусель, выбирает цвет и отвечает вам.",
+          "detail": "Покажите товары в карусели WhatsApp. Клиент сможет сравнить варианты и выбрать нужный прямо в переписке."
+        },
+        "knowledge": {
+          "badge": "Ответы на вопросы",
+          "title": "Ответы по вашим материалам.",
+          "subtitle": "ИИ использует ваши описания товаров и условия доставки.",
+          "detail": "Добавьте материалы компании, чтобы ИИ опирался на них в ответах. Вопросы, которые ИИ не должен решать сам, передавайте человеку."
+        },
+        "followUp": {
+          "badge": "Повторные сообщения",
+          "title": "Напомните о выборе.",
+          "subtitle": "Вернитесь к клиенту с ответом на важный для покупки вопрос.",
+          "detail": "Настройте паузу и условие: например, отправить сообщение, если клиент не ответил. Ваша команда решает, когда и что отправлять."
+        },
+        "smartChat": {
+          "badge": "Рассылки",
+          "title": "Рассылки для вашей аудитории.",
+          "subtitle": "Выберите клиентов, проверьте число получателей и текст.",
+          "detail": "Выберите сегмент клиентов и проверьте сообщение перед отправкой. В примере рассылку получат те, кто интересовался вазами Terra, но ещё не купил. Купившие и отписавшиеся исключены."
+        },
+        "meta": {
+          "badge": "Качество в WhatsApp",
+          "title": "Контроль качества шаблонов.",
+          "subtitle": "Следите за качеством шаблонов перед следующей рассылкой.",
+          "detail": "Отслеживайте изменения качества шаблонов WhatsApp. Уведомления помогут команде вовремя проверить текст и аудиторию рассылки."
+        },
+        "ads": {
+          "badge": "Заявки из рекламы",
+          "title": "Из рекламы в WhatsApp.",
+          "subtitle": "Клиент видит товар в Instagram и пишет вам в чат.",
+          "detail": "Принимайте обращения из рекламы Meta в WhatsApp. Отвечайте на вопросы о товаре и подключайте сотрудника, чтобы помочь с покупкой."
+        },
+        "assets": {
+          "badge": "Материалы для рассылок",
+          "title": "Общая библиотека фото.",
+          "subtitle": "Храните фотографии товаров в общей библиотеке.",
+          "detail": "Загружайте изображения в библиотеку и используйте их в рассылках. Команде не придётся каждый раз искать и добавлять те же файлы."
+        },
+        "voice": {
+          "badge": "Голосовые сообщения",
+          "title": "Превратите текст в голос.",
+          "subtitle": "Подготовьте текст ответа и создайте озвучку.",
+          "detail": "Создайте голосовое сообщение по готовому тексту. Прослушайте его и проверьте перед отправкой клиенту."
+        },
+        "analytics": {
+          "badge": "Аналитика продаж",
+          "title": "Продажи в цифрах.",
+          "subtitle": "Учтённые продажи, возвраты и динамика диалогов.",
+          "detail": "Учитывайте продажи и возвраты в «Источниках». Сравнивайте число диалогов по периодам в «Обзоре»."
+        }
+      },
+      "previews": {
+        "common": {
+          "shop": "Forma Home",
+          "product": "Настольная лампа Arc",
+          "cream": "Кремовый",
+          "terracotta": "Терракотовый",
+          "price": "18 000 ₸",
+          "customer": "Клиент",
+          "size": "Высота 38 см",
+          "businessAccount": "Бизнес-аккаунт",
+          "today": "Сегодня",
+          "message": "Сообщение",
+          "conversationLabel": "Диалог WhatsApp с Forma Home"
+        },
+        "carousel": {
+          "question": "Лампа Arc есть в двух цветах?",
+          "answer": "Да. Какой цвет вам нравится?",
+          "choose": "Выберите цвет",
+          "hint": "Листайте товары и выберите цвет.",
+          "previous": "Предыдущий товар",
+          "next": "Следующий товар"
+        },
+        "knowledge": {
+          "question": "Плед Lino можно стирать в машине?",
+          "answer": "Да, при 30 °C на деликатном режиме. Сушите в расправленном виде.",
+          "citation": "Уход за текстилем Lino",
+          "sourcesHeading": "Источник ответа"
+        },
+        "reminders": {
+          "messageBody": "Подсказать размеры зеркала Sora?",
+          "waitLabel": "На следующий день · Клиент не ответил",
+          "followUpBody": "Размер Sora 60 × 90 см. Поместится на стене в прихожей?",
+          "reply": "Да, размер подходит.",
+          "rule": "Повторное сообщение по условию сценария."
+        },
+        "smartChat": {
+          "title": "Керамика с характером",
+          "status": "Черновик",
+          "prompt": "Подготовь предложение клиентам, которые интересовались вазами Terra.",
+          "answer": "Ваза Terra снова в наличии, цена 12 500 ₸. Показать, как она смотрится в интерьере?",
+          "recipients": "Получатели",
+          "template": "Шаблон WhatsApp",
+          "approval": "Перед отправкой нужно ваше одобрение",
+          "audienceLabel": "Аудитория",
+          "audience": "Интересовались вазами Terra за последние 30 дней",
+          "eligibility": "Дали согласие на рассылку · ещё не купили",
+          "templateStatus": "Одобрен Meta",
+          "showExclusions": "Кто исключён из рассылки",
+          "hideExclusions": "Скрыть исключения",
+          "purchased": "Уже купили",
+          "unsubscribed": "Отписались"
+        },
+        "meta": {
+          "title": "Качество шаблона изменилось",
+          "status": "Требует внимания",
+          "body": "Проверьте текст и аудиторию перед следующей рассылкой.",
+          "action": "Проверить шаблон",
+          "quality": "Мониторинг качества",
+          "note": "Команда получает уведомление и решает, что изменить."
+        },
+        "ads": {
+          "badge": "Forma Home",
+          "headline": "У каждой вещи своё место.",
+          "cta": "Написать в WhatsApp",
+          "lead": "Корзины Mora продаются набором?",
+          "answer": "Да, в наборе две корзины: 30 и 40 см в диаметре. Подойдут для пледов и подушек.",
+          "source": "Из рекламы в Instagram",
+          "back": "Вернуться к рекламе в Instagram",
+          "sponsored": "Реклама",
+          "caption": "Корзины Mora в двух размерах. Напишите нам, и мы поможем выбрать.",
+          "like": "Отметить пример рекламы как понравившийся",
+          "save": "Сохранить пример рекламы"
+        },
+        "assets": {
+          "title": "Вещи для дома",
+          "story": "Сторис",
+          "catalog": "Каталог",
+          "ad": "Реклама",
+          "selected": "Выбрано: {placement}",
+          "hint": "Керамика, корзины и мягкий текстиль."
+        },
+        "voice": {
+          "title": "Сообщение от вашего магазина",
+          "scriptLabel": "Текст голосового сообщения",
+          "script": "Ваза Terra снова в наличии. Её высота 26 см. Прислать фото?",
+          "note": "Подготовьте текст и озвучку. Проверьте запись перед отправкой."
+        },
+        "analytics": {
+          "sample": "Демо-магазин · Вымышленные данные",
+          "periodLabel": "Период отчёта",
+          "periods": {
+            "month": "За 30 дней",
+            "week": "За 7 дней"
+          },
+          "netRevenue": "Выручка с учётом возвратов",
+          "sales": "Подтверждённые продажи",
+          "customers": "Покупатели",
+          "note": "На основе продаж, зафиксированных командой или переданных платёжной системой.",
+          "trend": {
+            "title": "Диалоги по дням",
+            "unit": "Диалоги",
+            "current": "Текущий период",
+            "previous": "Предыдущий период",
+            "axis": "День периода · значения за день",
+            "day": "День {day}",
+            "summary": "Диалоги по дням: {current} за текущий период и {previous} за предыдущий.",
+            "source": "Аналитика → Обзор"
+          },
+          "refunds": "Возвраты",
+          "source": "Аналитика → Источники"
+        },
+        "products": {
+          "vase": {
+            "name": "Керамическая ваза Terra",
+            "price": "12 500 ₸"
+          },
+          "basket": {
+            "name": "Корзины Mora",
+            "price": "22 000 ₸"
+          },
+          "textile": {
+            "name": "Хлопковый плед Lino",
+            "price": "24 000 ₸"
+          },
+          "mirror": {
+            "name": "Настенное зеркало Sora",
+            "price": "42 000 ₸"
+          }
+        }
+      },
+      "imageAlts": {
+        "instagram": "Терракотовая лампа рядом с блокнотом в солнечном рабочем уголке",
+        "campaign": "Кремовая лампа освещает тумбочку у синей стены",
+        "story": "Плетёные корзины на дубовой скамье у синей стены",
+        "catalog": "Терракотовая настольная лампа Arc на светлом студийном фоне",
+        "display": "Дубовые подносы, вазы, корзины и кремовая лампа на полке магазина товаров для дома",
+        "vase": "Терракотовая керамическая ваза на каменной консоли в солнечной комнате",
+        "textile": "Хлопковый плед и подушка на оливковом кресле"
+      }
+    },
+    "sources": {
+      "title": "Начните с WhatsApp и подключите остальные каналы.",
+      "description": "Отвечайте клиентам там, где им удобно общаться.",
+      "website": "Чат на сайте"
+    },
+    "cta": {
+      "eyebrow": "Начните с одного канала",
+      "title": "Общайтесь с клиентами",
+      "titleAccent": "в airi.chat.",
+      "pricing": "Подключите канал, пригласите команду и настройте первый сценарий.",
+      "demo": "Посмотреть продукт на демо"
+    },
+    "footer": {
+      "ourTeam": "О компании",
+      "terms": "Условия использования",
+      "refunds": "Условия возврата",
+      "privacy": "Конфиденциальность",
+      "security": "Безопасность",
+      "rights": "© 2026 ТОО Ais.ii",
+      "tagline": "Рассылки, диалоги и аналитика продаж для бизнеса.",
+      "navigation": "Компания и документы",
+      "productNavigation": "Продукт",
+      "delivery": "Доставка рассылок",
+      "metaAds": "Meta Ads MCP",
+      "mcp": "MCP-сервер airi.chat",
+      "templates": "Шаблоны WhatsApp"
+    },
+    "faq": {
+      "eyebrow": "Вопросы о запуске",
+      "title": "Важно знать перед подключением.",
+      "description": "О номере WhatsApp, работе ИИ и оплате сообщений.",
+      "items": {
+        "start": {
+          "question": "С чего начать?",
+          "answer": "Создайте рабочее пространство и подключите канал. Добавьте информацию о товарах и услугах, чтобы опираться на неё в ответах. Для рассылок в WhatsApp понадобятся бизнес-аккаунт, согласие получателей и шаблон, одобренный Meta."
+        },
+        "number": {
+          "question": "Можно подключить текущий номер WhatsApp?",
+          "answer": "Да, если номер и аккаунт соответствуют требованиям Meta. Пользоваться приложением WhatsApp Business и дальше можно, если для вашего аккаунта доступен совместный режим. Поможем проверить это до подключения."
+        },
+        "ai": {
+          "question": "Можно ли отвечать клиентам без ИИ?",
+          "answer": "Да. Команда может вести диалоги самостоятельно. Вы выбираете, где использовать ИИ, и настраиваете передачу вопросов сотрудникам. Черновики рассылок можно проверить перед отправкой."
+        },
+        "cost": {
+          "question": "Сообщения WhatsApp входят в тариф?",
+          "answer": "Meta выставляет счёт за сообщения WhatsApp отдельно. В стоимость airi.chat они не входят."
+        },
+        "crm": {
+          "question": "Нужна ли отдельная CRM?",
+          "answer": "Нет. Диалоги, рассылки, база знаний и учёт продаж доступны в airi.chat. Продажи можно фиксировать вручную или передавать из платёжной системы через интеграцию. Для этого не нужно подключать CRM."
+        }
+      }
+    },
+    "revenueWorkflows": {
+      "eyebrow": "Пять способов продавать больше",
+      "title": "Превращайте обращения в продажи.",
+      "demo": "Посмотреть на демо",
+      "campaign": {
+        "label": "Рассылки",
+        "title": "Предложите то, что уже интересно.",
+        "message": "Здравствуйте, Алекс! Ваза *Terra* поможет освежить уютный уголок.\nГде бы вы её поставили: на полке или на столе?",
+        "template": "Шаблон одобрен Meta",
+        "outcome": "Больше продаж из рассылок"
+      },
+      "consultation": {
+        "label": "ИИ и команда",
+        "title": "Помогите решиться на покупку.",
+        "source": "Из рекламы в Instagram",
+        "question": "В большую корзину поместится плед?",
+        "answer": "Да, её диаметр 40 см. Поместятся плед и пара подушек.",
+        "sourceNote": "Из характеристик Mora",
+        "reply": "Отлично. Возьму набор.",
+        "outcome": "Больше покупок из рекламы"
+      },
+      "recovery": {
+        "label": "Напоминания об оплате",
+        "title": "Верните клиента к оплате.",
+        "pending": "Заказ ожидает оплаты",
+        "wait": "Через час · Оплата не учтена",
+        "message": "Здравствуйте, Алекс! Ещё выбираете зеркало *Sora*?\nПомочь с размером, доставкой или оформлением? Выберите, что поможет вам решить.",
+        "confirmed": "Оплата учтена",
+        "stop": "Следующее напоминание отменено",
+        "outcome": "Меньше неоплаченных заказов"
+      },
+      "repeat": {
+        "label": "Повторные продажи",
+        "title": "Повторная покупка",
+        "previous": "Покупка 30 дней назад",
+        "message": "Здравствуйте, Алекс! Корзины *Mora* хорошо дополнят плед Lino.\nПоказать размеры или предложить другую идею для комнаты?",
+        "audience": "Клиент согласился получать предложения",
+        "outcome": "Больше повторных покупок"
+      },
+      "qr": {
+        "label": "QR-⁠коды",
+        "title": "С витрины в WhatsApp.",
+        "description": "Клиент сканирует код и отправляет вопрос. Вы отвечаете, зная, что его заинтересовало.",
+        "sign": "Поможем выбрать.",
+        "open": "Открыть пример диалога по QR-⁠коду",
+        "alt": "Демонстрационный QR-⁠код airi.chat",
+        "demoNote": "Пример QR-⁠кода. Ссылка ведёт на эту демонстрацию.",
+        "source": "QR-⁠код · Витрина, Алматы",
+        "sourceNote": "Источник обращения сохранён",
+        "question": "Здравствуйте! Увидела вазу Terra на витрине. Какая у неё высота?",
+        "answer": "26 см. Можем отложить для вас в магазине.",
+        "reply": "Спасибо! Зайду сегодня после шести.",
+        "outcome": "Больше обращений из офлайн-точек"
+      }
+    },
+    "revenueReport": {
+      "monthly": {
+        "scope": "Meta Ads → диалоги → продажи",
+        "title": "Сквозная аналитика по месяцам.",
+        "concept": "Концепт отчёта · Вымышленные данные",
+        "current": "Период",
+        "previous": "Сравнить с",
+        "metric": "Показатель",
+        "change": "Изменение",
+        "chart": "Выручка из рекламных диалогов",
+        "unit": "тыс. ₸",
+        "chartLabel": "Выручка из рекламных диалогов с января по июнь 2026 года за вычетом возвратов, в тенге.",
+        "selection": "Сравнение: {current} и {previous}.",
+        "note": "Полные календарные месяцы. Только продажи, связанные с рекламными диалогами; выручка за вычетом возвратов. Расходы на рекламу указаны в USD.",
+        "metrics": {
+          "spend": "Расходы на рекламу · USD",
+          "conversations": "Диалоги из рекламы",
+          "sales": "Подтверждённые продажи",
+          "netRevenue": "Выручка после возвратов · ₸"
+        },
+        "months": {
+          "jan": "Январь",
+          "feb": "Февраль",
+          "mar": "Март",
+          "apr": "Апрель",
+          "may": "Май",
+          "jun": "Июнь"
+        },
+        "shortMonths": {
+          "jan": "Янв",
+          "feb": "Фев",
+          "mar": "Мар",
+          "apr": "Апр",
+          "may": "Май",
+          "jun": "Июн"
+        }
+      },
+      "eyebrow": "Аналитика бизнеса",
+      "title": "От расходов на рекламу до продаж.",
+      "description": "Примеры из отдельных отчётов: «Источники», «Обзор», «Аналитика рассылок» и «Команда».",
+      "details": {
+        "ads": {
+          "title": "Какие объявления приводят к диалогу?",
+          "source": "Аналитика → Источники · Meta Ads · USD",
+          "description": "Сравнивайте расходы и стоимость начатой переписки.",
+          "spend": "Расходы на рекламу",
+          "results": "Переписки",
+          "cost": "Стоимость переписки",
+          "table": "Сравнение объявлений · результаты по данным Meta",
+          "ad": "Объявление",
+          "captured": "{count} диалогов с рекламным источником в airi.chat.",
+          "boundary": "Meta и airi.chat учитывают диалоги по-⁠разному."
+        },
+        "campaign": {
+          "title": "Что происходит после отправки?",
+          "description": "Ваза Terra · {count} принятых отправок",
+          "totalAccepted": "Принято к отправке",
+          "delivered": "Доставлено",
+          "read": "Прочитано",
+          "replied": "Ответили",
+          "replyRate": "Доля ответов: {rate} от принятых отправок",
+          "cost": "≈ {value} за ответ · USD",
+          "source": "Рассылки → Аналитика"
+        },
+        "response": {
+          "title": "Сколько ждут ваши клиенты?",
+          "description": "Время до первого ответа сотрудника.",
+          "median": "Медианное время ожидания",
+          "p90": "90% ответов в пределах",
+          "scope": "По {count} первым ответам сотрудников. Диалоги без ответа исключены; учитывается всё время ожидания.",
+          "duration": {
+            "missing": "—",
+            "lessThanMinute": "Меньше минуты",
+            "minutes": "{count, plural, one {{value} мин.} few {{value} мин.} many {{value} мин.} other {{value} мин.}}",
+            "hours": "{count, plural, one {{value} ч.} few {{value} ч.} many {{value} ч.} other {{value} ч.}}",
+            "days": "{count, plural, one {{value} дн.} few {{value} дн.} many {{value} дн.} other {{value} дн.}}",
+            "noChange": "Без изменений"
+          },
+          "source": "Аналитика → Обзор / Команда"
+        },
+        "demoNote": "Примеры из отдельных экранов продукта · Вымышленные данные."
+      }
+    },
+    "templates": {
+      "seo": {
+        "title": "Шаблоны WhatsApp",
+        "description": "62 примера сообщений WhatsApp на русском, английском и казахском: для продаж, записи и уведомлений.",
+        "intro": "Выберите пример и получите его в WhatsApp.",
+        "detailTitle": "Пример шаблона WhatsApp",
+        "detailHeading": "Получить пример",
+        "customizeNote": "Вымышленный пример. Для вашего бизнеса нужен свой шаблон с одобрением WhatsApp.",
+        "relatedTitle": "Похожие шаблоны",
+        "languagesLabel": "Языки шаблонов"
+      },
+      "navigation": "Шаблоны",
+      "landingCta": "Хочу такой шаблон",
+      "eyebrow": "Библиотека шаблонов WhatsApp",
+      "title": "Шаблоны WhatsApp",
+      "description": "Выберите пример и получите его в WhatsApp.",
+      "backHome": "На главную",
+      "browseAll": "Все шаблоны",
+      "search": "Поиск шаблонов",
+      "searchPlaceholder": "Корзина, запись, день рождения…",
+      "filtersLabel": "Фильтры шаблонов",
+      "useCase": "Задача",
+      "industry": "Отрасль",
+      "goal": "Цель",
+      "format": "Формат",
+      "all": {
+        "useCase": "Все задачи",
+        "industry": "Все отрасли",
+        "goal": "Все цели",
+        "format": "Все форматы"
+      },
+      "industries": {
+        "retail": "Магазины и онлайн-торговля",
+        "services": "Услуги",
+        "education": "Образование",
+        "finance": "Финансы"
+      },
+      "useCases": {
+        "follow-up": "Сопровождение лидов",
+        "booking": "Бронирования",
+        "service": "Обновления по услугам",
+        "commerce": "Подбор товаров",
+        "information": "Документы и начало работы",
+        "contacts": "Контакты и предпочтения",
+        "learning": "Обучение",
+        "retention": "Удержание клиентов"
+      },
+      "goals": {
+        "acquire": "Начать разговор",
+        "convert": "Завершить покупку",
+        "retain": "Вернуть покупателей",
+        "inform": "Держать в курсе"
+      },
+      "formats": {
+        "text": "Текст",
+        "image": "Изображение",
+        "carousel": "Карусель",
+        "flow": "WhatsApp Flow",
+        "document": "PDF",
+        "video": "Видео",
+        "location": "Геолокация"
+      },
+      "resultCount": "{count, plural, one {# шаблон} few {# шаблона} many {# шаблонов} other {# шаблона}}",
+      "resetFilters": "Сбросить фильтры",
+      "catalogLabel": "Примеры шаблонов WhatsApp",
+      "emptyTitle": "Подходящих шаблонов нет",
+      "emptyDescription": "Измените запрос или сбросьте фильтры.",
+      "getTemplate": "Получить пример",
+      "viewTemplate": "Посмотреть шаблон",
+      "getTemplateLabel": "Получить «{title}» в WhatsApp",
+      "viewTemplateLabel": "Посмотреть «{title}»",
+      "ready": "Готов к отправке",
+      "comingSoon": "Скоро",
+      "previewLabel": "Предпросмотр сообщения WhatsApp",
+      "mediaPlaceholder": "Здесь будет изображение вашего бренда",
+      "carouselPrevious": "Предыдущий товар",
+      "carouselNext": "Следующий товар",
+      "mediaUnavailable": "Предпросмотр недоступен",
+      "sampleNote": "Пример сообщения. Кнопки и изображения показаны для иллюстрации.",
+      "requestDescription": "Оставьте контакты, чтобы получить пример в WhatsApp.",
+      "previewDescription": "Посмотрите сообщение перед тем, как попробовать его в WhatsApp.",
+      "checkingAvailability": "Проверяем доступность примера…",
+      "availabilityUnavailable": "Доступность примера временно не удалось проверить",
+      "comingSoonTitle": "Отправка скоро появится",
+      "comingSoonDescription": "Вы уже можете изучить этот пример. Отправка станет доступна, когда его шаблон WhatsApp будет готов.",
+      "name": "Ваше имя",
+      "email": "Рабочая почта",
+      "phone": "Номер WhatsApp",
+      "phoneHint": "Укажите код страны, например +7 700 123 45 67.",
+      "consent": "Я согласен получать этот пример, новости продукта и предложения от airi.chat в WhatsApp. Я могу отказаться от рассылки в любое время.",
+      "privacyPrefix": "Мы обрабатываем ваши данные в соответствии с",
+      "privacyLink": "политикой конфиденциальности",
+      "submit": "Получить пример",
+      "sending": "Отправляем запрос…",
+      "checkAgain": "Проверить ещё раз",
+      "acceptedTitle": "Пример ожидает отправки",
+      "acceptedDescription": "Ваш запрос принят для доставки на указанный номер WhatsApp. Доставка может занять некоторое время.",
+      "done": "Готово",
+      "processingTitle": "Запрос пока не подтверждён",
+      "processingDescription": "Проверьте, пришёл ли пример в WhatsApp. Вы можете безопасно проверить тот же запрос снова, не отправляя новый.",
+      "restartRequest": "Начать новый запрос",
+      "errors": {
+        "unavailable": "Сейчас этот пример нельзя отправить. Попробуйте позже или продолжите просмотр.",
+        "rate_limited": "Слишком много запросов. Попробуйте снова позже.",
+        "invalid_request": "Проверьте имя, почту и номер WhatsApp с кодом страны.",
+        "send_failed": "Пример не был отправлен. Начните новый запрос, чтобы попробовать снова.",
+        "unknown": "Не удалось подтвердить запрос. Проверьте ещё раз."
+      },
+      "catalog": {
+        "seasonal-offer": {
+          "title": "Коллекция товаров",
+          "description": "Товар и идеи его использования.",
+          "button": "Открыть airi.chat",
+          "buttons": {
+            "0": "Открыть airi.chat"
+          },
+          "demoPrefix": "*Демо airi.chat: сезонное предложение*\n_Вымышленный пример_"
+        },
+        "abandoned-cart": {
+          "title": "Помощь с выбором",
+          "description": "Помощь с размером, доставкой и заказом.",
+          "button": "Показать варианты",
+          "buttons": {
+            "0": "Показать варианты",
+            "1": "Задать вопрос"
+          },
+          "demoPrefix": "*Демо airi.chat: брошенная корзина*\n_Вымышленный пример_"
+        },
+        "repeat-purchase": {
+          "description": "Предложение товаров к прошлой покупке.",
+          "button": "Открыть airi.chat",
+          "buttons": {
+            "0": "Открыть airi.chat"
+          },
+          "demoPrefix": "*Демо airi.chat: повторная покупка*\n_Вымышленный пример_"
+        },
+        "welcome": {
+          "title": "Приветствие",
+          "description": "Приветствие нового клиента.",
+          "body": "Здравствуйте, Алекс! Добро пожаловать в *airi.chat*.\nЧто хотите улучшить сначала: ответы клиентам или повторные обращения? Выберите тему и начните разговор с командой.",
+          "button": "Показать варианты",
+          "buttons": {
+            "0": "Показать варианты",
+            "1": "Задать вопрос"
+          },
+          "demoPrefix": "*Демо airi.chat: приветствие*\n_Вымышленный пример_"
+        },
+        "order-confirmation": {
+          "title": "Подтверждение заказа",
+          "description": "Подтверждение заказа и дальнейшие действия.",
+          "body": "Здравствуйте, Алекс! Демо-заказ *№1042* подтверждён.\nСледующее сообщение можно отправить, когда он будет готов. Нужна помощь с примером? Выберите ответ ниже.",
+          "button": "Показать варианты",
+          "buttons": {
+            "0": "Показать варианты",
+            "1": "Задать вопрос"
+          },
+          "demoPrefix": "*Демо airi.chat: подтверждение заказа*\n_Вымышленный пример_"
+        },
+        "shipping-update": {
+          "title": "Статус доставки",
+          "description": "Этап доставки и ожидаемый день прибытия.",
+          "body": "Хорошие новости, Алекс! Демо-заказ *№1042* уже в пути.\nОжидаемая доставка: *четверг*.\nЕсть вопрос о доставке? Напишите в этом демо-диалоге.",
+          "button": "Открыть airi.chat",
+          "buttons": {
+            "0": "Открыть airi.chat"
+          },
+          "demoPrefix": "*Демо airi.chat: статус доставки*\n_Вымышленный пример_"
+        },
+        "appointment-reminder": {
+          "title": "Напоминание о записи",
+          "description": "Напоминание о встрече с подтверждением записи.",
+          "body": "Здравствуйте, Алекс! Демо-встреча: *завтра в 14:00*.\nПодтвердить время или попросить перенос? Выберите ответ ниже и попробуйте диалог.",
+          "button": "Подтвердить время",
+          "buttons": {
+            "0": "Подтвердить время",
+            "1": "Попробовать перенос"
+          },
+          "demoPrefix": "*Демо airi.chat: напоминание о встрече*\n_Вымышленный пример_"
+        },
+        "course-enrollment": {
+          "title": "Запись на курс",
+          "description": "Запись на курс через WhatsApp Flow.",
+          "body": "Здравствуйте, Алекс! Хотите изучить *автоматизацию WhatsApp*?\nОткройте короткую форму, выберите демо-курс и попробуйте завершить её прямо в WhatsApp. Реальной записи на курс нет.",
+          "button": "Открыть демо-форму",
+          "buttons": {
+            "0": "Открыть демо-форму"
+          },
+          "demoPrefix": "*Демо airi.chat: запись на курс*\n_Вымышленный пример_"
+        },
+        "payment-reminder": {
+          "title": "Напоминание об оплате",
+          "description": "Номер счёта, срок оплаты и варианты ответа.",
+          "body": "Здравствуйте, Алекс. Демо-счёт *№204* нужно оплатить до *пятницы*.\nУже оплатили или есть вопрос? Выберите ответ и попробуйте напоминание. Это демо не запрашивает платёж.",
+          "button": "Уже оплатил",
+          "buttons": {
+            "0": "Уже оплатил",
+            "1": "Вопрос по счёту"
+          },
+          "demoPrefix": "*Демо airi.chat: напоминание об оплате*\n_Вымышленный пример_"
+        },
+        "feedback": {
+          "title": "Отзыв клиента",
+          "description": "Запрос отзыва после визита в шоурум.",
+          "body": "Здравствуйте, Алекс! Как прошёл демо-визит в *наш шоурум*?\nВыберите ответ и расскажите, что понравилось или что можно улучшить. Один ответ может начать полезный разговор.",
+          "button": "Всё понравилось",
+          "buttons": {
+            "0": "Всё понравилось",
+            "1": "Можно лучше"
+          },
+          "demoPrefix": "*Демо airi.chat: обратная связь*\n_Вымышленный пример_"
+        },
+        "back-in-stock": {
+          "title": "Товары в наличии",
+          "description": "Карусель товаров, вернувшихся в продажу.",
+          "body": "Здравствуйте, Алекс! Демо-коллекция снова в наличии: *Terra, Mora и Lino*.\nЛистайте карточки. Что бы вы выбрали для своей комнаты?",
+          "button": "Посмотреть коллекцию",
+          "buttons": {
+            "0": "Открыть airi.chat"
+          },
+          "demoPrefix": "*Демо airi.chat: снова в наличии*\n_Вымышленный пример_",
+          "cards": [
+            {
+              "body": "*Ваза Terra · пример товара*"
+            },
+            {
+              "body": "*Корзины Mora · примеры товаров*"
+            },
+            {
+              "body": "*Плед Lino · пример товара*"
+            }
+          ]
+        },
+        "birthday-offer": {
+          "title": "Поздравление с днём рождения",
+          "description": "Поздравление и подарок ко дню рождения.",
+          "body": "С днём рождения, Алекс! 🎉\nНебольшой вымышленный подарок: код *BIRTHDAY* в демо-сценарии покупки.\nВыбрали бы подарок для себя или новую идею для дома?",
+          "button": "Открыть airi.chat",
+          "buttons": {
+            "0": "Открыть airi.chat"
+          },
+          "demoPrefix": "*Демо airi.chat: предложение ко дню рождения*\n_Вымышленный пример_"
+        },
+        "enquiry-follow-up": {
+          "title": "Напоминание о запросе",
+          "description": "Уточнение вопроса после обращения клиента.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\nЗдравствуйте, Алексей! Вы ещё рассматриваете решение для общения с клиентами?\n\nКороткий разговор поможет сравнить следующие шаги. Что сейчас полезнее: обзор цен или демонстрация возможностей?\n\n_Попробуйте ответить кнопкой ниже. Консультация не назначается._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Обзор цен", "Покажите возможности"]
+        },
+        "discovery-recap": {
+          "title": "Итоги разговора",
+          "description": "Приоритеты клиента после первой беседы.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример итогов первого разговора*\n\nЗдравствуйте, Алексей! Вот приоритеты, которые мы обсудили:\n• Последовательно отвечать на новые обращения\n• Обсуждать изменения записи в одном диалоге\n• Каждую неделю оценивать результаты\n\n*Следующий шаг:* сравнить небольшой пилот с вашим текущим процессом.\n\n_Этот пример не фиксирует реальную встречу._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Всё верно", "Нужно изменить"]
+        },
+        "quote-ready": {
+          "title": "Предложение в PDF",
+          "description": "Состав работ и цена в PDF.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример предложения готов*\n\nНомер: Q-204\nСостав работ: консультация по интерьеру и подбор товаров\nПримерная сумма: *180 долларов США*\n\nОткройте PDF во вложении, чтобы посмотреть состав предложения и вопросы, которые стоит задать перед решением.\n\n_Это вымышленный пример, а не оферта, счёт или запрос оплаты._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "quote-question": {
+          "title": "Вопрос по предложению",
+          "description": "Уточнение вопросов перед решением.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\nЗдравствуйте, Алексей! Один короткий вопрос о примере предложения *Q-204*.\n\nПомогло бы вам более подробное описание работ или другой срок?\n\n_Нажмите кнопку, чтобы попробовать ответ. Предложение вымышленное._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Уточнить состав работ", "Обсудить сроки"]
+        },
+        "proposal-comparison": {
+          "title": "Сравнение предложений",
+          "description": "Сравнение двух вариантов работ.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Выберите, с чего начать*\n\n*Вариант А · Небольшой пилот*\nОдин клиентский сценарий, небольшая команда и оценка через две недели.\n\n*Вариант Б · Широкий запуск*\nТри клиентских сценария, общие правила и ежемесячная оценка.\n\nКакой подход ближе к вашим задачам?\n\n_Это вымышленные варианты. Выбор не оформляет покупку или заказ услуги._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Небольшой пилот", "Широкий запуск"]
+        },
+        "decision-check-in": {
+          "title": "Уточнение решения",
+          "description": "Выбор следующего шага или паузы.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\nЗдравствуйте, Алексей! Вы ещё рассматриваете пилотный проект переписки с клиентами?\n\nЕсли сроки изменились, всё в порядке. Можно изучить пример сейчас или вернуться к разговору позже.\n\n_Это пример повторного обращения, не связанный с реальным проектом._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Продолжить знакомство", "Может быть, позже"]
+        },
+        "showroom-visit-follow-up": {
+          "title": "Итоги визита в шоурум",
+          "description": "Напоминание о товаре после визита.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Одна деталь после условного визита в шоурум*\n\nЗдравствуйте, Алексей! *Ваза Terra* хорошо смотрится как самостоятельный акцент на свободной полке.\n\nПеред выбором сравните глубину полки, высоту вазы и естественное освещение комнаты.\n\n_Визит и интерес к товару вымышлены. Товар не забронирован._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "home-service-quote": {
+          "title": "Расчёт стоимости услуги",
+          "description": "Выбор услуги, объёма работ и даты.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте расчёт бытовой услуги*\n\nВыберите пример услуги, объём работ и вымышленный район обслуживания. Проверьте дополнительные опции и дату перед завершением демо.\n\n_Адрес, телефон и оплата не запрашиваются. Смета и выезд специалиста не оформляются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Пример расчёта"]
+        },
+        "appointment-booking": {
+          "title": "Запись на встречу",
+          "description": "Выбор времени встречи в WhatsApp Flow.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте записаться на услугу*\n\nВыберите пример услуги, дату и время, затем проверьте все детали.\n\n_Этот Flow airi.chat показывает вымышленную запись. Время не бронируется, контактные данные не собираются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Попробовать запись"]
+        },
+        "restaurant-table": {
+          "title": "Бронирование столика",
+          "description": "Выбор числа гостей и места.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте забронировать столик*\n\nВыберите условную дату, количество гостей и место. На последнем шаге удобно проверить выбор.\n\n_Столик в ресторане не бронируется. Личные данные не запрашиваются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Выбрать столик"]
+        },
+        "travel-date-range": {
+          "title": "Планирование поездки",
+          "description": "Выбор дат и пожеланий к поездке.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Немного планирования поездки прямо в WhatsApp*\n\nВыберите условные даты поездки, тип номера и дополнительные опции, затем проверьте план.\n\n_Это вымышленный маршрут. Билеты, номера и туристические услуги не бронируются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["План поездки"]
+        },
+        "event-registration": {
+          "title": "Регистрация на мероприятие",
+          "description": "Выбор сессии и пожеланий участника.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте регистрацию на мероприятие*\n\nВыберите пример сессии и пожелания к участию, затем проверьте результат.\n\n_Демо не выдаёт билет, не регистрирует участника и не запрашивает личные данные._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Пример регистрации"]
+        },
+        "appointment-rescheduled": {
+          "title": "Перенос записи",
+          "description": "Прежнее и новое время встречи.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример изменения записи*\n\nНомер: DEMO-A-318\nПрежнее время: 14 октября 2026, 14:30 UTC\n*Новое время: 15 октября 2026, 14:30 UTC*\n\nПроверьте разницу перед планированием дня.\n\n_Изменение вымышленное. Реальная запись не менялась._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Время подходит", "Нужно другое время"]
+        },
+        "visit-preparation": {
+          "title": "Подготовка к визиту",
+          "description": "Список подготовки к консультации.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Перед условной консультацией*\n\nЕсли вы планируете консультацию по оформлению комнаты, небольшая подготовка поможет:\n• Запишите три главных вопроса\n• Подготовьте подходящие фотографии для примера\n• Проверьте время встречи и маршрут\n\n_Этот список показывает пример напоминания. Визит не назначен._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "delivery-preferences": {
+          "title": "Пожелания к доставке",
+          "description": "Выбор способа получения заказа.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте выбрать условия доставки*\n\nИзучите примеры самовывоза и доставки, вымышленное место и временной интервал, затем проверьте выбор.\n\n_Демо не меняет отправление и не собирает адрес. Используйте только предложенные варианты._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Выбрать условия"]
+        },
+        "return-request": {
+          "title": "Запрос на возврат",
+          "description": "Выбор причины и способа возврата.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте оформить запрос на возврат*\n\nИспользуйте демонстрационный номер, выберите причину и вариант решения. Проверьте условные способы передачи товара перед завершением демо.\n\n_Заказ не меняется, забор товара и возврат денег не запрашиваются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Пример возврата"]
+        },
+        "pickup-ready": {
+          "title": "Самовывоз",
+          "description": "Сообщение о готовности заказа с точкой на карте.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример самовывоза с точкой на карте*\n\nЗаказ DEMO-O-426 отмечен готовым в этом вымышленном примере.\n\nТочка показывает *Эйфелеву башню в Париже* — общедоступную достопримечательность для демонстрации геолокации. Это *не адрес airi.chat и не реальный пункт выдачи*.\n\n_Не приезжайте туда за заказом. Откройте точку, чтобы посмотреть формат геолокации._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "repair-progress": {
+          "title": "Статус ремонта",
+          "description": "Этап ремонта и дальнейшие действия.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример статуса ремонта*\n\nОбращение: DEMO-R-182\nТовар: настольная лампа\n*Этап:* осмотр завершён\n*Далее:* согласование предложенных работ\n\nПример делает статус понятным, не создавая впечатления, что ремонт уже завершён.\n\n_Сообщение не связано с реальным устройством или ремонтом._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Что дальше?", "Есть вопрос"]
+        },
+        "service-completed": {
+          "title": "Завершение работ",
+          "description": "Список выполненных работ и результат.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример завершённой услуги*\n\nНомер: S-1042\nЧто показано в примере:\n• Проверен согласованный объём работ\n• Зафиксирован результат\n• Подготовлен короткий список передачи работ\n\nСохраните итоги там, где их легко найти перед следующим визитом.\n\n_Вымышленное сообщение не подтверждает выполнение реальных работ._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "refund-status": {
+          "title": "Возврат денег",
+          "description": "Сумма и этап возврата денег.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример статуса возврата денег*\n\nНомер: DEMO-RF-091\nУсловная сумма: *24 доллара США*\nЭтап: проверка завершена; далее в этом примере — обработка возврата.\n\nРеальная компания должна проверить статус платежа перед отправкой такого сообщения.\n\n_Возврат денег не запрошен, не одобрен и не выплачен._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "subscription-renewal": {
+          "title": "Продление подписки",
+          "description": "Тариф и срок продления подписки.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример проверки перед продлением*\n\nТариф: Studio на месяц\nУсловная дата продления: 31 октября 2026\n\nПеред новым периодом проверьте, подходит ли тариф вашим задачам и какими возможностями вы пользуетесь.\n\n_Вымышленное напоминание не продлевает подписку и не запрашивает оплату._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Посмотреть тариф", "Обсудить изменение"]
+        },
+        "service-summary": {
+          "title": "Отчёт об услуге в PDF",
+          "description": "Работы, наблюдения и следующие шаги в PDF.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример итогов услуги*\n\nНомер: S-1042\nPDF во вложении показывает краткую памятку: что сделано, полезные рекомендации по уходу и план следующих действий.\n\n_Вымышленный документ не является актом работ, счётом или гарантией._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "product-finder": {
+          "title": "Подбор товара",
+          "description": "Выбор товара по пожеланиям покупателя.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте подбор товара*\n\nВыберите, для чего нужен товар, условный бюджет и полезные характеристики. В конце проверьте предложенное направление.\n\n_Демо не проверяет реальные остатки и не оформляет заказ._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Подобрать товар"]
+        },
+        "product-comparison": {
+          "title": "Сравнение товаров",
+          "description": "Сравнение назначения и материалов трёх товаров.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Более понятное сравнение товаров*\n\nПролистайте три вымышленных предмета для дома. Каждая карточка показывает своё назначение, чтобы выбор начинался с потребностей вашей комнаты.\n\n_Изображения иллюстративны. Размеры, наличие и цены не являются актуальным предложением._\n\nОтписаться: samat@airi.chat",
+          "buttons": [],
+          "cards": [
+            {
+              "body": "*Ваза Terra*\nВыразительный акцент для полки или столика.\n_Для одного лаконичного акцента._",
+              "buttons": ["Открыть airi.chat"]
+            },
+            {
+              "body": "*Корзины Mora*\nПлетёное хранение повседневных вещей.\n_Практичная вещь с приятной фактурой._",
+              "buttons": ["Открыть airi.chat"]
+            },
+            {
+              "body": "*Плед Lino*\nМягкий текстиль для дивана или уголка чтения.\n_Чтобы легко изменить настроение._",
+              "buttons": ["Открыть airi.chat"]
+            }
+          ]
+        },
+        "room-styling": {
+          "title": "Идеи для интерьера",
+          "description": "Карусель предметов для одной комнаты.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Три детали для более спокойной комнаты*\n\nНачните с акцента, добавьте практичную фактуру и завершите мягким текстилем. Пролистайте вымышленный пример сочетания.\n\n_Это идея для иллюстрации, а не цена комплекта или бронирование товаров._\n\nОтписаться: samat@airi.chat",
+          "buttons": [],
+          "cards": [
+            {
+              "body": "*1 · Добавьте акцент*\nОставьте немного свободного места вокруг вазы, чтобы подчеркнуть её форму.",
+              "buttons": ["Открыть airi.chat"]
+            },
+            {
+              "body": "*2 · Добавьте полезную фактуру*\nПлетёная корзина поможет собрать повседневные мелочи в одном месте.",
+              "buttons": ["Открыть airi.chat"]
+            },
+            {
+              "body": "*3 · Завершите мягким текстилем*\nСложите плед там, где он добавит мягкий переход фактур.",
+              "buttons": ["Открыть airi.chat"]
+            }
+          ]
+        },
+        "product-care": {
+          "title": "Уход за товаром",
+          "description": "Видео с советами по уходу.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Немного заботы — и вещь служит дольше*\n\nПосмотрите три иллюстративных совета для вазы Terra: используйте мягкую влажную ткань, осторожно вытирайте насухо и избегайте абразивных губок.\n\n_Ролик — вымышленное демо товара. Следуйте инструкции к вашей реальной вещи._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "bundle-idea": {
+          "title": "Сочетание товаров",
+          "description": "Пример использования двух товаров вместе.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример сочетания для повседневной жизни*\n\n*Корзина Mora* может хранить плед рядом с диваном, чтобы обе вещи были под рукой.\n\nПеред новой покупкой подумайте о свободном месте и о том, чем вы пользуетесь каждый день.\n\n_Это вымышленный совет по интерьеру, без цены комплекта и оформления заказа._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "sizing-guide": {
+          "title": "Подбор размера",
+          "description": "Памятка по размерам с изображением товара.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример выбора размера корзины*\n\nМаленькая: *24 × 18 см*\nБольшая: *32 × 24 см*\n\nИзмерьте проём полки и оставьте место, чтобы корзину было удобно доставать.\n\n_Размеры вымышлены и не являются характеристиками товара в продаже._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "gift-selection": {
+          "title": "Выбор подарка",
+          "description": "Вопросы для выбора подарка.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Хороший подарок начинается с одного вопроса*\n\nЗдравствуйте, Алексей! Кому предназначен условный подарок: любителю домашнего уюта, гостеприимному хозяину или человеку, который ценит спокойный отдых?\n\nОдно полезное пожелание может сделать выбор более личным.\n\n_Подарок и получатель вымышлены. Кнопки только демонстрируют выбор._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": [
+            "Для любителя уюта",
+            "Для хозяина дома",
+            "Для тихого отдыха"
+          ]
+        },
+        "onboarding-guide": {
+          "title": "Руководство по запуску",
+          "description": "Первые шаги в PDF.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Начните с простой памятки*\n\nЗдравствуйте, Алексей! Памятка во вложении показывает подключение бизнес-канала, подготовку шаблонов, создание клиентского сценария и тестирование перед запуском.\n\nСохраните её как пример полезного документа для начала работы.\n\n_Демо не активирует аккаунт, интеграцию или услугу._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "event-agenda": {
+          "title": "Программа мероприятия",
+          "description": "Расписание мероприятия в PDF.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример программы мероприятия*\n\nСобытие: Практикум по общению с клиентами\nУсловное расписание: 10:00–11:00\n\nВ PDF порядок сессий и основные темы собраны на одной странице, которую удобно сохранить.\n\n_Мероприятие вымышленное. Документ не является билетом или подтверждением регистрации._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "first-week-checklist": {
+          "title": "План первой недели",
+          "description": "Задачи ученика на первую неделю.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример списка на первую неделю*\n\nДля курса «Основы общения с клиентами» начните с трёх небольших шагов:\n☐ Посмотрите вводный урок\n☐ Попробуйте короткое упражнение\n☐ Запишите вопрос, к которому хотите вернуться\n\nПрогресс заметнее, когда у первой недели есть понятный план.\n\n_Вымышленный список не записывает на курс и не отслеживает обучение._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Попробовать упражнение", "Повторить урок"]
+        },
+        "account-setup-checklist": {
+          "title": "План запуска переписки",
+          "description": "Сценарий, ответственный и результат для оценки.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример списка для старта*\n\nПеред пилотным запуском переписки:\n☐ Выберите один клиентский сценарий\n☐ Договоритесь, кто отвечает за сообщения\n☐ Подготовьте демонстрационные тексты\n☐ Определите, какой результат будет полезным\n\nНачните с небольшого объёма, чтобы оценить итог.\n\n_Пример не меняет настройки аккаунта и не подключает канал._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "subscription-change-summary": {
+          "title": "Смена тарифа",
+          "description": "Прежние и новые условия подписки.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример итогов смены тарифа*\n\nПрежний тариф: Studio на месяц\nНовый тариф: *Studio на год*\nУсловная дата перехода: 1 ноября 2026\n\nРеальный сервис должен отдельно подтвердить условия оплаты.\n\n_Демо не меняет тариф, списания или подписку._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Всё понятно", "Посмотреть детали"]
+        },
+        "privacy-request-acknowledgement": {
+          "title": "Подтверждение запроса о данных",
+          "description": "Номер запроса, этап рассмотрения и контакты.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример подтверждения запроса о приватности*\n\nНомер: DEMO-PR-014\n\nПример показывает информацию, которую компания может сообщить после обращения: номер запроса, этап рассмотрения и понятный способ связи.\n\n_Демо не создаёт запрос, не подтверждает личность и не обрабатывает персональные данные._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "contact-airi": {
+          "title": "Выбор способа связи",
+          "description": "Контакты airi.chat в WhatsApp Flow.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Свяжитесь с airi.chat*\n\nПопробуйте короткое демо выбора способа связи, затем решите, как обратиться к нам самостоятельно.\n\n*WhatsApp / телефон:* +7 708 260 93 46\n*Почта:* samat@airi.chat\n\n_Flow не назначает звонок и не запрашивает обратный звонок. Личные контактные данные не собираются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Как связаться"]
+        },
+        "preference-center": {
+          "title": "Настройки рассылки",
+          "description": "Выбор тем и частоты сообщений.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте настройки сообщений*\n\nВыберите демонстрационные темы и желаемую частоту сообщений, затем проверьте выбор.\n\n_Вымышленный Flow не меняет реальные подписки или согласие на маркетинг. Чтобы действительно отписаться, напишите на почту ниже._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Настроить пример"]
+        },
+        "feedback-survey": {
+          "title": "Опрос клиента",
+          "description": "Выбор оценки и тем для комментария.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Попробуйте короткий опрос*\n\nВыберите условную оценку и темы, которые хотите прокомментировать. Проверьте выбор перед завершением демо.\n\n_Это вымышленное упражнение, а не отзыв о реальном визите. Не вводите личные данные._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Попробовать опрос"]
+        },
+        "company-contact": {
+          "title": "Контакты airi.chat",
+          "description": "Телефон, почта и кнопка звонка.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Свяжитесь с airi.chat напрямую*\n\nЕсть вопросы о работе с клиентами в WhatsApp?\n\n*Телефон / WhatsApp:* +7 708 260 93 46\n*Почта:* samat@airi.chat\n*Сайт:* https://www.airi.chat/\n\nКнопка звонка открывает набор реального номера компании на вашем телефоне. Контакты настоящие; сообщение показывает, как ими делиться.",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Позвонить airi.chat"]
+        },
+        "branch-directory": {
+          "title": "Адрес филиала",
+          "description": "Пример адреса с точкой на карте.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример сообщения с адресом филиала*\n\nОткройте точку, чтобы посмотреть *Сиднейский оперный театр* как пример геолокации общедоступной достопримечательности.\n\nЭто *не офис airi.chat, не филиал партнёра и не место оказания услуг*. Название и адрес показывают, как выглядела бы точка реального филиала.\n\n_Запись, билет и деловой визит не оформляются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "service-hours": {
+          "title": "Часы работы",
+          "description": "Расписание работы в одном сообщении.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример часов работы*\n\nПонедельник–пятница: *09:00–18:00*\nСуббота: *10:00–14:00*\nВоскресенье: выходной\n\nТакое короткое сообщение помогает реальной компании объяснить график до визита клиента.\n\n_Это вымышленные часы магазина, а не график работы или поддержки airi.chat._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "human-handoff": {
+          "title": "Передача диалога сотруднику",
+          "description": "Сообщение о смене ответственного за разговор.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример передачи диалога*\n\nЗдравствуйте, Алексей! Вот как ассистент может объяснить следующий шаг:\n\n«Ваш вопрос требует внимания коллеги. Мы передадим контекст разговора, чтобы вам не пришлось всё повторять».\n\n_Пример не назначает ответственного и не уведомляет коллегу. Кнопки ответов только иллюстрируют взаимодействие._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Передача понятна", "Есть ещё вопрос"]
+        },
+        "learning-path": {
+          "title": "Направление обучения",
+          "description": "Выбор целей, опыта и тем обучения.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Найдите условное направление обучения*\n\nВыберите цель, текущий опыт и интересующие темы. Проверьте учебный маршрут, который объединяет эти пожелания.\n\n_Вымышленный Flow не записывает на курс, не оценивает навыки и не собирает личные данные._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Выбрать обучение"]
+        },
+        "lesson-recap": {
+          "title": "Итоги урока",
+          "description": "Основные идеи урока в одном сообщении.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример итогов урока · Понятные ответы клиентам*\n\nТри идеи, которые стоит запомнить:\n• Начинайте с реального вопроса клиента\n• Делайте следующий шаг понятным\n• Передавайте сложные случаи человеку\n\n*Попробуйте:* перепишите один длинный ответ двумя короткими и ясными предложениями.\n\n_Сообщение показывает поддержку обучения, но не фиксирует реальный прогресс._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Попробовать упражнение", "Повторить главные идеи"]
+        },
+        "practice-challenge": {
+          "title": "Задание на пять минут",
+          "description": "Задание для применения изученной темы.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Небольшая практическая задача*\n\nУ вас пять минут. Превратите этот пример ответа в понятный следующий шаг:\n\n«Мы получили ваше сообщение и предпримем соответствующие действия согласно нашему процессу».\n\nПостарайтесь обозначить одно полезное действие и одно понятное ожидание.\n\n_Задание вымышленное. Кнопки не отправляют работу на оценку._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Принимаю задачу", "Показать другой пример"]
+        },
+        "study-plan": {
+          "title": "План занятий",
+          "description": "Расписание занятий на неделю.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример недельного плана · Понятное общение с клиентами*\n\n*Понедельник:* прочитайте один короткий пример\n*Среда:* перепишите один ответ своими словами\n*Пятница:* сравните первую и последнюю попытки\n\nОтводите около 15 минут на занятие и работайте над одним улучшением.\n\n_Вымышленный план не создаёт напоминания и не записывает на курс._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "webinar-follow-up": {
+          "title": "Итоги вебинара",
+          "description": "Идея для практики после вебинара.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Один вывод из условного вебинара*\n\nТема: Как улучшить общение с клиентами\n\nПеред автоматизацией диалога запишите:\n1. Вопрос клиента\n2. Полезный следующий шаг\n3. Момент, когда нужен человек\n\nТакой небольшой план — практичная отправная точка.\n\n_Вебинар вымышленный. Сообщение не выдаёт запись и не регистрирует на другое мероприятие._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Полезная идея", "Ещё одна идея"]
+        },
+        "loyalty-milestone": {
+          "title": "Благодарность клиенту",
+          "description": "Благодарность за несколько визитов.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример важного этапа для клиента*\n\nЗдравствуйте, Алексей! В этом примере мы отмечаем *5 визитов* в вымышленный магазин товаров для дома.\n\nТёплая благодарность делает важный момент личным, не превращая каждое сообщение в предложение.\n\n_Баллы, купон, история покупок и награда не создаются._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        },
+        "care-check-in": {
+          "title": "Советы после покупки",
+          "description": "Вопрос об использовании товара и совет по уходу.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример вопроса об уходе*\n\nЗдравствуйте, Алексей! Вы уже нашли удобное место для товара «Корзина Mora»?\n\nДержите плетёные корзины вдали от сырости и проверяйте инструкции производителя перед чисткой.\n\n_Это вымышленное повторное обращение. Кнопки показывают пример ответа и не создают заявку в поддержку._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Советы полезны", "Есть вопрос об уходе"]
+        },
+        "community-invitation": {
+          "title": "Встреча сообщества",
+          "description": "Приглашение обсудить идеи для интерьера.",
+          "body": "*Демо airi.chat · вымышленный пример*\n\n*Пример приглашения · Уютный уголок*\n\nПодготовьте небольшой вопрос об интерьере и посмотрите, как ваза, плетёная корзина и мягкий плед могут изменить уголок для чтения.\n\nИдея — поделиться практичным вдохновением без обязательной покупки.\n\n_Встреча вымышленная: нет назначенной даты, билета или регистрации. Кнопка открывает airi.chat._",
+          "footer": "Отписаться: samat@airi.chat",
+          "buttons": ["Открыть airi.chat"]
+        }
+      },
+      "unsubscribe": "Для отказа от сообщений: samat@airi.chat"
+    }
+  },
+  "Pagination": {
+    "previous": "Назад",
+    "next": "Вперед",
+    "previousAria": "Перейти на предыдущую страницу",
+    "nextAria": "Перейти на следующую страницу",
+    "morePages": "Еще страницы"
+  },
+  "SetWebhookPage": {
+    "title": "Прежняя настройка устарела",
+    "description": "Этот устаревший метод настройки был отключен. Пожалуйста, настройте вебхуки Telegram непосредственно в настройках вашего рабочего пространства в разделе Интеграции.",
+    "setWebhook": "Перейти в настройки рабочего пространства"
+  },
+  "MergeAssetsPage": {
+    "metadataTitle": "Объединение рабочих пространств",
+    "metadataDescription": "Привяжите существующий доступ к workspace к текущему входу.",
+    "brand": "airi.chat",
+    "title": "Объединить рабочие пространства?",
+    "description": "Мы нашли существующий доступ к workspace для {email}. Вы можете привязать его к этому входу перед продолжением.",
+    "workspaceSummary": "{workspaceCount, plural, one {# рабочее пространство} few {# рабочих пространства} many {# рабочих пространств} other {# рабочих пространств}} из {legacyAccountCount, plural, one {# предыдущего входа} few {# предыдущих входов} many {# предыдущих входов} other {# предыдущих входов}}",
+    "moreCandidates": "+{count} ещё",
+    "mergeAndContinue": "Объединить и продолжить",
+    "continueWithoutMerging": "Продолжить без объединения",
+    "mergeError": "Не удалось объединить рабочие пространства. Попробуйте снова.",
+    "skipError": "Не удалось сохранить ваш выбор. Попробуйте снова.",
+    "roles": {
+      "admin": "Администратор",
+      "manager": "Менеджер"
+    }
+  },
+  "AiriMetaAds": {
+    "skill": {
+      "description": {
+        "missingSource": "Подключите Meta Ads и включите Ads MCP, чтобы использовать @meta",
+        "accountNotEnabled": "Meta ещё не включила инструменты ИИ для этого рекламного аккаунта. Проверьте доступность позже.",
+        "checking": "Проверяем доступ к Meta Ads для @meta",
+        "selectAccount": "Выберите доступный рекламный аккаунт в интеграциях",
+        "checkAgain": "Проверьте доступ к Meta Ads в интеграциях",
+        "verify": "Проверьте подключение Meta Ads в интеграциях",
+        "reconnect": "Обновите подключение Meta Ads, чтобы использовать @meta",
+        "connect": "Включите и проверьте доступ ИИ к Meta Ads в интеграциях",
+        "retry": "Перед выполнением Airi проверит доступ к Meta Ads",
+        "management": "Отчёты Meta Ads и изменения кампаний после подтверждения",
+        "reporting": "Отчёты Meta Ads; для изменений нужен доступ к управлению"
+      },
+      "recovery": {
+        "connect": "Подключить Meta Ads для @meta",
+        "authorize": "Включить управление рекламой для @meta",
+        "reconnect": "Переподключить Meta Ads для @meta",
+        "settings": "Проверить подключение Meta Ads",
+        "rollout": "Проверить доступность Meta Ads"
+      }
+    },
+    "starter": {
+      "title": "Meta Ads (@meta)",
+      "reporting": "Просматривайте рекламные аккаунты и результаты. Для изменений кампаний нужен доступ к управлению.",
+      "management": "Просматривайте результаты и готовьте изменения кампаний к подтверждению.",
+      "recheck": "Airi проверит доступ к Meta Ads перед просмотром аккаунтов и результатов.",
+      "prompt": "@meta Покажи мои рекламные аккаунты и основные расходы за последние 30 дней.",
+      "plan": {
+        "title": "Спланировать рекламу Meta Ads",
+        "description": "Используйте запросы клиентов для выбора аудитории, креативов и структуры кампании.",
+        "prompt": "Используй данные моей компании, чтобы спланировать аудиторию, креативы и структуру кампании Meta Ads."
+      }
+    },
+    "common": {
+      "cancel": "Отмена",
+      "notProvided": "Не указано",
+      "notChanged": "Без изменений",
+      "none": "Нет",
+      "technical": "Технические сведения"
+    },
+    "review": {
+      "title": "Проверка изменений Meta Ads",
+      "description": "Проверьте аккаунт и изменения перед подтверждением. Airi выполнит только это проверенное действие.",
+      "states": {
+        "ready": "Готово",
+        "submitting": "Отправка",
+        "stale": "Устарело",
+        "mismatched": "Несоответствие"
+      },
+      "staleError": "Это действие уже не актуально. Попросите Airi подготовить новое.",
+      "mismatchError": "Действие не совпадает с проверенной транзакцией. Попросите Airi подготовить его заново.",
+      "error": "Не удалось подтвердить изменение. Проверьте технические сведения или подготовьте новое действие.",
+      "summary": "Запрошенное изменение",
+      "target": "Рекламный аккаунт",
+      "operation": "Операция",
+      "entities": "Затрагиваемые объекты",
+      "entityAction": "Действие: {action}",
+      "entityStatus": "Статус: {status}",
+      "requestedStatus": "Запрошенный статус",
+      "currencyTimezone": "Валюта / часовой пояс",
+      "business": "Бизнес",
+      "money": "Денежные значения",
+      "moneyRaw": "Точное значение для Meta",
+      "moneyCurrency": "Валюта рекламного аккаунта",
+      "moneyUnits": "Единицы измерения не проверены. Это точное входное значение Meta, а не подтверждённая сумма в {currency}. Перед подтверждением проверьте единицы поля в Meta.",
+      "schedule": "Расписание",
+      "values": "Значения",
+      "targeting": "Настройки аудитории",
+      "creativeAssets": "Креативы",
+      "logicalAssets": "Выбранные материалы",
+      "uploadUrls": "Ссылки для загрузки",
+      "uploadHelp": "Временные ссылки создаются при выполнении подтверждённого действия.",
+      "warnings": "Примечания для проверки",
+      "unmapped": "Другие входные поля",
+      "user": "Пользователь Meta",
+      "sourceConnection": "Источник / подключение",
+      "tool": "Инструмент Meta",
+      "accounts": "ID аккаунтов",
+      "businesses": "ID бизнесов",
+      "json": "Точные входные данные",
+      "shortDigest": "Короткая контрольная сумма",
+      "fullDigest": "Полная контрольная сумма",
+      "errorDetails": "Подробности ошибки",
+      "confirm": "Подтвердить и выполнить",
+      "submitting": "Отправка…"
+    },
+    "reconciliation": {
+      "title": "Записать проверенный результат Meta Ads",
+      "description": "Запишите результат проверки в Meta Ads Manager. Действие повторно не выполняется.",
+      "currentOutcome": "Текущий результат: {status}",
+      "statuses": {
+        "executing": "Ожидание Meta",
+        "outcome_unknown": "Неизвестен",
+        "succeeded": "Выполнено",
+        "not_executed": "Не выполнено"
+      },
+      "outcome": "Проверенный результат",
+      "completed": "Выполнено",
+      "notExecuted": "Не выполнено",
+      "note": "Основание для результата",
+      "notePlaceholder": "Опишите, что вы проверили в Meta Ads Manager и что произошло.",
+      "noteHelp": "Обязательно · {count}/500 символов",
+      "noteRequired": "Укажите основание перед записью результата.",
+      "identifiersRequired": "Заполните оба поля для каждого объекта.",
+      "identifiers": "Проверенные ID объектов Meta (необязательно)",
+      "addId": "Добавить ID",
+      "idsHelp": "Добавляйте ID только тех объектов Meta, которые вы проверили.",
+      "identifierKind": "Тип объекта {index}",
+      "identifierId": "ID объекта {index}",
+      "removeIdentifier": "Удалить объект {index}",
+      "kind": "Тип объекта",
+      "id": "ID",
+      "record": "Записать результат",
+      "recording": "Запись…"
+    },
+    "actions": {
+      "review": "Проверить изменения",
+      "submitting": "Отправка…",
+      "legacy": "Это действие устарело. Попросите Airi подготовить новое.",
+      "regenerate": "Подготовить заново",
+      "missing": "Проверенное действие отсутствует. Попросите Airi подготовить его заново.",
+      "mismatch": "Действие не совпадает с проверенной транзакцией. Попросите Airi подготовить его заново.",
+      "outcome": "Проверить результат Meta Ads",
+      "unknown": "Результат неизвестен. Проверьте Meta Ads Manager перед записью результата.",
+      "stranded": "Выполнение действия прервано. Проверьте Meta Ads Manager перед записью результата.",
+      "waiting": "Airi ожидает результат Meta. Если он не появится, проверьте Meta Ads Manager через пять минут.",
+      "record": "Записать проверенный результат",
+      "recording": "Запись…"
+    },
+    "errors": {
+      "confirm": "Не удалось подтвердить изменение Meta Ads",
+      "regenerate": "Подготовьте новое действие перед продолжением.",
+      "refresh": "Результат Meta Ads сохранён, но чат не обновился. Откройте чат заново, чтобы загрузить результат.",
+      "record": "Не удалось записать проверенный результат Meta Ads"
+    }
+  },
+  "AiriChat": {
+    "pendingPatchNewTemplateTitle": "Airi подготовила новый шаблон. Открытый шаблон останется без изменений.",
+    "pendingPatchNewFlowTitle": "Airi подготовила новую форму. Открытая форма останется без изменений.",
+    "pendingPatchOtherTitle": "Airi обновила другой черновик в этом чате.",
+    "pendingPatchOpenNew": "Открыть как новый черновик",
+    "pendingPatchOpenOther": "Открыть этот черновик",
+    "pendingPatchResolveConflict": "Сначала выберите версию выше, чтобы не потерять свои правки.",
+    "messagesLoadFailed": "Не удалось загрузить сообщения этого чата.",
+    "openDraftFailed": "Не удалось открыть черновик. Попробуйте ещё раз.",
+    "previewLoadFailed": "Не удалось загрузить предпросмотр.",
+    "retry": "Повторить",
+    "stopAnswer": "Остановить ответ",
+    "stoppingAnswer": "Останавливаем ответ",
+    "stopFailed": "Не удалось остановить ответ. Попробуйте ещё раз.",
+    "answerStopped": "Остановлено",
+    "runActive": "Airi ещё отвечает в этом чате. Дождитесь ответа или остановите его.",
+    "loadEarlier": "Загрузить более ранние сообщения",
+    "loadingEarlier": "Загружаем более ранние сообщения",
+    "loadEarlierFailed": "Более ранние сообщения не загрузились. Попробуйте ещё раз.",
+    "emptyTitle": "Чем займёмся?",
+    "emptyDescription": "Спросите о рассылках, WhatsApp, базе знаний или диалогах с клиентами.",
+    "suggestedActionsLabel": "Предложенные действия Airi",
+    "tryAiriFor": "Попробуйте Airi для...",
+    "recentChats": "Недавние чаты",
+    "recentChatsLabel": "Недавние чаты с Airi",
+    "viewAll": "Все чаты",
+    "toolsTitle": "Инструменты Airi",
+    "toggleSidePanel": "Показать или скрыть боковую панель",
+    "suggestedActions": "Предложенные действия",
+    "chatSection": "Чат",
+    "chatActionsLabel": "Действия чата Airi",
+    "newAiriChat": "Новый чат с Airi",
+    "loadingMessages": "Загружаем сообщения",
+    "newThread": "Новый чат",
+    "campaign": {
+      "label": "Пакет кампании",
+      "savedPlan": "Сохранённый план - версия {revision} - {status, select, draft {черновик} submitted {отправлен} published {опубликован} failed {ошибка} archived {в архиве} other {{status}}}",
+      "blocked": "Заблокировано: {count}",
+      "ready": "Готово",
+      "goal": "Цель",
+      "audience": "Аудитория",
+      "angle": "Подача",
+      "toolsReady": "{count, plural, one {# инструмент готов} few {# инструмента готовы} many {# инструментов готово} other {# инструмента готово}}",
+      "connectTool": "Подключить сервис",
+      "open": "Открыть",
+      "nextAction": "Следующий шаг",
+      "openInAiriCreate": "Открыть в Airi Create",
+      "openBulkDraft": "Открыть черновик рассылки",
+      "openAssetDrafts": "Открыть черновики медиа",
+      "stepStatus": {
+        "ready": "Готово",
+        "approval_required": "Нужно подтверждение",
+        "blocked": "Заблокировано",
+        "needs_input": "Нужны данные"
+      }
+    },
+    "start": {
+      "metricLabels": {
+        "chats": "{count, plural, one {чат} few {чата} many {чатов} other {чата}}",
+        "items": "{count, plural, one {материал} few {материала} many {материалов} other {материала}}",
+        "replies": "{count, plural, one {ответ} few {ответа} many {ответов} other {ответа}}",
+        "channels": "{count, plural, one {канал} few {канала} many {каналов} other {канала}}",
+        "tools": "{count, plural, one {сервис} few {сервиса} many {сервисов} other {сервиса}}",
+        "sources": "{count, plural, one {источник} few {источника} many {источников} other {источника}}"
+      },
+      "cards": {
+        "canva-whatsapp-campaign": {
+          "title": "Кампания Canva в WhatsApp",
+          "description": "Креатив в Canva и шаблон WhatsApp для массовой рассылки.",
+          "prompt": "Используй Canva и WhatsApp вместе: спланируй массовую рассылку с шаблоном WhatsApp по правилам Meta, подходом к аудитории и брифом для креатива в Canva.",
+          "eyebrow": "Canva + WhatsApp",
+          "compactTitle": "Кампания в Canva"
+        },
+        "click-to-whatsapp-funnel": {
+          "title": "Воронка из рекламы в WhatsApp",
+          "description": "Идеи для рекламы, первое сообщение в WhatsApp и шаги дожима.",
+          "prompt": "Спланируй воронку из рекламы Meta Ads в WhatsApp: аудитория, креативная идея, приветственный шаблон и сценарий дожима.",
+          "eyebrow": "Реклама + WhatsApp",
+          "compactTitle": "Воронка в WhatsApp"
+        },
+        "avatar-whatsapp-campaign": {
+          "title": "Кампания с видеоаватаром",
+          "description": "Короткий сценарий видео с аватаром и план отправки в WhatsApp.",
+          "prompt": "Спланируй кампанию в WhatsApp с коротким видео говорящего аватара Wan: бриф портрета, сценарий до 15 секунд, подача предложения и текст шаблона.",
+          "eyebrow": "Wan Avatar + WhatsApp",
+          "compactTitle": "Кампания с аватаром"
+        },
+        "meta-ads-creative-pack": {
+          "title": "Креативы для Meta Ads",
+          "description": "Рекламные идеи и брифы на основе подключённых креативных сервисов.",
+          "prompt": "Подготовь пакет креативов для Meta Ads с помощью моих подключённых креативных сервисов: зацепки, форматы, брифы и план тестирования.",
+          "eyebrow": "Реклама + креатив",
+          "compactTitle": "Креативы для Meta Ads"
+        },
+        "website-lead-whatsapp-nurture": {
+          "title": "Прогрев заявок с сайта",
+          "description": "Квалификация заявок с сайта и напоминания в WhatsApp.",
+          "prompt": "На основе чатов с сайта и WhatsApp спроектируй прогрев заявок: квалифицирующие вопросы, напоминания и сообщения, которые доводят до покупки.",
+          "eyebrow": "Сайт + WhatsApp",
+          "compactTitle": "Прогрев заявок с сайта"
+        },
+        "email-whatsapp-reactivation": {
+          "title": "Возврат клиентов: Email + WhatsApp",
+          "description": "Письма и сообщения в WhatsApp без повторов.",
+          "prompt": "Спланируй кампанию по возврату клиентов через email и WhatsApp: последовательность, тексты сообщений и защиту от навязчивых повторов.",
+          "eyebrow": "Email + WhatsApp",
+          "compactTitle": "Вернуть клиентов через WhatsApp"
+        },
+        "instagram-canva-content": {
+          "title": "Контент из Instagram в Canva",
+          "description": "Идеи постов и сторис в Canva на основе сигналов из Instagram.",
+          "prompt": "На основе Instagram и Canva спланируй вовлекающий контент: брифы для постов, сторис и дизайна кампании, опирающиеся на поведение клиентов.",
+          "eyebrow": "Instagram + Canva",
+          "compactTitle": "Контент для Instagram"
+        },
+        "instagram-meta-ads-angle": {
+          "title": "Рекламные идеи из Instagram",
+          "description": "Зацепки для Meta Ads и тесты аудиторий на основе Instagram.",
+          "prompt": "На основе Instagram предложи зацепки для Meta Ads, аудитории, возражения клиентов и первые тесты для этого пространства.",
+          "eyebrow": "Instagram + реклама",
+          "compactTitle": "Идеи рекламы из Instagram"
+        },
+        "canva-higgsfield-visual-pipeline": {
+          "title": "Поток визуального контента",
+          "description": "Сгенерированные изображения, макеты Canva и тексты кампании.",
+          "prompt": "Спланируй поток визуального контента с Higgsfield и Canva: промпты для креативов, брифы макетов и где использовать каждый материал.",
+          "eyebrow": "Higgsfield + Canva",
+          "compactTitle": "Визуальный контент"
+        },
+        "higgsfield-whatsapp-media": {
+          "title": "Медиашаблон WhatsApp",
+          "description": "Медиакреатив и текст для шаблона рассылки в WhatsApp.",
+          "prompt": "Используй Higgsfield и WhatsApp вместе: спланируй кампанию с медиашаблоном — промпты для визуала, основной текст, кнопки и заметки, чтобы шаблон прошёл модерацию.",
+          "eyebrow": "Higgsfield + WhatsApp",
+          "compactTitle": "Медиашаблон"
+        },
+        "avatar-voice-video": {
+          "title": "Сценарий говорящего аватара",
+          "description": "Подача аватара, голос и сценарий короткого видео.",
+          "prompt": "Подготовь концепцию говорящего аватара Wan с голосом ElevenLabs: бриф портрета, сценарий до 15 секунд, указания для голоса и как создать видео в медиатеке.",
+          "eyebrow": "Wan Avatar + голос",
+          "compactTitle": "Сценарий аватара"
+        },
+        "voice-whatsapp-follow-up": {
+          "title": "Дожим с голосовыми сообщениями",
+          "description": "Голосовая концепция и цепочка сообщений в WhatsApp вокруг неё.",
+          "prompt": "Спланируй дожим клиентов с голосовыми сообщениями через ElevenLabs и WhatsApp: сценарий, тексты для WhatsApp и где использовать аудио.",
+          "eyebrow": "Голос + WhatsApp",
+          "compactTitle": "Голосовой дожим"
+        },
+        "booking-reminder-flow": {
+          "title": "Напоминания о записи",
+          "description": "Напоминания и повторные сообщения вокруг записей клиентов.",
+          "prompt": "Создай рабочий сценарий напоминаний о записи и возврата неявившихся клиентов на основе календаря, последних сообщений клиентов и подключённых мессенджеров.",
+          "eyebrow": "Календарь + мессенджеры",
+          "compactTitle": "Напоминания о записи"
+        },
+        "manager-capacity-triage": {
+          "title": "Распределение обращений",
+          "description": "Срочные ответы, передача менеджеру и возврат клиентов без ответа для небольшой команды.",
+          "prompt": "Создай рабочий сценарий в WhatsApp для распределения обращений и повторных сообщений для небольшой команды, которая не успевает сразу отвечать каждому клиенту. По последним сообщениям клиентов определи срочные запросы, ветки «запись» и «нужна помощь», правила передачи менеджеру и возврат клиентов, которые не ответили. Отправку и публикацию оставь на проверку.",
+          "eyebrow": "Автоматизация поддержки",
+          "compactTitle": "Распределение обращений"
+        },
+        "cross-channel-whatsapp-follow-up": {
+          "title": "Дожим из других каналов",
+          "description": "Интерес из соцсетей и чатов превращается в цепочку сообщений в WhatsApp.",
+          "prompt": "На основе подключённых соцсетей, чатов и WhatsApp спроектируй сценарий дожима заинтересованных клиентов через несколько каналов.",
+          "eyebrow": "Каналы + WhatsApp",
+          "compactTitle": "Дожим из других каналов"
+        },
+        "conversation-data": {
+          "title": "Чаты с клиентами готовы",
+          "description": "Airi найдёт частые вопросы, намерения клиентов и идеи для рассылок.",
+          "prompt": "Изучи мои переписки с клиентами и найди частые вопросы, сигналы к покупке и пробелы в поддержке, которыми стоит заняться в первую очередь.",
+          "eyebrow": "Данные пространства",
+          "compactTitle": "Анализ чатов с клиентами"
+        },
+        "knowledge-data": {
+          "title": "База знаний подключена",
+          "description": "Ответы на основе документов, ссылок, готовых фрагментов и правил.",
+          "prompt": "Проверь мою подключённую базу знаний и скажи, какой информации не хватает для лучших ответов клиентам.",
+          "eyebrow": "Данные пространства",
+          "compactTitle": "Чего не хватает в базе знаний"
+        },
+        "reply-data": {
+          "title": "Ответы, которые можно улучшить",
+          "description": "Сделайте сохранённые ответы сильнее для поддержки и продаж.",
+          "prompt": "Проверь мои быстрые ответы и предложи улучшенные версии для конверсии и качества поддержки.",
+          "eyebrow": "Данные пространства",
+          "compactTitle": "Улучшить готовые ответы"
+        },
+        "customer-channels": {
+          "title": "Каналы с клиентами подключены",
+          "description": "Возможности по спросу, возражениям и повторным контактам по приоритету.",
+          "prompt": "Изучи мои подключённые каналы с клиентами и составь план возможностей по приоритету: задачи поддержки, намерения клиентов, сигналы роста, подтверждения и следующие действия Airi.",
+          "eyebrow": "Данные компании",
+          "compactTitle": "Возможности в каналах"
+        },
+        "creative-stack": {
+          "title": "Креативные сервисы подключены",
+          "description": "Изображения, видео, голос и брифы для дизайна на основе данных компании.",
+          "prompt": "С помощью моих подключённых креативных сервисов и данных пространства спланируй пакет вовлекающего контента.",
+          "eyebrow": "Креатив",
+          "compactTitle": "Креативный пакет"
+        },
+        "connected-sources": {
+          "title": "Каналы подключены",
+          "description": "Подключённые сервисы компании как основа для следующих шагов.",
+          "prompt": "Что Airi может сделать с моими подключёнными каналами и сервисами в этом пространстве?",
+          "eyebrow": "Настройка",
+          "compactTitle": "План с подключёнными сервисами"
+        },
+        "saved-chats": {
+          "title": "Прошлая работа с Airi",
+          "description": "Продолжите прошлые чаты о стратегии, шаблонах или рассылках.",
+          "prompt": "Кратко перескажи мои прошлые чаты с Airi и предложи следующий полезный шаг.",
+          "eyebrow": "История",
+          "compactTitle": "Продолжить прошлую работу"
+        },
+        "whatsapp-template": {
+          "title": "Создать шаблон WhatsApp",
+          "description": "Шаблон по правилам Meta, который откроется в конструкторе.",
+          "prompt": "Создай шаблон WhatsApp на основе данных моего пространства. Подготовь его к проверке в конструкторе перед отправкой на модерацию.",
+          "eyebrow": "WhatsApp",
+          "compactTitle": "Создать шаблон WhatsApp"
+        },
+        "follow-up-scenario": {
+          "title": "Сценарий дожима",
+          "description": "Повторные сообщения для заявок, неотвеченных клиентов или тех, кто может уйти.",
+          "prompt": "Спроектируй сценарий дожима в WhatsApp для клиентов, которые проявили интерес, но не купили.",
+          "eyebrow": "Сценарий",
+          "compactTitle": "Сценарий дожима"
+        },
+        "bulk-campaign": {
+          "title": "Спланировать рассылку",
+          "description": "Аудитория, подача, контент и план отправки на основе ваших данных.",
+          "prompt": "Спланируй рассылку для вовлечения клиентов на основе данных и сервисов, доступных в этом пространстве.",
+          "eyebrow": "Рассылка",
+          "compactTitle": "Спланировать рассылку"
+        },
+        "meta-ads-mcp": {
+          "eyebrow": "Реклама MCP",
+          "compactTitle": "Meta Ads через @meta"
+        },
+        "meta-ads-plan": {
+          "eyebrow": "Реклама"
+        },
+        "avatar-video": {
+          "title": "Видео с аватаром",
+          "description": "Короткий сценарий говорящего аватара для медиатеки (изображение + текст или аудио).",
+          "prompt": "Помоги создать короткое видео говорящего аватара Wan для нашей следующей кампании: рекомендации по портрету и сценарий до 15 секунд.",
+          "eyebrow": "Wan Avatar",
+          "compactTitle": "Видео с аватаром"
+        },
+        "creative-content": {
+          "title": "Контент-план",
+          "description": "Брифы для дизайна, визуала, голоса и коротких видео.",
+          "prompt": "Составь контент-план для вовлечения клиентов с учётом данных пространства для моих подключённых креативных сервисов.",
+          "eyebrow": "Креатив"
+        },
+        "support-gaps": {
+          "title": "Пробелы в поддержке",
+          "description": "Airi изучит данные клиентов и базу знаний и предложит, что исправить.",
+          "prompt": "Проанализируй доступные данные о клиентах и базу знаний. Какие пробелы в поддержке нужно закрыть в первую очередь?",
+          "eyebrow": "Поддержка"
+        },
+        "product-capabilities": {
+          "title": "Что умеет Airi?",
+          "description": "Узнайте, какие действия Airi доступны в этом пространстве.",
+          "prompt": "Что Airi может сделать в этом пространстве и что мне подключить дальше?",
+          "eyebrow": "Возможности",
+          "compactTitle": "Что умеет Airi"
+        },
+        "connect-context": {
+          "title": "План настройки пространства",
+          "description": "Какие каналы, знания и креативные сервисы подключить в первую очередь.",
+          "prompt": "Помоги решить, что подключить в первую очередь, чтобы Airi могла предлагать полезные маркетинговые действия.",
+          "eyebrow": "Настройка"
+        }
+      }
+    },
+    "closeSidebar": "Закрыть панель Airi",
+    "pinChat": "Закрепить чат",
+    "unpinChat": "Открепить чат",
+    "archiveChat": "Архивировать чат",
+    "chatActions": "Действия с чатом",
+    "moreChatActions": "Другие действия с чатом",
+    "conversationLabel": "Переписка с Airi",
+    "scrollToLatest": "К последнему сообщению",
+    "askAiri": "Спросите Airi",
+    "backToStart": "К началу Airi",
+    "newChat": "Новый чат",
+    "loadingChats": "Загружаем чаты",
+    "noChatsYet": "Чатов пока нет.",
+    "searchChats": "Поиск по чатам",
+    "startChat": "Чат",
+    "backToChats": "К чатам",
+    "workspaceAssistant": "Помощник пространства",
+    "chatCount": "{count, plural, one {# чат} few {# чата} many {# чатов} other {# чата}}",
+    "composer": {
+      "openTools": "Открыть инструменты сообщения",
+      "attachFile": "Прикрепить фото или документ",
+      "chooseCreativeAsset": "Выбрать медиафайл",
+      "addSources": "Добавить источники",
+      "sendMessage": "Отправить сообщение",
+      "backToSources": "К источникам",
+      "chooseFromChats": "Выбрать из чатов",
+      "addSourcesAndSkills": "Добавить источники и навыки",
+      "pickerLabel": "Навыки, источники и чаты",
+      "loadingSources": "Загружаем источники",
+      "alreadySelected": "Уже выбрано",
+      "noChatsFound": "Чаты не найдены.",
+      "noSourcesFound": "Источники не найдены.",
+      "sourcesFailed": "Не удалось загрузить источники",
+      "chatsFailed": "Не удалось загрузить чаты"
+    }
+  },
+  "AiriChatProgress": {
+    "working": "Работаем над вашим запросом",
+    "preparing": "Готовим ответ",
+    "understanding": "Разбираемся в вашем запросе",
+    "context": "Изучаем нужную информацию",
+    "writing": "Составляем ответ",
+    "template": "Готовим шаблон WhatsApp",
+    "flow": "Готовим форму WhatsApp",
+    "image": "Готовим изображение",
+    "opportunities": "Изучаем возможности",
+    "campaign": "Готовим кампанию",
+    "ads": "Изучаем вашу рекламу",
+    "saving": "Сохраняем ответ",
+    "ready": "Ответ готов",
+    "partial": "Частичные результаты готовы",
+    "stopped": "Запрос остановлен",
+    "error": "Не удалось выполнить запрос",
+    "details": "Подробности работы",
+    "running": "В процессе",
+    "complete": "Завершено",
+    "failed": "Не удалось"
+  },
+  "Select": {
+    "scrollUp": "Прокрутить вверх",
+    "scrollDown": "Прокрутить вниз"
+  },
+  "AppUpdateBanner": {
+    "updateReady": "Доступно обновление",
+    "refresh": "Обновить",
+    "refreshing": "Обновляем...",
+    "dismiss": "Скрыть уведомление об обновлении"
+  }
+}

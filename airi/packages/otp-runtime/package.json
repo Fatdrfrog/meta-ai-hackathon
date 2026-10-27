@@ -1,0 +1,30 @@
+{
+  "name": "@icecore/otp-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "check-types": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^5.3.0",
+    "@icecore/airi-runtime": "workspace:*",
+    "@icecore/shared": "workspace:*",
+    "@icecore/temporal": "workspace:*",
+    "@supabase/supabase-js": "^2.116.0",
+    "@temporalio/client": "~1.24.0",
+    "mongoose": "^8.24.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.19.17",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2"
+  }
+}

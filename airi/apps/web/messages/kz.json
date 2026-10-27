@@ -1,0 +1,2361 @@
+{
+  "WhatsAppHistorySync": {
+    "standardAllowance": "Компанияның стандартты импорт лимиті — {messages, number} хабарлама немесе {mib, number} МиБ. Үлкен көлем үшін қолдау қызметіне хабарласыңыз.",
+    "rangeDays": "Тарих кезеңі (күн)",
+    "pausedTitle": "Тарихты импорттау тоқтатылды",
+    "pausedDescription": "Компанияның тарихты импорттау лимиті таусылды. Алынған тарих сақталған. Лимитті арттыру және импорттауды жалғастыру үшін қолдау қызметіне хабарласыңыз.",
+    "pausedPlanDescription": "Тарихты импорттау тарифіңізге байланысты тоқтатылды. Әлі импортталмаған тарих ақылы тарифке өткеннен кейін шамамен бір сағат ішінде автоматты түрде жүктеле бастайды.",
+    "idleTitle": "Тарих сұралмады",
+    "idleDescription": "Тарихты бөлісу WhatsApp Business қолданбасындағы нөмірді қосқанда қолжетімді.",
+    "requestingTitle": "Тарих сұралуда",
+    "requestingDescription": "Meta сұрауды растағанын күтеміз. Қайта сұрау қолжетімсіз.",
+    "requestUnknownTitle": "Тарих сұрауы тексерілуде",
+    "requestUnknownDescription": "Meta сұрауды қабылдаған болуы мүмкін. Күйін тексеріп жатырмыз; тек қайталау үшін нөмірді қайта қоспаңыз.",
+    "requestedTitle": "WhatsApp тарихын күтеміз",
+    "requestedDescription": "Meta сұрауды қабылдады. WhatsApp Business қолданбасында тарихты бөлісуді растаңыз. Хабарламалар сақталғаннан кейін көрінеді.",
+    "receivingTitle": "WhatsApp тарихы алынуда",
+    "receivingDescription": "WhatsApp тарихты жіберіп жатыр. Сақталған хабарламалар қолжетімді, қалғандары әлі өңделуде.",
+    "savingTitle": "WhatsApp тарихы сақталуда",
+    "savingDescription": "WhatsApp тарихты жіберуді аяқтады. Қалған хабарламалар әлі сақталуда.",
+    "completedTitle": "Тарих сақталды",
+    "completedDescription": "Алынған тарих хабарламаларының барлығы өңделді.",
+    "planSkippedTitle": "Кейбір диалогтар импортталмады",
+    "planSkippedDescription": "Тариф шектеулеріне байланысты кейбір диалогтар импортталмады. Оларды импорттау үшін ақылы тарифке өтіп, қолдау қызметіне жазыңыз.",
+    "unverifiedTitle": "Бұрынғы тарих тасымалы",
+    "unverifiedDescription": "Бұрынғы қосылым тасымалдың аяқталғанын хабарлады. Сақталған хабарламалар саны тексерілмеген.",
+    "declinedTitle": "Тарихты бөлісу қабылданбады",
+    "declinedDescription": "WhatsApp Business қолданбасында тарихты бөлісу қабылданбады. Бұл сұрауды қайталау мүмкін емес.",
+    "errorTitle": "Тарих назар аударуды қажет етеді",
+    "errorDescription": "Тарихтың бір бөлігі сақталмады. Өзгерістерді тексеру үшін күйді жаңартыңыз. Meta-ға жаңа сұрау жіберілмейді.",
+    "staleTitle": "Тарих жаңартылмады",
+    "staleDescription": "Тарихтың жаңа жаңартуы жоқ. Тексеру үшін күйді жаңартыңыз. Бастапқы сұрауды қайталау мүмкін емес.",
+    "savedCount": "Қолжетімді хабарламалар: {count}",
+    "pendingCount": "Өңдеуді күтуде: {count}",
+    "failedCount": "Назар аударуды қажет етеді: {count}",
+    "planSkippedCount": "Тарифке байланысты импортталмады: {count}",
+    "providerProgress": "WhatsApp тасымалы: {progress}%",
+    "refreshStatus": "Күйді жаңарту",
+    "statusUnavailable": "Күйді жаңарту мүмкін болмады. Соңғы белгілі нәтиже көрсетілген.",
+    "onboardingRequired": "Тарихты импорттау WhatsApp-ты жаңадан қосқанда ғана қолжетімді. Бұрыннан бар қосылымдардың тарихы қайта импортталмайды.",
+    "windowExpired": "Бұл қосылым үшін тарих сұрауының мерзімі өтті. Сұрауды осы жерден бастау мүмкін емес.",
+    "navLabel": "WhatsApp тарихы: {status}",
+    "manageHistory": "Чат тарихын басқару"
+  },
+  "CustomerBehavior": {
+    "title": "Клиент әрекеті",
+    "journey": "Хабарламалар тізбегі",
+    "beforeDue": "Мерзімге дейін",
+    "delay": "Оқиғадан кейінгі кідіріс",
+    "unit": "Өлшем",
+    "minutes": "Минут",
+    "hours": "Сағат",
+    "days": "Күн",
+    "segments": "Сатып алу және шығын сүзгілері",
+    "minPurchases": "Ең аз сатып алу саны",
+    "maxPurchases": "Ең көп сатып алу саны",
+    "minDaysSincePurchase": "Сатып алудан кейін кемінде күн",
+    "maxDaysSincePurchase": "Сатып алудан кейін ең көбі күн",
+    "minNetSpend": "Ең аз таза шығын",
+    "maxNetSpend": "Ең көп таза шығын",
+    "currency": "Шығын валютасы",
+    "invalidConfig": "Аралықтарды тексеріп, шығын сүзгісіне валютаны таңдаңыз.",
+    "triggerHint": "Жаңа тіркелген оқиғалардан басталады. Алғашқы әрекет ретінде мақұлданған WhatsApp үлгісін қосыңыз. Кейінгі оқиғалар үшін сценарий баптауларында қайталап іске қосуды қосыңыз. Маркетинг келісімі қажет; жаңа сатып алу еске салуларды тоқтатады.",
+    "stopsOnPurchase": "Жаңа сатып алудан кейін тоқтайды",
+    "contactPolicy": "Науқандар арасындағы байланыс шектері",
+    "policyHint": "Осы кеңістіктің WhatsApp маркетинг науқандары мен автоматты тізбектеріне қолданылады. Нәтижесі белгісіз әрекеттер де есептеледі.",
+    "intervalHours": "Байланыстар арасындағы сағат",
+    "maxPerWeek": "7 күндегі ең көп саны",
+    "savePolicy": "Кеңістік шектерін сақтау",
+    "recordEvent": "Еске салу оқиғалары",
+    "eventHint": "Нақты тапсырысты немесе белгілі ұзарту/қызмет күнін тіркеңіз. Жапқанда не өзгерткенде сол нөмірді қолданыңыз. Төлемді «Сатуды тіркеу» арқылы растаңыз.",
+    "eventType": "Клиент оқиғасы",
+    "reference": "Тапсырыс немесе қызмет нөмірі",
+    "dueDate": "Мерзім (жергілікті уақыт)",
+    "saveEvent": "Оқиғаны тіркеу",
+    "eventSaved": "Оқиға тіркелді. Сәйкес белсенді тізбектер жақында жоспарланады.",
+    "recentJourneys": "Соңғы тізбектер",
+    "empty": "Тізбектер әлі жоқ. Сценарийлерде «Клиент әрекеті» триггерін орнатып, сәйкес оқиғаны тіркеңіз.",
+    "loading": "Жүктелуде…",
+    "retry": "Қайталау",
+    "saving": "Сақталуда…",
+    "error": "Сақтау немесе жүктеу мүмкін болмады. Қайталап көріңіз.",
+    "presets": {
+      "abandoned_cart": "Тасталған себет",
+      "abandoned_checkout": "Аяқталмаған тапсырыс",
+      "purchase_completed": "Аяқталған сатып алу",
+      "replenishment": "Қорды толықтыру еске салуы",
+      "second_purchase": "Екінші сатып алу",
+      "win_back": "Клиентті қайтару",
+      "upcoming_renewal": "Жақында ұзарту",
+      "overdue_service": "Мерзімі өткен қызмет"
+    },
+    "presetDescriptions": {
+      "abandoned_cart": "Белгілі сатып алушы сайт себетінде тауар қалдырып, рәсімдеуді бастамағанда іске қосылады.",
+      "abandoned_checkout": "Сатып алушы рәсімдеуді бастап, сатып алуды аяқтамағанда іске қосылады."
+    },
+    "recoveryTemplateHint": "Мақұлданған WhatsApp үлгісінде cart.recovery_token мәнін батырманың нөмірленген динамикалық мәні ретінде қолданыңыз. cart.recovery_url, cart.total, cart.currency, cart.items және cart.item_count мәндері де бар.",
+    "events": {
+      "checkout_started": "Тапсырыс басталды",
+      "checkout_closed": "Тапсырыс жабылды",
+      "renewal_scheduled": "Ұзарту жоспарланды",
+      "renewal_completed": "Ұзарту аяқталды",
+      "service_scheduled": "Қызмет жоспарланды",
+      "service_completed": "Қызмет аяқталды"
+    },
+    "status": {
+      "pending": "Жоспарланған",
+      "signaled": "Кезекте",
+      "contacted": "Байланыс әрекеті",
+      "cancelled": "Бас тартылған",
+      "skipped": "Тоқтатылған"
+    },
+    "reasons": {
+      "converted": "Кейінгі сатып алу тізбекті тоқтатты.",
+      "event_superseded": "Тапсырыс деректері немесе мерзімі өзгерді.",
+      "marketing_consent_required": "Маркетингтік хабарламаларға келісім қажет.",
+      "marketing_opt_out": "Клиент маркетингтік хабарламалардан бас тартты.",
+      "contact_frequency_limit": "Жұмыс кеңістігінің байланыс лимитіне жетті.",
+      "scenario_changed": "Сценарий өзгертілді немесе тоқтатылды.",
+      "another_scenario_active": "Басқа сценарий іске қосылған.",
+      "manual_handoff_active": "Диалогты менеджер жүргізіп жатыр.",
+      "purchase_segment_changed": "Клиент сатып алу сүзгілеріне сәйкес келмейді.",
+      "not_first_purchase": "Клиенттің бірнеше сатып алуы бар.",
+      "journey_expired": "Еске салуды жіберу мерзімі өтті.",
+      "unavailable": "Тізбекті жалғастыру мүмкін болмады."
+    }
+  },
+  "Onboarding": {
+    "welcomeToast": "Алғашқы таратылымды жіберу үшін WhatsApp-ты қосыңыз.",
+    "integrationSuccessToast": "Қосылды. Арна жұмысқа дайын.",
+    "whatsappConnectedToast": "WhatsApp қосылды. Келесі қадам: алғашқы хабарлама үлгісін жасаңыз.",
+    "createTemplateAction": "Үлгі жасау"
+  },
+  "AppSidebar": {
+    "airiChat": "Airi чаты",
+    "requests": "Клиент чаттары",
+    "settings": "Баптаулар",
+    "integrations": "Интеграциялар",
+    "help": "Көмек",
+    "defaultUserName": "Пайдаланушы",
+    "knowledgeBase": "Білім базасы",
+    "scenarios": "Сценарийлер",
+    "bulkCampaigns": "Жаппай науқандар",
+    "limits": {
+      "exhaustedTitle": "Сөйлесу лимиті таусылды",
+      "remaining": "{limit} ішінен {remaining} қалды",
+      "textAi": {
+        "loading": "ЖИ қолданысы жүктелуде",
+        "unavailable": "ЖИ қолданысы туралы деректер уақытша қолжетімсіз. Кейінірек қайталап көріңіз.",
+        "remaining": "Қосылған {limit} мәтіндік ЖИ әрекетінің {remaining} қалды",
+        "shared": "Компанияның бүкіл қызмет мерзіміне барлық жұмыс кеңістігіне ортақ лимит.",
+        "lifetime": "Жазылымды ұзарту және жаңа жұмыс кеңістіктері лимитті жаңартпайды.",
+        "customerReady": "Қосылған лимит таусылғаннан кейін Google кілтіңіз пайдаланылады.",
+        "customerActive": "Мәтіндік ЖИ Google кілтіңізді пайдаланады. Ақысын Google жобаңыз төлейді.",
+        "exhausted": "Қосылған мәтіндік ЖИ лимиті таусылды. Жалғастыру үшін өз кілтіңізді қосыңыз.",
+        "spendLimit": "Компанияның қосылған ЖИ шығындары лимитіне жеттіңіз. ЖИ жұмысын жалғастыру үшін өз кілтіңізді қосыңыз.",
+        "connect": "Google AI қосу"
+      },
+      "freePlan": "Сізде тегін тариф.",
+      "freePlanUpgrade": "Сізде тегін тариф: <link>жаңарту</link>"
+    },
+    "messengers": {
+      "title": "WhatsApp менеджері"
+    },
+    "analytics": {
+      "title": "Аналитика",
+      "dashboard": "Дашборд",
+      "llm": "LLM",
+      "performance": "Өнімділік"
+    },
+    "widget": {
+      "title": "Веб виджет",
+      "analytics": "Аналитика",
+      "branding": "Брендинг"
+    },
+    "onboarding": {
+      "label": "Баптау",
+      "progress": "{percent}%",
+      "steps": {
+        "company_profile": {
+          "title": "Компания профилі"
+        },
+        "test_airi": {
+          "title": "Airi-ді тексеру"
+        },
+        "connect_integration": {
+          "title": "Тікелей арна қосу"
+        },
+        "create_scenario": {
+          "title": "Сценарийді іске қосу"
+        },
+        "publish_knowledge": {
+          "title": "Білімді жариялау"
+        },
+        "verify_answers": {
+          "title": "Жауаптарды тексеру"
+        }
+      }
+    },
+    "customers": "Лидтер",
+    "email": "Email",
+    "assets": "Медиатека"
+  },
+  "PanelError": {
+    "title": "Бет жүктелмеді",
+    "description": "Бұл экранды жүктеу кезінде қате орын алды.",
+    "hint": "Жалғастыру үшін қайталаңыз. Осы жұмыс кеңістігіндегі деректер сақталған.",
+    "retry": "Қайталау"
+  },
+  "LoginPage": {
+    "productIntroLabel": "airi.chat туралы",
+    "productIntroTitle": "Клиентпен байланысты үзбеңіз.",
+    "productIntroDescription": "WhatsApp науқандары, клиенттерге жауаптар мен қайталама хабарламалар бір жұмыс кеңістігінде.",
+    "showPassword": "Құпия сөзді көрсету",
+    "hidePassword": "Құпия сөзді жасыру",
+    "signUpErrorInvalidEmail": "Дұрыс email мекенжайын енгізіңіз.",
+    "signUpErrorWeakPassword": "Кемінде 6 таңбадан тұратын құпия сөзді пайдаланыңыз.",
+    "signUpErrorRateLimited": "Әрекеттер тым көп. Бірнеше минут күтіп, қайталап көріңіз.",
+    "signUpErrorSignupDisabled": "Тіркелу қазір қолжетімсіз. Кейінірек қайталап көріңіз.",
+    "signUpErrorUnknown": "Қазір аккаунт жасау мүмкін болмады. Сәлден соң қайталап көріңіз.",
+    "googleSignInError": "Google-ға қосылу мүмкін болмады. Қайталап көріңіз немесе email мен құпия сөзді пайдаланыңыз.",
+    "termsLink": "Қолдану шарттары",
+    "privacyLink": "Құпиялық саясаты",
+    "welcomeTitle": "Аккаунтыңызға кіріңіз",
+    "welcomeDescription": "Email мен құпиясөзді пайдаланыңыз немесе Google арқылы жалғастырыңыз.",
+    "signInButton": "Кіру",
+    "or": "Немесе",
+    "signinTab": "Кіру",
+    "signupTab": "Тіркелу",
+    "email": "Электрондық пошта",
+    "password": "Құпия сөз",
+    "signingIn": "Кіру орындалуда...",
+    "createAccount": "Аккаунт құру",
+    "fillFormToStart": "Email мен құпиясөз арқылы аккаунт жасаңыз.",
+    "creating": "Құрылуда...",
+    "signUp": "Тіркелу",
+    "signupPendingTitle": "Поштаңызды тексеріңіз",
+    "signupPendingDescription": "Жалғастыру үшін хаттағы сілтемені ашыңыз.",
+    "signupUnconfirmedDescription": "Бұл email-де әлі расталмаған аккаунт бар, мысалы бұрынғы шақырудан. Біз оған жаңа сілтеме жібердік.",
+    "signupRecentlySentDescription": "Бұл мекенжайға бір минуттан аз уақыт бұрын хат жібердік. Жалғастыру үшін хаттағы сілтемені ашыңыз.",
+    "emailPlaceholder": "m@example.com",
+    "passwordPlaceholder": "Қауіпсіз құпия сөз енгізіңіз",
+    "forgotPassword": "Құпия сөзді ұмыттыңыз ба?",
+    "wrongEmail": "Қате email? Қайталап көріңіз",
+    "checkInboxTitle": "Хат жіберілді",
+    "checkInboxHint": "Баптауды аяқтап, жұмыс кеңістігіне өту үшін хаттағы сілтемені ашыңыз.",
+    "unconfirmedAccountHint": "Енгізген құпия сөзіңіз сақталмады. Кіріп, жалғастыру үшін хаттағы сілтемені ашыңыз.",
+    "checkSpamHint": "Хат келмесе, спамды тексеріңіз немесе қайта жіберіңіз.",
+    "existingAccountHint": "Аккаунтыңыз бар ма? Осы email арқылы кіріңіз.",
+    "signInWithThisEmail": "Осы email арқылы кіру",
+    "resendVerificationEmail": "Растау хатын қайта жіберу",
+    "resendingVerificationEmail": "Қайта жіберілуде...",
+    "verificationEmailResent": "Хат қайта жіберілді. Поштаңызды тексеріңіз.",
+    "failedToResendVerificationEmail": "Хатты қайта жіберу мүмкін болмады.",
+    "emailRecentlySent": "Бұл мекенжайға бір минуттан аз уақыт бұрын хат жібердік. Кіріс жәшігін және спам қалтасын тексеріңіз.",
+    "sendAgainIn": "{seconds} с кейін қайта жіберу",
+    "alreadyHaveAccount": "Аккаунтыңыз бар ма?",
+    "existingAccountTitle": "Сізде аккаунт бар",
+    "existingAccountDescription": "Жалғастыру үшін аккаунтыңыздың құпия сөзімен кіріңіз. Email төменде толтырылған.",
+    "passwordRequirements": "Кемінде 6 таңба",
+    "signUpWithGoogle": "Google арқылы жалғастыру",
+    "inAppBrowserGoogleTitle": "Бұл бетті браузерде ашыңыз",
+    "inAppBrowserGoogleDescription": "Google арқылы кіру Threads, Instagram, Facebook, Telegram, TikTok және LinkedIn сияқты қолданбалардың ішкі браузерлерінде бұғатталады. Бұл бетті Chrome, Safari немесе әдепкі браузерде ашып, қайта көріңіз.",
+    "inviteTitle": "Сіз {workspace} кеңістігіне шақырылдыңыз",
+    "inviteSubtitle": "Аккаунтыңыз бар ма? Кіріңіз. Жаңа пайдаланушы болсаңыз, тіркеліңіз. Содан кейін {workspace} шақыруын растаңыз.",
+    "inviteGenericSubtitle": "Аккаунтыңыз бар ма? Кіріңіз. Жаңа пайдаланушы болсаңыз, тіркеліңіз. Содан кейін жұмыс кеңістігінің шақыруын растаңыз.",
+    "inviteSignInTitle": "Шақыруды қабылдау үшін кіріңіз",
+    "inviteSignInDescription": "airi.chat аккаунтыңыздың email-ін пайдаланыңыз. Кіргеннен кейін {workspace} шақыруын растайсыз.",
+    "inviteSignUpTitle": "Қосылу үшін аккаунт жасаңыз",
+    "inviteSignUpDescription": "airi.chat аккаунтын жасаңыз. Email расталғаннан кейін {workspace} шақыруын растайсыз.",
+    "inviteSignInButton": "Кіріп, жалғастыру",
+    "inviteSignUpButton": "Аккаунт жасап, жалғастыру",
+    "inviteInvalidTitle": "Шақыру сілтемесін тексеру мүмкін болмады",
+    "inviteInvalidDescription": "Әкімшіден жаңа шақыру сілтемесін сұраңыз немесе бұл шақыруды қабылдамай кіріңіз.",
+    "inviteSignInLinkHint": "Құпия сөзіңіз жоқ па? Email-ге қауіпсіз кіру сілтемесін жіберіңіз, шақыру кіргеннен кейін жалғасады.",
+    "sendInviteSignInLink": "Кіру сілтемесін жіберу",
+    "sendingInviteSignInLink": "Жіберілуде...",
+    "inviteSignInLinkSent": "Кіру сілтемесі жіберілді. Шақыруды қабылдау үшін оны ашыңыз.",
+    "failedToSendInviteSignInLink": "Кіру сілтемесін жіберу мүмкін болмады.",
+    "inviteEmailRequired": "Алдымен жоғарыда email енгізіңіз.",
+    "signInErrorInvalidCredentials": "Email немесе құпия сөз қате.",
+    "signInErrorRateLimited": "Кіру әрекеттері тым көп. Бір минут күтіп, қайталап көріңіз.",
+    "signInErrorUnknown": "Қазір кіру мүмкін болмады. Сәлден соң қайталап көріңіз.",
+    "signInRecoveryHint": "Email мен құпия сөзді тексеріңіз. Google арқылы тіркелдіңіз бе? Төмендегі «Google арқылы жалғастыру» түймесін басыңыз. Сізді команданың жұмыс кеңістігінен шығарып тастады ма? Әкімшіден жаңа шақыру сұраңыз.",
+    "resetPassword": "Құпия сөзді қалпына келтіру",
+    "signinUnconfirmedDescription": "Бұл аккаунттың email-і әлі расталмаған. Хаттағы сілтемені ашыңыз немесе жаңасын жіберіңіз.",
+    "confirmEmailTitle": "Email-ді растаңыз",
+    "signInConnectionErrorTitle": "Кіру орындалмады",
+    "signInConnectionErrorDescription": "airi.chat-қа қосылу мүмкін болмады. Интернетті немесе VPN-ді тексеріп, қайталап көріңіз.",
+    "signInPageErrorTitle": "Кіру бетінде қате орын алды",
+    "signInPageErrorDescription": "Қайталап көріңіз. Қате қайталанса, бетті қайта жүктеңіз.",
+    "tryAgain": "Қайталау",
+    "reloadPage": "Бетті қайта жүктеу"
+  },
+  "LandingPage": {
+    "cookieConsent": {
+      "description": "Ненің тиімді екенін түсініп, airi.chat қызметін жақсарту үшін бақылау cookie файлдарын қолданамыз.",
+      "decline": "Бас тарту",
+      "accept": "Cookie файлдарын қабылдау"
+    },
+    "header": {
+      "openWorkspace": "Жұмыс кеңістігіне"
+    }
+  },
+  "SiteHeader": {
+    "toggleTheme": "Тақырыпты ауыстыру",
+    "lightTheme": "Жарық тақырып",
+    "darkTheme": "Қараңғы тақырып",
+    "systemTheme": "Жүйе параметрлері",
+    "toggleSidebar": "Бүйірлік тақтаны ауыстыру",
+    "upgrade": "Тарифті жаңарту",
+    "openAiriChat": "Airi чатын ашу"
+  },
+  "LanguageSwitcher": {
+    "changeLanguage": "Тілді өзгерту",
+    "english": "English",
+    "russian": "Русский",
+    "kazakh": "Қазақша"
+  },
+  "NavMain": {
+    "overview": "Шолу"
+  },
+  "NavUser": {
+    "logout": "Шығу",
+    "profile": "Профиль",
+    "settings": "Баптаулар",
+    "theme": "Тақырып",
+    "whatsNew": "Не жаңалық",
+    "copyWorkspaceId": "Кеңістік ID-ін көшіру"
+  },
+  "AiContextManager": {
+    "title": "Контекст тегтері",
+    "description": "Іздеуді бағыттайтын тегтерді қосыңыз.",
+    "placeholder": "Тег қосыңыз (мысалы, 'Enterprise келісімдерін ұзарту')...",
+    "salesGrowth": "Сатылым өсімі",
+    "customerRetention": "Клиенттерді ұстап қалу",
+    "competitorAnalysis": "Бәсекелестерді талдау",
+    "productFeedback": "Өнім туралы пікір",
+    "serviceQuality": "Қызмет сапасы",
+    "saving": "Сақталуда...",
+    "saveChanges": "Тегтерді сақтау",
+    "failedToSave": "Өзгерістерді сақтау сәтсіз аяқталды.",
+    "unknownError": "Белгісіз қате орын алды.",
+    "contextUpdated": "Контекст тегтері жаңартылды.",
+    "infoText": "Аз ғана нақты тег қолданыңыз.",
+    "tagsCountOne": "1 тег бапталды",
+    "tagsCountOther": "{count} тег бапталды",
+    "unsavedChanges": "Сізде сақталмаған өзгерістер бар",
+    "botSettings": {
+      "title": "Мінез-құлық",
+      "description": "Автожауапты, коучты, қорғанысты және кеңейтілген баптауларды басқарыңыз.",
+      "loading": "Бот параметрлері жүктелуде...",
+      "loadFailed": "Airi бот параметрлерін жүктеу сәтсіз аяқталды",
+      "coverage": "Автожауап {enabled} / {total} чатта қосулы.",
+      "enabledHint": "Жаңа чаттар автожауаппен басталады.",
+      "disabledHint": "Жаңа чаттар автожауапсыз басталады.",
+      "enableButton": "Барлық чаттар үшін ботты қосу",
+      "enabledButton": "Барлық чаттар үшін қосылған",
+      "enableSuccess": "Airi боты барлық чаттар үшін қосылды",
+      "enableFailed": "Барлық чаттар үшін Airi ботын қосу сәтсіз аяқталды",
+      "disableButton": "Барлық чаттар үшін ботты өшіру",
+      "disableSuccess": "Airi боты барлық чаттар үшін өшірілді",
+      "disableFailed": "Барлық чаттар үшін Airi ботын өшіру сәтсіз аяқталды",
+      "scenarioTitle": "Сценарийлер",
+      "scenarioDescription": "Сценарий автоматтандыруын жалпы автожауаптардан бөлек іске қосыңыз.",
+      "scenarioCoverage": "Сценарийлер {enabled} / {total} чатта қосулы.",
+      "scenarioEnabledHint": "Жаңа чаттар сценарийлерді іске қоса алады.",
+      "scenarioDisabledHint": "Жаңа чаттар сценарийлерді іске қоспайды.",
+      "scenarioEnableSuccess": "Сценарийлер барлық чаттар үшін қосылды.",
+      "scenarioEnableFailed": "Барлық чаттар үшін сценарийлерді қосу сәтсіз аяқталды.",
+      "scenarioDisableSuccess": "Сценарийлер барлық чаттар үшін өшірілді.",
+      "scenarioDisableFailed": "Барлық чаттар үшін сценарийлерді өшіру сәтсіз аяқталды.",
+      "coachTitle": "Коуч",
+      "coachDescription": "Осы кеңістік үшін коучты қосыңыз не өшіріңіз.",
+      "coachCoverage": "Коуч {enabled} / {total} чатта қосулы.",
+      "coachEnabledHint": "Жаңа чаттар коучпен басталады.",
+      "coachDisabledHint": "Жаңа чаттар коучсыз басталады.",
+      "coachEnableSuccess": "Airi коучингі барлық чаттар үшін қосылды",
+      "coachEnableFailed": "Барлық чаттар үшін Airi коучингін қосу сәтсіз аяқталды",
+      "coachDisableSuccess": "Airi коучингі барлық чаттар үшін өшірілді",
+      "coachDisableFailed": "Барлық чаттар үшін Airi коучингін өшіру сәтсіз аяқталды",
+      "onboardingTitle": "Білім базасы дайын",
+      "onboardingDescription": "Алғашқы мақала жарияланды. Airi оны чаттарда қолдансын десеңіз, автожауапты қосыңыз.",
+      "saveControlsFailed": "Баптауды сақтау мүмкін болмады.",
+      "elevenlabsAgentIdLabel": "ElevenLabs агентінің идентификаторы",
+      "elevenlabsAgentIdPlaceholder": "agent_xxxxxxxxxxxxxxxx",
+      "elevenlabsAgentIdHint": "Осы кеңістікке арналған агент ID-і (міндетті емес).",
+      "retrievalModeLabel": "Іздеу режимі",
+      "retrievalModeHint": "Адаптивті режим қысқа follow-up хабарламаларға соңғы контексті қосады. Соңғы хабар режимі тек соңғы хабарды қолданады.",
+      "retrievalModeAdaptiveOption": "Адаптивті (ұсынылады)",
+      "retrievalModeLastMessageOption": "Тек соңғы хабар",
+      "languageBiasLabel": "Тілдік басымдық",
+      "languageBiasHint": "Мұны чаттардың көбі бір тілде болса ғана қолданыңыз.",
+      "languageBiasNone": "Бейтарап",
+      "languageBiasKazakh": "Қазақ тілін таңдау",
+      "languageBiasRussian": "Орыс тілін таңдау",
+      "languageBiasUzbek": "Өзбек тілін таңдау",
+      "historyToggleLabel": "Соңғы чат тарихын пайдалану",
+      "historyToggleHint": "Соңғы хабарларды іздеуге қосады. Токен шығынын арттыруы мүмкін.",
+      "kbLinksToggleLabel": "Білім базасы сілтемелерін жіберу",
+      "kbLinksToggleHint": "Жауапта қолданылса, жария ББ сілтемелерін клиент арналарына да жібереді.",
+      "autoSaveHint": "Автоматты сақталады.",
+      "savingControls": "Параметр сақталуда...",
+      "controlsSaved": "Параметр сақталды."
+    }
+  },
+  "OnboardingProductStep": {
+    "websitesLabel": "Сіздің сайттарыңыз",
+    "websitesHelp": "Біз бұл беттерді сканерлеп, өніміңізді зерттейміз және Airi білімін құрамыз.",
+    "websiteInputLabel": "{number}-сайт",
+    "websiteInvalid": "https://example.com сияқты дұрыс ашық сайт енгізіңіз.",
+    "websitePlaceholder": "https://example.com",
+    "addWebsite": "Тағы сайт қосу",
+    "removeWebsite": "Сайтты жою",
+    "removeWebsiteLabel": "{number}-сайтты жою",
+    "instagramLabel": "Instagram",
+    "instagramConnected": "Қосылған",
+    "instagramInclude": "Менің Instagram био мен соңғы жазбаларымды Airi біліміне қосу.",
+    "trainingNeedsSource": "Сайт қосыңыз немесе қосылған арнаны таңдаңыз. Оқыту міндетті емес, дереккөздерді кейін Интеграцияларда қоса аласыз.",
+    "trainingOptional": "Оқыту міндетті емес. Интеграцияларға өтіп, дереккөздерді кейін қоса аласыз.",
+    "trainingLoading": "Оқыту күйі жүктелуде...",
+    "trainingLoadError": "Оқыту күйін жүктеу мүмкін болмады.",
+    "tryAgain": "Қайталап көру",
+    "whatsappLabel": "WhatsApp",
+    "whatsappHelp": "Cloud API немесе WhatsApp Business қолданбасымен бірге жұмыс режимі арқылы қосыңыз. Бірге жұмыс режимінде Airi-ді оқыту үшін соңғы чат тарихын импорттауға болады.",
+    "whatsappConnected": "Қосылған",
+    "whatsappIncludeHistory": "Airi-ді оқыту үшін соңғы WhatsApp чат тарихын импорттау.",
+    "whatsappIncludeCloud": "Бұл WhatsApp арнасын Airi үшін нақты қосылған дереккөз ретінде пайдалану.",
+    "whatsappHistoryRequested": "Тарих сұралды. Хабарламалар WhatsApp жіберіп, airi.chat сақтағаннан кейін қолжетімді болады.",
+    "whatsappHistoryError": "WhatsApp тарихына назар аудару керек. Күйін тексеру үшін Баптауларды ашыңыз.",
+    "trainingProgressWhatsapp": "WhatsApp тарихы импортталып, контекст дайындалуда…",
+    "testChatLocked": "Airi-ді сынау үшін дереккөз қосып, оқытуды бастаңыз",
+    "testChatLockedHelp": "Airi-ді тексермес бұрын дереккөз қосып, оқытуды бастаңыз.",
+    "learningReadyTitle": "Airi-де контекст бар",
+    "learningReadyDescription": "Төменде клиенттің бір нақты сұрағын қойыңыз. Алғашқы пайдалы жауап активацияны аяқтайды.",
+    "trainingError": "Оқытуды бастау мүмкін болмады. Қайталап көріңіз.",
+    "trainingLimitError": "Сайт пен Instagram дереккөздерінің шегіне жеттіңіз. Интеграциялардан бір дереккөзді жойып, қайталап көріңіз.",
+    "trainingStart": "Airi-ді оқытуды бастау",
+    "trainingRestart": "Airi-ді қайта оқыту",
+    "trainingProgressTitle": "Индекстеу барысы",
+    "trainingProgressPending": "Дереккөздеріңіз индекстелуде…",
+    "trainingBackgroundTitle": "Оқыту фондық режимде жалғасуда",
+    "trainingBackgroundDescription": "Интеграцияларға өтіп, прогресті кейін осы жерден тексере аласыз.",
+    "checkAgain": "Қайта тексеру",
+    "statusIndexed": "Индекстелді",
+    "statusFailed": "Қате",
+    "statusPending": "Индекстелуде…",
+    "statusFailedNoContent": "Оқуға болатын мазмұн табылмады.",
+    "statusFailedTimeout": "Индекстеу уақыты аяқталды.",
+    "statusFailedGeneric": "Дереккөзді индекстеу мүмкін болмады. Қайталап көріңіз.",
+    "retrySource": "Қайталау: {source}",
+    "testChatHeading": "Airi нені үйренгенін тексеріңіз",
+    "testChatHelp": "Контекстті дұрыс түсінгенін тексеру үшін Airi-ден өніміңіз туралы сұраңыз.",
+    "testChatTitle": "Airi-мен сынақ чаты",
+    "openAiriChat": "Airi чатын ашу"
+  },
+  "AddCompanyForm": {
+    "registerCompany": "Компанияңызды тіркеңіз",
+    "lastStepDescription": "Жұмыс кеңістігі профилін жасаңыз, Airi-ді өніміңізге үйретіңіз де, Airi-ге нақты сұрақ қоюдан бастаңыз.",
+    "stepLabel": "{number}-қадам",
+    "requiredBadge": "Міндетті",
+    "requiredStepTab": "Компания профилі",
+    "requiredStepTitle": "Жұмыс кеңістігін жасаңыз",
+    "requiredStepDescription": "Жұмыс кеңістігін жасау үшін компания атауын енгізіңіз.",
+    "continueToProductStep": "Жалғастыру",
+    "productStepTab": "Airi-ді оқыту",
+    "productStepTitle": "Airi-ді өніміңізге үйретіңіз",
+    "productStepDescription": "Airi өніміңіз туралы білуі үшін сайтыңызды қосып, кейін оны төменде сынап көріңіз. Қосылған арналарды автоматты түрде қосуға болады.",
+    "productBadge": "Ұсынылады",
+    "companyName": "Компания атауы",
+    "companyNamePlaceholder": "мысалы, \"Гүлдер мен Мерекелер ЖШС\"",
+    "phoneNumber": "Телефон нөмірі (міндетті емес)",
+    "phoneNumberPlaceholder": "+7 701 234 56 78",
+    "referralSource": "Біз туралы қайдан естідіңіз? (міндетті емес)",
+    "referralSourcePlaceholder": "Дереккөзді таңдаңыз",
+    "referralSourceGoogle": "Google іздеу",
+    "referralSourceLinkedIn": "LinkedIn",
+    "referralSourceInstagram": "Instagram",
+    "referralSourceFacebook": "Facebook",
+    "referralSourceTikTok": "TikTok",
+    "referralSourceYouTube": "YouTube",
+    "referralSourceReferral": "Дос немесе әріптес",
+    "referralSourceEvent": "Іс-шара немесе конференция",
+    "referralSourceProductHunt": "Product Hunt",
+    "referralSourceOther": "Басқа",
+    "referralSourceOtherLabel": "Дереккөзді жазыңыз",
+    "referralSourceOtherPlaceholder": "Подкаст, қауымдастық, серіктес және т. б.",
+    "creating": "Құрылуда...",
+    "registerCompanyButton": "Компанияны тіркеу",
+    "continueToIntegrations": "Интеграцияларға өту",
+    "requiredStepLockedHint": "Жұмыс кеңістігіңіз әлдеқашан жасалды. Бұл деректерді кейінірек Баптауларда өзгерте аласыз.",
+    "httpError": "HTTP қатесі! мәртебесі:",
+    "unknownError": "Белгісіз қате орын алды",
+    "privacyAgreement": "Мен <privacy>Құпиялылық саясаты</privacy> және <terms>Шарттармен</terms> келісемін.",
+    "setupErrorTitle": "Бет жүктелмеді",
+    "setupErrorDescription": "Компанияны баптауды жүктеу кезінде қате орын алды.",
+    "setupErrorHint": "Үрдісіңіз сақталған болуы мүмкін. Жалғастыру үшін қайталаңыз.",
+    "setupErrorRetry": "Қайталау"
+  },
+  "Command": {
+    "commandPalette": "Командалар палитрасы",
+    "searchCommand": "Орындалатын команданы іздеңіз..."
+  },
+  "Dialog": {
+    "close": "Жабу"
+  },
+  "Sheet": {
+    "close": "Жабу"
+  },
+  "TagInput": {
+    "placeholder": "Тег қосып, Enter басыңыз...",
+    "recommendations": "Ұсыныстар:",
+    "removeTag": "{tag} тегін өшіру"
+  },
+  "Sidebar": {
+    "mobileSidebarTitle": "Бүйірлік тақта",
+    "mobileSidebarDescription": "Мобильді бүйірлік тақтаны көрсетеді.",
+    "toggleSidebar": "Бүйірлік тақтаны ауыстыру"
+  },
+  "FinishProfilePage": {
+    "title": "Профиль атауы",
+    "description": "Өз шын атыңызды қолданыңыз",
+    "fullNameLabel": "Толық аты-жөні",
+    "fullNamePlaceholder": "Асқар Асқаров",
+    "continueButton": "Жалғастыру"
+  },
+  "Auth": {
+    "completeInvite": {
+      "title": "Жұмыс кеңістігін баптауды аяқтаңыз",
+      "description": "Атыңызды енгізіп, email арқылы кіру үшін құпиясөз орнатыңыз.",
+      "fullNameLabel": "Толық аты-жөні",
+      "fullNamePlaceholder": "Айгерім Нұрланова",
+      "passwordLabel": "Құпиясөз",
+      "passwordPlaceholder": "Сенімді құпиясөз ойлап табыңыз",
+      "passwordHint": "Бұл құпиясөз тек email арқылы кіргенде қажет.",
+      "confirmPasswordLabel": "Құпиясөзді растаңыз",
+      "confirmPasswordPlaceholder": "Құпиясөзді қайта енгізіңіз",
+      "showPassword": "Құпиясөзді көрсету",
+      "hidePassword": "Құпиясөзді жасыру",
+      "strengthLabel": "Құпиясөз сенімділігі: <value>{strength}</value>",
+      "strength": {
+        "weak": "төмен",
+        "fair": "орташа",
+        "good": "жақсы",
+        "strong": "жоғары"
+      },
+      "submit": "Баптауды аяқтау",
+      "submitting": "Баптау аяқталуда…",
+      "submitted": "Баптау аяқталды",
+      "legal": "Аккаунт жасау арқылы сіз <terms>Пайдалану шарттарымен</terms> және <privacy>Құпиялық саясатымен</privacy> келісесіз.",
+      "validation": {
+        "nameTooShort": "Аты кемінде 2 таңбадан тұруы керек",
+        "nameTooLong": "Аты тым ұзын",
+        "nameInvalid": "Тек әріптерді, бос орынды, дефис пен апострофты қолданыңыз",
+        "passwordTooShort": "Құпиясөз кемінде 8 таңбадан тұруы керек",
+        "passwordTooLong": "Құпиясөз тым ұзын",
+        "passwordLowercase": "Кемінде бір кіші әріп қосыңыз",
+        "passwordUppercase": "Кемінде бір бас әріп қосыңыз",
+        "passwordNumber": "Кемінде бір сан қосыңыз",
+        "passwordMismatch": "Құпиясөздер сәйкес келмейді"
+      },
+      "toast": {
+        "successTitle": "Баптау аяқталды",
+        "redirecting": "Жұмыс кеңістігі ашылуда…",
+        "alreadySetUpTitle": "Сіз баптауды аяқтағансыз",
+        "failedTitle": "Баптауды аяқтау мүмкін болмады",
+        "failedFallback": "Сәлден кейін қайталап көріңіз."
+      }
+    },
+    "unauthorizedTitle": "Рұқсат етілмеген",
+    "unauthorizedDescription": "Сізде бұл бетке кіруге рұқсат жоқ.",
+    "authErrorTitle": "Аутентификация қатесі",
+    "unknownAuthError": "Белгісіз аутентификация қатесі",
+    "goToLogin": "Кіруге өту",
+    "goBack": "Артқа қайту",
+    "authCodeError": {
+      "descriptionPkce": "Бұл сілтеме үшін тексеру контексті қолжетімсіз.",
+      "descriptionLinkInvalid": "Сіздің аутентификация сілтемеңіз енді жарамды емес.",
+      "descriptionGeneric": "Аутентификация кезінде қате орын алды.",
+      "showTechnicalDetails": "Техникалық мәліметтерді көрсету",
+      "verificationSessionMismatch": "Тексеру сессиясы сәйкессіздігі",
+      "verificationContextHint": "Тексеру сілтемелері түпнұсқа тіркелу/кіру контекстіне тәуелді. Хост өзгеруі, cookie тазалау, басқа браузер немесе email сілтемесін алдын ала жүктеу бұл контекстті бұза алады.",
+      "linkAlreadyUsed": "Бұл сілтеме қолданылған.",
+      "linkExpired": "Сілтеменің мерзімі өтіп кеткен.",
+      "linkInvalidOrExpired": "Сілтеме жарамсыз немесе мерзімі өтіп кеткен.",
+      "hintAlreadyUsed": "Кіріңіз немесе жаңа растау хатын сұраңыз.",
+      "hintExpired": "Жаңа растау хатын сұраңыз немесе аккаунтыңыз бар болса кіріңіз.",
+      "magicLinkLabel": "Жаңа кіру сілтемесін жіберу (ұсынылады)",
+      "magicLinkHint": "Кіру сілтемесі кез келген браузерде жұмыс істейді және тексеру контексті жоқ болғанда тіркелу немесе кіруді аяқтауға мүмкіндік береді.",
+      "emailPlaceholder": "Email мекенжайыңызды енгізіңіз",
+      "magicLinkSent": "Кіру сілтемесі жіберілді. Поштаңызды тексеріп, сілтемені басыңыз.",
+      "requestVerificationEmail": "Жаңа растау хатын сұрау",
+      "verificationEmailSent": "Растау хаты жіберілді! Кіріс жәшігін тексеріңіз.",
+      "logIn": "Кіру",
+      "tryRecovery": "Қалпына келтіруді көру",
+      "contactSupportHint": "Мәселе шешілмесе, қолдау қызметіне хабарласыңыз",
+      "tryAutomaticRecovery": "Автоматты қалпына келтіруді көру",
+      "invalidEmail": "Дұрыс email мекенжайын енгізіңіз",
+      "failedToSendEmail": "Хат жіберу сәтсіз аяқталды. Қайталап көріңіз.",
+      "unexpectedError": "Күтілмеген қате орын алды. Қайталап көріңіз.",
+      "failedToSendMagicLink": "Кіру сілтемесін жіберу сәтсіз аяқталды"
+    },
+    "callbackRecovery": {
+      "noSessionError": "Белсенді сессия табылмады. Бұл әдетте сілтеме басқа браузерден, қолданбадан, доменнен ашылғанда немесе auth cookie тазаланғаннан кейін болады.",
+      "redirecting": "Қайта бағыттау...",
+      "checkingAuth": "Аутентификация тексерілуде...",
+      "sessionFound": "Сессия табылды! Сізді панельге апарамыз.",
+      "pleaseWait": "Сессияңызды тексеру күтіңіз.",
+      "verificationLinkIssue": "Тексеру сілтемесі сессиясы мәселесі",
+      "authRecovery": "Аутентификацияны қалпына келтіру",
+      "pkceDescription": "Бұл сілтеме үшін тексеру контекстін қалпына келтіре алмадық. Аутентификацияны аяқтау үшін жаңа кіру сілтемесін сұраңыз.",
+      "genericDescription": "Сессияңызды автоматты тексеру мүмкін болмады. Төмендегі опциялардың бірін қолданыңыз.",
+      "linkExpiredFallback": "Аутентификация сілтемесінің мерзімі өтіп кеткен немесе қолданылған болуы мүмкін.",
+      "sendMagicLinkLabel": "Email-ге жаңа кіру сілтемесін жіберу",
+      "magicLinkHintShort": "Кіру сілтемесі кез келген браузерде жұмыс істейді және тіркелу немесе кіруді аяқтауға мүмкіндік береді.",
+      "invalidEmail": "Дұрыс email мекенжайын енгізіңіз",
+      "failedToSendMagicLink": "Кіру сілтемесін жіберу сәтсіз аяқталды",
+      "unexpectedError": "Күтілмеген қате орын алды. Қайталап көріңіз.",
+      "magicLinkSent": "Кіру сілтемесі жіберілді. Поштаңызды тексеріп, сілтемені басыңыз.",
+      "emailPlaceholder": "Email мекенжайыңызды енгізіңіз"
+    }
+  },
+  "EnhancedMarkdownEditor": {
+    "placeholder": "Мақала мазмұнын Markdown форматында жазыңыз...",
+    "format": "Пішім",
+    "bold": "Қалың",
+    "italic": "Курсив",
+    "link": "Сілтеме",
+    "image": "Сурет",
+    "heading1": "Тақырып 1",
+    "heading2": "Тақырып 2",
+    "heading3": "Тақырып 3",
+    "quote": "Дәйексөз",
+    "bulletList": "Маркерленген тізім",
+    "numberedList": "Нөмірленген тізім",
+    "uploadImage": "Сурет жүктеу",
+    "uploadingImage": "Сурет жүктелуде...",
+    "importMarkdown": "Markdown импорттау",
+    "importingMarkdown": "Markdown импортталуда...",
+    "importMarkdownSuccess": "Markdown импортталды",
+    "code": "код",
+    "linkText": "сілтеме мәтіні",
+    "altText": "балама мәтін",
+    "alignLeft": "Солға туралау",
+    "alignCenter": "Ортаға туралау",
+    "alignRight": "Оңға туралау",
+    "alignJustify": "Ені бойынша туралау",
+    "table": "Кесте",
+    "tableActions": "Кесте әрекеттері",
+    "insertTable": "Кесте кірістіру",
+    "addRowBefore": "Алдына жол қосу",
+    "addRowAfter": "Артына жол қосу",
+    "deleteRow": "Жолды жою",
+    "deleteRowShort": "Жолды жою",
+    "addColumnBefore": "Алдына баған қосу",
+    "addColumnAfter": "Артына баған қосу",
+    "deleteColumn": "Бағанды жою",
+    "deleteColumnShort": "Бағанды жою",
+    "addAbove": "Жоғары қосу",
+    "addBelow": "Төмен қосу",
+    "addLeft": "Солға қосу",
+    "addRight": "Оңға қосу",
+    "toggleHeaderRow": "Тақырып жолын қосу/өшіру",
+    "toggleHeaderColumn": "Тақырып бағанын қосу/өшіру",
+    "toggleHeaderCell": "Тақырып ұяшығын қосу/өшіру",
+    "mergeCells": "Ұяшықтарды біріктіру",
+    "splitCell": "Ұяшықты бөлу",
+    "deleteTable": "Кестені жою",
+    "linkDialogDescription": "URL мекенжайын енгізіңіз және қаласаңыз сілтеме мәтінін реттеңіз.",
+    "linkUrl": "URL",
+    "linkTextPlaceholder": "Көрсетілетін мәтін",
+    "cancel": "Болдырмау",
+    "save": "Сақтау",
+    "editorToolbar": "Мәтінді пішімдеу құралдар тақтасы",
+    "undo": "Болдырмау",
+    "redo": "Қайтару",
+    "normalText": "Қалыпты мәтін",
+    "blockType": "Блок түрі",
+    "blockTypeHint": "Абзац немесе тақырып деңгейі. Қалыпты мәтін үшін Ctrl/Cmd+Alt+0, тақырыптар үшін Ctrl/Cmd+Alt+1–3 басыңыз.",
+    "contextMenuLabel": "Блок кірістіру",
+    "draftTable": "Черновик кесте",
+    "divider": "Бөлгіш",
+    "resetImageSize": "Тастау",
+    "resizeImage": "Сурет өлшемін өзгерту",
+    "fontFamily": "Қаріп",
+    "searchFonts": "Қаріптерді іздеу...",
+    "noFontsFound": "Қаріптер табылмады",
+    "defaultFont": "Әдепкі қаріп",
+    "gridLayout": "Тор",
+    "gridColumns": "{columns} баған",
+    "gridMode": "Тор режимі",
+    "gridBorderSubtle": "Жіңішке жиек",
+    "gridBorderSolid": "Тұтас жиек",
+    "gridBorderDashed": "Үзік жиек",
+    "gridBorderNone": "Жиексіз",
+    "gridBorderColor": "Жиек түсі",
+    "gridBorderWidth": "{width}px жиек",
+    "editGridBorder": "Тор жиегін өңдеу",
+    "selectGrid": "Бүкіл торды таңдау",
+    "deleteGrid": "Торды жою",
+    "textColor": "Мәтін түсі",
+    "highlightColor": "Бөлектеу түсі",
+    "resetTextColor": "Мәтін түсін қалпына келтіру",
+    "resetHighlightColor": "Бөлектеуді қалпына келтіру",
+    "customColor": "Өз түсі"
+  },
+  "ForgotPasswordDialog": {
+    "title": "Құпия сөзді қалпына келтіру",
+    "description": "Email мекенжайыңызды енгізіңіз, біз сізге құпия сөзді қалпына келтіру сілтемесін жібереміз.",
+    "email": "Электрондық пошта",
+    "emailPlaceholder": "your@email.com",
+    "sendResetLink": "Қалпына келтіру сілтемесін жіберу",
+    "sending": "Жіберілуде...",
+    "close": "Жабу",
+    "successMessage": "Құпия сөзді қалпына келтіру хаты жіберілді! Кіріс жәшігін және спам қалтасын тексеріңіз.",
+    "errorMessage": "Қалпына келтіру хатын жіберу сәтсіз аяқталды"
+  },
+  "LandingDemo": {
+    "header": {
+      "signIn": "Кіру",
+      "startFree": "Тегін бастау",
+      "bookDemo": "Демоға қосыл",
+      "navigation": "Кампаниялар",
+      "openMenu": "Мәзірді ашу",
+      "nav": {
+        "features": "Ақылды кампаниялар",
+        "videos": "Нұсқаулықтар",
+        "integrations": "Арналар",
+        "fit": "Сізге сай ма?",
+        "about": "Біз туралы",
+        "team": "Команда"
+      },
+      "resources": "Мәзір",
+      "close": "Жабу",
+      "openResources": "Мәзірді ашу",
+      "closeResources": "Мәзірді жабу"
+    },
+    "about": {
+      "title": "Біз туралы",
+      "caption": "Лиссабондағы Web Summit 2025, One Piece-тегі Chopper және Ace қалпақтарымен.",
+      "images": {
+        "heroAlt": "Airi.chat негізін қалаушылары Web Summit 2025-те",
+        "productAlt": "Airi.chat өнім дашборды"
+      },
+      "links": {
+        "linkedin": "LinkedIn"
+      },
+      "teamInfo": {
+        "title": "Команда туралы",
+        "intro": "Airi.chat-ты шағын команда жасайды. Біз ресми WhatsApp науқандарымен, ЖИ жауаптарымен және клиентке қайта жазумен айналысамыз. Негізгі мүшелер:",
+        "aisulu": {
+          "nameRole": "Aisulu Kalshabekova (Co-Founder & CEO)",
+          "description": "Негізін қалаушы, клиенттермен жұмысқа жауап береді. Мәселені Қазақстандағы ірі банкте көрді: онда 50-ден астам аналитик шағымдарды қолмен жіктеп, тикет ашатын."
+        },
+        "samat": {
+          "nameRole": "Samat Kalshabekov (Co-Founder & CTO)",
+          "description": "Негізін қалаушы, өнімнің UX-іне, әзірлеушілерге ыңғайлылыққа және жүйенің сенімділігіне жауап береді."
+        },
+        "pmf": "Біз әлі жолдың басындамыз: product-market fit іздеп, клиенттермен тығыз жұмыс істеп жүрміз."
+      },
+      "products": {
+        "title": "Airi.chat не істейді",
+        "intro": "Airi.chat бизнеске WhatsApp арқылы сатуға көмектеседі. Сіз ресми WhatsApp Business Platform арқылы науқан жібересіз, клиенттерге өзіңіз немесе ЖИ көмегімен жауап бересіз және жауап бергендерге қайта жазасыз. Үлгілер, WhatsApp Flows, клиент тізімдері мен сатылым аналитикасы кірістірілген, ал Instagram, Telegram, email және веб-чат сол жұмыс кеңістігінде жұмыс істейді.",
+        "problemsLabel": "Біз шешетін мәселелер:",
+        "problems": {
+          "overwhelmed": "WhatsApp науқандары әртүрлі құралдардан жіберіледі, ал клиенттердің жауаптарына уақытында назар аударылмайды.",
+          "visibility": "Жауаптар, хабарлама алуға келісімдер және сатып алу белгілері әртүрлі чаттар арасында жоғалып кетеді.",
+          "manualAnalysis": "Клиенттерді қолмен сегменттеу және жауаптарды қолмен оқу келесі науқанды баяулатады.",
+          "audienceCompanies": "Клиенттермен WhatsApp-та сөйлесетін интернет-дүкендер, SaaS, финтех, білім беру және қызмет көрсету компаниялары.",
+          "audienceTeams": "WhatsApp-та ауқымды науқан жіберетін және қажет кезде адам қосыла алатын автоматтандыруды қалайтын маркетинг және сату командалары."
+        },
+        "closing": "Airi.chat-та науқан жіберумен аяқталмайды. Кім жауап бергенін көріп, аудиторияны жауаптары бойынша бөліп, контексті ескеріп жазысуды жалғастырасыз."
+      },
+      "ourTeam": {
+        "title": "Біздің команда",
+        "join": "Командаға қосылу"
+      },
+      "faq": {
+        "what": {
+          "question": "Airi.chat деген не?",
+          "answer": "Airi.chat ресми WhatsApp науқандарын жіберуге және клиенттердің жауаптарымен жұмыс істеуге көмектеседі. Команда өзі немесе ЖИ көмегімен жауап беріп, жауап бергендерге қайта жазады."
+        },
+        "founders": {
+          "question": "Airi.chat-ты кім құрды?",
+          "answer": "Airi.chat-ты Aisulu Kalshabekova (Co-Founder & CEO) және Samat Kalshabekov (Co-Founder & CTO) құрды."
+        },
+        "problems": {
+          "question": "Airi.chat қандай мәселелерді шешеді?",
+          "answer": "Airi.chat бытыраңқы науқан құралдары мен тәуекелі жоғары бейресми жіберу тәсілдерінің орнын басады, ал науқаннан кейінгі жауаптар мен сатып алу белгілері жоғалмайды."
+        },
+        "audience": {
+          "question": "Airi.chat кімдерге арналған?",
+          "answer": "WhatsApp науқандарын жіберіп, жауаптармен жұмыс істейтін интернет-дүкендердің, SaaS, финтех, білім беру және қызмет көрсету компанияларының маркетинг және сату командаларына арналған."
+        }
+      }
+    },
+    "hero": {
+      "officialTechProviders": "Meta Tech Provider",
+      "title": "Жақсы науқан",
+      "titleAccent": "әңгіме бастайды.",
+      "subtitle": "WhatsApp-⁠та қажет аудиторияға науқан жіберіңіз, клиент сұрақтарына жауап беріңіз және сатылымды бақылаңыз.",
+      "startFree": "Тегін бастау",
+      "connectWaba": "WABA-⁠ны қосу",
+      "workEmail": "Жұмыс email",
+      "bookDemo": "Демоға жазылу",
+      "invalidEmail": "Дұрыс жұмыс email енгізіңіз",
+      "demoSuccess": "Рахмет! Біз сізбен байланысамыз.",
+      "demoError": "Қате шықты. Қайта көріңіз.",
+      "subtitleSecondary": "Сегменттелген рассылкалар, промо және еске салғыштар бір жерде."
+    },
+    "featureCards": {
+      "scrollUp": "Жоғары айналдыру",
+      "scrollDown": "Төмен айналдыру",
+      "scrollHint": "Мысалдарды қараңыз",
+      "label": "Науқаннан басталған әңгіме.",
+      "example": "Мысал · Forma Home",
+      "pause": "Қозғалысты кідірту",
+      "play": "Қозғалысты жалғастыру",
+      "explore": "Барлық мүмкіндікті қарау",
+      "explorerTitle": "Әңгіменің қалай жалғасатынын көріңіз.",
+      "explorerDescription": "Тапсырманы таңдап, интерактивті мысалды көріңіз.",
+      "previous": "Алдыңғы сценарий",
+      "next": "Келесі сценарий",
+      "progress": "{current} / {total}",
+      "workflowLabel": "Сценарийді таңдаңыз",
+      "previewLabel": "Интерактивті мысал",
+      "imageAlt": "Емен науаның жанындағы сөреде тұрған крем түсті және терракота түсті үстел шамдары",
+      "imageUnavailable": "Тауардың суреті қолжетімсіз",
+      "learnMore": "Осы сценарийді қарау",
+      "reviewNote": "Бұл тек мысал. Хабарламалар жіберілмейді.",
+      "cards": {
+        "interactive": {
+          "badge": "Тауармен танысу",
+          "title": "Тауарлар WhatsApp-⁠та.",
+          "subtitle": "Клиент каруселді парақтап, түсін таңдап, сізге жауап береді.",
+          "detail": "Тауарларды WhatsApp каруселінде көрсетіңіз. Клиенттің жауаптарына сүйеніп, таңдау жасауына көмектесіңіз."
+        },
+        "knowledge": {
+          "badge": "Мән-жайға сай жауаптар",
+          "title": "Материалдарыңызға сай жауаптар.",
+          "subtitle": "ЖИ тауар сипаттамалары мен жеткізу шарттарына сүйеніп жауап береді.",
+          "detail": "Компания материалдары мен клиенттің жағдайын ескеріп, дереккөзге сілтемесі бар жауаптар беріңіз. Команданың қатысуын қажет ететін сұрақтарды маманға тапсырыңыз."
+        },
+        "followUp": {
+          "badge": "Әңгімені жалғастыру",
+          "title": "Таңдауды еске салыңыз.",
+          "subtitle": "Клиентке шешім қабылдауға қажет жауаппен қайта жазыңыз.",
+          "detail": "Сценарийде күту уақытын және жауапқа байланысты шарттарды орнатыңыз. Әңгімені қашан және қалай жалғастыруды командаңыз басқарады."
+        },
+        "smartChat": {
+          "badge": "Науқандар",
+          "title": "Өз аудиторияңызға хабарламалар.",
+          "subtitle": "Клиенттерді таңдап, мәтінді жібермес бұрын тексеріңіз.",
+          "detail": "Клиенттер сегментін таңдап, жіберер алдында хабарламаны тексеріңіз. Бұл мысалда Terra вазаларына қызығушылық танытқан, бірақ әлі сатып алмаған клиенттер қамтылған. Сатып алғандар мен жазылымнан бас тартқандар тізімнен шығарылған."
+        },
+        "meta": {
+          "badge": "WhatsApp сапасы",
+          "title": "Үлгі сапасын бақылаңыз.",
+          "subtitle": "Келесі науқанға дейін сапа өзгерістерін байқаңыз.",
+          "detail": "Meta үлгінің сапа бағасын өзгерткенде ескерту аласыз, сондықтан команда мәтін мен аудиторияны уақытында тексере алады."
+        },
+        "ads": {
+          "badge": "Жарнамадан әңгімеге",
+          "title": "Жарнамадан WhatsApp-⁠қа.",
+          "subtitle": "Клиент Instagram-⁠да тауарды көріп, сізге чатқа жазады.",
+          "detail": "Meta жарнамасынан келген өтініштерді WhatsApp-⁠та қабылдаңыз. Жауап бергенде әңгіме мән-жайын ескеріп, жалғасын командаңызға тапсырыңыз."
+        },
+        "assets": {
+          "badge": "Науқан кітапханасы",
+          "title": "Ортақ фото кітапхана.",
+          "subtitle": "Тауар суреттерін ортақ кітапханада сақтаңыз.",
+          "detail": "Суреттерді кітапханаға бір рет жүктеп, кез келген науқанда қолданыңыз. Командаға бір файлды қайта іздеудің қажеті болмайды."
+        },
+        "voice": {
+          "badge": "Дауыстық хабарламалар",
+          "title": "Мәтінді дыбыстаңыз.",
+          "subtitle": "Бизнесіңіздің мәнеріне сай дауыстық хабарламалар дайындаңыз.",
+          "detail": "Мәтін жазып, дауыстық хабарламаға арналған дыбыс жасаңыз. Әңгімеде қолданбас бұрын аудионы тыңдап, тексеріңіз."
+        },
+        "analytics": {
+          "badge": "Сатылым аналитикасы",
+          "title": "Сатылымдар сандармен.",
+          "subtitle": "Тіркелген сатылымдар, қайтарымдар және кезеңдер бойынша диалогтар.",
+          "detail": "«Дереккөздерде» тіркелген сатылымдар мен қайтарымдарды бақылаңыз. «Шолуда» кезеңдер бойынша диалог санын салыстырыңыз."
+        }
+      },
+      "previews": {
+        "common": {
+          "shop": "Forma Home",
+          "product": "Arc үстел шамы",
+          "cream": "Крем түсті",
+          "terracotta": "Терракота",
+          "price": "18 000 ₸",
+          "customer": "Клиент",
+          "size": "Биіктігі 38 см",
+          "businessAccount": "Бизнес-аккаунт",
+          "today": "Бүгін",
+          "message": "Хабарлама",
+          "conversationLabel": "Forma Home дүкенімен WhatsApp диалогы"
+        },
+        "carousel": {
+          "question": "Arc шамы екі түсте бар ма?",
+          "answer": "Иә. Қай түсі ұнайды?",
+          "choose": "Түсті таңдаңыз",
+          "hint": "Топтаманы қараңыз. Әңгімені жалғастырыңыз.",
+          "previous": "Алдыңғы тауар",
+          "next": "Келесі тауар"
+        },
+        "knowledge": {
+          "question": "Lino пледін кір жуғыш машинада жууға бола ма?",
+          "answer": "Иә, 30 °C температурада нәзік жуу режимін таңдаңыз. Жайып кептіріңіз.",
+          "citation": "Lino тоқыма бұйымдарын күту нұсқаулығы",
+          "sourcesHeading": "Бизнесіңіз туралы білімнен"
+        },
+        "reminders": {
+          "messageBody": "Sora айнасының өлшемдерін айтайын ба?",
+          "waitLabel": "Келесі күні · Жауап жоқ",
+          "followUpBody": "Sora өлшемі 60 × 90 см. Дәліздегі қабырғаңызға сыя ма?",
+          "reply": "Иә, өлшемі сәйкес келеді.",
+          "rule": "Пайдалы мәлімет әңгімені жалғастыруға көмектеседі."
+        },
+        "smartChat": {
+          "title": "Ерекше керамика",
+          "status": "Жоба",
+          "prompt": "Terra вазалары туралы сұраған клиенттерге ұсыныс дайында.",
+          "answer": "Terra вазасы қайта сатылымда, бағасы 12 500 ₸. Интерьерде қалай көрінетінін көрсетейін бе?",
+          "recipients": "Алушылар",
+          "template": "WhatsApp үлгісі",
+          "approval": "Жібермес бұрын сіздің мақұлдауыңыз қажет",
+          "audienceLabel": "Аудитория",
+          "audience": "Соңғы 30 күнде Terra вазаларына қызығушылық танытқандар",
+          "eligibility": "Хабарламаға келіскен · әлі сатып алмаған",
+          "templateStatus": "Мақұлданған",
+          "showExclusions": "Кімдер шығарылғанын көру",
+          "hideExclusions": "Шығарылғандарды жасыру",
+          "purchased": "Сатып алғандар",
+          "unsubscribed": "Жазылымнан бас тартқандар"
+        },
+        "meta": {
+          "title": "Үлгі сапасы өзгерді",
+          "status": "Назар аудару қажет",
+          "body": "Келесі жіберілімге дейін соңғы пікірлерді қарап шығыңыз.",
+          "action": "Үлгіні тексеру",
+          "quality": "Сапаны бақылау",
+          "note": "Командаңыз шешім қабылдай алуы үшін ескерту."
+        },
+        "ads": {
+          "badge": "Forma Home",
+          "headline": "Әр заттың өз орны бар.",
+          "cta": "WhatsApp-⁠та жазу",
+          "lead": "Mora себеттері жиынтықпен сатыла ма?",
+          "answer": "Иә, жиынтықта диаметрі 30 және 40 см екі себет бар. Плед пен жастық салуға ыңғайлы.",
+          "source": "Instagram жарнамасынан",
+          "back": "Instagram жарнамасына оралу",
+          "sponsored": "Жарнама",
+          "caption": "Mora себеттері екі өлшемде. Жазыңыз, таңдауға көмектесеміз.",
+          "like": "Жарнама мысалын ұнату",
+          "save": "Жарнама мысалын сақтау"
+        },
+        "assets": {
+          "title": "Үйге арналған бұйымдар",
+          "story": "Хикая",
+          "catalog": "Каталог",
+          "ad": "Науқан",
+          "selected": "Таңдалды: {placement}",
+          "hint": "Керамика, себеттер және жұмсақ тоқыма бұйымдары."
+        },
+        "voice": {
+          "title": "Дүкеніңізден хабарлама",
+          "scriptLabel": "Дауыстық хабарлама мәтіні",
+          "script": "Terra вазасы қайта сатылымда. Биіктігі 26 см. Фотосын жіберейін бе?",
+          "note": "Жазыңыз. Дыбыстаңыз. Жібермес бұрын тексеріңіз."
+        },
+        "analytics": {
+          "sample": "Демо-дүкен · Шартты деректер",
+          "periodLabel": "Есеп кезеңі",
+          "periods": {
+            "month": "Соңғы 30 күн",
+            "week": "Соңғы 7 күн"
+          },
+          "netRevenue": "Қайтарымдардан кейінгі түсім",
+          "sales": "Расталған сатылымдар",
+          "customers": "Сатып алушылар",
+          "note": "Команда немесе төлем жүйесі тіркеген сатылымдар бойынша.",
+          "trend": {
+            "title": "Күндер бойынша диалогтар",
+            "unit": "Диалогтар",
+            "current": "Ағымдағы кезең",
+            "previous": "Алдыңғы кезең",
+            "axis": "Кезең күні · күндік мәндер",
+            "day": "{day}-күн",
+            "summary": "Күндер бойынша диалогтар: ағымдағы кезеңде {current}, алдыңғы кезеңде {previous}.",
+            "source": "Аналитика → Шолу"
+          },
+          "refunds": "Қайтарылған сома",
+          "source": "Аналитика → Дереккөздер"
+        },
+        "products": {
+          "vase": {
+            "name": "Terra керамикалық вазасы",
+            "price": "12 500 ₸"
+          },
+          "basket": {
+            "name": "Mora себеттері",
+            "price": "22 000 ₸"
+          },
+          "textile": {
+            "name": "Lino мақта пледі",
+            "price": "24 000 ₸"
+          },
+          "mirror": {
+            "name": "Sora қабырға айнасы",
+            "price": "42 000 ₸"
+          }
+        }
+      },
+      "imageAlts": {
+        "instagram": "Күн түсіп тұрған жұмыс бұрышындағы дәптер жанында терракота шамы",
+        "campaign": "Көк қабырға жанындағы тумбаны жарықтандырған крем түсті шам",
+        "story": "Көк қабырға жанындағы емен орындықта өрілген себеттер",
+        "catalog": "Ашық студиялық фонда терракота түсті Arc үстел шамы",
+        "display": "Үй тауарлары сөресіндегі емен науалар, құмыралар, себеттер және крем түсті шам",
+        "vase": "Күн сәулесі түскен бөлмедегі тас консоль үстінде тұрған терракота түсті керамикалық ваза",
+        "textile": "Зәйтүн түсті креслодағы мақта пледі мен жастық"
+      }
+    },
+    "sources": {
+      "title": "WhatsApp-⁠тан бастап, басқа арналарды қосыңыз.",
+      "description": "Клиенттеріңіз қолданып жүрген арналарды қосыңыз.",
+      "website": "Сайттағы чат"
+    },
+    "cta": {
+      "eyebrow": "Келесі науқаннан бастаңыз",
+      "title": "Клиенттермен",
+      "titleAccent": "airi.chat-⁠та сөйлесіңіз.",
+      "pricing": "Арнаны қосыңыз, команданы шақырып, алғашқы науқанды баптаңыз.",
+      "demo": "Бірге көргіңіз келе ме? Демоға жазылыңыз"
+    },
+    "footer": {
+      "ourTeam": "Біздің команда",
+      "terms": "Шарттар",
+      "refunds": "Қайтарымдар",
+      "privacy": "Құпиялылық",
+      "security": "Қауіпсіздік",
+      "rights": "(c) 2026 Ais.ii ЖШС",
+      "tagline": "Бизнеске арналған науқандар, диалогтар және сатылым аналитикасы.",
+      "navigation": "Компания және құжаттар",
+      "productNavigation": "Өнім",
+      "delivery": "Науқандарды жеткізу",
+      "metaAds": "Meta Ads MCP",
+      "mcp": "airi.chat MCP сервері",
+      "templates": "WhatsApp үлгілері"
+    },
+    "faq": {
+      "eyebrow": "Іске қосу туралы сұрақтар",
+      "title": "Бастамас бұрын.",
+      "description": "WhatsApp нөмірі, ЖИ жауаптары және хабарлама ақысы туралы.",
+      "items": {
+        "start": {
+          "question": "Жұмысты бастау үшін не қажет?",
+          "answer": "Жұмыс кеңістігін құрыңыз, арнаны қосыңыз және команда клиенттерге жауап бергенде қолданатын бизнес ақпаратын енгізіңіз. WhatsApp науқандары үшін бизнес-аккаунтты қосып, мақұлданған үлгіні дайындаңыз."
+        },
+        "number": {
+          "question": "Қазіргі WhatsApp нөмірімді қолдана аламын ба?",
+          "answer": "Талаптарға сай WhatsApp Business нөмірін қосуға болады. Business қолданбасын платформамен бірге сақтау мүмкіндігі аккаунтыңызға және Meta талаптарына байланысты. Қосылмас бұрын тексеруге көмектесеміз."
+        },
+        "ai": {
+          "question": "Барлық диалогқа ЖИ жауап бере ме?",
+          "answer": "ЖИ қалай қолданылатынын өзіңіз таңдайсыз. Ол бизнес біліміне сүйеніп жауап бере алады немесе науқан дайындауға көмектеседі. Команда диалогқа қосылып, науқан жобасын жібермес бұрын тексере алады."
+        },
+        "cost": {
+          "question": "WhatsApp хабарлама ақысы тарифке кіре ме?",
+          "answer": "WhatsApp хабарламалары үшін ақыны Meta бөлек есептейді. airi.chat бұл төлемдерді қоспайды."
+        },
+        "crm": {
+          "question": "airi.chat үшін CRM қажет пе?",
+          "answer": "Жоқ. Қосылған арналар, клиент диалогтары, науқандар және бизнес білімі airi.chat ішінде қолжетімді. Бұл үдерістер үшін CRM қажет емес."
+        }
+      }
+    },
+    "revenueWorkflows": {
+      "eyebrow": "Көбірек сатудың бес жолы",
+      "title": "Диалогтарды сатылымға айналдырыңыз.",
+      "demo": "Демода көру",
+      "campaign": {
+        "label": "Таратылымдар",
+        "title": "Қызығушылық танытқандарға ұсыныңыз.",
+        "message": "Сәлем, Алекс! *Terra* вазасы жайлы бұрышты жаңартуға көмектеседі.\nОны сөреге қояр ма едіңіз, әлде үстелге ме?",
+        "template": "Meta мақұлдаған үлгі",
+        "outcome": "Таратылымнан көбірек сату"
+      },
+      "consultation": {
+        "label": "ЖИ және команда",
+        "title": "Сатып алуға шешім қабылдауға көмектесіңіз.",
+        "source": "Instagram жарнамасынан",
+        "question": "Үлкен себетке плед сыя ма?",
+        "answer": "Иә, диаметрі 40 см. Плед пен екі жастыққа орын жетеді.",
+        "sourceNote": "Mora сипаттамасынан",
+        "reply": "Керемет. Жиынтықты аламын.",
+        "outcome": "Жарнамадан көбірек сатып алу"
+      },
+      "recovery": {
+        "label": "Еске салулар",
+        "title": "Клиентті төлемге қайтарыңыз.",
+        "pending": "Тапсырыс төлемді күтуде",
+        "wait": "Бір сағаттан кейін · Төлем тіркелмеген",
+        "message": "Сәлем, Алекс! *Sora* айнасын әлі таңдап жүрсіз бе?\nӨлшемі, жеткізуі немесе рәсімдеуі бойынша көмек керек пе? Қажетті жауапты таңдаңыз.",
+        "confirmed": "Төлем тіркелді",
+        "stop": "Келесі еске салу тоқтатылды",
+        "outcome": "Төленбеген тапсырыстарды азайту"
+      },
+      "repeat": {
+        "label": "Қайта сатып алу",
+        "title": "Қайта сатып алу",
+        "previous": "30 күн бұрын сатып алған",
+        "message": "Сәлем, Алекс! *Mora* себеттері Lino пледімен жақсы үйлеседі.\nӨлшемдерін көрсетейік пе, әлде бөлмеге басқа идея ұсынған дұрыс па?",
+        "audience": "Клиент ұсыныстар алуға келісім берген",
+        "outcome": "Қайта сатып алуды көбейту"
+      },
+      "qr": {
+        "label": "QR-⁠кодтар",
+        "title": "Дүкеннен WhatsApp-⁠қа.",
+        "description": "Клиент кодты сканерлеп, сұрағын жібереді. Сіз оның неге қызыққанын біліп жауап бересіз.",
+        "sign": "Көмек керек пе?",
+        "open": "QR-⁠код арқылы келген диалог мысалын ашу",
+        "alt": "airi.chat демонстрациялық QR-⁠коды",
+        "demoNote": "QR-⁠код мысалы. Сілтеме осы демонстрацияны ашады.",
+        "source": "QR-⁠код · Алматыдағы витрина",
+        "sourceNote": "Өтініш көзі сақталды",
+        "question": "Сәлеметсіз бе! Витринадан Terra вазасын көрдім. Биіктігі қандай?",
+        "answer": "26 см. Дүкенде сізге біреуін алып қоя аламыз.",
+        "reply": "Рақмет! Бүгін алтыдан кейін келемін.",
+        "outcome": "Офлайн нүктелерден көбірек өтініш"
+      }
+    },
+    "revenueReport": {
+      "monthly": {
+        "scope": "Meta Ads → диалогтар → сатылымдар",
+        "title": "Айлар бойынша толық аналитика.",
+        "concept": "Есеп тұжырымдамасы · Шартты деректер",
+        "current": "Кезең",
+        "previous": "Салыстыру кезеңі",
+        "metric": "Көрсеткіш",
+        "change": "Өзгеріс",
+        "chart": "Жарнама диалогтарынан түскен түсім",
+        "unit": "мың ₸",
+        "chartLabel": "2026 жылғы қаңтардан маусымға дейін жарнама диалогтарынан түскен түсім, қайтарымдар шегерілген, теңгемен.",
+        "selection": "Салыстыру: {current} және {previous}.",
+        "note": "Толық күнтізбелік айлар. Тек жарнамадан келген диалогтарға байланысты сатылымдар; қайтарымдар түсімнен шегерілген. Жарнама шығыны АҚШ долларымен берілген.",
+        "metrics": {
+          "spend": "Жарнама шығыны · USD",
+          "conversations": "Жарнамадан келген диалогтар",
+          "sales": "Расталған сатылымдар",
+          "netRevenue": "Қайтарымнан кейінгі түсім · ₸"
+        },
+        "months": {
+          "jan": "Қаңтар",
+          "feb": "Ақпан",
+          "mar": "Наурыз",
+          "apr": "Сәуір",
+          "may": "Мамыр",
+          "jun": "Маусым"
+        },
+        "shortMonths": {
+          "jan": "Қаң",
+          "feb": "Ақп",
+          "mar": "Нау",
+          "apr": "Сәу",
+          "may": "Мам",
+          "jun": "Мау"
+        }
+      },
+      "eyebrow": "Бизнес аналитикасы",
+      "title": "Жарнама шығынынан сатылымға дейін.",
+      "description": "Бөлек есептердің мысалдары: дереккөздер, шолу, таратылым аналитикасы және команда.",
+      "details": {
+        "ads": {
+          "title": "Қай жарнама диалогқа әкеледі?",
+          "source": "Аналитика → Дереккөздер · Meta Ads · USD",
+          "description": "Шығын мен басталған хат алмасудың құнын салыстырыңыз.",
+          "spend": "Жарнама шығыны",
+          "results": "Хат алмасулар",
+          "cost": "Бір хат алмасу құны",
+          "table": "Жарнамаларды салыстыру · Meta деректері",
+          "ad": "Жарнама",
+          "captured": "airi.chat жүйесінде жарнамадан келген {count} диалог тіркелген.",
+          "boundary": "Meta мен airi.chat диалогтарды әртүрлі есептейді."
+        },
+        "campaign": {
+          "title": "Жібергеннен кейін не болады?",
+          "description": "Terra құмырасы · жіберуге қабылданған {count} хабарлама",
+          "totalAccepted": "Жіберуге қабылданды",
+          "delivered": "Жеткізілді",
+          "read": "Оқылды",
+          "replied": "Жауап берді",
+          "replyRate": "Жауап үлесі: жіберуге қабылданғандардың {rate}",
+          "cost": "Бір жауапқа ≈ {value} · USD",
+          "source": "Таратылымдар → Аналитика"
+        },
+        "response": {
+          "title": "Клиенттер қанша уақыт күтеді?",
+          "description": "Қызметкердің алғашқы жауабына дейінгі уақыт.",
+          "median": "Медианалық күту уақыты",
+          "p90": "Жауаптардың 90%-ы осы уақытта",
+          "scope": "Қызметкерлердің {count} алғашқы жауабы бойынша. Жауапсыз диалогтар есепке кірмейді; толық күту уақыты есептеледі.",
+          "duration": {
+            "missing": "—",
+            "lessThanMinute": "Бір минуттан аз",
+            "minutes": "{count, plural, one {{value} мин.} other {{value} мин.}}",
+            "hours": "{count, plural, one {{value} сағ.} other {{value} сағ.}}",
+            "days": "{count, plural, one {{value} күн} other {{value} күн}}",
+            "noChange": "Өзгеріссіз"
+          },
+          "source": "Аналитика → Шолу / Команда"
+        },
+        "demoNote": "Өнімнің бөлек экрандарынан мысалдар · Шартты деректер."
+      }
+    },
+    "templates": {
+      "seo": {
+        "title": "WhatsApp үлгілері",
+        "description": "Ағылшын, орыс және қазақ тілдеріндегі WhatsApp үлгілері мен мысалдары.",
+        "intro": "Мысалды таңдап, WhatsApp арқылы алыңыз.",
+        "detailTitle": "WhatsApp үлгісінің мысалы",
+        "detailHeading": "Мысалды алу",
+        "customizeNote": "Ойдан шығарылған мысал. Бизнесіңізге арналған үлгіні WhatsApp мақұлдауы керек.",
+        "relatedTitle": "Ұқсас үлгілер",
+        "languagesLabel": "Үлгі тілдері"
+      },
+      "navigation": "Үлгілер",
+      "landingCta": "Осы үлгіні алғым келеді",
+      "eyebrow": "WhatsApp үлгілер кітапханасы",
+      "title": "WhatsApp үлгілері",
+      "description": "Мысалды таңдап, WhatsApp арқылы алыңыз.",
+      "backHome": "Басты бетке",
+      "browseAll": "Барлық үлгілер",
+      "search": "Үлгілерді іздеу",
+      "searchPlaceholder": "Себет, брондау, туған күн…",
+      "filtersLabel": "Үлгілер сүзгілері",
+      "useCase": "Міндет",
+      "industry": "Сала",
+      "goal": "Мақсат",
+      "format": "Формат",
+      "all": {
+        "useCase": "Барлық міндеттер",
+        "industry": "Барлық салалар",
+        "goal": "Барлық мақсаттар",
+        "format": "Барлық форматтар"
+      },
+      "industries": {
+        "retail": "Дүкендер және онлайн сауда",
+        "services": "Қызметтер",
+        "education": "Білім беру",
+        "finance": "Қаржы"
+      },
+      "useCases": {
+        "follow-up": "Лидтермен кейінгі байланыс",
+        "booking": "Брондау",
+        "service": "Қызмет жаңартулары",
+        "commerce": "Тауар таңдау",
+        "information": "Құжаттар және жұмысты бастау",
+        "contacts": "Байланыс және қалаулар",
+        "learning": "Оқу",
+        "retention": "Клиенттерді сақтау"
+      },
+      "goals": {
+        "acquire": "Әңгіме бастау",
+        "convert": "Сатып алуды аяқтау",
+        "retain": "Клиенттерді қайтару",
+        "inform": "Хабардар ету"
+      },
+      "formats": {
+        "text": "Мәтін",
+        "image": "Сурет",
+        "carousel": "Карусель",
+        "flow": "WhatsApp Flow",
+        "document": "PDF",
+        "video": "Бейне",
+        "location": "Орналасу нүктесі"
+      },
+      "resultCount": "{count} үлгі",
+      "resetFilters": "Сүзгілерді тазарту",
+      "catalogLabel": "WhatsApp үлгілерінің мысалдары",
+      "emptyTitle": "Сәйкес үлгілер табылмады",
+      "emptyDescription": "Сұрауды өзгертіңіз немесе сүзгілерді тазартыңыз.",
+      "getTemplate": "Мысалды алу",
+      "viewTemplate": "Үлгіні қарау",
+      "getTemplateLabel": "«{title}» үлгісін WhatsApp арқылы алу",
+      "viewTemplateLabel": "«{title}» үлгісін қарау",
+      "ready": "Жіберуге дайын",
+      "comingSoon": "Жақында",
+      "previewLabel": "WhatsApp хабарламасын алдын ала қарау",
+      "mediaPlaceholder": "Мұнда брендіңіздің суреті болады",
+      "carouselPrevious": "Алдыңғы тауар",
+      "carouselNext": "Келесі тауар",
+      "mediaUnavailable": "Алдын ала қарау қолжетімсіз",
+      "sampleNote": "Хабарлама мысалы. Батырмалар мен суреттер көрнекілік үшін көрсетілген.",
+      "requestDescription": "Мысалды WhatsApp арқылы алу үшін деректеріңізді енгізіңіз.",
+      "previewDescription": "WhatsApp арқылы байқамас бұрын хабарламаны қарап шығыңыз.",
+      "checkingAvailability": "Мысалдың қолжетімділігін тексеріп жатырмыз…",
+      "availabilityUnavailable": "Мысалдың қолжетімділігін уақытша тексеру мүмкін емес",
+      "comingSoonTitle": "Жіберу жақында қолжетімді болады",
+      "comingSoonDescription": "Бұл мысалды қазір қарап шыға аласыз. WhatsApp үлгісі дайын болғанда жіберу қолжетімді болады.",
+      "name": "Атыңыз",
+      "email": "Жұмыс поштасы",
+      "phone": "WhatsApp нөмірі",
+      "phoneHint": "Ел кодын көрсетіңіз, мысалы +7 700 123 45 67.",
+      "consent": "Мен airi.chat компаниясынан WhatsApp арқылы осы мысалды, өнім жаңалықтары мен ұсыныстарын алуға келісемін. Жазылымнан кез келген уақытта бас тарта аламын.",
+      "privacyPrefix": "Деректеріңіз біздің ережелерге сай өңделеді:",
+      "privacyLink": "Құпиялық саясаты",
+      "submit": "Мысалды алу",
+      "sending": "Сұрау жіберіліп жатыр…",
+      "checkAgain": "Қайта тексеру",
+      "acceptedTitle": "Мысал жіберу кезегінде",
+      "acceptedDescription": "Сұрауыңыз көрсетілген WhatsApp нөміріне жеткізу үшін қабылданды. Жеткізуге біраз уақыт қажет болуы мүмкін.",
+      "done": "Дайын",
+      "processingTitle": "Сұрау әлі расталған жоқ",
+      "processingDescription": "Мысалдың WhatsApp-қа келгенін тексеріңіз. Жаңа сұрау жібермей, сол сұрауды қауіпсіз қайта тексере аласыз.",
+      "restartRequest": "Жаңа сұрау бастау",
+      "errors": {
+        "unavailable": "Бұл мысалды қазір жіберу мүмкін емес. Кейінірек қайталап көріңіз немесе басқа үлгілерді қараңыз.",
+        "rate_limited": "Сұраулар тым көп. Кейінірек қайталап көріңіз.",
+        "invalid_request": "Атыңызды, поштаңызды және ел коды бар WhatsApp нөмірін тексеріңіз.",
+        "send_failed": "Мысал жіберілген жоқ. Қайта көру үшін жаңа сұрау бастаңыз.",
+        "unknown": "Сұрауды растау мүмкін болмады. Қайта тексеріңіз."
+      },
+      "catalog": {
+        "seasonal-offer": {
+          "title": "Тауарды таныстыру",
+          "description": "Тауарды таныстырады.",
+          "button": "airi.chat ашу",
+          "buttons": {
+            "0": "airi.chat ашу"
+          },
+          "demoPrefix": "*airi.chat демосы: маусымдық ұсыныс*\n_Ойдан шығарылған мысал_"
+        },
+        "abandoned-cart": {
+          "title": "Таңдауға көмек",
+          "description": "Тауарды таңдауға көмектеседі.",
+          "button": "Нұсқаларды көрсету",
+          "buttons": {
+            "0": "Нұсқаларды көрсету",
+            "1": "Сұрақ қою"
+          },
+          "demoPrefix": "*airi.chat демосы: аяқталмаған тапсырыс*\n_Ойдан шығарылған мысал_"
+        },
+        "repeat-purchase": {
+          "description": "Қосымша тауарды ұсынады.",
+          "button": "airi.chat ашу",
+          "buttons": {
+            "0": "airi.chat ашу"
+          },
+          "demoPrefix": "*airi.chat демосы: қайта сатып алу*\n_Ойдан шығарылған мысал_"
+        },
+        "welcome": {
+          "title": "Сәлемдесу",
+          "description": "Жаңа клиентпен танысады.",
+          "body": "Сәлем, Алекс! *airi.chat* жүйесіне қош келдіңіз.\nАлдымен нені жақсартқыңыз келеді: клиенттерге жауап беру ме, әлде қайта хабарласу ма? Тақырыпты таңдап, командамен сөйлесіңіз.",
+          "button": "Нұсқаларды көрсету",
+          "buttons": {
+            "0": "Нұсқаларды көрсету",
+            "1": "Сұрақ қою"
+          },
+          "demoPrefix": "*airi.chat демосы: сәлемдесу*\n_Ойдан шығарылған мысал_"
+        },
+        "order-confirmation": {
+          "title": "Тапсырысты растау",
+          "description": "Тапсырысты растап, келесі қадамды көрсетеді.",
+          "body": "Сәлем, Алекс! *№1042* демо-тапсырысы расталды.\nОл дайын болғанда келесі хабарламаны жіберуге болады. Мысал бойынша көмек керек пе? Төменнен жауап таңдаңыз.",
+          "button": "Нұсқаларды көрсету",
+          "buttons": {
+            "0": "Нұсқаларды көрсету",
+            "1": "Сұрақ қою"
+          },
+          "demoPrefix": "*airi.chat демосы: тапсырысты растау*\n_Ойдан шығарылған мысал_"
+        },
+        "shipping-update": {
+          "title": "Жеткізу күйі",
+          "description": "Жеткізу кезеңі мен келу күнін хабарлайды.",
+          "body": "Жақсы жаңалық, Алекс! *№1042* демо-тапсырысы жолда.\nБолжамды жеткізу күні: *бейсенбі*.\nЖеткізу туралы сұрақ бар ма? Осы демо-диалогта жазыңыз.",
+          "button": "airi.chat ашу",
+          "buttons": {
+            "0": "airi.chat ашу"
+          },
+          "demoPrefix": "*airi.chat демосы: жеткізу жаңалығы*\n_Ойдан шығарылған мысал_"
+        },
+        "appointment-reminder": {
+          "title": "Кездесуді еске салу",
+          "description": "Кездесу уақытын еске салады.",
+          "body": "Сәлем, Алекс! Демо-кездесу: *ертең, сағат 14:00*.\nОсы уақытты растайсыз ба, әлде ауыстыруды сұрайсыз ба? Төменнен жауап таңдап, диалогты байқап көріңіз.",
+          "button": "Уақытты растау",
+          "buttons": {
+            "0": "Уақытты растау",
+            "1": "Уақытты ауыстыру"
+          },
+          "demoPrefix": "*airi.chat демосы: кездесуді еске салу*\n_Ойдан шығарылған мысал_"
+        },
+        "course-enrollment": {
+          "title": "Курсқа жазылу",
+          "description": "Flow арқылы курсқа жазылуды көрсетеді.",
+          "body": "Сәлем, Алекс! *WhatsApp автоматтандыру* тақырыбын зерттегіңіз келе ме?\nҚысқа форманы ашып, демо-курсты таңдаңыз және WhatsApp ішінде аяқтап көріңіз. Нақты курсқа тіркелмейсіз.",
+          "button": "Демо форманы ашу",
+          "buttons": {
+            "0": "Демо форманы ашу"
+          },
+          "demoPrefix": "*airi.chat демосы: курсқа жазылу*\n_Ойдан шығарылған мысал_"
+        },
+        "payment-reminder": {
+          "title": "Төлемді еске салу",
+          "description": "Шот нөмірі мен төлем мерзімін еске салады.",
+          "body": "Сәлем, Алекс. *№204* демо-шотын *жұмаға* дейін төлеу керек.\nТөлеп қойдыңыз ба, әлде сұрақ бар ма? Жауап таңдап, еске салуды байқап көріңіз. Бұл демо төлем сұрамайды.",
+          "button": "Төледім",
+          "buttons": {
+            "0": "Төледім",
+            "1": "Шот туралы сұрақ"
+          },
+          "demoPrefix": "*airi.chat демосы: төлемді еске салу*\n_Ойдан шығарылған мысал_"
+        },
+        "feedback": {
+          "title": "Клиент пікірі",
+          "description": "Клиенттен қызмет туралы пікір сұрайды.",
+          "body": "Сәлем, Алекс! *біздің шоурумға* демо-сапары қалай өтті?\nЖауап таңдап, не ұнағанын немесе нені жақсартуға болатынын айтыңыз. Бір жауап пайдалы әңгіме бастай алады.",
+          "button": "Бәрі ұнады",
+          "buttons": {
+            "0": "Бәрі ұнады",
+            "1": "Жақсартуға болады"
+          },
+          "demoPrefix": "*airi.chat демосы: кері байланыс*\n_Ойдан шығарылған мысал_"
+        },
+        "back-in-stock": {
+          "title": "Тауардың қайта келуі",
+          "description": "Қайта келген тауарларды карусельде көрсетеді.",
+          "body": "Сәлем, Алекс! Демо-топтама қайта сатылымда: *Terra, Mora және Lino*.\nКарточкаларды қарап шығыңыз. Бөлмеңізге қайсысын таңдар едіңіз?",
+          "button": "Топтаманы қарау",
+          "buttons": {
+            "0": "airi.chat ашу"
+          },
+          "demoPrefix": "*airi.chat демосы: қайта сатылымда*\n_Ойдан шығарылған мысал_",
+          "cards": [
+            {
+              "body": "*Terra вазасы · демо тауар*"
+            },
+            {
+              "body": "*Mora себеттері · демо тауарлар*"
+            },
+            {
+              "body": "*Lino пледі · демо тауар*"
+            }
+          ]
+        },
+        "birthday-offer": {
+          "title": "Туған күн ұсынысы",
+          "description": "Клиентті құттықтап, сыйлық ұсынады.",
+          "body": "Туған күніңізбен, Алекс! 🎉\nОйдан шығарылған шағын сыйлық: демо-сатып алу сценарийіндегі *BIRTHDAY* коды.\nӨзіңізге сыйлық таңдар ма едіңіз, әлде үйге жаңа идея іздер ме едіңіз?",
+          "button": "airi.chat ашу",
+          "buttons": {
+            "0": "airi.chat ашу"
+          },
+          "demoPrefix": "*airi.chat демосы: туған күнге ұсыныс*\n_Ойдан шығарылған мысал_"
+        },
+        "enquiry-follow-up": {
+          "title": "Өтінім бойынша байланыс",
+          "description": "Өтінім бойынша қайта хабарласады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\nСәлем, Алекс! Сізді клиенттермен хабар алмасуды баптау әлі де қызықтыра ма?\n\nҚысқа әңгіме келесі қадамдарды салыстыруға көмектеседі. Сізге қайсысы пайдалырақ: бағаларға шолу ма, әлде жұмыс барысын көрсету ме?\n\n_Төмендегі үлгі жауапты байқап көріңіз. Кеңес беру уақыты белгіленбейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Бағаларға шолу", "Қалай жұмыс істейді?"]
+        },
+        "discovery-recap": {
+          "title": "Әңгіме қорытындысы",
+          "description": "Әңгімеде талқыланған міндеттерді жинақтайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Алғашқы әңгіме қорытындысының үлгісі*\n\nСәлем, Алекс! Талқылаған негізгі міндеттер:\n• Жаңа өтінімдерге бірізді жауап беру\n• Жазылу уақытын бір чатта өзгерту\n• Нәтижелерді апта сайын қарау\n\n*Келесі қадам:* шағын пилотты қазіргі жұмысыңызбен салыстыру.\n\n_Бұл мысал нақты кездесуді тіркемейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Дұрыс", "Өзгерту керек"]
+        },
+        "quote-ready": {
+          "title": "Баға ұсынысы",
+          "description": "Баға ұсынысын PDF арқылы жібереді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Ұсыныс үлгісі дайын*\n\nНөмірі: Q-204\nҚызмет: үйді безендіру кеңесі және тауарларды іріктеу\nҮлгі жалпы сома: *180 USD*\n\nҚұрамына не кіретінін және шешім қабылдамас бұрын қандай сұрақтар қою керегін тіркелген PDF файлынан қараңыз.\n\n_Бұл ойдан алынған ұсыныс оферта, шот немесе төлем талабы емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "quote-question": {
+          "title": "Ұсыныс туралы сұрақ",
+          "description": "Ұсыныстың түсініксіз тұсын нақтылайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\nСәлем, Алекс! *Q-204* ұсыныс үлгісі туралы бір сұрақ.\n\nҚызмет көлемін нақтылау немесе басқа мерзімді қарастыру шешім қабылдауға көмектесе ме?\n\n_Үлгі жауапты басып, әрекетті байқап көріңіз. Ұсыныс ойдан алынған._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Қызметті нақтылау", "Мерзімді талқылау"]
+        },
+        "proposal-comparison": {
+          "title": "Ұсыныстарды салыстыру",
+          "description": "Екі ұсыныстың жұмыс көлемін салыстырады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Неден бастайтыныңызды таңдаңыз*\n\n*А нұсқасы · Шағын пилот*\nБір клиенттік сценарий, шағын команда және екі аптадан кейін нәтижені қарау.\n\n*Б нұсқасы · Кеңінен енгізу*\nҮш клиенттік сценарий, ортақ нұсқаулар және ай сайын нәтижені қарау.\n\nҚай тәсіл қажеттілігіңізге жақынырақ?\n\n_Бұл ойдан алынған нұсқалар. Сатып алу немесе қызмет көрсету міндеттемесі туындамайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Шағын пилот", "Кеңінен енгізу"]
+        },
+        "decision-check-in": {
+          "title": "Шешім туралы сұрақ",
+          "description": "Клиенттің шешімін сұрайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\nСәлем, Алекс! хабар алмасу пилоты әлі де жоспарыңызда бар ма?\n\nМерзім өзгерсе, ештеңе етпейді. Мысалды қазір қарап шығуға немесе әңгімені кейінге қалдыруға болады.\n\n_Бұл еске салу үлгісі нақты жобаға қатысты емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Қарауды жалғастыру", "Кейінірек"]
+        },
+        "showroom-visit-follow-up": {
+          "title": "Дүкенге сапар қорытындысы",
+          "description": "Клиент қараған тауарды еске салады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Көрме залына бару үлгісінен бір деталь*\n\nСәлем, Алекс! *Terra вазасы* қарапайым сөреде көз тартатын жалғыз акцент бола алады.\n\nТаңдамас бұрын сөренің тереңдігін, вазаның биіктігін және бөлмедегі табиғи жарықты салыстырыңыз.\n\n_Келу мен тауарға қызығушылық ойдан алынған. Ешбір тауар резервке қойылмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "home-service-quote": {
+          "title": "Қызметті жоспарлау",
+          "description": "Қызмет, жұмыс көлемі және күнді таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Үй қызметінің бағасын есептеп көріңіз*\n\nҮлгі қызметті, жұмыс көлемін және ойдан алынған аймақты таңдаңыз. Демоны аяқтамас бұрын қосымша қызметтер мен мерзімді қарап шығыңыз.\n\n_Мекенжай, телефон немесе төлем сұралмайды. Ұсыныс жасалмайды және маман келуге жазылмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Бағаны есептеу"]
+        },
+        "appointment-booking": {
+          "title": "Кездесуге жазылу",
+          "description": "WhatsApp ішінде кездесу уақытын таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қабылдауға жазылуды байқап көріңіз*\n\nҮлгі қызметті, күнді және уақытты таңдаңыз, содан кейін мәліметтерді бірге тексеріңіз.\n\n_Бұл airi.chat Flow — ойдан алынған жазылу жаттығуы. Уақыт резервке қойылмайды және байланыс деректері жиналмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Жазылып көру"]
+        },
+        "restaurant-table": {
+          "title": "Үстел брондау",
+          "description": "Қонақ саны мен орын қалауларын сұрайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Үстелге тапсырыс беруді байқап көріңіз*\n\nҮлгі күнді, қонақ санын және отыратын орынды таңдаңыз. Тексеру қадамында таңдауларды оңай қарап шығуға болады.\n\n_Мейрамханада үстел резервке қойылмайды және жеке деректер сұралмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Үстел таңдау"]
+        },
+        "travel-date-range": {
+          "title": "Сапар күндері",
+          "description": "Сапар күндері мен қалауларын таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*WhatsApp ішінде шағын сапар жоспары*\n\nҮлгі сапар күндерін, бөлме түрін және бірнеше қосымша қызметті таңдап, жоспарды қарап шығыңыз.\n\n_Бұл ойдан алынған сапар жаттығуы. Билеттер, бөлмелер немесе туристік қызметтер брондалмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Сапар жоспарлау"]
+        },
+        "event-registration": {
+          "title": "Іс-шараға тіркелу",
+          "description": "Іс-шара сессиясын таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Іс-шараға тіркелуді байқап көріңіз*\n\nҮлгі сессияны және қатысу қалауларын таңдап, қысқа тексеруді аяқтаңыз.\n\n_Бұл демо билет бермейді, қатысушыны тіркемейді және жеке деректерді сұрамайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Тіркеліп көру"]
+        },
+        "appointment-rescheduled": {
+          "title": "Кездесу уақытын өзгерту",
+          "description": "Кездесудің жаңа уақытын хабарлайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қабылдау үлгісінің уақыты өзгерді*\n\nНөмірі: DEMO-A-318\nБұрынғы уақыт: 2026 ж. 14 қазан, 14:30 UTC\n*Жаңа уақыт: 2026 ж. 15 қазан, 14:30 UTC*\n\nКүніңізді жоспарламас бұрын айырмашылықты тексеріңіз.\n\n_Бұл ойдан алынған кесте өзгерісі. Нақты қабылдау уақыты өзгертілмейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Уақыт қолайлы", "Басқа уақыт керек"]
+        },
+        "visit-preparation": {
+          "title": "Кездесуге дайындық",
+          "description": "Кездесуге дайындалу қадамдарын жібереді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Үлгі кеңеске дайындық*\n\nҚызмет: бөлмені безендіру кеңесі. Аздап дайындық көмектеседі:\n• Негізгі үш сұрағыңызды жазып алыңыз\n• Қатысты үлгі фотоларды дайындаңыз\n• Кездесу уақыты мен жол жоспарын тексеріңіз\n\n_Бұл тізім еске салу үлгісін көрсетеді. Кездесу белгіленбейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "delivery-preferences": {
+          "title": "Жеткізу қалаулары",
+          "description": "Жеткізу нұсқаларын таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Жеткізу қалауларын таңдап көріңіз*\n\nҮлгі алып кету немесе жеткізу тәсілін, ойдан алынған орынды және уақыт аралығын таңдап, таңдауды тексеріңіз.\n\n_Бұл демо жөнелтімді өзгертпейді және мекенжай жинамайды. Тек берілген үлгі нұсқаларды пайдаланыңыз._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Қалауларды таңдау"]
+        },
+        "return-request": {
+          "title": "Тауарды қайтару",
+          "description": "Қайтару себебі мен шешімін таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қайтару өтінімін байқап көріңіз*\n\nҮлгі нөмірді пайдаланып, қайтару себебі мен шешімді таңдаңыз. Демоны аяқтамас бұрын ойдан алынған тапсыру тәсілдерін тексеріңіз.\n\n_Тапсырыс өзгертілмейді, алып кету ұйымдастырылмайды және ақшаны қайтару сұралмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Қайтаруды көру"]
+        },
+        "pickup-ready": {
+          "title": "Алып кету орны",
+          "description": "Алып кету орнын картада көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Карта белгісі бар алып кету хабарламасының үлгісі*\n\nБұл ойдан алынған мысалда DEMO-O-426 тапсырысы дайын деп белгіленген.\n\nКарта белгісі қоғамдық көрнекі орын үлгісі ретінде *Париждегі Эйфель мұнарасын* көрсетеді. Бұл *airi.chat мекенжайы немесе нақты алып кету орны емес*.\n\n_Тапсырысты алуға ол жерге бармаңыз. Геолокация пішімін көру үшін карта белгісін ашыңыз._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "repair-progress": {
+          "title": "Жөндеу күйі",
+          "description": "Тексеру кезеңі мен келесі қадамды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Жөндеу барысының үлгісі*\n\nӨтінім: DEMO-R-182\nБұйым: үстел шамы\n*Кезең:* тексеру аяқталды\n*Келесі қадам:* ұсынылған жөндеу жұмыстарын қарау\n\nБұл мысал жұмыс аяқталды деп көрсетпей, мәртебені түсінікті жеткізеді.\n\n_Нақты құрылғыға немесе жөндеу өтініміне қатысты емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Келесі қадамдар", "Сұрағым бар"]
+        },
+        "service-completed": {
+          "title": "Қызметтің аяқталуы",
+          "description": "Орындалған жұмысты хабарлайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қызметтің аяқталу үлгісі*\n\nНөмірі: S-1042\nМысалда көрсетілген жұмыс:\n• Келісілген жұмыс көлемі тексерілді\n• Нәтиже тіркелді\n• Қысқа тапсыру тізімі дайындалды\n\nКелесі келуге дейін қорытындыны оңай табылатын жерде сақтаңыз.\n\n_Бұл ойдан алынған хабар нақты жұмыстың орындалуын растамайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "refund-status": {
+          "title": "Ақшаны қайтару күйі",
+          "description": "Қайтарылатын сома мен кезеңді көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Ақшаны қайтару мәртебесінің үлгісі*\n\nНөмірі: DEMO-RF-091\nҮлгі сома: *24 USD*\nКезең: тексеру аяқталды; бұл мысалдағы келесі қадам — өңдеу.\n\nНақты компания хабарламаны жібермес бұрын төлем мәртебесін тексеруі керек.\n\n_Ақшаны қайтару сұралмайды, мақұлданбайды және төленбейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "subscription-renewal": {
+          "title": "Жазылымды ұзарту",
+          "description": "Жазылымды ұзарту алдында тарифті еске салады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Жазылымды ұзарту үлгісін қараңыз*\n\nТариф: Studio айлық\nҮлгі ұзарту күні: 2026 ж. 31 қазан\n\nКелесі кезеңге дейін тарифтің қажеттілігіңізге сай келетінін және қандай мүмкіндіктерді пайдаланатыныңызды тексеріңіз.\n\n_Бұл ойдан алынған еске салу жазылымды ұзартпайды және төлем сұрамайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Тарифті қарау", "Өзгертуді қарастыру"]
+        },
+        "service-summary": {
+          "title": "Қызмет қорытындысы",
+          "description": "Жұмыс қорытындысын PDF арқылы жібереді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қызмет қорытындысының үлгісі*\n\nНөмірі: S-1042\nТіркелген PDF файлында күтім бойынша қысқа қорытынды бар: атқарылған жұмыс, пайдалы ұсыныстар және кейінгі әрекет жоспары.\n\n_Бұл ойдан алынған құжат жұмыс дәлелі, шот немесе кепілдік емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "product-finder": {
+          "title": "Тауар таңдау",
+          "description": "Қалауларға сай тауарды таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Тауар таңдауды байқап көріңіз*\n\nБұйымды қалай пайдаланатыныңызды, үлгі бюджетті және пайдалы қасиеттерді таңдаңыз. Соңында ұсынылған бағытты қарап шығыңыз.\n\n_Бұл демо нақты қорды тексермейді және тапсырыс бермейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Тауар таңдау"]
+        },
+        "product-comparison": {
+          "title": "Тауарларды салыстыру",
+          "description": "Үш тауарды карусельде салыстырады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Тауарларды түсінікті салыстыру*\n\nҮйге арналған үш ойдан алынған бұйымды сырғытып қараңыз. Әр карточка әртүрлі қолдануды көрсетеді, сондықтан таңдау бөлмеңіздің қажетіне негізделеді.\n\n_Суреттер — мысал. Өлшемдер, қор және бағалар нақты ұсыныс емес._\n\nЖазылымнан бас тарту: samat@airi.chat",
+          "buttons": [],
+          "cards": [
+            {
+              "body": "*Terra вазасы*\nСөре не шағын үстелге арналған айқын акцент.\n_Қолайлысы: бір қарапайым ерекше деталь._",
+              "buttons": ["airi.chat туралы"]
+            },
+            {
+              "body": "*Mora себеттері*\nКүнделікті заттарға арналған өрілген сақтау бұйымдары.\n_Қолайлысы: пайдалы фактура._",
+              "buttons": ["airi.chat туралы"]
+            },
+            {
+              "body": "*Lino пледі*\nДиванға не оқу бұрышына арналған жұмсақ қабат.\n_Қолайлысы: көңіл күйді оңай өзгерту._",
+              "buttons": ["airi.chat туралы"]
+            }
+          ]
+        },
+        "room-styling": {
+          "title": "Бөлмені жабдықтау",
+          "description": "Бөлмеге арналған бұйымдарды карусельде көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Жайлы бөлмеге арналған үш қабат*\n\nАлдымен көз тартатын акцентті, содан кейін пайдалы фактураны қосыңыз да, жұмсақ бұйыммен толықтырыңыз. Ойдан алынған интерьер үйлесімін сырғытып қараңыз.\n\n_Бұл бөлмені безендіру идеясы. Жиынтық бағасы көрсетілмейді және тауар резервке қойылмайды._\n\nЖазылымнан бас тарту: samat@airi.chat",
+          "buttons": [],
+          "cards": [
+            {
+              "body": "*1 · Акцент қосыңыз*\nПішіні айқын көрінуі үшін вазаның айналасында аздап бос орын қалдырыңыз.",
+              "buttons": ["airi.chat туралы"]
+            },
+            {
+              "body": "*2 · Пайдалы фактура қосыңыз*\nӨрілген себет күнделікті ұсақ заттарды бір жерге жинайды.",
+              "buttons": ["airi.chat туралы"]
+            },
+            {
+              "body": "*3 · Жұмсақ деталь қосыңыз*\nПледті фактураны нәзік толықтыратын жерге бүктеп қойыңыз.",
+              "buttons": ["airi.chat туралы"]
+            }
+          ]
+        },
+        "product-care": {
+          "title": "Тауар күтімі",
+          "description": "Тауар күтімін бейнеде көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Ұқыпты күтім ұзаққа жеткізеді*\n\nTerra вазасына арналған үш үлгі кеңесті қараңыз: жұмсақ дымқыл шүберекпен сүртіңіз, ақырын құрғатыңыз және абразивті губкаларды қолданбаңыз.\n\n_Видео — ойдан алынған тауар демосы. Нақты бұйыммен берілген нұсқауларды орындаңыз._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "bundle-idea": {
+          "title": "Тауарлар жиынтығы",
+          "description": "Екі бұйымның үйлесімін көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Күнделікті қолданысқа арналған үйлесім үлгісі*\n\n*Mora себеті* диван жанындағы пледті сақтап, екеуін де қолжетімді жерде ұстауға көмектеседі.\n\nЖаңа нәрсе қоспас бұрын бос орынды және күнде қолданатын заттарыңызды ойластырыңыз.\n\n_Бұл ойдан алынған интерьер ұсынысы. Жиынтық бағасы немесе сатып алу рәсімі жоқ._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "sizing-guide": {
+          "title": "Өлшем нұсқаулығы",
+          "description": "Тауар өлшемін таңдауға көмектеседі.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Себет өлшемінің үлгі нұсқаулығы*\n\nКіші: *24 × 18 см*\nҮлкен: *32 × 24 см*\n\nСөренің ішкі өлшемін өлшеп, себетті ыңғайлы шығарып алуға орын қалдырыңыз.\n\n_Бұл өлшемдер — ойдан алынған мысалдар, сатылымдағы тауар сипаттамасы емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "gift-selection": {
+          "title": "Сыйлық таңдау",
+          "description": "Сыйлық туралы қалауларды сұрайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Мәні бар сыйлық бір сұрақтан басталады*\n\nСәлем, Алекс! Үлгі сыйлық үй жайлылығын ұнататын жанға, қонақ күтетін адамға немесе тыныш сәтті бағалайтын жанға арналған ба?\n\nҚалауды білу таңдауды жеке әрі орынды етуге көмектеседі.\n\n_Сыйлық пен алушы ойдан алынған. Жауап батырмалары тек таңдауды көрсетеді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": [
+            "Үй жайлылығын ұнататынға",
+            "Қонақ күтетінге",
+            "Тыныш сәт үшін"
+          ]
+        },
+        "onboarding-guide": {
+          "title": "Жұмысты бастау",
+          "description": "Алғашқы қадамдарды PDF арқылы жібереді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қарапайым нұсқаулықтан бастаңыз*\n\nСәлем, Алекс! Тіркелген үлгі нұсқаулықта бизнес арнасын қосу, шаблон дайындау, клиенттік сценарий құру және іске қосу алдында тексеру қадамдары бар.\n\nОны пайдалы бастапқы нұсқаулық үлгісі ретінде сақтап қойыңыз.\n\n_Бұл демо аккаунтты, интеграцияны немесе қызметті іске қоспайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "event-agenda": {
+          "title": "Іс-шара бағдарламасы",
+          "description": "Іс-шара кестесін PDF арқылы жібереді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Іс-шара бағдарламасының үлгісі*\n\nІс-шара: Клиенттермен сөйлесу практикумы\nҮлгі кесте: 10:00–11:00\n\nPDF сессиялар ретін және негізгі тақырыптарды сақтауға ыңғайлы бір бетке жинайды.\n\n_Іс-шара ойдан алынған. Құжат билет немесе тіркелу растамасы емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "first-week-checklist": {
+          "title": "Алғашқы апта жоспары",
+          "description": "Алғашқы аптадағы оқу қадамдарын көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Алғашқы аптаның үлгі тізімі*\n\nКлиенттермен сөйлесу негіздері курсын үш шағын қадамнан бастаңыз:\n☐ Кіріспе сабақты қараңыз\n☐ Қысқа жаттығуды орындап көріңіз\n☐ Кейін оралатын бір сұрақты жазыңыз\n\nАлғашқы аптаның жоспары анық болса, ілгерілеуді байқау оңайырақ.\n\n_Бұл ойдан алынған тізім курсқа тіркемейді және оқуыңызды бақыламайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Жаттығуды орындау", "Сабақты қайталау"]
+        },
+        "account-setup-checklist": {
+          "title": "Пилотты жоспарлау",
+          "description": "Хабар алмасу пилотының қадамдарын көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Баптау тізімінің үлгісі*\n\nХабар алмасу пилотын бастамас бұрын:\n☐ Бір клиенттік сценарийді таңдаңыз\n☐ Жауапқа кім жауапты екенін келісіңіз\n☐ Үлгі хабарлама мәтінін дайындаңыз\n☐ Пайдалы нәтиженің қандай болатынын анықтаңыз\n\nНәтижесін тексеруге ыңғайлы шағын қадамнан бастаңыз.\n\n_Бұл мысал аккаунт баптауларын өзгертпейді және арна қоспайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "subscription-change-summary": {
+          "title": "Тарифті өзгерту",
+          "description": "Бұрынғы және жаңа тарифті салыстырады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Тариф өзгерісінің үлгі қорытындысы*\n\nБұрынғы тариф: Studio айлық\nЖаңа тариф: *Studio жылдық*\nҮлгі күшіне ену күні: 2026 ж. 1 қараша\n\nНақты қызмет төлем шарттарын бөлек растауы керек.\n\n_Бұл демо тарифті, төлемді немесе жазылымды өзгертпейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Қорытынды түсінікті", "Мәліметтерді қарау"]
+        },
+        "privacy-request-acknowledgement": {
+          "title": "Құпиялық сұрауын растау",
+          "description": "Құпиялық туралы сұрауды растайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Құпиялық туралы сұрауға жауап үлгісі*\n\nНөмірі: DEMO-PR-014\n\nБұл мысал компания сұрау алғаннан кейін қандай ақпарат бере алатынын көрсетеді: өтінім нөмірі, қарау кезеңі және байланысу жолы.\n\n_Бұл демо құпиялық өтінімін жасамайды, тұлғаны тексермейді және жеке деректерді өңдемейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "contact-airi": {
+          "title": "Байланыс тәсілін таңдау",
+          "description": "Flow ішінде airi.chat байланыс деректерін көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*airi.chat-пен байланысыңыз*\n\nБайланысу қалауларының қысқа демосын қарап, бізбен өзіңіз қалай байланысқыңыз келетінін таңдаңыз.\n\n*WhatsApp / телефон:* +7 708 260 93 46\n*Эл. пошта:* samat@airi.chat\n\n_Flow қоңырау уақытын белгілемейді және кері қоңырау сұрамайды. Жеке байланыс деректері жиналмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Байланысу жолдары"]
+        },
+        "preference-center": {
+          "title": "Хабарлама қалаулары",
+          "description": "Хабарлама тақырыптарын таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Хабарлама қалауларын байқап көріңіз*\n\nҰнаған үлгі тақырыптар мен хабарлама жиілігін таңдап, таңдауыңызды тексеріңіз.\n\n_Бұл ойдан алынған Flow нақты жазылымыңызды немесе маркетинг келісімін өзгертпейді. Нақты жазылымнан бас тарту үшін төмендегі эл. поштаға жазыңыз._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Қалауларды көру"]
+        },
+        "feedback-survey": {
+          "title": "Пікір сауалнамасы",
+          "description": "Flow арқылы пікір жинауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Қысқа кері байланыс сауалнамасын байқап көріңіз*\n\nҮлгі бағалауды және пікір айтқыңыз келетін тақырыптарды таңдаңыз. Демоны аяқтамас бұрын таңдауларыңызды тексеріңіз.\n\n_Бұл — ойдан алынған жаттығу, нақты компанияға бару туралы пікір емес. Жеке ақпарат енгізбеңіз._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Сауалнаманы көру"]
+        },
+        "company-contact": {
+          "title": "airi.chat байланыс деректері",
+          "description": "airi.chat телефоны мен поштасын көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*airi.chat-пен тікелей байланысыңыз*\n\nWhatsApp-та клиенттермен сөйлесу туралы сұрағыңыз бар ма?\n\n*Телефон / WhatsApp:* +7 708 260 93 46\n*Эл. пошта:* samat@airi.chat\n*Сайт:* https://www.airi.chat/\n\nҚоңырау батырмасы компанияның нақты нөмірі бар телефон тергішін ашады. Байланыс деректері нақты; бұл хабар оларды бөлісу үлгісін көрсетеді.",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat-қа қоңырау"]
+        },
+        "branch-directory": {
+          "title": "Бөлімше мекенжайы",
+          "description": "Үлгі бөлімшенің орнын картада көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Бөлімше туралы хабарламаның үлгісі*\n\nҚоғамдық көрнекі орын үлгісі ретінде *Сидней опера театрын* карта белгісінен қараңыз.\n\nБұл *airi.chat кеңсесі, серіктес бөлімше немесе қызмет көрсету орны емес*. Атауы мен мекенжайы нақты бөлімше белгісінің қалай көрінетінін көрсетеді.\n\n_Кездесу, билет немесе іскерлік келу ұйымдастырылмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "service-hours": {
+          "title": "Жұмыс уақыты",
+          "description": "Қызметтің үлгі жұмыс кестесін көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Жұмыс уақытының үлгісі*\n\nДүйсенбі–жұма: *09:00–18:00*\nСенбі: *10:00–14:00*\nЖексенбі: жабық\n\nНақты компания келушіге алдын ала түсінік беру үшін осындай қысқа хабарлама жібере алады.\n\n_Бұл дүкеннің ойдан алынған кестесі, airi.chat жұмыс немесе қолдау уақыты емес._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "human-handoff": {
+          "title": "Маманға қосу",
+          "description": "Әңгімені маманға беруді хабарлайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Маманға тапсыру хабарламасының үлгісі*\n\nСәлем, Алекс! Хабар алмасу көмекшісі келесі қадамды былай түсіндіре алады:\n\n«Сұрағыңызды әріптесіміз қарауы керек. Қайта түсіндірмеуіңіз үшін әңгіме мәнмәтінін бірге береміз».\n\n_Бұл мысал әңгімені тағайындамайды және әріптеске хабарламайды. Жауап батырмалары — тек үлгі._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Тапсыру түсінікті", "Тағы сұрағым бар"]
+        },
+        "learning-path": {
+          "title": "Оқу бағыты",
+          "description": "Оқу мақсаты мен тақырыптарын таңдауды көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Үлгі оқу бағытын табыңыз*\n\nМақсатыңызды, қазіргі тәжірибеңізді және қызықты тақырыптарды таңдаңыз. Сол таңдауларды біріктіретін оқу бағытын қарап шығыңыз.\n\n_Бұл ойдан алынған Flow курсқа тіркемейді, дағдыларыңызды бағаламайды және жеке деректер жинамайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Оқу бағытын табу"]
+        },
+        "lesson-recap": {
+          "title": "Сабақ қорытындысы",
+          "description": "Сабақтың негізгі ойларын жинақтайды.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Сабақ қорытындысының үлгісі · Клиентке түсінікті жауаптар*\n\nЕсте сақтайтын үш ой:\n• Клиенттің нақты сұрағынан бастаңыз\n• Келесі қадамды түсінікті жеткізіңіз\n• Күрделі жағдайларға жауапты маман белгілеңіз\n\n*Байқап көріңіз:* бір ұзақ жауапты екі қысқа, анық сөйлемге айналдырыңыз.\n\n_Бұл хабар оқу қолдауын көрсетеді; нақты курстағы ілгерілеу тіркелмейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Жаттығуды орындау", "Негізгі ойларды қарау"]
+        },
+        "practice-challenge": {
+          "title": "Бес минуттық жаттығу",
+          "description": "Сабақтан кейін жаттығу ұсынады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Шағын практикалық тапсырма*\n\nБес минутыңыз бар. Мына үлгі жауапты нақты қадамға айналдырыңыз:\n\n«Хабарламаңызды алдық және рәсімімізге сәйкес тиісті әрекеттерді орындаймыз».\n\nБір пайдалы әрекет пен бір анық күтілетін нәтижеге ұмтылыңыз.\n\n_Бұл ойдан алынған жаттығу. Жауап батырмалары бағаланатын жұмыс жібермейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Тапсырманы қабылдаймын", "Басқа мысалды көру"]
+        },
+        "study-plan": {
+          "title": "Оқу жоспары",
+          "description": "Апталық оқу қадамдарын көрсетеді.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Апталық жоспар үлгісі · Клиентпен түсінікті әңгімелер*\n\n*Дүйсенбі:* бір қысқа мысалды оқыңыз\n*Сәрсенбі:* бір жауапты өз сөзіңізбен жазыңыз\n*Жұма:* алғашқы және соңғы нұсқаны салыстырыңыз\n\nӘр сабаққа шамамен 15 минут бөліп, бір жақсартуға назар аударыңыз.\n\n_Бұл ойдан алынған жоспар еске салу жасамайды және курсқа тіркемейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "webinar-follow-up": {
+          "title": "Вебинар қорытындысы",
+          "description": "Вебинардың негізгі ойын еске салады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Үлгі вебинардан бір пайдалы ой*\n\nСессия: Клиентпен нәтижелі сөйлесу\n\nӘңгімені автоматтандырмас бұрын мыналарды жазыңыз:\n1. Клиенттің сұрағы\n2. Пайдалы келесі қадам\n3. Маман қашан араласуы керек\n\nОсы шағын жоспар — бастауға ыңғайлы негіз.\n\n_Вебинар ойдан алынған; бұл хабар жазба бермейді және басқа іс-шараға тіркемейді._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Пайдалы ой", "Басқа ойды қарау"]
+        },
+        "loyalty-milestone": {
+          "title": "Клиентке алғыс",
+          "description": "Тұрақты клиентке алғыс айтады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Клиент белесінің үлгісі*\n\nСәлем, Алекс! Бұл мысал ойдан алынған үй бұйымдары дүкеніне *5 рет келуді* атап өтеді.\n\nЖылы алғыс әр хабарламаны ұсынысқа айналдырмай-ақ, белесті жеке әрі маңызды ете алады.\n\n_Ұпай, купон, сатып алу тарихы немесе сыйлық жасалмайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        },
+        "care-check-in": {
+          "title": "Күтім туралы сұрақ",
+          "description": "Тауар күтімі туралы көмек ұсынады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Күтім туралы кейінгі сұрақ үлгісі*\n\nСәлем, Алекс! *Mora себеті* үшін ыңғайлы орын таптыңыз ба?\n\nӨрілген сақтау бұйымдарын ылғалды жерден аулақ ұстаңыз және тазаламас бұрын өндіруші нұсқауларын тексеріңіз.\n\n_Бұл ойдан алынған хабар. Жауап батырмалары әрекетті көрсетеді, қолдау өтінімін жасамайды._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["Кеңестер пайдалы", "Күтім туралы сұрағым бар"]
+        },
+        "community-invitation": {
+          "title": "Қауымдастық кездесуі",
+          "description": "Қауымдастық кездесуіне шақырады.",
+          "body": "*airi.chat демосы · ойдан алынған мысал*\n\n*Шақыру үлгісі · Жайлы бұрыш*\n\nИнтерьер туралы бір шағын сұрақпен келіңіз. Ваза, өрілген себет және жұмсақ плед оқу бұрышын қалай өзгерте алатынын қарастырыңыз.\n\nМақсат — пайдалы шабытпен бөлісу. Сатып алу міндетті емес.\n\n_Бұл ойдан алынған кездесудің күні, билеті немесе тіркелуі жоқ. Батырма airi.chat сайтын ашады._",
+          "footer": "Жазылымнан бас тарту: samat@airi.chat",
+          "buttons": ["airi.chat туралы"]
+        }
+      },
+      "unsubscribe": "Хабарламадан бас тарту: samat@airi.chat"
+    }
+  },
+  "Pagination": {
+    "previous": "Артқа",
+    "next": "Алға",
+    "previousAria": "Алдыңғы бетке өту",
+    "nextAria": "Келесі бетке өту",
+    "morePages": "Басқа беттер"
+  },
+  "SetWebhookPage": {
+    "title": "Ескірген баптау өшірілді",
+    "description": "Бұл ескірген орнату әдісі тоқтатылды. Telegram вебхуктерін тікелей жұмыс кеңістігінің параметрлеріндегі Интеграциялар бөлімінде конфигурациялаңыз.",
+    "setWebhook": "Жұмыс кеңістігінің параметрлеріне өту"
+  },
+  "MergeAssetsPage": {
+    "metadataTitle": "Жұмыс кеңістіктерін біріктіру",
+    "metadataDescription": "Бар workspace қолжетімділігін ағымдағы кіруіңізге тіркеңіз.",
+    "brand": "airi.chat",
+    "title": "Жұмыс кеңістіктерін біріктіру керек пе?",
+    "description": "{email} үшін бар workspace қолжетімділігін таптық. Жалғастырмас бұрын оны осы кіруге тіркеуге болады.",
+    "workspaceSummary": "{workspaceCount, plural, one {# жұмыс кеңістігі} other {# жұмыс кеңістігі}} {legacyAccountCount, plural, one {# алдыңғы кіруден} other {# алдыңғы кіруден}}",
+    "moreCandidates": "+{count} тағы",
+    "mergeAndContinue": "Біріктіру және жалғастыру",
+    "continueWithoutMerging": "Біріктірмей жалғастыру",
+    "mergeError": "Жұмыс кеңістіктерін біріктіру мүмкін болмады. Қайта көріңіз.",
+    "skipError": "Таңдауыңызды сақтау мүмкін болмады. Қайта көріңіз.",
+    "roles": {
+      "admin": "Әкімші",
+      "manager": "Менеджер"
+    }
+  },
+  "AiriMetaAds": {
+    "skill": {
+      "description": {
+        "missingSource": "@meta қолдану үшін Meta Ads қосып, Ads MCP іске қосыңыз",
+        "accountNotEnabled": "Meta бұл жарнама аккаунты үшін ЖИ құралдарын әлі қоспады. Қолжетімділікті кейін тексеріңіз.",
+        "checking": "@meta үшін Meta Ads қолжетімділігін тексеріп жатырмыз",
+        "selectAccount": "Интеграцияларда қолжетімді жарнама аккаунтын таңдаңыз",
+        "checkAgain": "Интеграцияларда Meta Ads қолжетімділігін тексеріңіз",
+        "verify": "Интеграцияларда Meta Ads қосылымын тексеріңіз",
+        "reconnect": "@meta қолдану үшін Meta Ads қайта қосыңыз",
+        "connect": "Интеграцияларда Meta Ads ЖИ қолжетімділігін қосып, тексеріңіз",
+        "retry": "Орындау алдында Airi Meta Ads қолжетімділігін тексереді",
+        "management": "Meta Ads есептері және растаудан кейінгі науқан өзгерістері",
+        "reporting": "Meta Ads есептері; өзгерістер үшін басқару рұқсаты қажет"
+      },
+      "recovery": {
+        "connect": "@meta үшін Meta Ads қосу",
+        "authorize": "@meta үшін жарнаманы басқаруды қосу",
+        "reconnect": "@meta үшін Meta Ads қайта қосу",
+        "settings": "Meta Ads қосылымын тексеру",
+        "rollout": "Meta Ads қолжетімділігін тексеру"
+      }
+    },
+    "starter": {
+      "title": "Meta Ads (@meta)",
+      "reporting": "Жарнама аккаунттары мен нәтижелерін қараңыз. Науқанды өзгерту үшін басқару рұқсаты қажет.",
+      "management": "Нәтижелерді қарап, науқан өзгерістерін растауға дайындаңыз.",
+      "recheck": "Аккаунттар мен нәтижелерді қарау алдында Airi Meta Ads қолжетімділігін тексереді.",
+      "prompt": "@meta Жарнама аккаунттарымды және соңғы 30 күндегі негізгі шығындарды көрсет.",
+      "plan": {
+        "title": "Meta Ads жарнамасын жоспарлау",
+        "description": "Клиент сұраныстары арқылы аудиторияны, креативтерді және науқан құрылымын таңдаңыз.",
+        "prompt": "Компаниямның деректері арқылы Meta Ads аудиториясын, креативтерін және науқан құрылымын жоспарла."
+      }
+    },
+    "common": {
+      "cancel": "Бас тарту",
+      "notProvided": "Көрсетілмеген",
+      "notChanged": "Өзгеріс жоқ",
+      "none": "Жоқ",
+      "technical": "Техникалық мәліметтер"
+    },
+    "review": {
+      "title": "Meta Ads өзгерістерін тексеру",
+      "description": "Растау алдында аккаунт пен өзгерістерді тексеріңіз. Airi тек осы тексерілген әрекетті орындайды.",
+      "states": {
+        "ready": "Дайын",
+        "submitting": "Жіберілуде",
+        "stale": "Ескірген",
+        "mismatched": "Сәйкессіздік"
+      },
+      "staleError": "Бұл әрекет ескірген. Airi қызметінен жаңа әрекет дайындауды сұраңыз.",
+      "mismatchError": "Әрекет тексерілген транзакцияға сәйкес келмейді. Airi қызметінен қайта дайындауды сұраңыз.",
+      "error": "Өзгерісті растау мүмкін болмады. Техникалық мәліметтерді тексеріңіз немесе жаңа әрекет дайындаңыз.",
+      "summary": "Сұралған өзгеріс",
+      "target": "Жарнама аккаунты",
+      "operation": "Операция",
+      "entities": "Өзгеретін нысандар",
+      "entityAction": "Әрекет: {action}",
+      "entityStatus": "Күйі: {status}",
+      "requestedStatus": "Сұралған күй",
+      "currencyTimezone": "Валюта / уақыт белдеуі",
+      "business": "Бизнес",
+      "money": "Ақшалай мәндер",
+      "moneyRaw": "Meta қызметіне жіберілетін нақты мән",
+      "moneyCurrency": "Жарнама аккаунтының валютасы",
+      "moneyUnits": "Өлшем бірліктері расталмаған. Бұл {currency} валютасындағы расталған сома емес, Meta қызметінің нақты кіріс мәні. Растау алдында Meta қызметінде өрістің бірліктерін тексеріңіз.",
+      "schedule": "Кесте",
+      "values": "Мәндер",
+      "targeting": "Аудитория баптаулары",
+      "creativeAssets": "Креативтер",
+      "logicalAssets": "Таңдалған материалдар",
+      "uploadUrls": "Жүктеу сілтемелері",
+      "uploadHelp": "Уақытша сілтемелер расталған әрекет орындалғанда жасалады.",
+      "warnings": "Тексеру ескертпелері",
+      "unmapped": "Басқа кіріс өрістері",
+      "user": "Meta пайдаланушысы",
+      "sourceConnection": "Дереккөз / қосылым",
+      "tool": "Meta құралы",
+      "accounts": "Аккаунт ID",
+      "businesses": "Бизнес ID",
+      "json": "Нақты кіріс деректері",
+      "shortDigest": "Қысқа бақылау сомасы",
+      "fullDigest": "Толық бақылау сомасы",
+      "errorDetails": "Қате мәліметтері",
+      "confirm": "Растау және орындау",
+      "submitting": "Жіберілуде…"
+    },
+    "reconciliation": {
+      "title": "Тексерілген Meta Ads нәтижесін жазу",
+      "description": "Meta Ads Manager қызметінде тексерілген нәтижені жазыңыз. Әрекет қайта орындалмайды.",
+      "currentOutcome": "Ағымдағы нәтиже: {status}",
+      "statuses": {
+        "executing": "Meta жауабы күтілуде",
+        "outcome_unknown": "Белгісіз",
+        "succeeded": "Орындалды",
+        "not_executed": "Орындалмады"
+      },
+      "outcome": "Тексерілген нәтиже",
+      "completed": "Орындалды",
+      "notExecuted": "Орындалмады",
+      "note": "Нәтиженің дәлелі",
+      "notePlaceholder": "Meta Ads Manager қызметінде нені тексергеніңізді және не болғанын сипаттаңыз.",
+      "noteHelp": "Міндетті · {count}/500 таңба",
+      "noteRequired": "Нәтижені жазу алдында дәлелді көрсетіңіз.",
+      "identifiersRequired": "Әр нысанның екі өрісін де толтырыңыз.",
+      "identifiers": "Тексерілген Meta нысандарының ID (міндетті емес)",
+      "addId": "ID қосу",
+      "idsHelp": "Тек өзіңіз тексерген Meta нысандарының ID қосыңыз.",
+      "identifierKind": "{index}-нысан түрі",
+      "identifierId": "{index}-нысан ID",
+      "removeIdentifier": "{index}-нысанды жою",
+      "kind": "Нысан түрі",
+      "id": "ID",
+      "record": "Нәтижені жазу",
+      "recording": "Жазылуда…"
+    },
+    "actions": {
+      "review": "Өзгерістерді тексеру",
+      "submitting": "Жіберілуде…",
+      "legacy": "Бұл әрекет ескірген. Airi қызметінен жаңа әрекет дайындауды сұраңыз.",
+      "regenerate": "Қайта дайындау",
+      "missing": "Тексерілген әрекет жоқ. Airi қызметінен қайта дайындауды сұраңыз.",
+      "mismatch": "Әрекет тексерілген транзакцияға сәйкес келмейді. Airi қызметінен қайта дайындауды сұраңыз.",
+      "outcome": "Meta Ads нәтижесін тексеру",
+      "unknown": "Нәтиже белгісіз. Жазу алдында Meta Ads Manager қызметінде тексеріңіз.",
+      "stranded": "Әрекет орындалуы үзілген. Нәтижені жазу алдында Meta Ads Manager қызметінде тексеріңіз.",
+      "waiting": "Airi Meta нәтижесін күтіп жатыр. Нәтиже келмесе, бес минуттан кейін Meta Ads Manager қызметінде тексеріңіз.",
+      "record": "Тексерілген нәтижені жазу",
+      "recording": "Жазылуда…"
+    },
+    "errors": {
+      "confirm": "Meta Ads өзгерісін растау мүмкін болмады",
+      "regenerate": "Жалғастырмас бұрын жаңа әрекет дайындаңыз.",
+      "refresh": "Meta Ads нәтижесі сақталды, бірақ чат жаңармады. Нәтижені жүктеу үшін чатты қайта ашыңыз.",
+      "record": "Тексерілген Meta Ads нәтижесін жазу мүмкін болмады"
+    }
+  },
+  "AiriChat": {
+    "pendingPatchNewTemplateTitle": "Airi жаңа үлгі дайындады. Ашық тұрған үлгі өзгеріссіз қалады.",
+    "pendingPatchNewFlowTitle": "Airi жаңа форма дайындады. Ашық тұрған форма өзгеріссіз қалады.",
+    "pendingPatchOtherTitle": "Airi осы чаттағы басқа жобаны жаңартты.",
+    "pendingPatchOpenNew": "Жаңа жоба ретінде ашу",
+    "pendingPatchOpenOther": "Сол жобаны ашу",
+    "pendingPatchResolveConflict": "Түзетулеріңіз жоғалмауы үшін алдымен жоғарыдан нұсқаны таңдаңыз.",
+    "messagesLoadFailed": "Бұл чаттың хабарламалары жүктелмеді.",
+    "openDraftFailed": "Жобаны ашу мүмкін болмады. Қайталап көріңіз.",
+    "previewLoadFailed": "Алдын ала қарау жүктелмеді.",
+    "retry": "Қайталау",
+    "stopAnswer": "Жауапты тоқтату",
+    "stoppingAnswer": "Жауап тоқтатылуда",
+    "stopFailed": "Жауапты тоқтату мүмкін болмады. Қайталап көріңіз.",
+    "answerStopped": "Тоқтатылды",
+    "runActive": "Airi бұл чатта әлі жауап беріп жатыр. Жауапты күтіңіз немесе оны тоқтатыңыз.",
+    "loadEarlier": "Ертеректегі хабарламаларды жүктеу",
+    "loadingEarlier": "Ертеректегі хабарламалар жүктелуде",
+    "loadEarlierFailed": "Ертеректегі хабарламалар жүктелмеді. Қайталап көріңіз.",
+    "emptyTitle": "Немен айналысамыз?",
+    "emptyDescription": "Науқандар, WhatsApp, білім базасы немесе клиенттермен сөйлесулер туралы сұраңыз.",
+    "suggestedActionsLabel": "Airi ұсынған әрекеттер",
+    "tryAiriFor": "Airi-ді қолданып көріңіз...",
+    "recentChats": "Соңғы чаттар",
+    "recentChatsLabel": "Airi-мен соңғы чаттар",
+    "viewAll": "Барлық чаттар",
+    "toolsTitle": "Airi құралдары",
+    "toggleSidePanel": "Бүйірлік тақтаны көрсету немесе жасыру",
+    "suggestedActions": "Ұсынылған әрекеттер",
+    "chatSection": "Чат",
+    "chatActionsLabel": "Airi чатының әрекеттері",
+    "newAiriChat": "Airi-мен жаңа чат",
+    "loadingMessages": "Хабарламалар жүктелуде",
+    "newThread": "Жаңа чат",
+    "campaign": {
+      "label": "Науқан жиынтығы",
+      "savedPlan": "Сақталған жоспар - {revision}-нұсқа - {status, select, draft {жоба} submitted {жіберілді} published {жарияланды} failed {қате} archived {мұрағатта} other {{status}}}",
+      "blocked": "Бұғатталған: {count}",
+      "ready": "Дайын",
+      "goal": "Мақсат",
+      "audience": "Аудитория",
+      "angle": "Тәсіл",
+      "toolsReady": "{count, plural, other {# құрал дайын}}",
+      "connectTool": "Құралды қосу",
+      "open": "Ашу",
+      "nextAction": "Келесі қадам",
+      "openInAiriCreate": "Airi Create-те ашу",
+      "openBulkDraft": "Науқан жобасын ашу",
+      "openAssetDrafts": "Медиа жобаларын ашу",
+      "stepStatus": {
+        "ready": "Дайын",
+        "approval_required": "Растау қажет",
+        "blocked": "Бұғатталған",
+        "needs_input": "Деректер қажет"
+      }
+    },
+    "start": {
+      "metricLabels": {
+        "chats": "{count, plural, other {чат}}",
+        "items": "{count, plural, other {материал}}",
+        "replies": "{count, plural, other {жауап}}",
+        "channels": "{count, plural, other {арна}}",
+        "tools": "{count, plural, other {құрал}}",
+        "sources": "{count, plural, other {дереккөз}}"
+      },
+      "cards": {
+        "canva-whatsapp-campaign": {
+          "title": "Canva мен WhatsApp науқаны",
+          "description": "Жаппай жіберуге арналған Canva креативі мен WhatsApp үлгісі.",
+          "prompt": "Canva мен WhatsApp-ты бірге қолдан: Meta ережелеріне сай WhatsApp үлгісі, аудиторияға арналған тәсіл және Canva креатив брифі бар жаппай науқанды жоспарла.",
+          "eyebrow": "Canva + WhatsApp",
+          "compactTitle": "Canva науқанын жасау"
+        },
+        "click-to-whatsapp-funnel": {
+          "title": "Жарнамадан WhatsApp-қа воронка",
+          "description": "Жарнама идеялары, WhatsApp-тағы алғашқы хабарлама және кейінгі қадамдар.",
+          "prompt": "Meta Ads пен WhatsApp арқылы жарнамадан WhatsApp-қа апаратын воронканы жоспарла: аудитория, креатив идеясы, алғашқы үлгі және кейінгі сценарий.",
+          "eyebrow": "Жарнама + WhatsApp",
+          "compactTitle": "WhatsApp воронкасын құру"
+        },
+        "avatar-whatsapp-campaign": {
+          "title": "Аватар бейнесі бар науқан",
+          "description": "Аватармен қысқа бейне сценарийі және WhatsApp-қа жіберу жоспары.",
+          "prompt": "WhatsApp үшін Wan сөйлейтін аватарының қысқа бейнесімен науқан жоспарла: портрет брифі, 15 секундқа дейінгі сценарий, ұсыныс тәсілі және үлгі мәтіні.",
+          "eyebrow": "Wan Avatar + WhatsApp",
+          "compactTitle": "Аватар науқанын жоспарлау"
+        },
+        "meta-ads-creative-pack": {
+          "title": "Meta Ads креатив жиынтығы",
+          "description": "Қосылған креатив құралдары арқылы жарнама идеялары мен брифтер.",
+          "prompt": "Қосылған креатив құралдарым арқылы Meta Ads креатив жиынтығын дайында: назар аудартатын тәсілдер, форматтар, брифтер және сынақ жоспары.",
+          "eyebrow": "Жарнама + креатив",
+          "compactTitle": "Meta Ads жиынтығын дайындау"
+        },
+        "website-lead-whatsapp-nurture": {
+          "title": "Сайттағы өтінімдерді жылыту",
+          "description": "Сайттағы өтінімдерді іріктеу және WhatsApp-тағы еске салғыштар.",
+          "prompt": "Сайттағы чаттар мен WhatsApp негізінде өтінімдерді жылыту ағынын жобала: іріктеу сұрақтары, еске салғыштар және сатып алуға жеткізетін хабарламалар.",
+          "eyebrow": "Сайт + WhatsApp",
+          "compactTitle": "Сайт өтінімдерін жылыту"
+        },
+        "email-whatsapp-reactivation": {
+          "title": "Клиенттерді қайтару: Email + WhatsApp",
+          "description": "Email мен WhatsApp хабарламалары қайталаусыз.",
+          "prompt": "Email мен WhatsApp арқылы клиенттерді қайтару науқанын жоспарла: реттілік, хабарлама мәтіндері және мазалайтын қайталаулардан қорғау.",
+          "eyebrow": "Email + WhatsApp",
+          "compactTitle": "WhatsApp арқылы қайтару"
+        },
+        "instagram-canva-content": {
+          "title": "Instagram-нан Canva-ға контент",
+          "description": "Instagram сигналдары негізінде Canva-дағы пост пен сторис идеялары.",
+          "prompt": "Instagram мен Canva арқылы тартымды контент жоспарла: клиенттердің мінез-құлқына негізделген пост, сторис және науқан дизайнының брифтері.",
+          "eyebrow": "Instagram + Canva",
+          "compactTitle": "Instagram контентін жасау"
+        },
+        "instagram-meta-ads-angle": {
+          "title": "Instagram-нан жарнама идеялары",
+          "description": "Instagram негізінде Meta Ads тәсілдері мен аудитория сынақтары.",
+          "prompt": "Instagram деректері негізінде осы кеңістік үшін Meta Ads тәсілдерін, аудиторияларды, клиент қарсылықтарын және алғашқы сынақтарды ұсын.",
+          "eyebrow": "Instagram + жарнама",
+          "compactTitle": "Instagram жарнама идеялары"
+        },
+        "canva-higgsfield-visual-pipeline": {
+          "title": "Визуалды контент ағыны",
+          "description": "Жасалған суреттер, Canva макеттері және науқан мәтіндері.",
+          "prompt": "Higgsfield пен Canva арқылы визуалды контент ағынын жоспарла: креатив промпттары, макет брифтері және әр материалды қайда қолдану керегі.",
+          "eyebrow": "Higgsfield + Canva",
+          "compactTitle": "Визуалды ағын құру"
+        },
+        "higgsfield-whatsapp-media": {
+          "title": "WhatsApp медиа үлгісі",
+          "description": "WhatsApp науқан үлгісіне арналған медиа креатив пен мәтін.",
+          "prompt": "Higgsfield пен WhatsApp-ты бірге қолдан: медиа үлгісі бар науқанды жоспарла — визуал промпттары, негізгі мәтін, түймелер және үлгі модерациядан өтуі үшін ескертпелер.",
+          "eyebrow": "Higgsfield + WhatsApp",
+          "compactTitle": "Медиа үлгісін жасау"
+        },
+        "avatar-voice-video": {
+          "title": "Сөйлейтін аватар сценарийі",
+          "description": "Аватардың берілуі, дауыс және қысқа бейне сценарийі.",
+          "prompt": "ElevenLabs дауысымен Wan сөйлейтін аватарының тұжырымдамасын дайында: портрет брифі, 15 секундқа дейінгі сценарий, дауыс нұсқаулары және оны медиатекада қалай жасау керегі.",
+          "eyebrow": "Wan Avatar + дауыс",
+          "compactTitle": "Аватар сценарийін дайындау"
+        },
+        "voice-whatsapp-follow-up": {
+          "title": "Дауыстық хабарламамен кейінгі байланыс",
+          "description": "Дауыс тұжырымдамасы және оның айналасындағы WhatsApp хабарламалар тізбегі.",
+          "prompt": "ElevenLabs пен WhatsApp арқылы дауыстық хабарламалармен клиенттермен кейінгі байланысты жоспарла: сценарий, WhatsApp мәтіндері және аудионы қайда қолдану керегі.",
+          "eyebrow": "Дауыс + WhatsApp",
+          "compactTitle": "Дауыстық байланысты жоспарлау"
+        },
+        "booking-reminder-flow": {
+          "title": "Жазылу туралы еске салғыштар",
+          "description": "Клиенттердің жазылуына байланысты еске салғыштар мен қайта хабарламалар.",
+          "prompt": "Күнтізбе, клиенттердің соңғы хабарламалары және қосылған мессенджерлер негізінде жазылу туралы еске салу және келмеген клиенттерді қайтару бойынша жұмыс істейтін сценарий жаса.",
+          "eyebrow": "Күнтізбе + мессенджерлер",
+          "compactTitle": "Еске салғыштар құру"
+        },
+        "manager-capacity-triage": {
+          "title": "Өтініштерді бөлу",
+          "description": "Шағын команда үшін шұғыл жауаптар, менеджерге беру және жауап бермеген клиенттерді қайтару.",
+          "prompt": "Әр клиентке бірден жауап беріп үлгермейтін шағын команда үшін WhatsApp-та өтініштерді бөлу және қайта хабарласу сценарийін жаса. Клиенттердің соңғы хабарламалары бойынша шұғыл сұраныстарды, «жазылу» және «көмек керек» тармақтарын, менеджерге беру ережелерін және жауап бермеген клиенттерді қайтаруды анықта. Жіберу мен жариялауды тексеруге қалдыр.",
+          "eyebrow": "Қолдауды автоматтандыру",
+          "compactTitle": "Өтініштерді бөлу"
+        },
+        "cross-channel-whatsapp-follow-up": {
+          "title": "Басқа арналардан кейінгі байланыс",
+          "description": "Әлеуметтік желі мен чаттағы қызығушылықты WhatsApp хабарламалар тізбегіне айналдыру.",
+          "prompt": "Қосылған әлеуметтік желілер, чаттар және WhatsApp негізінде қызығушылық танытқан клиенттерге бірнеше арна арқылы кейінгі байланыс сценарийін жобала.",
+          "eyebrow": "Арналар + WhatsApp",
+          "compactTitle": "Арналар арасындағы байланыс"
+        },
+        "conversation-data": {
+          "title": "Клиент чаттары дайын",
+          "description": "Airi жиі қойылатын сұрақтарды, клиент ниетін және науқан идеяларын табады.",
+          "prompt": "Клиенттермен хат алмасуымды зерттеп, жиі қойылатын сұрақтарды, сатып алу белгілерін және алдымен шешу керек қолдаудағы олқылықтарды тап.",
+          "eyebrow": "Кеңістік деректері",
+          "compactTitle": "Клиент чаттарын талдау"
+        },
+        "knowledge-data": {
+          "title": "Білім базасы қосылды",
+          "description": "Құжаттар, сілтемелер, дайын үзінділер және ережелерге негізделген жауаптар.",
+          "prompt": "Қосылған білім базамды тексеріп, клиенттерге жақсырақ жауап беру үшін қандай ақпарат жетіспейтінін айт.",
+          "eyebrow": "Кеңістік деректері",
+          "compactTitle": "Білім базасындағы олқылықтар"
+        },
+        "reply-data": {
+          "title": "Жақсартуға болатын жауаптар",
+          "description": "Сақталған жауаптарды қолдау мен сату үшін күштірек етіңіз.",
+          "prompt": "Жылдам жауаптарымды тексеріп, конверсия мен қолдау сапасы үшін жақсартылған нұсқаларын ұсын.",
+          "eyebrow": "Кеңістік деректері",
+          "compactTitle": "Дайын жауаптарды жақсарту"
+        },
+        "customer-channels": {
+          "title": "Клиент арналары қосылды",
+          "description": "Сұраныс, қарсылықтар және қайта байланыс бойынша мүмкіндіктер басымдық ретімен.",
+          "prompt": "Қосылған клиент арналарымды зерттеп, басымдық бойынша мүмкіндіктер жоспарын құр: қолдау міндеттері, клиент ниеттері, өсу белгілері, дәлелдер және Airi-дің келесі әрекеттері.",
+          "eyebrow": "Компания деректері",
+          "compactTitle": "Арналардағы мүмкіндіктер"
+        },
+        "creative-stack": {
+          "title": "Креатив құралдары қосылды",
+          "description": "Компания деректері негізінде суреттер, бейнелер, дауыс және дизайн брифтері.",
+          "prompt": "Қосылған креатив құралдарым мен кеңістік деректері арқылы тартымды контент жиынтығын жоспарла.",
+          "eyebrow": "Креатив",
+          "compactTitle": "Креатив жиынтығын жоспарлау"
+        },
+        "connected-sources": {
+          "title": "Арналар қосылды",
+          "description": "Компанияның қосылған құралдары келесі қадамдарға негіз ретінде.",
+          "prompt": "Airi осы кеңістіктегі қосылған арналарым мен құралдарыммен не істей алады?",
+          "eyebrow": "Баптау",
+          "compactTitle": "Қосылған құралдармен жоспарлау"
+        },
+        "saved-chats": {
+          "title": "Airi-мен бұрынғы жұмыс",
+          "description": "Стратегия, үлгілер немесе науқандар туралы бұрынғы чаттарды жалғастырыңыз.",
+          "prompt": "Airi-мен бұрынғы чаттарымды қысқаша айтып, келесі пайдалы қадамды ұсын.",
+          "eyebrow": "Тарих",
+          "compactTitle": "Бұрынғы жұмысты жалғастыру"
+        },
+        "whatsapp-template": {
+          "title": "WhatsApp үлгісін жасау",
+          "description": "Meta ережелеріне сай үлгі, ол конструкторда ашылады.",
+          "prompt": "Кеңістігімнің деректері негізінде WhatsApp үлгісін жаса. Модерацияға жібермес бұрын оны конструкторда тексеруге дайында.",
+          "eyebrow": "WhatsApp",
+          "compactTitle": "WhatsApp үлгісін жасау"
+        },
+        "follow-up-scenario": {
+          "title": "Кейінгі байланыс сценарийі",
+          "description": "Өтінімдер, жауап бермеген немесе кетуі мүмкін клиенттер үшін қайта хабарламалар.",
+          "prompt": "Қызығушылық танытқан, бірақ сатып алмаған клиенттерге WhatsApp-та кейінгі байланыс сценарийін жобала.",
+          "eyebrow": "Сценарий",
+          "compactTitle": "Кейінгі байланыс сценарийі"
+        },
+        "bulk-campaign": {
+          "title": "Науқанды жоспарлау",
+          "description": "Деректеріңіз негізінде аудитория, тәсіл, контент және жіберу жоспары.",
+          "prompt": "Осы кеңістіктегі деректер мен құралдар негізінде клиенттерді тартатын жаппай науқанды жоспарла.",
+          "eyebrow": "Науқан",
+          "compactTitle": "Жаппай науқанды жоспарлау"
+        },
+        "meta-ads-mcp": {
+          "eyebrow": "Жарнама MCP",
+          "compactTitle": "@meta арқылы Meta Ads"
+        },
+        "meta-ads-plan": {
+          "eyebrow": "Жарнама"
+        },
+        "avatar-video": {
+          "title": "Аватар бейнесі",
+          "description": "Медиатекаға арналған сөйлейтін аватардың қысқа сценарийі (сурет + мәтін немесе аудио).",
+          "prompt": "Келесі науқанымызға Wan сөйлейтін аватарының қысқа бейнесін жасауға көмектес: портрет бойынша ұсыныстар және 15 секундқа дейінгі сценарий.",
+          "eyebrow": "Wan Avatar",
+          "compactTitle": "Аватар бейнесін жасау"
+        },
+        "creative-content": {
+          "title": "Контент жоспары",
+          "description": "Дизайн, визуал, дауыс және қысқа бейнелерге арналған брифтер.",
+          "prompt": "Қосылған креатив құралдарым үшін кеңістік деректерін ескеретін, клиенттерді тартатын контент жоспарын құр.",
+          "eyebrow": "Креатив"
+        },
+        "support-gaps": {
+          "title": "Қолдаудағы олқылықтар",
+          "description": "Airi клиент деректері мен білім базасын зерттеп, нені түзету керегін ұсынады.",
+          "prompt": "Клиенттер туралы қолжетімді деректер мен білім базасын талда. Қолдаудағы қай олқылықтарды бірінші жабу керек?",
+          "eyebrow": "Қолдау"
+        },
+        "product-capabilities": {
+          "title": "Airi не істей алады?",
+          "description": "Осы кеңістікте Airi-дің қандай әрекеттері қолжетімді екенін біліңіз.",
+          "prompt": "Airi осы кеңістікте не істей алады және маған келесі не қосу керек?",
+          "eyebrow": "Мүмкіндіктер",
+          "compactTitle": "Airi не істей алады"
+        },
+        "connect-context": {
+          "title": "Кеңістікті баптау жоспары",
+          "description": "Алдымен қандай арналарды, білімді және креатив құралдарын қосу керек.",
+          "prompt": "Airi пайдалы маркетинг әрекеттерін ұсына алуы үшін алдымен нені қосу керектігін шешуге көмектес.",
+          "eyebrow": "Баптау"
+        }
+      }
+    },
+    "closeSidebar": "Airi тақтасын жабу",
+    "pinChat": "Чатты бекіту",
+    "unpinChat": "Чатты босату",
+    "archiveChat": "Чатты мұрағаттау",
+    "chatActions": "Чат әрекеттері",
+    "moreChatActions": "Басқа чат әрекеттері",
+    "conversationLabel": "Airi-мен хат алмасу",
+    "scrollToLatest": "Соңғы хабарламаға өту",
+    "askAiri": "Airi-ден сұраңыз",
+    "backToStart": "Airi басына оралу",
+    "newChat": "Жаңа чат",
+    "loadingChats": "Чаттар жүктелуде",
+    "noChatsYet": "Әзірге чат жоқ.",
+    "searchChats": "Чаттардан іздеу",
+    "startChat": "Чат",
+    "backToChats": "Чаттарға оралу",
+    "workspaceAssistant": "Кеңістік көмекшісі",
+    "chatCount": "{count, plural, other {# чат}}",
+    "composer": {
+      "openTools": "Хабарлама құралдарын ашу",
+      "attachFile": "Фото не құжат тіркеу",
+      "chooseCreativeAsset": "Медиа файл таңдау",
+      "addSources": "Дереккөздерді қосу",
+      "sendMessage": "Хабарламаны жіберу",
+      "backToSources": "Дереккөздерге оралу",
+      "chooseFromChats": "Чаттардан таңдау",
+      "addSourcesAndSkills": "Дереккөздер мен дағдыларды қосу",
+      "pickerLabel": "Дағдылар, дереккөздер және чаттар",
+      "loadingSources": "Дереккөздер жүктелуде",
+      "alreadySelected": "Таңдалған",
+      "noChatsFound": "Чаттар табылмады.",
+      "noSourcesFound": "Дереккөздер табылмады.",
+      "sourcesFailed": "Дереккөздерді жүктеу мүмкін болмады",
+      "chatsFailed": "Чаттарды жүктеу мүмкін болмады"
+    }
+  },
+  "AiriChatProgress": {
+    "working": "Сұрауыңызды орындап жатырмыз",
+    "preparing": "Жауап дайындап жатырмыз",
+    "understanding": "Сұрауыңызды қарастырып жатырмыз",
+    "context": "Қажетті ақпаратты қарап жатырмыз",
+    "writing": "Жауап жазып жатырмыз",
+    "template": "WhatsApp үлгісін дайындап жатырмыз",
+    "flow": "WhatsApp формасын дайындап жатырмыз",
+    "image": "Сурет дайындап жатырмыз",
+    "opportunities": "Мүмкіндіктерді қарап жатырмыз",
+    "campaign": "Науқанды дайындап жатырмыз",
+    "ads": "Жарнамаңызды қарап жатырмыз",
+    "saving": "Жауапты сақтап жатырмыз",
+    "ready": "Жауап дайын",
+    "partial": "Ішінара нәтижелер дайын",
+    "stopped": "Сұрау тоқтатылды",
+    "error": "Сұрауды орындау мүмкін болмады",
+    "details": "Жұмыс барысы",
+    "running": "Орындалуда",
+    "complete": "Аяқталды",
+    "failed": "Орындалмады"
+  },
+  "Select": {
+    "scrollUp": "Жоғары айналдыру",
+    "scrollDown": "Төмен айналдыру"
+  },
+  "AppUpdateBanner": {
+    "updateReady": "Жаңарту дайын",
+    "refresh": "Жаңарту",
+    "refreshing": "Жаңартылуда...",
+    "dismiss": "Жаңарту хабарламасын жабу"
+  }
+}

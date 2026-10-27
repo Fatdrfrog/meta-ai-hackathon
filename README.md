@@ -6,6 +6,7 @@ Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/
 
 - [docs/architecture.md](docs/architecture.md): how it works, which Meta models do what, and how it stays separate from airi.chat
 - [HACKATHON.md](HACKATHON.md): how to tell what was built during the hackathon
+- `airi/`: airi.chat, our existing product, imported as pre-existing code (see HACKATHON.md); it is a separate pnpm workspace
 
 ## Status
 

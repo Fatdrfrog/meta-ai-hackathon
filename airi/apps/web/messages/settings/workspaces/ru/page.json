@@ -1,0 +1,26 @@
+{
+  "Workspaces": {
+    "selectWorkspace": "Выберите рабочее пространство",
+    "workspaces": "Рабочие пространства",
+    "manageWorkspaces": "Управление пространствами...",
+    "createWorkspace": "Новое пространство",
+    "workspaceRoutingDescription": "Отдельные пространства для команд, брендов или филиалов.",
+    "createWorkspaceDescription": "Создайте следующее рабочее пространство, затем подключите его номер WhatsApp.",
+    "nameLabel": "Название",
+    "namePlaceholder": "напр., Команда поддержки",
+    "createButton": "Создать пространство",
+    "createAndConnectWhatsapp": "Создать и подключить WhatsApp",
+    "openWorkspace": "Открыть",
+    "connectWhatsapp": "Настройка WhatsApp",
+    "currentWorkspace": "Текущее",
+    "creating": "Создание…",
+    "loadError": "Не удалось загрузить пространства. Обновите страницу.",
+    "limitError": "Достигнут лимит пространств. Проверьте ваш тариф.",
+    "permissionError": "Создавать пространства могут только администраторы.",
+    "createError": "Не удалось создать пространство. Попробуйте снова.",
+    "nameError": "Название должно содержать от 2 до 100 символов.",
+    "emptyWorkspaces": "Нет доступных пространств.",
+    "openWorkspaceNamed": "Открыть {name}",
+    "trialError": "Пробный период завершён. Проверьте тариф, чтобы создать пространство."
+  }
+}

@@ -1,0 +1,1888 @@
+{
+  "DashboardPage": {
+    "header": {
+      "title": "Dashboard",
+      "description": "Overview of your support activity and trends."
+    },
+    "filters": {
+      "allChannels": "All channels",
+      "allCategories": "All categories",
+      "allLabels": "All labels",
+      "allManagers": "All managers",
+      "label": "Filters",
+      "channelCount": "{count, plural, one {# channel} other {# channels}}",
+      "categoryCount": "{count, plural, one {# category} other {# categories}}",
+      "labelCount": "{count, plural, one {# label} other {# labels}}",
+      "managerCount": "{count, plural, one {# manager} other {# managers}}",
+      "channels": "Channels",
+      "noChannels": "No channels",
+      "categories": "Categories",
+      "noCategories": "No categories",
+      "internalLabels": "Internal labels",
+      "noInternalLabels": "No internal labels",
+      "managers": "Managers",
+      "noManagers": "No managers",
+      "sheetTitle": "Dashboard filters",
+      "sheetDescription": "These filters apply to every dashboard section and both periods.",
+      "apply": "Apply filters",
+      "clearSelection": "Clear selection"
+    },
+    "presets": {
+      "label": "Presets",
+      "empty": "No presets",
+      "delete": "Delete: {name}",
+      "save": "Save current as preset",
+      "saveTitle": "Save filter preset",
+      "saveDescription": "Save this selection to reuse it later.",
+      "nameLabel": "Preset name",
+      "namePlaceholder": "For example, Support leads",
+      "cancel": "Cancel",
+      "confirmSave": "Save preset",
+      "apply": "Apply {name}",
+      "deleteAria": "Delete {name}",
+      "deleteTitle": "Delete filter preset?",
+      "deleteDescription": "Delete {name}. This cannot be undone.",
+      "deleteCancel": "Keep preset",
+      "deleteConfirm": "Delete preset",
+      "deleteAction": "Delete"
+    },
+    "actions": {
+      "export": "Export"
+    },
+    "export": {
+      "all": "ALL",
+      "filters": "Filters",
+      "comparisonPeriods": "Comparison periods",
+      "categoryComparisons": "Category comparison",
+      "dailyCountsOverall": "Daily Counts (overall)",
+      "messageActivityByHour": "Message Activity By Hour",
+      "topCategoriesVisible": "Top Categories (visible)",
+      "categoriesByChannelVisible": "Categories By Channel (visible)",
+      "statsOverall": "Stats (overall)",
+      "advertisement": "Advertisement",
+      "metaAdsManagerDaily": "Meta Ads Manager Daily",
+      "metaAdsManagerTopAds": "Meta Ads Manager Top Ads",
+      "advertisementSources": "Advertisement Sources",
+      "internalLabels": "Internal Labels",
+      "managers": "Managers",
+      "internalLabelBreakdown": "Internal Label Breakdown",
+      "metaAdsCurrencies": "Meta spend by currency",
+      "metaAdsAccounts": "Meta account metrics",
+      "conversionFeedback": "Meta outcome feedback",
+      "conversionFeedbackReasons": "Delivery reasons"
+    },
+    "advertisement": {
+      "title": "Meta ads",
+      "description": "Ads Manager results alongside Airi-captured WhatsApp referral conversations.",
+      "sourceTypes": {
+        "metaAds": "Meta ads",
+        "instagramPosts": "Instagram posts",
+        "unknown": "Unknown source"
+      },
+      "sourceTypeCount": "{type}: {count}",
+      "tiles": {
+        "metaResults": "Meta results",
+        "spend": "Spend",
+        "costPerResult": "Cost/result",
+        "airiCaptured": "Airi captured",
+        "capturedStarts": "Captured starts",
+        "responded": "Responded",
+        "closed": "Closed",
+        "trackedSources": "Tracked sources"
+      },
+      "selectedAdAccount": "Selected ad account",
+      "spendScope": "All ads in the account · {account}",
+      "uniqueSources": "{count, plural, one {# unique source} other {# unique sources}}",
+      "ofMetaResults": "{percent} of Meta results",
+      "responseRate": "{percent} response rate",
+      "closeRate": "{percent} close rate",
+      "topSourcesShown": "Top sources shown below",
+      "captureGap": "{count, plural, one {{countValue} Meta result did not become an Airi-captured referral conversation in this range.} other {{countValue} Meta results did not become Airi-captured referral conversations in this range.}}",
+      "metaByDay": {
+        "title": "Meta results by day",
+        "description": "Ads Manager messaging results and spend."
+      },
+      "dateRange": "{start} to {end}",
+      "capturedByDay": {
+        "title": "Airi-captured starts",
+        "description": "Meta-referred conversation starts by day."
+      },
+      "dayCount": "{count, plural, one {# day} other {# days}}",
+      "metaResultTooltip": "{date}: {count}, {spend}",
+      "capturedStartTooltip": "{date}: {count}",
+      "topAds": {
+        "ad": "Meta ad",
+        "results": "Results",
+        "spend": "Spend",
+        "costPerResult": "Cost/result"
+      },
+      "sources": {
+        "source": "Airi source",
+        "starts": "Starts",
+        "responded": "Responded",
+        "closed": "Closed",
+        "latest": "Latest",
+        "empty": "No source breakdown is available for this period."
+      },
+      "sourceId": "Source ID: {id}",
+      "openSource": "Open advertisement source",
+      "sales": {
+        "unknownCurrency": "Unknown currency",
+        "title": "Recorded sales",
+        "scope": "All workspace sales for the selected dates. Channel, category, label and manager filters do not apply.",
+        "customerScope": "“Known paying customers” counts linked customer profiles. “Paid conversations” counts chats with a recorded sale. The same customer can appear in several ad groups.",
+        "currencyGroup": "Sales in {currency}",
+        "adColumn": "Ad / campaign",
+        "ad": "Ad: {id}",
+        "unattributed": "Unattributed",
+        "payingCustomers": "Known paying customers",
+        "paidConversations": "Paid conversations",
+        "sales": "Sales",
+        "refunds": "Refunds",
+        "gross": "Gross revenue",
+        "refunded": "Refunded",
+        "net": "Net revenue",
+        "empty": "No recorded sales or refunds for these dates.",
+        "error": "Could not load recorded sales. Refresh the dashboard to try again.",
+        "dateRangeError": "Select a date range of up to 366 days to view recorded sales.",
+        "truncated": "Showing the first 200 ad and currency groups. Choose a shorter date range for more detail.",
+        "recent": "Recent Meta delivery ({count})",
+        "deliveryScope": "Receipt by Meta does not confirm ad attribution. Events without an eligible WhatsApp ad conversation remain in your sales report.",
+        "unknownHelp": "Check these events in Meta Events Manager before any resend. Delivery is uncertain; automatic retries are disabled.",
+        "sale": "Sale",
+        "refund": "Refund",
+        "testCode": "Test code",
+        "preparationFailed": "Could not send",
+        "statuses": {
+          "pending": "Pending",
+          "queued": "Queued",
+          "delivery_unknown": "Delivery unknown",
+          "sent": "Received by Meta",
+          "rejected": "Rejected by Meta",
+          "not_eligible": "Not eligible"
+        }
+      },
+      "filterScope": "Selected dates. Conversation filters affect captured chats; Meta results and spend are not filtered.",
+      "diagnostics": {
+        "allMessaging": "Meta messaging results include all destinations; they are not the number of WhatsApp chats captured by airi.chat.",
+        "reportTime": "Results by conversion date; ad-set attribution settings.",
+        "fetchedAt": "Updated {date}",
+        "partial": "This report is incomplete. Efficiency estimates are unavailable.",
+        "coverage": "Results reported in {reported} rows; missing in {missing} rows.",
+        "spendCoverage": "Spend reported in {reported} rows; missing in {missing} rows.",
+        "currency": "Currency",
+        "unknownCurrency": "Unknown currency",
+        "impressions": "Impressions",
+        "linkClicks": "Link clicks",
+        "ctr": "Link CTR",
+        "cpc": "Link CPC",
+        "account": "Account",
+        "reach": "Reach",
+        "frequency": "Frequency",
+        "timeZone": "Time zone",
+        "currencyBreakdown": "Spend by currency",
+        "accountSummary": "Account totals for the selected dates. Reach and frequency are not added across ads or days.",
+        "warnings": {
+          "sources_truncated": "Source limit reached",
+          "accounts_truncated": "Account limit reached",
+          "credentials_unavailable": "Credentials unavailable",
+          "accounts_unavailable": "Accounts unavailable",
+          "insights_unavailable": "Insights unavailable",
+          "account_summary_unavailable": "Account totals unavailable",
+          "rows_truncated": "Row limit reached",
+          "invalid_paging": "Provider pagination incomplete",
+          "currency_unavailable": "Currency unavailable",
+          "timezone_scope": "Account time zones differ from report",
+          "results_not_reported": "Selected result action not reported",
+          "multiple_currencies": "Multiple currencies are kept separate",
+          "ads_truncated": "Ad table is incomplete",
+          "spend_not_reported": "Spend not reported",
+          "report_timeout": "Provider report timed out",
+          "sources_unavailable": "Source inventory unavailable"
+        },
+        "currentDestination": "Current destination: {destination}",
+        "destinationWhatsApp": "WhatsApp",
+        "destinationOther": "Another or multiple destinations",
+        "destinationUnknown": "Not verified",
+        "destinationUpdatedAt": "Ad set last updated {date}",
+        "currentDestinationHelp": "Destination details describe the current ad-set configuration. Its last update is used to conservatively check the selected period."
+      },
+      "feedback": {
+        "title": "Meta outcome feedback",
+        "scope": "Recorded sales/refunds in this period; chat filters do not change feedback delivery. Accepted does not mean attributed revenue.",
+        "recorded": "Recorded",
+        "eligible": "Eligible",
+        "pending": "Pending",
+        "accepted": "Accepted by Meta",
+        "rejected": "Rejected",
+        "unknown": "Delivery unknown",
+        "ineligible": "Not eligible",
+        "oldestPending": "Oldest pending: {date}",
+        "unknownHelp": "Unknown delivery is not automatically retried; Meta acceptance does not prove ad attribution.",
+        "empty": "No recorded outcomes in this period",
+        "unavailable": "Outcome feedback is unavailable",
+        "reasonsTitle": "Delivery reasons",
+        "status": "Status",
+        "reason": "Reason",
+        "count": "Count",
+        "truncated": "The reason breakdown is incomplete.",
+        "reasons": {
+          "missing_attributable_click": "No attributable click",
+          "transaction_id_missing": "Transaction ID missing",
+          "feedback_not_enabled": "Feedback not enabled",
+          "whatsapp_source_unavailable": "WhatsApp source unavailable",
+          "whatsapp_account_changed": "WhatsApp account changed",
+          "delivery_destination_changed": "Delivery destination changed",
+          "event_too_old": "Event too old",
+          "pre_dispatch_failure": "Failed before dispatch",
+          "dispatch_started": "Dispatch started",
+          "original_purchase_not_sent": "Original purchase not sent",
+          "invalid_value": "Invalid value",
+          "invalid_currency": "Invalid currency",
+          "invalid_event_time": "Invalid event time",
+          "event_in_future": "Event in the future",
+          "missing_snapshot": "Delivery snapshot missing",
+          "missing_whatsapp_source": "WhatsApp source missing",
+          "unsupported_outcome": "Unsupported outcome",
+          "invalid_ctwa_clid": "Invalid click ID",
+          "invalid_dataset_id": "Invalid dataset",
+          "invalid_waba_id": "Invalid WhatsApp account",
+          "other": "Other provider reason",
+          "purchase_not_eligible": "Original purchase not eligible",
+          "purchase_destination_changed": "Original purchase destination changed",
+          "invalid_snapshot": "Invalid delivery snapshot",
+          "invalid_source_id": "Invalid source ID",
+          "invalid_event_name": "Invalid event name",
+          "invalid_test_event_code": "Invalid test event code",
+          "invalid_event_id": "Invalid event ID",
+          "invalid_access_token": "Access token invalid",
+          "transport_error": "Transport error",
+          "unconfirmed_http_error": "Unconfirmed provider response",
+          "missing_acceptance": "Acceptance not confirmed",
+          "provider_response_timeout": "Provider response timed out",
+          "provider_response_too_large": "Provider response too large",
+          "meta": "Meta error {code}"
+        }
+      }
+    },
+    "internalLabels": {
+      "title": "Internal labels",
+      "description": "Workspace-owned labels by conversation volume and handling state.",
+      "labeled": "{percent} labeled",
+      "tiles": {
+        "tagged": "Tagged",
+        "unlabeled": "Unlabeled",
+        "uniqueLabels": "Unique labels",
+        "topLabels": "Top labels"
+      },
+      "coverageDetail": "{percent} of conversations",
+      "noLabelAttached": "No internal label attached",
+      "assignmentCount": "{count, plural, one {{countValue} total assignment} other {{countValue} total assignments}}",
+      "shownBelow": "Shown in the table below",
+      "table": {
+        "label": "Label",
+        "conversations": "Conversations",
+        "open": "Open",
+        "inProgress": "In progress",
+        "closed": "Closed",
+        "responded": "Responded",
+        "latest": "Latest"
+      },
+      "view": "View"
+    },
+    "managerResponse": {
+      "title": "Manager response",
+      "description": "Median first human reply after the first customer message.",
+      "table": {
+        "manager": "Manager",
+        "handled": "Handled",
+        "medianFirstResponse": "Median first response",
+        "p90": "P90",
+        "replies": "Replies"
+      },
+      "help": {
+        "ariaLabel": "What {metric} means",
+        "medianFirstResponse": "Half of this manager’s first replies were faster than this, half slower. Median holds up better than the average when a few replies are very slow.",
+        "p90": "90% of this manager’s first replies happened by this time. The other 10% took longer, which shows the delays customers notice most."
+      },
+      "genericManager": "manager"
+    },
+    "serviceTruth": {
+      "title": "Human service evidence",
+      "description": "First human replies, unanswered chats and confirmed resolution timestamps.",
+      "eligible": "First-inbound cohort",
+      "answered": "Answered by a human",
+      "unanswered": "No human reply",
+      "coverage": "Answered coverage",
+      "oldestUnanswered": "Oldest unanswered",
+      "medianResolution": "Median resolution time",
+      "unknownClosures": "Closures without resolution evidence",
+      "timeouts": "Timeout closures",
+      "managerFilterNotice": "A first-responder filter cannot define ownership of unanswered chats; their denominator is unavailable.",
+      "knownResolutions": "{count} measured resolutions",
+      "resolutionNotice": "Resolution uses a stable lifecycle timestamp. Updates and timeout closures do not imply resolution.",
+      "empty": "No service evidence",
+      "partialCoverage": "Timing, status and manager details cover only the newest {limit} chats in this range. Full message volume is counted separately.",
+      "cohortNotice": "Replies use chats whose first inbound was in the selected range. Closure evidence covers chats active in that range; retained historical transitions have separate coverage."
+    }
+  },
+  "DateRangeControl": {
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last90Days": "Last 90 days",
+    "thisWeek": "This week",
+    "last12Months": "Last 12 months",
+    "allTime": "All time",
+    "select": "Select",
+    "customRange": "Custom range",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
+  "DashboardClientPage": {
+    "board": {
+      "title": "Analytics",
+      "description": "Understand demand and service quality.",
+      "conversationScope": "Dates and filters apply to conversation counts. AI and campaign summaries use their own 30-day windows. Advertising metrics and confirmed sales follow their own scope.",
+      "view": "Dashboard",
+      "new": "New dashboard",
+      "newTitle": "Create a dashboard",
+      "newDescription": "Choose a starting layout. You can add, remove and resize cards before saving.",
+      "name": "Dashboard name",
+      "namePlaceholder": "For example, Weekly support",
+      "edit": "Edit layout",
+      "editHint": "Move cards or open Card settings to resize or remove them. Choose Save changes when you are ready.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "delete": "Delete dashboard",
+      "viewLimit": "You can save up to 12 dashboards. Delete an existing dashboard to create another.",
+      "addCard": "Add card",
+      "libraryTitle": "Add dashboard cards",
+      "libraryDescription": "Choose cards to add to this dashboard. Each card can appear once.",
+      "allCardsAdded": "All available cards are already on this dashboard.",
+      "emptyTitle": "Your dashboard is empty",
+      "emptyDescription": "Add a card to start building your view.",
+      "grid": "Dashboard cards",
+      "drag": "Reorder {card}",
+      "dragInstructions": "Press Space to pick up a card. Use arrow keys to move it, Space to drop it, or Escape to cancel.",
+      "dragStarted": "Picked up {card}.",
+      "dragPosition": "{card} is at position {position}.",
+      "dragDropped": "Placed {card} at position {position}.",
+      "dragCancelled": "Moving {card} was cancelled.",
+      "settings": "Settings for {card}",
+      "width": "Width",
+      "height": "Height",
+      "widthChoices": {
+        "1": "1 column",
+        "2": "2 columns",
+        "3": "3 columns",
+        "4": "4 columns"
+      },
+      "heightChoices": {
+        "1": "1 row",
+        "2": "2 rows",
+        "3": "3 rows"
+      },
+      "sizeHint": "Sizes apply on wider screens. Cards grow with their content on mobile.",
+      "earlier": "Move earlier",
+      "later": "Move later",
+      "remove": "Remove card",
+      "loading": "Loading dashboard preferences…",
+      "loadFailed": "Could not load your dashboards. Retry to open your saved views.",
+      "saveFailed": "Could not save this dashboard. Your changes are still here; try saving again.",
+      "conflict": "This dashboard was changed elsewhere. Reload the saved version before editing again. Reloading discards your unsaved changes.",
+      "reloadFailed": "Could not reload the saved dashboard. Your unsaved changes are still here.",
+      "reload": "Reload saved version",
+      "retry": "Retry",
+      "noCardData": "No data for this card in the selected period.",
+      "comparisonUnavailable": "Choose a comparable date range to see period changes.",
+      "templates": {
+        "starter": {
+          "title": "Getting started",
+          "description": "See inquiry volume, response time and the topics customers contact you about.",
+          "question": "How is demand changing?"
+        },
+        "sales": {
+          "title": "Growth",
+          "description": "Explore inquiry sources, repeat contact and campaign responses.",
+          "question": "Which sources bring inquiries and replies?"
+        },
+        "support": {
+          "title": "Customer support",
+          "description": "Follow service levels, satisfaction and your team's response times.",
+          "question": "Are customers getting timely help?"
+        },
+        "operations": {
+          "title": "Team operations",
+          "description": "Plan capacity with workload, busy hours and AI usage.",
+          "question": "Where does the team need capacity?"
+        }
+      },
+      "cards": {
+        "total": "Total inquiries",
+        "new": "New inquiries",
+        "resolved": "Resolved inquiries",
+        "first_response": "First response time",
+        "in_progress": "In progress",
+        "sla": "SLA breaches",
+        "repeat": "Repeat inquiries",
+        "csat": "Customer satisfaction",
+        "ttr": "Resolution time",
+        "volume": "Inquiry volume",
+        "category_comparison": "Category comparison",
+        "period_summary": "Period summary",
+        "categories": "Inquiry categories",
+        "channels": "Channels",
+        "team": "Team workload",
+        "activity": "Busy hours",
+        "advertisements": "Advertisement sources",
+        "labels": "Internal labels",
+        "ai_usage": "AI usage",
+        "campaigns": "Campaign results"
+      },
+      "domain": {
+        "window": "Last 30 days",
+        "aiScope": "All AI calls",
+        "campaignScope": "All campaign recipients",
+        "campaignReplyWindow": "Replies within 7 days of each send",
+        "openReport": "Open detailed report",
+        "loading": "Loading summary…",
+        "unavailable": "Summary unavailable",
+        "emptyAi": "No AI activity in this period",
+        "emptyCampaigns": "No accepted campaign sends in this period",
+        "loadFailed": "Could not load this summary",
+        "retry": "Retry",
+        "notAvailable": "Not available",
+        "aiErrors": "AI call errors"
+      },
+      "done": "Done",
+      "close": "Close",
+      "move": "Move",
+      "cardSettings": "Card settings",
+      "nameRequired": "Enter a dashboard name before saving or creating another dashboard.",
+      "invalidLayout": "Check the dashboard names before saving your changes.",
+      "librarySearch": "Find a card",
+      "librarySearchPlaceholder": "Search by metric, topic or reporting scope",
+      "libraryNoResults": "No cards match your search. Try another term.",
+      "groups": {
+        "conversations": "Inquiry overview",
+        "service": "Service quality",
+        "sources": "Topics and sources",
+        "team": "Team capacity",
+        "automation": "AI and campaigns"
+      },
+      "scopes": {
+        "conversation": "Selected period and conversation filters",
+        "ai": "Last 30 days · all AI calls",
+        "campaigns": "Last 30 days · all campaign recipients",
+        "advertising": "Selected dates. Conversation filters affect chat counts; ad metrics and confirmed sales follow their own scope."
+      },
+      "nav": {
+        "dashboards": "Dashboards",
+        "conversations": "Conversations",
+        "campaigns": "Campaigns",
+        "ai": "AI usage",
+        "performance": "Performance",
+        "widget": "Web widget",
+        "outcomes": "Outcomes"
+      },
+      "cardDescriptions": {
+        "total": "Count inquiries in the selected period.",
+        "new": "See inquiries with an open status.",
+        "resolved": "See inquiries marked as resolved.",
+        "first_response": "Median time to the first reply, with average and P90 context.",
+        "in_progress": "See inquiries currently in progress.",
+        "sla": "Open or in-progress inquiries unresolved for more than three days.",
+        "repeat": "See customers who started another inquiry in this period.",
+        "csat": "Average customer rating in the selected period.",
+        "ttr": "Average time from opening to resolving an inquiry.",
+        "volume": "Follow daily inquiry volume and compare periods.",
+        "category_comparison": "Compare inquiry topics between the current and previous periods.",
+        "period_summary": "See a summary of changes against the previous period.",
+        "categories": "See how inquiries are distributed by topic.",
+        "channels": "Compare the channels customers use to reach you.",
+        "team": "Review workload and response times across managers.",
+        "activity": "Find the days and hours with the most inquiry activity.",
+        "advertisements": "Explore advertisement sources and their inquiry outcomes.",
+        "labels": "Review tagged inquiries and their statuses.",
+        "ai_usage": "Track AI calls, usage and errors over the last 30 days.",
+        "campaigns": "Review accepted sends and recipient replies over the last 30 days."
+      },
+      "unsavedChanges": "Unsaved changes",
+      "libraryAdded": "{card} added.",
+      "dashboardCount": "{count, plural, one {# dashboard} other {# dashboards}}",
+      "dashboardsTitle": "Your dashboards",
+      "dashboardsDescription": "Open a dashboard, rename or delete it, or create another one.",
+      "viewSummary": "{count, plural, one {# card} other {# cards}} · Started from {template}",
+      "rename": "Rename",
+      "deleteShort": "Delete",
+      "deletePending": "{count, plural, =1 {{names} will be deleted when you save changes.} other {# dashboards will be deleted when you save changes: {names}.}}",
+      "deletePendingName": "“{name}”",
+      "recommended": "Recommended for your workspace",
+      "recommendationReasons": {
+        "new_workspace": "Your workspace is new, so start with inquiry volume and response time.",
+        "low_volume": "Inquiries are still building up, so start with volume and response time.",
+        "ads_connected": "Meta Ads is connected, so follow which sources bring inquiries.",
+        "recent_campaigns": "You sent WhatsApp campaigns recently, so follow sources and replies.",
+        "team_size": "Several teammates answer customers, so follow workload and busy hours.",
+        "support_default": "Your inquiries are steady, so follow service levels and satisfaction."
+      },
+      "unreadable": "Your saved layout could not be opened, so a starting dashboard is shown. Saving changes replaces the saved layout.",
+      "resizeHint": "Drag to resize. You can also change the size in Card settings.",
+      "resizePreview": "{width} × {height}"
+    },
+    "tabs": {
+      "label": "Dashboard sections",
+      "overview": "Overview",
+      "categories": "Categories",
+      "team": "Team and workload",
+      "sources": "Sources and labels"
+    },
+    "conversationVolume": {
+      "title": "Inquiry volume",
+      "description": "Distinct customer inquiries for each day in the selected period."
+    },
+    "comparison": {
+      "label": "Period comparison",
+      "enabled": "Compare with previous period",
+      "disabled": "Current period only",
+      "unavailable": "Comparison is unavailable for this range",
+      "currentPeriod": "Current: {range}",
+      "previousPeriod": "Previous: {range}",
+      "previousValue": "Previous: {value}"
+    },
+    "activeFilters": {
+      "label": "Active filters",
+      "count": "Active filters: {count}",
+      "clearAll": "Clear all",
+      "remove": "Remove {value}",
+      "removeAction": "Remove"
+    },
+    "categoryComparison": {
+      "title": "Category comparison",
+      "description": "Inquiry volume by category for the selected periods.",
+      "currentOnlyDescription": "Inquiry volume by category for the selected period.",
+      "caption": "Current and previous inquiry volume by category",
+      "currentOnlyCaption": "Current inquiry volume by category",
+      "views": {
+        "all": "All",
+        "increased": "Increased",
+        "decreased": "Decreased",
+        "new": "New",
+        "noLongerActive": "No longer active"
+      },
+      "table": {
+        "category": "Category",
+        "current": "Current",
+        "previous": "Previous",
+        "difference": "Difference",
+        "change": "Change",
+        "total": "Total",
+        "totalAllCategories": "Total, all categories"
+      },
+      "mobile": {
+        "current": "Current",
+        "previous": "Previous",
+        "difference": "Difference",
+        "rate": "Rate"
+      },
+      "changeKinds": {
+        "increase": "Increased",
+        "decrease": "Decreased",
+        "unchanged": "No change",
+        "new": "New",
+        "noLongerActive": "No longer active"
+      },
+      "viewAll": "View all",
+      "empty": "No categories match this view."
+    },
+    "notableChanges": {
+      "title": "Notable changes",
+      "description": "Largest category change in inquiry volume.",
+      "increase": "{category} increased by {delta} inquiries.",
+      "decrease": "{category} decreased by {delta} inquiries.",
+      "new": "{category} is new with {delta} inquiries.",
+      "noLongerActive": "{category} is no longer active, a change of {delta} inquiries.",
+      "unchanged": "Category inquiry volume was unchanged."
+    },
+    "moreMetrics": "More metrics",
+    "showInactiveManagers": "Show inactive managers",
+    "empty": {
+      "dashboard": "No activity in this period.",
+      "chart": "No conversation volume in this period."
+    },
+    "accessibility": {
+      "comparisonControl": "Choose period comparison",
+      "categoryViews": "Filter categories by change",
+      "currentValue": "Current value",
+      "previousValue": "Previous value",
+      "differenceValue": "Difference",
+      "changeRate": "Change rate"
+    },
+    "failedToLoadData": "Failed to load dashboard data.",
+    "topGrowingCategories": "Top Growing Categories",
+    "topDecliningCategories": "Top Declining Categories",
+    "conversationActivityTitle": "Busy hours",
+    "conversationActivityDescription": "When message volume is highest. Times shown in {timeZone}.",
+    "conversationActivityPeakLabel": "Peak:",
+    "conversationActivityPeakValue": "{day}, {hour} ({count} messages)",
+    "conversationActivityTotal": "{count} messages",
+    "conversationActivityEmpty": "No message activity in this period.",
+    "conversationActivityGridLabel": "Message activity by day and hour",
+    "conversationActivityCellLabel": "{day}, {hour}: {count} messages",
+    "conversationActivityLegendLow": "Low",
+    "conversationActivityLegendHigh": "High",
+    "conversationActivityDayMon": "Mon",
+    "conversationActivityDayTue": "Tue",
+    "conversationActivityDayWed": "Wed",
+    "conversationActivityDayThu": "Thu",
+    "conversationActivityDayFri": "Fri",
+    "conversationActivityDaySat": "Sat",
+    "conversationActivityDaySun": "Sun",
+    "topInsight": "Top insight",
+    "viewMore": "View more",
+    "complaintInsight": "The 'Complaint' category is most often associated with the topic \"{tag}\".",
+    "noComplaintTrends": "No significant complaint trends found.",
+    "insufficientDataForPeak": "Insufficient data to determine peak load.",
+    "peakTimeInsight": "Peak message volume is on {dayOfWeek}, from {startHour}:00 to {endHour}:00.",
+    "uncategorized": "Uncategorized",
+    "unknown": "Unknown",
+    "missingValue": "—",
+    "retry": "Retry",
+    "metricDefinition": "Definition"
+  },
+  "ChannelBreakdown": {
+    "title": "Categories by channel",
+    "description": "Comparison of the number of chats across different channels.",
+    "category": "Category",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "insight": "Insight:",
+    "total": "Total"
+  },
+  "CategoryDistributionChart": {
+    "title": "Top categories",
+    "description": "Distribution of chats by main categories.",
+    "uncategorized": "Uncategorized chats:",
+    "previousValue": "Previous: {value}"
+  },
+  "SectionCards": {
+    "noChange": "No change",
+    "previousValue": "Previous: {value}",
+    "comparisonNotes": {
+      "liveStatus": "Current status · not compared",
+      "notCompared": "Not compared with the previous period"
+    },
+    "metrics": {
+      "total": "Total chats",
+      "new": "Open",
+      "inProgress": "In progress",
+      "resolved": "Resolved",
+      "slaBreached": "SLA breached",
+      "repeatRequests": "Repeat chats",
+      "avgCsat": "Average rating (CSAT)",
+      "medianFirstManagerResponseTime": "First manager reply",
+      "avgResolutionTime": "Average resolution time"
+    },
+    "duration": {
+      "missing": "—",
+      "lessThanMinute": "Less than a minute",
+      "seconds": "{count, plural, one {{value} sec} other {{value} sec}}",
+      "minutes": "{count, plural, one {{value} min} other {{value} min}}",
+      "hours": "{count, plural, one {{value} hr} other {{value} hr}}",
+      "days": "{count, plural, one {{value} day} other {{value} days}}",
+      "noChange": "No change"
+    },
+    "firstManagerResponseInsight": "Replies: {countValue}. Avg: {average}, P90: {p90}",
+    "help": {
+      "ariaLabel": "What {metric} means",
+      "firstResponse": "The large number is the median: half of first replies were faster, half slower. Below: reply count, average, and P90 (90% of replies by this time). Average and P90 are often higher than the median because of a few very slow replies.",
+      "sla": "Open chats older than the configured attention window; this is an age backlog, not a measured response SLA.",
+      "repeat": "Customers with more than one active chat in the selected population. Confirmed repeat purchases are available in Outcomes.",
+      "csat": "Average customer rating for the selected period.",
+      "ttr": "Average time from open to close for resolved chats."
+    },
+    "view": "View",
+    "openRequestQueue": "Open request queue"
+  },
+  "KeyMomentsNavigator": {
+    "title": "Key moments",
+    "price_inquiry": "Price Inquiry",
+    "objection": "Objection",
+    "positive_feedback": "Positive Feedback",
+    "negative_feedback": "Negative Feedback",
+    "upsell_attempt": "Upsell Attempt"
+  },
+  "ConversionDialog": {
+    "sourceMessageNotLoaded": "This message is outside the loaded history. Load earlier messages to review it.",
+    "recordSale": "Record sale",
+    "saleDescription": "Record a sale after checking that the payment was received.",
+    "paymentConfirmationDescription": "A receipt or payment message is not proof that funds arrived. Check the payment, then confirm the amount and currency.",
+    "saleAmount": "Sale amount",
+    "transactionId": "Payment transaction reference (optional)",
+    "transactionIdRequired": "Payment transaction reference *",
+    "transactionIdHelp": "Use the payment provider's transaction ID, not the order number. Without it, the sale is saved locally and is not sent to Meta.",
+    "transactionIdRequiredHelp": "Use the payment provider's transaction ID, not the order number. It is required while automatic sales import is enabled to avoid recording the same payment twice.",
+    "transactionIdMissing": "Enter the payment transaction reference to record this sale.",
+    "currency": "Currency",
+    "confirmSale": "Confirm sale",
+    "salesTitle": "Sales",
+    "salesActions": "Sales and follow-ups",
+    "paymentSuggestions": "Review payments",
+    "noPaymentSuggestions": "No payments to review yet.",
+    "loadingPayments": "Loading payment suggestions",
+    "paymentsError": "Could not load payment suggestions.",
+    "retry": "Retry",
+    "receiptSuggested": "Possible payment receipt",
+    "paymentClaimSuggested": "Customer reports a payment",
+    "amountUnknown": "Amount not identified",
+    "currencyUnknown": "Currency not identified",
+    "needsConfirmation": "Needs confirmation",
+    "viewMessage": "View message",
+    "saleRecorded": "Sale recorded",
+    "reviewPayment": "Review",
+    "merchantConfirmed": "Confirmed by your team",
+    "title": "Track Conversion",
+    "description": "Record a business outcome from this conversation to track ROI and agent performance.",
+    "conversionType": "Conversion Type *",
+    "conversionTypes": {
+      "sale": "Sale or purchase",
+      "signup": "✍️ Sign Up / Registration",
+      "booking": "Booking or appointment",
+      "retention": "Retention or renewal",
+      "custom": "⭐ Custom Conversion"
+    },
+    "conversionValue": "Conversion Value (optional)",
+    "valuePlaceholder": "0.00",
+    "currencies": {
+      "USD": "USD - US Dollar",
+      "EUR": "EUR - Euro",
+      "KZT": "KZT - Kazakhstani Tenge",
+      "RUB": "RUB - Russian Ruble",
+      "UZS": "UZS - Uzbekistani Som"
+    },
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Add any additional context about this conversion...",
+    "cancel": "Cancel",
+    "trackConversion": "Track Conversion",
+    "tracking": "Tracking...",
+    "toast": {
+      "success": "Conversion recorded",
+      "error": "Failed to track conversion. Please try again."
+    },
+    "compactSale": "Sale",
+    "compactEvent": "Event",
+    "compactPayments": "Payments"
+  },
+  "HelpPage": {
+    "title": "Help & Support",
+    "description": "Find answers to common questions and get support.",
+    "gettingStartedTitle": "Getting Started",
+    "contactSupportTitle": "Contact Support",
+    "contactSupportBody": "Need help? Reach out to our support team.",
+    "quickLinks": "Quick links to common tasks",
+    "connectNewSource": "Connect New Source",
+    "inviteTeamMembers": "Invite Team Members",
+    "configureAiContext": "Configure AI controls",
+    "documentation": "Documentation",
+    "documentationDescription": "Learn how to use Airi.chat effectively",
+    "emailSupport": "Email Support",
+    "telegramSupport": "Telegram Support"
+  },
+  "CreativeAssetsWorkspace": {
+    "storageLoading": "Checking company storage…",
+    "storageUnavailable": "Company storage status is temporarily unavailable.",
+    "storagePreparing": "Company storage is being prepared. New uploads will be available when it is ready.",
+    "storageRecording": "New uploads: {stored} GiB stored + {reserved} GiB reserved of {limit} GiB. Earlier files are still being counted.",
+    "storageUsage": "Company storage: {stored} GiB stored + {reserved} GiB pending / {limit} GiB.",
+    "storageFull": "The storage allowance is full.",
+    "title": "Assets",
+    "subtitle": "Images, videos, audio, and captions for campaigns, templates, and Airi Create",
+    "studioTab": "Studio",
+    "libraryTab": "Library",
+    "avatarPortraitUpload": "Upload portrait",
+    "loadingAssets": "Loading assets",
+    "noAssetsFound": "No assets found",
+    "emptyAssetsTitle": "No assets yet",
+    "emptyAssetsDescription": "Upload media, drop files onto this page, or generate campaign-ready images and videos.",
+    "emptySearchDescription": "Try a different search term, media type, or status filter.",
+    "clearSearch": "Clear search",
+    "searchAssets": "Search assets",
+    "uploadAsset": "Upload",
+    "assetUploaded": "Asset uploaded",
+    "assetUploadTooLarge": "File is larger than the current creative asset upload limit.",
+    "assetUrlCopied": "Asset URL copied",
+    "assetUrlCopyFailed": "Couldn't copy the asset URL.",
+    "assetsLoadFailed": "Couldn't load assets.",
+    "retry": "Retry",
+    "sourceImagesLoading": "Loading source images...",
+    "sourceImagesLoadFailed": "Couldn't refresh source images. Existing choices are still available.",
+    "sourceMediaLoading": "Loading source media...",
+    "sourceMediaLoadFailed": "Couldn't refresh some source media. Existing choices are still available.",
+    "mediaKind": "Media type",
+    "assetStatus": "Status",
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago",
+    "characterReferenceUpload": "Upload reference image",
+    "uploadInProgressDescription": "Your upload is in progress. Keep this page open.",
+    "removeSourceImage": "Remove image",
+    "replaceAvatarPortrait": "Replace portrait",
+    "removeAvatarPortrait": "Remove portrait",
+    "studioSkillSetupRequired": "Set up this skill to use it.",
+    "studioGenerationBlockerSetupRequired": "Set up the required provider to generate this asset.",
+    "studioGenerationBlockerPromptRequired": "Add a prompt before generating.",
+    "studioGenerationBlockerSourceImageRequired": "Choose a source image before generating.",
+    "studioGenerationBlockerSourceMediaRequired": "Choose source media before continuing.",
+    "studioGenerationBlockerCharacterReferenceRequired": "Add at least one character reference image.",
+    "studioGenerationBlockerMorphFramesRequired": "Choose both the first and last frames.",
+    "studioGenerationBlockerMorphFramesMustDiffer": "Choose different first and last frames.",
+    "studioGenerationBlockerDurationInvalid": "Choose a valid duration.",
+    "studioGenerationBlockerAvatarPortraitRequired": "Choose a portrait image for the avatar.",
+    "studioGenerationBlockerAvatarAudioRequired": "Choose speech audio for the avatar.",
+    "studioGenerationBlockerAvatarVoiceRequired": "Connect ElevenLabs to generate avatar speech.",
+    "dropToUpload": "Drop to upload",
+    "refreshAssets": "Refresh assets",
+    "summaryReady": "{count} ready",
+    "summaryGenerating": "{count} generating",
+    "summaryVideos": "{count} videos",
+    "shownCount": "{shown} of {total} shown",
+    "allMedia": "All media",
+    "images": "Images",
+    "videos": "Videos",
+    "audio": "Audio",
+    "textAssets": "Text",
+    "allStates": "All states",
+    "complete": "Complete",
+    "queued": "Queued",
+    "inProgress": "In progress",
+    "failed": "Failed",
+    "nsfw": "NSFW",
+    "imageKind": "image",
+    "videoKind": "video",
+    "audioKind": "audio",
+    "textKind": "text",
+    "sourceUpload": "Upload",
+    "sourceHiggsfield": "Higgsfield",
+    "sourceGoogle": "Google",
+    "sourceElevenLabs": "ElevenLabs",
+    "sourceWan": "Wan Avatar",
+    "sourceHappyHorse": "HappyHorse",
+    "sourceAlibaba": "Alibaba",
+    "sourceEdited": "Edited",
+    "videoTextToVideoHint": "No image → text-to-video (9:16). Add an image for image-to-video.",
+    "imageTab": "Image",
+    "bannerTab": "Banner",
+    "videoTab": "Video",
+    "characterTab": "Character",
+    "audioTab": "Voice",
+    "avatarTab": "Avatar",
+    "studioSkillsGroup": "Skills",
+    "studioSkillsEmpty": "No skills found.",
+    "studioSkillAlreadySelected": "Active",
+    "studioSkillImageDescription": "Generate an image from a text prompt",
+    "studioSkillBannerDescription": "Create ad banners with aspect ratio and copy-safe framing",
+    "studioSkillVideoDescription": "Create a video with your connected Google AI or Higgsfield source",
+    "studioSkillCharacterDescription": "Lock character/product consistency with 1–9 reference images (HappyHorse r2v)",
+    "studioSkillVoiceDescription": "Create voice, SFX, transcript, subtitles, or dub",
+    "studioSkillAvatarDescription": "Create a talking avatar from portrait + script/audio (Wan)",
+    "providerStatusImage": "Image: {provider}",
+    "providerStatusVideo": "Video: {provider}",
+    "providerStatusCharacter": "Character: {provider}",
+    "providerStatusMorph": "Morph: {provider}",
+    "providerStatusAvatar": "Avatar: {provider}",
+    "sourceCanva": "Canva",
+    "openEditor": "Open editor",
+    "avatarPortraitUploaded": "Portrait uploaded",
+    "bannerAspectRatio": "Aspect ratio",
+    "bannerPromptPlaceholder": "Describe the banner: offer, product, layout, and where headline/CTA should sit. Type @ for skills.",
+    "generateBanner": "Generate banner",
+    "bannerGenerationQueued": "Banner generation queued",
+    "characterPromptPlaceholder": "Describe the scene and cite refs as [Image 1], [Image 2], …. Type @ for skills.",
+    "characterRatio": "Aspect ratio",
+    "characterAddFromLibrary": "Add reference",
+    "characterReferenceHint": "{count}/{max} references",
+    "characterImageLabel": "Img {n}",
+    "characterMoveLeft": "Move left",
+    "characterMoveRight": "Move right",
+    "characterRemoveReference": "Remove reference",
+    "characterReferenceUploaded": "Reference image uploaded",
+    "generateCharacter": "Generate character video",
+    "characterGenerationQueued": "Character video queued",
+    "characterGenerationFailed": "Failed to start character video",
+    "characterUnavailableTitle": "Character reference video unavailable",
+    "characterUnavailableDescription": "This tool does not yet support customer credentials. Use image or video generation with a connected Google AI or Higgsfield account.",
+    "morphTab": "Morph",
+    "studioSkillMorphDescription": "Before/after morph from a first frame to a last frame (Wan i2v)",
+    "morphPromptPlaceholder": "Describe the transition between the before and after frames. Type @ for skills.",
+    "morphFirstFrame": "First frame (before)",
+    "morphLastFrame": "Last frame (after)",
+    "morphUploadFirst": "Upload before",
+    "morphUploadLast": "Upload after",
+    "morphReplaceFirst": "Replace before",
+    "morphReplaceLast": "Replace after",
+    "generateMorph": "Generate morph",
+    "morphGenerationQueued": "Morph video queued",
+    "morphGenerationFailed": "Failed to start morph video",
+    "morphUnavailableTitle": "Morph video unavailable",
+    "morphUnavailableDescription": "This tool does not yet support customer credentials. Use image or video generation with a connected Google AI or Higgsfield account.",
+    "studioProductSlot": "Product",
+    "avatarMode": "Avatar mode",
+    "avatarModeScript": "Image + script (TTS)",
+    "avatarModeAudio": "Image + audio",
+    "avatarPortrait": "Portrait image",
+    "avatarAudio": "Speech audio",
+    "avatarSelectAudio": "Select audio under 15s",
+    "avatarAudioLimitHint": "Wan 2.7 needs clear speech audio (WAV/MP3, 2–30s). Generated video is capped at 15s.",
+    "avatarScript": "Script",
+    "avatarScriptPlaceholder": "Write the short speech the avatar should say.",
+    "avatarNeedsElevenLabs": "Script mode needs ElevenLabs for text-to-speech.",
+    "avatarResolution": "Resolution",
+    "avatarUnavailableTitle": "Wan talking avatars unavailable",
+    "avatarUnavailableDescription": "This tool does not yet support customer credentials. Use image or video generation with a connected Google AI or Higgsfield account.",
+    "generateAvatar": "Generate talking avatar",
+    "avatarGenerationQueued": "Talking avatar queued",
+    "avatarGenerationFailed": "Failed to start talking avatar",
+    "prompt": "Prompt",
+    "motion": "Motion",
+    "seconds": "Sec",
+    "imagePromptPlaceholder": "Describe the final image: product, scene, lighting, style, and composition. Type @ for skills.",
+    "videoPromptPlaceholder": "Describe camera movement, subject motion, pacing, and mood. Type @ for skills.",
+    "generateImage": "Generate image",
+    "generateVideo": "Generate video",
+    "sourceImageDropTitle": "Drop source image here",
+    "sourceImageDropDescription": "Upload or drop an image to use it as the first frame.",
+    "uploadSourceImage": "Upload image",
+    "replaceSourceImage": "Replace image",
+    "selectLibraryImage": "Select from library",
+    "sourceImageSelected": "Image selected for video",
+    "sourceImageOnly": "Upload an image to use as the video source.",
+    "sourceImageUploaded": "Source image uploaded",
+    "sourceImageReady": "Ready for video",
+    "useForVideo": "Use for video",
+    "selectedForVideo": "Selected for video",
+    "makeGreenScreen": "Make green screen",
+    "greenScreenAlreadyExistsTooltip": "A green-screen copy already exists. Retry or delete that copy before creating another.",
+    "greenScreenQueued": "Green-screen edit queued",
+    "greenScreenFailed": "Failed to queue green-screen edit",
+    "copyUrl": "Copy URL",
+    "tryAgain": "Try again",
+    "retryQueued": "Retry queued",
+    "retryUnavailable": "This asset cannot be retried.",
+    "retryPossibleDuplicateTitle": "Retry may create a second paid video",
+    "retryPossibleDuplicateDescription": "The provider may have accepted the original job. Retrying can create a second paid video. Continue only if you accept that risk.",
+    "retryPossibleDuplicateCancel": "Keep waiting",
+    "retryPossibleDuplicateConfirm": "Retry anyway",
+    "deleteAsset": "Delete asset",
+    "deleteAssetConfirm": "Delete this asset?",
+    "assetDeleted": "Asset deleted",
+    "deleteFailed": "Delete failed",
+    "imageGenerationQueued": "Image generation queued",
+    "videoGenerationQueued": "Video generation queued",
+    "higgsfieldProvider": "Higgsfield source",
+    "higgsfieldSourceConnected": "Using your connected Higgsfield source for generation.",
+    "higgsfieldSourceRequiredTitle": "Connect a generation source to continue",
+    "higgsfieldSourceRequiredDescription": "Connect your Google AI or Higgsfield credentials in Settings > Integrations to generate images and video.",
+    "generationUnavailableTitle": "Image generation unavailable",
+    "generationUnavailableDescription": "Connect your Google AI or Higgsfield credentials in Settings > Integrations to generate images and video. Provider charges are billed to your account.",
+    "openIntegrations": "Open integrations",
+    "openElevenLabsIntegration": "Connect ElevenLabs",
+    "elevenLabsConnectHint": "Connect ElevenLabs to keep creating voiceovers, sound effects, subtitles, transcripts, and dubs.",
+    "elevenLabsMode": "ElevenLabs action",
+    "elevenLabsVoiceover": "Voiceover",
+    "elevenLabsSoundEffect": "Sound effect",
+    "elevenLabsTranscript": "Transcript",
+    "elevenLabsSubtitles": "Subtitles",
+    "elevenLabsDub": "Dub",
+    "elevenLabsScript": "Script",
+    "elevenLabsPrompt": "Sound prompt",
+    "elevenLabsScriptPlaceholder": "Write the short voiceover that should be generated.",
+    "elevenLabsPromptPlaceholder": "Describe the sound effect, ambience, timing, and style.",
+    "elevenLabsSourceMedia": "Source media",
+    "elevenLabsSelectSourceMedia": "Select audio or video",
+    "sourceMediaReady": "Ready",
+    "elevenLabsTargetLanguage": "Target language",
+    "elevenLabsUnavailableTitle": "Connect ElevenLabs to use voice tools",
+    "elevenLabsUnavailableDescription": "Connect your ElevenLabs API key in Settings > Integrations. Provider charges are billed to your account.",
+    "elevenLabsGenerate": "Generate",
+    "elevenLabsGenerationQueued": "ElevenLabs asset queued",
+    "elevenLabsGenerationFailed": "Failed to create ElevenLabs asset",
+    "canvaConnectHint": "Connect Canva in Integrations to show brand templates here.",
+    "canvaTemplatesTitle": "Canva brand templates",
+    "canvaTemplatesDescription": "Templates from your connected Canva source that can inspire WhatsApp follow-ups.",
+    "openCanvaTemplate": "Open in Canva",
+    "airiDraftTitle": "Airi creative draft",
+    "airiDraftDescription": "Review the draft from Airi, then generate or open the matching provider tool.",
+    "airiDraftProvider": "Provider: {provider}",
+    "airiDraftUse": "Use draft",
+    "airiDraftActive": "Active",
+    "marketingTemplatesTitle": "Marketing templates",
+    "marketingTemplatesDescription": "Start from a ready template.",
+    "marketingTemplatesCount": "{count} templates",
+    "marketingTemplatesUse": "Use",
+    "marketingTemplatesApplied": "Loaded “{title}” into Studio",
+    "marketingTemplatesCategoryAll": "All",
+    "marketingTemplatesCategoryUgc": "UGC",
+    "marketingTemplatesCategoryProduct": "Product",
+    "marketingTemplatesCategoryAvatar": "Avatar",
+    "marketingTemplatesCategoryVoice": "Voice",
+    "marketingTemplatesCategoryStory": "Story",
+    "marketingTemplatesCollectionAiri": "airi.chat templates",
+    "marketingTemplatesCollectionTikTok": "TikTok inspiration",
+    "marketingTemplatesCollectionNew": "New",
+    "marketingTemplatesTikTokTitle": "TikTok inspiration",
+    "marketingTemplatesTikTokCount": "{count} references",
+    "marketingTemplatesTikTokReferenceNotice": "Public TikTok posts are reference-only inspiration, not reusable assets. Review usage rights on TikTok.",
+    "marketingTemplatesTikTokMarketLabel": "Market",
+    "marketingTemplatesTikTokCategoryLabel": "Industry",
+    "marketingTemplatesTikTokSearch": "Search",
+    "marketingTemplatesTikTokNoResults": "No results",
+    "marketingTemplatesTikTokLoading": "Loading TikTok references",
+    "marketingTemplatesTikTokRefreshing": "Refreshing TikTok references",
+    "marketingTemplatesTikTokUnavailableTitle": "TikTok inspiration is unavailable",
+    "marketingTemplatesTikTokTemporaryTitle": "TikTok inspiration is temporarily unavailable",
+    "marketingTemplatesTikTokEmptyTitle": "No references found",
+    "marketingTemplatesTikTokRetryableErrorTitle": "TikTok references could not be loaded",
+    "marketingTemplatesTikTokNonretryableErrorTitle": "TikTok inspiration is unavailable",
+    "marketingTemplatesTikTokRetry": "Retry",
+    "marketingTemplatesTikTokResetFilters": "Reset filters",
+    "marketingTemplatesTikTokStaleWarning": "Showing saved references while TikTok is unavailable.",
+    "marketingTemplatesTikTokOpenReference": "Open {title} on TikTok (opens in new tab)",
+    "marketingTemplatesTikTokViewReference": "View on TikTok",
+    "marketingTemplatesTikTokImageUnavailable": "Preview unavailable",
+    "marketingTemplatesTikTokPresetPending": "Prompt preset coming later",
+    "marketingTemplatesTikTokCategoryAll": "All industries",
+    "marketingTemplatesTikTokCategoryApparelAndAccessories": "Apparel and accessories",
+    "marketingTemplatesTikTokCategoryBabyKidsAndMaternity": "Baby, kids, and maternity",
+    "marketingTemplatesTikTokCategoryBeautyAndPersonalCare": "Beauty and personal care",
+    "marketingTemplatesTikTokCategoryBusinessServices": "Business services",
+    "marketingTemplatesTikTokCategoryEducation": "Education",
+    "marketingTemplatesTikTokCategoryFinancialServices": "Financial services",
+    "marketingTemplatesTikTokCategoryFoodAndBeverage": "Food and beverage",
+    "marketingTemplatesTikTokCategoryGames": "Games",
+    "marketingTemplatesTikTokCategoryHealth": "Health",
+    "marketingTemplatesTikTokCategoryHomeImprovement": "Home improvement",
+    "marketingTemplatesTikTokCategoryHouseholdProducts": "Household products",
+    "marketingTemplatesTikTokCategoryLifeServices": "Life services",
+    "marketingTemplatesTikTokCategoryNewsAndEntertainment": "News and entertainment",
+    "marketingTemplatesTikTokCategoryPets": "Pets",
+    "marketingTemplatesTikTokCategorySportsAndOutdoor": "Sports and outdoor",
+    "marketingTemplatesTikTokCategoryTechnology": "Technology",
+    "marketingTemplatesTikTokCategoryTravel": "Travel",
+    "marketingTemplatesTikTokCategoryVehicleAndTransportation": "Vehicle and transportation",
+    "referenceVideoUseIdea": "Use this idea",
+    "referenceVideoOpenPlanner": "Plan with my assets",
+    "referenceVideoTitle": "Plan your video",
+    "referenceVideoDescription": "Choose an editing format, add your photos or clips, then review before creating.",
+    "referenceVideoReviewTitle": "Review your video plan",
+    "referenceVideoResultTitle": "Your video",
+    "referenceVideoReferenceLabel": "TikTok reference",
+    "referenceVideoReferenceNotice": "Choose an editing structure inspired by this reference. We do not automatically analyze or recreate the TikTok video.",
+    "referenceVideoFormat": "Editing format",
+    "referenceVideoBusinessTitle": "Business or offer title",
+    "referenceVideoBusinessPlaceholder": "e.g. Friday lunch at Willow Café",
+    "referenceVideoStoryboard": "Your storyboard",
+    "referenceVideoDuration": "{seconds}s · Vertical 9:16",
+    "referenceVideoPreviewNotice": "This storyboard shows the order, timing and captions. The finished video uses the original proportions with black padding where needed.",
+    "referenceVideoScenePreview": "Scene {number} preview",
+    "referenceVideoEmptyScene": "Choose a photo or video",
+    "referenceVideoChooseSceneAsset": "Choose asset for scene {number}",
+    "referenceVideoChangeAsset": "Change asset",
+    "referenceVideoChooseAsset": "Choose asset",
+    "referenceVideoCaption": "Scene {number} caption",
+    "referenceVideoSourceStart": "Scene {number}: start from (seconds)",
+    "referenceVideoReviewedTrim": "Use {seconds}s starting at {start}s",
+    "referenceVideoReviewedPhoto": "Show photo for {seconds}s",
+    "referenceVideoNoAiCharge": "No AI generation charge",
+    "referenceVideoAudioNotice": "Existing video audio is kept. Photos are silent. No music is added.",
+    "referenceVideoClipLengthNotice": "Choose clips long enough for each scene. Short clips cannot be rendered.",
+    "referenceVideoApprovalNotice": "Approve this exact storyboard to start rendering. Editing the plan requires a new review.",
+    "referenceVideoMissingAssets": "Choose an asset for {count} more scenes.",
+    "referenceVideoClose": "Close",
+    "referenceVideoEdit": "Edit plan",
+    "referenceVideoReview": "Review plan",
+    "referenceVideoApprove": "Approve and create video",
+    "referenceVideoPreparing": "Preparing review…",
+    "referenceVideoStarting": "Starting video…",
+    "referenceVideoComplete": "Your video is ready",
+    "referenceVideoFailed": "Video could not be created",
+    "referenceVideoRendering": "Assembling your approved video…",
+    "referenceVideoRefreshFailed": "Status is temporarily unavailable. We will keep checking.",
+    "referenceVideoFailedDescription": "Check your source clips and try a new plan.",
+    "referenceVideoOutputPreview": "Finished video preview",
+    "referenceVideoDownload": "Open / download video",
+    "referenceVideoSavedToAssets": "The output is saved in your Assets library.",
+    "referenceVideoInvalidResponse": "The server response could not be verified. Please retry.",
+    "referenceVideoTimeout": "The request timed out. Retry to check the same approval.",
+    "referenceVideoRequestFailed": "The request failed. Please try again.",
+    "referenceVideoRecipes": {
+      "product-reveal": {
+        "title": "Product reveal",
+        "description": "Introduce a product, show the details, invite the next step.",
+        "scenes": {
+          "hook": {
+            "label": "First look",
+            "caption": "Meet your next favorite"
+          },
+          "details": {
+            "label": "Product details",
+            "caption": "Take a closer look"
+          },
+          "cta": {
+            "label": "Call to action",
+            "caption": "Discover the collection"
+          }
+        }
+      },
+      "before-after": {
+        "title": "Before and after",
+        "description": "Show a real starting point, the work, and the result.",
+        "scenes": {
+          "before": {
+            "label": "Before",
+            "caption": "Before"
+          },
+          "process": {
+            "label": "The process",
+            "caption": "Behind the change"
+          },
+          "after": {
+            "label": "After",
+            "caption": "After"
+          },
+          "cta": {
+            "label": "Call to action",
+            "caption": "Talk to our team"
+          }
+        }
+      },
+      "three-details": {
+        "title": "Three details",
+        "description": "Make three product or service details easy to remember.",
+        "scenes": {
+          "hook": {
+            "label": "Overview",
+            "caption": "It's all in the details"
+          },
+          "first": {
+            "label": "First detail",
+            "caption": "A closer look"
+          },
+          "second": {
+            "label": "Second detail",
+            "caption": "Another angle"
+          },
+          "third": {
+            "label": "Third detail",
+            "caption": "The finishing touch"
+          },
+          "cta": {
+            "label": "Call to action",
+            "caption": "Find out more"
+          }
+        }
+      },
+      "how-it-works": {
+        "title": "How it works",
+        "description": "Explain a simple process in three visible steps.",
+        "scenes": {
+          "first": {
+            "label": "Step one",
+            "caption": "Step 1"
+          },
+          "second": {
+            "label": "Step two",
+            "caption": "Step 2"
+          },
+          "third": {
+            "label": "Step three",
+            "caption": "Step 3"
+          },
+          "cta": {
+            "label": "Call to action",
+            "caption": "Ready to try it?"
+          }
+        }
+      },
+      "offer-spotlight": {
+        "title": "Offer spotlight",
+        "description": "Show an offer and its details, then explain how to order.",
+        "scenes": {
+          "hook": {
+            "label": "The offer",
+            "caption": "Something for you"
+          },
+          "details": {
+            "label": "Offer details",
+            "caption": "Explore the details"
+          },
+          "cta": {
+            "label": "How to order",
+            "caption": "Message us to order"
+          }
+        }
+      },
+      "menu-picks": {
+        "title": "Menu picks",
+        "description": "Help customers choose with three dishes or items.",
+        "scenes": {
+          "first": {
+            "label": "First pick",
+            "caption": "On the menu"
+          },
+          "second": {
+            "label": "Second pick",
+            "caption": "Something to savor"
+          },
+          "third": {
+            "label": "Third pick",
+            "caption": "What will you choose?"
+          },
+          "cta": {
+            "label": "Visit or order",
+            "caption": "Visit us today"
+          }
+        }
+      },
+      "space-tour": {
+        "title": "Space tour",
+        "description": "Let customers see the entrance, interior, and a favorite corner.",
+        "scenes": {
+          "entrance": {
+            "label": "Entrance",
+            "caption": "Come on in"
+          },
+          "inside": {
+            "label": "Inside",
+            "caption": "Take a look around"
+          },
+          "detail": {
+            "label": "Favorite corner",
+            "caption": "Make yourself at home"
+          },
+          "cta": {
+            "label": "Plan a visit",
+            "caption": "Plan your visit"
+          }
+        }
+      },
+      "behind-scenes": {
+        "title": "Behind the scenes",
+        "description": "Show the people and care behind the finished work.",
+        "scenes": {
+          "team": {
+            "label": "The people",
+            "caption": "Meet the team"
+          },
+          "process": {
+            "label": "At work",
+            "caption": "A look behind the scenes"
+          },
+          "result": {
+            "label": "Finished work",
+            "caption": "Made with care"
+          },
+          "cta": {
+            "label": "Call to action",
+            "caption": "See more of our work"
+          }
+        }
+      },
+      "collection": {
+        "title": "Collection showcase",
+        "description": "Present a small collection as a consistent visual story.",
+        "scenes": {
+          "first": {
+            "label": "First item",
+            "caption": "Explore the collection"
+          },
+          "second": {
+            "label": "Second item",
+            "caption": "Find your style"
+          },
+          "third": {
+            "label": "Third item",
+            "caption": "Choose your favorite"
+          },
+          "cta": {
+            "label": "Call to action",
+            "caption": "See the full collection"
+          }
+        }
+      },
+      "service-story": {
+        "title": "Service story",
+        "description": "Connect a customer need to the service and the next step.",
+        "scenes": {
+          "need": {
+            "label": "Customer need",
+            "caption": "Let's get started"
+          },
+          "service": {
+            "label": "Your service",
+            "caption": "Here's how we can help"
+          },
+          "result": {
+            "label": "Real work",
+            "caption": "See our work"
+          },
+          "cta": {
+            "label": "Book or contact",
+            "caption": "Get in touch"
+          }
+        }
+      }
+    }
+  },
+  "WidgetBrandingPage": {
+    "title": "Widget Branding",
+    "description": "Configure colors, text and lightweight layout behavior for your web widget.",
+    "empty": {
+      "title": "No Widget Installed",
+      "description": "Install the Web Widget integration to set up its branding here.",
+      "cta": "Go to Integrations"
+    }
+  },
+  "PlanUpgradeDialog": {
+    "gateTrialExpired": "Your 14-day Free trial has ended. Upgrade to reopen this workspace.",
+    "gateConversationLimit": "{hiddenCount, plural, one {# conversation is hidden by your current plan.} other {# conversations are hidden by your current plan.}} New chats aren't saved until you upgrade.",
+    "gateConversationLimitReached": "This workspace has reached a plan limit. New chats aren't saved until you upgrade.",
+    "gateFeatureLimit": "Upgrade to unlock {featureLabel} for this workspace.",
+    "gateDefault": "This workspace has reached a plan limit.",
+    "title": "Upgrade your plan",
+    "checkoutFailed": "Checkout failed",
+    "unlimited": "Unlimited",
+    "billingCycle": "Choose billing cycle",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "proDescription": "For active customer operations.",
+    "upgradeToPro": "Upgrade to Pro",
+    "openingCheckout": "Opening checkout...",
+    "billingDisabled": "Billing is not enabled in this environment.",
+    "enterpriseDescription": "Custom capacity for larger teams.",
+    "contactSales": "Contact sales",
+    "features": {
+      "conversations": "conversations",
+      "bulkCampaigns": "bulk campaigns",
+      "seats": "seats",
+      "workspaces": "workspaces",
+      "oneSeat": "1 seat",
+      "oneWorkspace": "1 workspace",
+      "oneWhatsAppNumber": "1 WhatsApp number",
+      "allIntegrations": "All integrations, one connection each",
+      "voiceReplies": "WhatsApp voice replies (your ElevenLabs account)",
+      "proAiUsage": "5x increased AI usage",
+      "proScenarios": "50 scenario workflows",
+      "enterpriseAiUsage": "20x AI usage",
+      "whatsAppCapacity": "Custom WhatsApp number capacity",
+      "integrationCapacity": "Custom integration capacity"
+    }
+  },
+  "WhatsAppReconnectBanner": {
+    "warningTitle": "Restore your WhatsApp connection",
+    "expiredTitle": "Restore your WhatsApp connection",
+    "removedTitle": "WhatsApp was disconnected",
+    "body": "Confirm access to WhatsApp to restore the connection.",
+    "bodyWithPhone": "Confirm access to {phone} to restore the WhatsApp connection.",
+    "removedBody": "This WhatsApp Business account is no longer connected to airi.chat. Cloud API messages are paused.",
+    "removedBodyWithPhone": "{phone} is no longer connected to airi.chat. Cloud API messages are paused.",
+    "cta": "Reconnect",
+    "dismiss": "Dismiss",
+    "dismissWorkspace": "Dismiss for everyone in this workspace",
+    "dismissError": "Could not dismiss the alert. Try again."
+  },
+  "WhatsAppSubscribers": {
+    "page": {
+      "title": "WhatsApp Subscribers",
+      "description": "Opt-in links, consent events, QR codes, and messaging customer bases."
+    },
+    "connectRequired": {
+      "title": "Connect WhatsApp first",
+      "description": "Subscriber links and opt-in tracking require a connected WhatsApp Business account.",
+      "action": "Connect WhatsApp"
+    },
+    "stats": {
+      "links": "Links",
+      "optedIn": "Opted in",
+      "customerBases": "Customer bases"
+    },
+    "tabs": {
+      "links": "Links",
+      "subscribers": "Subscribers",
+      "bases": "Customer bases"
+    },
+    "createLink": {
+      "title": "Create Subscribe on WhatsApp link",
+      "description": "Opt-ins are tracked for marketing-message eligibility."
+    },
+    "defaults": {
+      "signupMessage": "Subscribe to receive updates on WhatsApp.",
+      "confirmationMessage": "You are subscribed."
+    },
+    "fields": {
+      "displayName": "Internal name",
+      "privacyPolicyUrl": "Privacy policy URL",
+      "signupMessage": "Pre-consent message",
+      "confirmationMessage": "Confirmation message",
+      "websiteUrl": "Website URL",
+      "promoCode": "Promo code",
+      "productLine": "Product line",
+      "shop": "Shop",
+      "campaign": "Campaign",
+      "landingPage": "Landing page",
+      "ad": "Ad",
+      "checkoutFlow": "Checkout flow",
+      "baseName": "Customer base name"
+    },
+    "placeholders": {
+      "displayName": "Summer launch",
+      "baseName": "Summer subscribers"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "createLink": "Create link",
+      "creatingLink": "Creating...",
+      "copyLink": "Copy link",
+      "copyEmbed": "Copy embed",
+      "qr": "QR",
+      "disable": "Disable",
+      "createBase": "Create",
+      "creatingBase": "Creating...",
+      "setDefault": "Set default"
+    },
+    "copyLabels": {
+      "link": "Link",
+      "embed": "Embed"
+    },
+    "empty": {
+      "links": "No signup links yet.",
+      "subscribers": "No opt-in events yet.",
+      "bases": "No customer bases synced yet.",
+      "attribution": "No attribution",
+      "value": "-"
+    },
+    "toasts": {
+      "signupCreated": "Signup link created",
+      "baseCreated": "Customer base created",
+      "signupDisabled": "Signup link disabled",
+      "defaultBaseUpdated": "Default customer base updated",
+      "copied": "{label} copied"
+    },
+    "errors": {
+      "load": "Failed to load WhatsApp subscribers",
+      "createSignup": "Failed to create signup link",
+      "createBase": "Failed to create customer base",
+      "disableSignup": "Failed to disable signup link",
+      "setDefaultBase": "Failed to set default customer base"
+    },
+    "created": "Created {date}",
+    "embedCta": "Subscribe on WhatsApp",
+    "qrAlt": "WhatsApp signup QR",
+    "subscribers": {
+      "title": "Subscriber consent",
+      "description": "Latest opt-in and opt-out events received from WhatsApp."
+    },
+    "table": {
+      "user": "User",
+      "status": "Status",
+      "source": "Source",
+      "attribution": "Attribution",
+      "eventTime": "Event time",
+      "name": "Name",
+      "metaId": "Meta ID",
+      "default": "Default",
+      "action": "Action"
+    },
+    "status": {
+      "optedIn": "Opted in",
+      "optedOut": "Opted out",
+      "default": "Default",
+      "no": "No"
+    },
+    "bases": {
+      "defaultHint": "The default customer base is set at WABA level. Local segments stay authoritative for product, shop, campaign, landing, ad, and checkout targeting.",
+      "createTitle": "Create customer base"
+    }
+  },
+  "WhatsAppWelcomeSequences": {
+    "page": {
+      "title": "Welcome Message Sequences",
+      "description": "Create Partner App message sequences for Click-to-WhatsApp ads. Use the Meta sequence ID in Ads Manager or future CTWA creative setup."
+    },
+    "connectRequired": {
+      "title": "Connect WhatsApp first",
+      "description": "Connect a WhatsApp Business account before creating welcome message sequences.",
+      "action": "Connect WhatsApp"
+    },
+    "summary": "{count} sequences synced from Meta",
+    "actions": {
+      "sync": "Sync from Meta",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "copyId": "Copy sequence ID",
+      "cancel": "Cancel"
+    },
+    "badges": {
+      "usedInAd": "Used in ad"
+    },
+    "fields": {
+      "text": "Text",
+      "autofill": "Autofill",
+      "iceBreakers": "FAQs",
+      "empty": "Not set"
+    },
+    "empty": {
+      "title": "No welcome sequences yet",
+      "description": "Create a sequence once, then select it as Partner App in the ad creative."
+    },
+    "dialog": {
+      "createTitle": "Create welcome sequence",
+      "editTitle": "Edit welcome sequence",
+      "description": "Meta sends this sequence when a customer opens a Click-to-WhatsApp ad."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Driver sign-up",
+      "text": "Welcome text",
+      "textPlaceholder": "Hi! Tell us what you need help with.",
+      "autofill": "Prefilled customer message",
+      "autofillPlaceholder": "Hello! Can I get more info?",
+      "iceBreakers": "FAQ buttons",
+      "iceBreakerPlaceholder": "Quick reply {index}"
+    },
+    "preview": {
+      "title": "Preview",
+      "empty": "Add content to preview the sequence.",
+      "emptyText": "Welcome text is not set."
+    },
+    "alerts": {
+      "loadFailed": "Failed to load welcome message sequences",
+      "createFailed": "Failed to create welcome message sequence",
+      "updateFailed": "Failed to update welcome message sequence",
+      "deleteFailed": "Failed to delete welcome message sequence",
+      "created": "Welcome sequence created",
+      "updated": "Welcome sequence updated",
+      "deleted": "Welcome sequence deleted",
+      "copied": "Sequence ID copied",
+      "deleteConfirm": "Delete welcome sequence {name}?",
+      "usedInAdDeleteBlocked": "This sequence is linked to an active ad and cannot be deleted."
+    }
+  },
+  "WhatsAppQr": {
+    "page": {
+      "title": "WhatsApp Chat QR codes",
+      "description": "Help customers start a WhatsApp chat without typing or saving your number. Add an optional prompt they can review and send."
+    },
+    "source": {
+      "requiredTitle": "Connect WhatsApp to create Chat QR codes",
+      "requiredDescription": "Connect a WhatsApp number to create a chat QR and link, or to connect an existing one.",
+      "connectAction": "Connect WhatsApp",
+      "loadErrorTitle": "WhatsApp sources could not be loaded",
+      "loadErrorDescription": "This is a source-loading error, not an empty workspace. Retry before changing your integrations."
+    },
+    "actions": {
+      "create": "Create chat QR",
+      "import": "Import existing",
+      "saveDraft": "Save draft",
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "refresh": "Refresh",
+      "filter": "Filter",
+      "clearFilter": "Remove filter",
+      "clearFilters": "Clear filters",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "form": {
+      "sourceLabel": "WhatsApp source",
+      "sourcePlaceholder": "Choose a source",
+      "sourceDescription": "The WhatsApp number that owns this QR code.",
+      "placementLabel": "Placement name",
+      "placementDescription": "Use a name that identifies where the printed QR will be placed.",
+      "messageLabel": "Prefilled message",
+      "optional": "(optional)",
+      "messageDescription": "{count}/{maximum}. This optional prompt opens in WhatsApp for the customer to review and send. Automation starts only after they send it.",
+      "errors": {
+        "chooseSource": "Choose a connected WhatsApp source.",
+        "enterPlacementName": "Enter a placement name.",
+        "enterDesiredMessage": "Enter the message customers should send.",
+        "maxCharacters": "Use {maximum} characters or fewer."
+      }
+    },
+    "manager": {
+      "columns": {
+        "asset": "QR code",
+        "readiness": "Readiness",
+        "scenario": "Scenario",
+        "updated": "Updated"
+      },
+      "searchLabel": "Search Chat QR codes",
+      "searchPlaceholder": "Search by placement name",
+      "loading": "Loading Chat QR codes",
+      "loadErrorTitle": "Chat QR codes could not be loaded",
+      "refreshErrorTitle": "Latest changes could not be loaded",
+      "refreshing": "Refreshing",
+      "firstEmptyTitle": "Make it easier to start a WhatsApp chat",
+      "firstEmptyDescription": "Create a QR and chat link for packaging, receipts, signs, print, or digital channels. Customers can scan or tap without typing or saving your number.",
+      "filteredEmptyTitle": "No Chat QR codes match these filters",
+      "filteredEmptyDescription": "Try another name or remove the active filter.",
+      "paginationLabel": "Chat QR code pages"
+    },
+    "filter": {
+      "all": "All QR codes",
+      "source": "Source",
+      "status": "Status",
+      "assignment": "Assignment",
+      "assigned": "Assigned",
+      "unassigned": "Unassigned",
+      "activeSource": "Source: {value}",
+      "activeStatus": "Status: {value}",
+      "activeAssignment": "Assignment: {value}"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "ACTIVE": "Active",
+      "DETACHED": "Detached"
+    },
+    "readiness": {
+      "ready": "Ready",
+      "draft": "Setup needed",
+      "reconciling": "Reconciling",
+      "detached": "Detached",
+      "unhealthy": "Needs attention"
+    },
+    "providerState": {
+      "PENDING": "Provider pending",
+      "ACTIVE": "Provider active",
+      "DELETED": "Provider deleted",
+      "RECONCILING": "Provider reconciling"
+    },
+    "routingState": {
+      "ENABLED": "Routing enabled",
+      "DISABLED": "Routing disabled",
+      "RECONCILING": "Routing reconciling"
+    },
+    "assignment": {
+      "unassigned": "Unassigned",
+      "status": {
+        "draft": "Draft Scenario",
+        "active": "Active Scenario"
+      }
+    },
+    "card": {
+      "sourceUnavailable": "WhatsApp source unavailable",
+      "message": "Prefilled message",
+      "noMessage": "No prefilled message yet",
+      "assignment": "Scenario assignment",
+      "updated": "Last updated",
+      "provider": "{state}",
+      "routing": "{state}",
+      "linkCopied": "WhatsApp link copied",
+      "copyFailed": "The WhatsApp link could not be copied",
+      "copyLink": "Copy WhatsApp link",
+      "downloadPng": "Download PNG artwork",
+      "moreActions": "More actions",
+      "openDetails": "Open details",
+      "testLink": "Test WhatsApp link",
+      "recoveryTitle": "This QR code needs attention",
+      "openRecovery": "Open recovery details",
+      "recovery": {
+        "ready": "A provider operation is still being reconciled.",
+        "draft": "Finish provider setup before assigning this QR code.",
+        "reconciling": "A provider operation is still being reconciled.",
+        "detached": "Review the provider binding before using this QR code.",
+        "unhealthy": "Review routing and provider state before using this QR code."
+      },
+      "openArtwork": "Open {name}",
+      "artworkAlt": "QR artwork for {name}",
+      "artworkUnavailable": "QR artwork unavailable"
+    },
+    "dialog": {
+      "createTitle": "Create a Chat QR code",
+      "importTitle": "Import a Chat QR code",
+      "description": "Add an optional chat prompt, then create the QR in WhatsApp now or save a draft and finish later.",
+      "intentLabel": "What do you want to do?",
+      "createIntent": "Create QR in WhatsApp",
+      "createIntentDescription": "Create a new QR and chat link that open WhatsApp with your optional prompt.",
+      "importIntent": "Connect existing QR",
+      "importIntentDescription": "Connect a QR code and chat link you already use.",
+      "importMethodLabel": "Import method",
+      "methodProvider": "From WhatsApp",
+      "methodLink": "From link",
+      "methodImage": "From image",
+      "providerCodeLabel": "Meta QR code",
+      "providerCodePlaceholder": "Choose a loaded code",
+      "providerCodeDescription": "Load QR codes from the selected WhatsApp number.",
+      "loadProviderCodes": "Load codes",
+      "linkLabel": "WhatsApp QR link",
+      "linkDescription": "Paste the wa.me link associated with the existing QR code.",
+      "imageLabel": "QR image",
+      "chooseImageAction": "Choose image",
+      "imageDescription": "Upload a PNG, JPEG, or WebP image containing the QR code.",
+      "operationFailedTitle": "The QR action could not be completed",
+      "openDraft": "Open retained draft",
+      "errors": {
+        "chooseProviderCode": "Load and choose a code from the current source page.",
+        "enterLink": "Enter the existing WhatsApp QR link.",
+        "chooseImage": "Choose an image containing the QR code."
+      }
+    },
+    "placementState": {
+      "CURRENT": "Current placement",
+      "HISTORICAL": "Historical placement",
+      "DETACHED": "Detached placement"
+    },
+    "operationKind": {
+      "CREATE": "code creation",
+      "CONNECT": "code connection",
+      "APPLY_MESSAGE": "message update",
+      "REPLACE": "replacement",
+      "MOVE": "move",
+      "SET_ROUTING": "routing update",
+      "DELETE": "deletion",
+      "SYNC_PROVIDER": "Meta status check",
+      "RECONCILE": "reconciliation"
+    },
+    "detail": {
+      "source": {
+        "notConnected": "Not connected",
+        "linkedUnavailable": "The WhatsApp source linked to this QR code is no longer available in this workspace.",
+        "chooseRequired": "Choose a connected WhatsApp source before creating or changing a provider code.",
+        "unavailableDescription": "{reason} Provider changes are disabled until a configured source is available. Local details and available artwork remain accessible."
+      },
+      "artwork": {
+        "title": "QR artwork and link",
+        "description": "Download the current artwork or open the exact WhatsApp link.",
+        "previewOnManager": "Artwork preview is available on the Manager page.",
+        "previewUnavailable": "Create or connect a provider code to get artwork.",
+        "deepLinkUnavailable": "Deep link unavailable"
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Rename this placement and manage the prefilled customer message.",
+        "save": "Save settings",
+        "applyMessage": "Update prompt in WhatsApp",
+        "createProviderCode": "Create QR in WhatsApp"
+      },
+      "assignment": {
+        "title": "Scenario assignment",
+        "description": "Assignment changes are made from the QR trigger picker.",
+        "meta": "Trigger {nodeId} · revision {revision}",
+        "unassignedDescription": "Choose this QR from a saved Scenario trigger when it is ready."
+      },
+      "health": {
+        "title": "Health",
+        "description": "Saved resource, last-known Meta, placement, and routing state.",
+        "resource": "Resource: {state}",
+        "source": "Source: {source}",
+        "provider": "Provider: {state}",
+        "routing": "Routing: {state}",
+        "placement": "Placement: {state}",
+        "missingCode": "Provider code: missing",
+        "lastKnownDescription": "The Meta status above is the last state saved in airi.chat.",
+        "checkProvider": "Check Meta status"
+      },
+      "history": {
+        "title": "Replacement and code history",
+        "description": "Printed historical versions remain attached to this stable entry point.",
+        "current": "Current",
+        "historical": "Historical",
+        "empty": "No current provider code.",
+        "moreTitle": "More history is retained",
+        "moreDescription": "This view shows the actionable history window. Older records remain retained locally.",
+        "createReplacement": "Create replacement",
+        "codeMeta": "{codeId} · {providerState} · {routingState}",
+        "disableRouting": "Disable routing",
+        "enableRouting": "Enable routing",
+        "delete": "Delete"
+      },
+      "recovery": {
+        "title": "Recovery",
+        "description": "Recover detached local state or reconcile a persisted provider operation.",
+        "recover": "Recover detached entry point",
+        "reconcile": "Reconcile {kind}"
+      },
+      "danger": {
+        "title": "Danger zone",
+        "description": "Deleting from Meta keeps the local entry point and its history.",
+        "activeTitle": "Active Scenario assignment",
+        "activeDescription": "Deactivate “{scenarioName}” before deleting its current provider code.",
+        "historyTitle": "Delete historical codes first",
+        "historyDescription": "Remove every retained provider code in the history list before deleting the current code.",
+        "deleteCurrent": "Delete current code from Meta"
+      },
+      "actionFailedTitle": "Action failed",
+      "draft": {
+        "title": "Prepare a local Chat QR draft",
+        "description": "Saving a draft does not create or change anything in Meta."
+      },
+      "load": {
+        "notFoundTitle": "Chat QR code not found",
+        "notFoundDescription": "This QR code may have been removed or may belong to another workspace. Return to the QR Manager and choose an available code.",
+        "errorTitle": "Unable to load this Chat QR code",
+        "refreshErrorTitle": "Latest state could not be refreshed",
+        "loadingLabel": "Loading Chat QR code",
+        "loadingDescription": "Fetching the latest saved QR state."
+      }
+    },
+    "deleteDialog": {
+      "title": "Delete this QR code from Meta?",
+      "codeIdentity": "{referenceCode} ({codeId})",
+      "currentDescription": "This deletes provider code {code}. The local entry point and code history remain available. The resource returns to its reusable draft state when its current code is deleted.",
+      "historicalDescription": "This deletes provider code {code}. The local entry point and code history remain available. Deleting this historical code does not change the current code or resource state.",
+      "activeTitle": "Deactivate the assigned Scenario first",
+      "activeDescription": "This QR is assigned to the active Scenario “{scenarioName}”. Open it and deactivate it before deleting the provider code.",
+      "acknowledgement": "I understand that the printed code will stop opening this Chat QR.",
+      "confirm": "Delete from Meta"
+    },
+    "controller": {
+      "status": {
+        "draftSaved": "Draft saved",
+        "codeCreated": "QR code created",
+        "codeConnected": "QR code connected",
+        "messageUpdated": "Prefilled message updated",
+        "replacementCreated": "Replacement QR code created",
+        "routingEnabled": "Routing enabled",
+        "routingDisabled": "Routing disabled",
+        "codeDeleted": "QR code deleted from Meta",
+        "entryPointRecovered": "QR entry point recovered",
+        "providerChecked": "Meta status matches this saved QR",
+        "providerReconciled": "Provider state reconciled",
+        "pngDownloaded": "PNG downloaded",
+        "svgDownloaded": "SVG downloaded"
+      },
+      "errors": {
+        "ownerChanged": "This Chat QR changed before the action completed.",
+        "requestFailed": "The request could not be completed.",
+        "indexMigrationRequired": "QR code saving is temporarily unavailable. Try again in a few minutes.",
+        "providerDriftDetected": "Meta no longer matches this saved QR. Review the Recovery section.",
+        "providerCheckUnavailable": "Meta status cannot be checked right now. Try again shortly.",
+        "providerRequestFailed": "WhatsApp could not complete this provider request. Try again.",
+        "operationBusy": "Another QR operation is already in progress.",
+        "stateChanged": "This QR changed before the action completed. Refresh and try again.",
+        "withOperationId": "{message} (operation {operationId})",
+        "placementNameLength": "Enter a placement name between 1 and {maximum} characters.",
+        "entryPointNotLoaded": "The requested Chat QR entry point has not loaded.",
+        "currentCodeUnavailable": "The current QR code is unavailable.",
+        "sourceUnavailable": "The WhatsApp source is unavailable.",
+        "codeVersionUnavailable": "This QR code version is unavailable.",
+        "entryPointUnavailable": "The QR entry point is unavailable.",
+        "reconciliationUnavailable": "The reconciliation operation is unavailable.",
+        "artworkUnavailable": "The current QR artwork is unavailable."
+      }
+    }
+  },
+  "MessengersSection": {
+    "title": "WhatsApp Manager",
+    "templates": "WhatsApp Templates",
+    "flows": "WhatsApp Flows",
+    "welcomeSequences": "Welcome Sequences",
+    "qrCodes": "Chat QR codes",
+    "subscribers": "WhatsApp Subscribers",
+    "catalog": "Catalog",
+    "officialBadge": "Official badge"
+  }
+}

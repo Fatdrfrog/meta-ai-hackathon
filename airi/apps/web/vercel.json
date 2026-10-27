@@ -1,0 +1,91 @@
+{
+  "installCommand": "pnpm install --frozen-lockfile --filter @icecore/web...",
+  "regions": ["fra1"],
+  "headers": [
+    {
+      "source": "/api/widget/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Visitor-Token, X-Visitor-Id, x-client-key"
+        },
+        {
+          "key": "Access-Control-Expose-Headers",
+          "value": "X-Visitor-Token"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/reconcile-billing-entitlements",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/classify",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/buildAnswerSnippets",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/refreshInstagramTokens",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/check-whatsapp-webhooks",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/whatsapp-inbound-liveness",
+      "schedule": "25 * * * *"
+    },
+    {
+      "path": "/api/cron/check-dependencies",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/reconcile-whatsapp-qr-cleanup",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/retry-airi-ingress",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/scenario-eval-extract",
+      "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/cron/airi-gap-backfill",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/offline-eval",
+      "schedule": "0 5 * * 0"
+    },
+    {
+      "path": "/api/cron/knowledge-canonical-sync",
+      "schedule": "30 5 * * *"
+    }
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "codex/whatsapp-qr-entry-points": false,
+      "main": false
+    }
+  }
+}

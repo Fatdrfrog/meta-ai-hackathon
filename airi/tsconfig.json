@@ -1,0 +1,10 @@
+{
+  "extends": "./apps/web/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./apps/web/src/*"],
+      "server-only": ["./packages/airi-runtime/src/shims/server-only.ts"]
+    }
+  },
+  "include": []
+}

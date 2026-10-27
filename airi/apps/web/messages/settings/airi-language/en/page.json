@@ -1,0 +1,39 @@
+{
+  "AiriLanguageSettings": {
+    "title": "Fallback language",
+    "description": "Used when the customer’s language is unclear. Replies normally follow the customer.",
+    "dynamicTitle": "Language detection",
+    "dynamicBody": "Airi replies in the customer's current language when detection is available.",
+    "autoReplyPriority": "Auto-reply priority: detected customer language -> draft language -> fallback language -> English.",
+    "coachingPriority": "Coaching tips also use this language. Shared across company workspaces.",
+    "usesTitle": "Where fallback applies",
+    "languages": {
+      "en": {
+        "name": "English",
+        "nativeName": "English",
+        "description": "Use English when fallback is needed"
+      },
+      "ru": {
+        "name": "Russian",
+        "nativeName": "Русский",
+        "description": "Use Russian when fallback is needed"
+      },
+      "kz": {
+        "name": "Kazakh",
+        "nativeName": "Қазақша",
+        "description": "Use Kazakh when fallback is needed"
+      },
+      "uz": {
+        "name": "Uzbek",
+        "nativeName": "O'zbekcha",
+        "description": "Use Uzbek when fallback is needed"
+      }
+    },
+    "unsavedChanges": "Unsaved changes",
+    "saveChanges": "Save language",
+    "saving": "Saving...",
+    "saveSuccess": "Fallback language saved",
+    "saveFailed": "Could not update fallback language. Try again.",
+    "loadFailed": "Could not load the language. Reload to try again."
+  }
+}

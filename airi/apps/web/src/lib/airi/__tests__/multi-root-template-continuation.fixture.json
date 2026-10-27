@@ -1,0 +1,310 @@
+{
+  "scenario": {
+    "_id": "69b91feab867aa73e3e91fe1",
+    "name": "Multi-root language selection",
+    "priority": 1,
+    "entryPolicy": "once_per_conversation",
+    "matchingRole": "default",
+    "updatedAt": "2026-10-08T15:20:32.343Z",
+    "nodes": [
+      {
+        "id": "node-1781294812166-1-281",
+        "data": {
+          "kind": "trigger",
+          "triggerConfig": {
+            "enabled": true,
+            "messageMatchMode": "any",
+            "keywordMatchMode": "contains",
+            "metaCampaignAdAccountId": "act_656779001036516",
+            "metaCampaignLabels": [
+              {
+                "id": "52600450947525",
+                "name": "orteke"
+              }
+            ],
+            "metaCampaignNameFallbacks": ["Ортеке"],
+            "onlyNewCustomers": true
+          }
+        }
+      },
+      {
+        "id": "node-demoshop-readable-trigger-20261008",
+        "data": {
+          "kind": "trigger",
+          "triggerConfig": {
+            "enabled": true,
+            "messageMatchMode": "any",
+            "channelFilter": ["whatsapp"],
+            "onlyNewCustomers": true
+          }
+        }
+      },
+      {
+        "id": "node-demoshop-orteke-lang-20260927",
+        "data": {
+          "kind": "action",
+          "actionType": "whatsapp_template",
+          "actionWhatsAppTemplateId": "2422689024904107",
+          "actionWhatsAppTemplateName": "pick_lang",
+          "actionWhatsAppTemplateLanguage": "kk",
+          "actionWhatsAppTemplateComponents": [
+            {
+              "type": "BODY",
+              "text": "Сәлеметсіз бе! 👋 Demoshop Group компаниясына хабарласқаныңызға рахмет 😊\nТілді таңдаңыз:\n\nЗдравствуйте! Добро пожаловать в  Demoshop Group 👋!\nВыберите язык:"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                {
+                  "type": "QUICK_REPLY",
+                  "text": "Қазақ тілі"
+                },
+                {
+                  "type": "QUICK_REPLY",
+                  "text": "Русский язык"
+                }
+              ]
+            }
+          ],
+          "actionOutcomes": {
+            "version": 1,
+            "noReply": {
+              "enabled": true,
+              "timeoutMinutes": 180,
+              "cancelIfPhrases": ["Тапсырысыңыз қабылданды"]
+            }
+          }
+        }
+      },
+      {
+        "id": "node-demoshop-readable-lang-20261008",
+        "data": {
+          "kind": "action",
+          "actionType": "reply",
+          "actionWhatsAppServiceMessage": {
+            "version": 1,
+            "message": {
+              "kind": "reply_buttons",
+              "body": {
+                "mode": "fixed",
+                "text": "Сәлеметсіз бе! 👋 Demoshop Group компаниясына хабарласқаныңызға рахмет 😊\nТілді таңдаңыз:\n\nЗдравствуйте! Добро пожаловать в  Demoshop Group 👋!\nВыберите язык:"
+              },
+              "options": [
+                {
+                  "id": "wsc:node-demoshop-readable-lang-20261008:kk",
+                  "label": "Қазақ тілі"
+                },
+                {
+                  "id": "wsc:node-demoshop-readable-lang-20261008:ru",
+                  "label": "Русский язык"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "node-1779454010349-254",
+        "data": {
+          "kind": "action",
+          "actionType": "reply",
+          "actionWhatsAppServiceMessage": {
+            "version": 1,
+            "message": {
+              "kind": "reply_buttons",
+              "body": {
+                "mode": "fixed",
+                "text": "Керемет таңдау! Ортеке — сахнада жиі кездесе бермейтін, ЮНЕСКО мұрасына кірген ұлттық өнер.\nБіз сізге ең ыңғайлы ұсыныс жасау үшін төмендегі батырмалардың бірін таңдаңызшы:"
+              },
+              "options": [
+                {
+                  "id": "wsc:node-1779454010349-254:choice-mpgx5l7x-hox3m",
+                  "label": "Мектеп-Балабақша"
+                },
+                {
+                  "id": "wsc:node-1779454010349-254:choice-mpgx8l6d-bn87f",
+                  "label": "Ересектерге"
+                },
+                {
+                  "id": "wsc:node-1779454010349-254:choice-mpgx8xvy-9a8wn",
+                  "label": "Балама"
+                }
+              ]
+            }
+          },
+          "actionOutcomes": {
+            "version": 1,
+            "noReply": {
+              "enabled": true,
+              "timeoutMinutes": 1320,
+              "cancelIfPhrases": ["Тапсырысыңыз қабылданды"]
+            }
+          }
+        }
+      },
+      {
+        "id": "node-1773740009253-973",
+        "data": {
+          "kind": "trigger",
+          "linkedConditionId": null,
+          "triggerConfig": {
+            "enabled": true,
+            "messageMatchMode": "any",
+            "keywordMatchMode": "contains",
+            "channelFilter": ["whatsapp"],
+            "metaCampaignAdAccountId": "act_656779001036516",
+            "metaCampaignLabels": [
+              {
+                "id": "52600451172325",
+                "name": "medal"
+              }
+            ],
+            "metaCampaignNameFallbacks": ["МЦ"],
+            "onlyNewCustomers": true
+          }
+        }
+      },
+      {
+        "id": "node-demoshop-medal-lang-20260927",
+        "data": {
+          "kind": "action",
+          "actionType": "whatsapp_template",
+          "actionWhatsAppTemplateId": "2422689024904107",
+          "actionWhatsAppTemplateName": "pick_lang",
+          "actionWhatsAppTemplateLanguage": "kk",
+          "actionWhatsAppTemplateComponents": [
+            {
+              "type": "BODY",
+              "text": "Сәлеметсіз бе! 👋 Demoshop Group компаниясына хабарласқаныңызға рахмет 😊\nТілді таңдаңыз:\n\nЗдравствуйте! Добро пожаловать в  Demoshop Group 👋!\nВыберите язык:"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                {
+                  "type": "QUICK_REPLY",
+                  "text": "Қазақ тілі"
+                },
+                {
+                  "type": "QUICK_REPLY",
+                  "text": "Русский язык"
+                }
+              ]
+            }
+          ],
+          "actionOutcomes": {
+            "version": 1,
+            "noReply": {
+              "enabled": true,
+              "timeoutMinutes": 180,
+              "cancelIfPhrases": ["Тапсырысыңыз қабылданды"]
+            }
+          }
+        }
+      },
+      {
+        "id": "node-1790495389291-1-669",
+        "data": {
+          "kind": "action",
+          "actionType": "whatsapp_template",
+          "actionWhatsAppTemplateId": "1266043812141183",
+          "actionWhatsAppTemplateName": "medal_pick_1",
+          "actionWhatsAppTemplateLanguage": "kk",
+          "actionWhatsAppTemplateCategory": "MARKETING",
+          "actionWhatsAppTemplateComponents": [
+            {
+              "type": "BODY",
+              "text": "Көмектесуге қуаныштымын! \n😊 Біздің медаль ілгіштеріміз — нағыз чемпиондарға арналған. Есімін жаздырып, ЕРЕКШЕ дизайн жасауға болады.\n\nСізге қай спорт түріне арналған дизайн қажет?"
+            },
+            {
+              "type": "FOOTER",
+              "text": "Егер тізімде жоқ болса, жай ғана жазып жіберіңіз"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                {
+                  "type": "FLOW",
+                  "text": "Таңдау",
+                  "flow_id": 2244981489363579,
+                  "flow_action": "NAVIGATE",
+                  "navigate_screen": "QUESTION_ONE"
+                }
+              ]
+            }
+          ],
+          "whatsAppTemplateButtonPayload": "stb:node-demoshop-medal-lang-20260927:0",
+          "whatsAppTemplateButtonLabel": "Қазақ тілі",
+          "actionOutcomes": {
+            "version": 1,
+            "noReply": {
+              "enabled": true,
+              "timeoutMinutes": 180
+            }
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "node-demoshop-orteke-lang-20260927",
+        "sourceHandle": "right-source-whatsapp-template-button-branch::0",
+        "target": "node-1779454010349-254"
+      },
+      {
+        "source": "node-demoshop-orteke-lang-20260927",
+        "sourceHandle": "right-source-whatsapp-template-button-branch::1",
+        "target": "node-1779454010349-254"
+      },
+      {
+        "source": "node-demoshop-orteke-lang-20260927",
+        "sourceHandle": "right-source-action-outcome::no-reply",
+        "target": "node-1779454010349-254"
+      },
+      {
+        "source": "node-1781294812166-1-281",
+        "target": "node-demoshop-orteke-lang-20260927",
+        "sourceHandle": "right-source"
+      },
+      {
+        "source": "node-demoshop-readable-trigger-20261008",
+        "target": "node-demoshop-readable-lang-20261008",
+        "sourceHandle": "right-source"
+      },
+      {
+        "source": "node-demoshop-medal-lang-20260927",
+        "sourceHandle": "right-source-whatsapp-template-button-branch::0",
+        "target": "node-1790495389291-1-669"
+      },
+      {
+        "source": "node-1773740009253-973",
+        "target": "node-demoshop-medal-lang-20260927",
+        "sourceHandle": "right-source"
+      }
+    ]
+  },
+  "state": {
+    "lockedScenarioId": "69b91feab867aa73e3e91fe1",
+    "lockedScenarioName": "Multi-root language selection",
+    "currentActionNodeId": "node-demoshop-orteke-lang-20260927",
+    "currentPathNodeIds": [
+      "node-1781294812166-1-281",
+      "node-demoshop-orteke-lang-20260927"
+    ],
+    "currentBranchNodeIds": [],
+    "pendingConditionNodeId": "__system:action-outcomes:node-demoshop-orteke-lang-20260927",
+    "pendingSourceActionNodeId": "node-demoshop-orteke-lang-20260927",
+    "pendingStartedAt": "2026-10-11T05:38:13.788Z",
+    "pendingScenarioUpdatedAt": "2026-10-08T15:20:32.343Z",
+    "pendingLastOutboundMessageId": "6acb20c23b48255cf94c2df0",
+    "lastMessageId": "6acb20c23b48255cf94c2df0",
+    "startedScenarios": [
+      {
+        "scenarioId": "69b91feab867aa73e3e91fe1",
+        "startedAt": "2026-10-11T05:38:08.758Z",
+        "firstActionNodeId": "node-demoshop-orteke-lang-20260927",
+        "firstMessageId": "6acb20bb3b48255cf94c2d3d"
+      }
+    ],
+    "completedScenarios": []
+  }
+}

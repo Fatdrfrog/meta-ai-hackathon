@@ -4,15 +4,20 @@ This repository is our entry to the Meta Global AI Developer Hackathon 2026, Sta
 
 ## What is new
 
-Everything in this repository is new work, written between kickoff on Oct 26, 2026 and the deadline on Nov 4, 2026 at 9:00 PM ET.
+Everything in this repository outside the `airi/` folder is new work, written between kickoff on Oct 26, 2026 and the deadline on Nov 4, 2026 at 9:00 PM ET.
 
 The first two commits, made a few hours before kickoff, only set up the repository: this file, the README, the license and the commit-message rule. They have no product code.
 
 ## What already existed
 
-[airi.chat](https://airi.chat), our WhatsApp customer-engagement product, existed before the hackathon. Its code is private and is not in this repository. Nothing here needs it: the demo runs from this repository alone, with synthetic data. The organizers confirmed this setup on Discord on Oct 26, 2026.
+[airi.chat](https://airi.chat), our WhatsApp customer-engagement product, existed before the hackathon. **The `airi/` folder is airi.chat as it was before this event, not hackathon work.**
 
-Where this project connects to airi.chat, the connection points are documented here, not copied.
+- It came in one commit, `meta-ai-hackathon: import airi.chat as pre-existing code (not hackathon work)`, taken from airi.chat's private main branch at commit `c81f9d812` (Oct 27, 2026).
+- In that commit, only these changes were made to airi.chat's code:
+  - database migrations, internal docs and AI-tool folders were removed;
+  - customer names, a team member's email and real-looking phone numbers in tests were replaced with neutral values;
+  - one demo data file moved next to the code that reads it.
+- Hackathon work inside `airi/` arrives only in later commits, and each one is listed under "Features built" below. `git log -- airi` shows every change after the import.
 
 ## How to check
 

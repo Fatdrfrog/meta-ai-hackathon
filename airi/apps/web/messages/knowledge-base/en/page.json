@@ -1,0 +1,166 @@
+{
+  "KnowledgeBase": {
+    "title": "Power replies with knowledge",
+    "view": "View",
+    "edit": "Edit",
+    "noArticlesYet": "No articles yet.",
+    "createFirstArticle": "Create article",
+    "settings": {
+      "title": "Knowledge Base Settings",
+      "description": "Configure external URL indexing for enhanced AI insights."
+    },
+    "emptyState": {
+      "title": "Welcome to Knowledge Base",
+      "description": "Create your first article using the plus button in the sidebar to get started.",
+      "hint": "Click plus in the sidebar to create an article"
+    },
+    "adminTree": {
+      "untitled": "Untitled",
+      "draft": "Draft",
+      "addSubArticle": "Add sub-article",
+      "rename": "Rename",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this article?",
+      "deleteConfirmDescription": "This permanently deletes the article and its translations.",
+      "failedToUpdate": "Failed to update",
+      "failedToDelete": "Failed to delete",
+      "failedToReorder": "Failed to reorder",
+      "failedToLoad": "Could not load articles",
+      "retry": "Retry",
+      "loadingArticles": "Loading articles...",
+      "openTree": "Show article list",
+      "expandArticle": "Expand article",
+      "collapseArticle": "Collapse article",
+      "cancel": "Cancel"
+    },
+    "articleEditor": {
+      "publishSuccess": "Article published",
+      "publishFailed": "Could not publish",
+      "firstPublishOnboardingTitle": "Knowledge base is live",
+      "firstPublishOnboardingDescription": "Next step: enable Airi bot for all chats in Settings -> AI controls: {settingsPath}",
+      "publishing": "Publishing...",
+      "enterArticleTitle": "Enter article title",
+      "titleRequired": "Add a title before publishing",
+      "saveFirst": "Please save the article first",
+      "writeContentPlaceholder": "Write and format your article content...",
+      "loadingEditor": "Loading editor...",
+      "saveStatus": {
+        "saving": "Saving...",
+        "saved": "Saved",
+        "error": "Save failed",
+        "unsaved": "Unsaved changes"
+      },
+      "chunkPreview": {
+        "label": "Show RAG chunk boundaries",
+        "hint": "Preview only. Airi splits the article at each H1–H3 heading. Text under a heading belongs to that chunk. Use “Normal text” in the block menu to turn a line back into body text so it stays part of the section above (not saved to the article).",
+        "headingLineHint": "This line is a heading, so it starts a new retrieval chunk. Switch to “Normal text” to merge it with the section above."
+      },
+      "published": "Published",
+      "publishToWeb": "Publish to web",
+      "publishChanges": "Publish changes",
+      "unpublishLanguage": "Unpublish this language",
+      "unpublishSuccess": "Unpublished this language",
+      "unpublishFailed": "Could not unpublish",
+      "unpublishing": "Unpublishing...",
+      "unpublishedChangesHint": "This language has unpublished changes.",
+      "shareLink": "Share link",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied to clipboard",
+      "publishMode": {
+        "title": "Publish mode",
+        "publicWithAutoLink": "Public + auto link in Airi replies",
+        "publicWithAutoLinkShort": "Public + auto link",
+        "publicWithAutoLinkDesc": "Anyone with link can view; Airi can attach this link",
+        "publicWithAutoLinkDescShort": "Anyone with link can view, Airi can attach link",
+        "publicNoAutoLink": "Public + no auto link in Airi replies",
+        "publicNoAutoLinkShort": "Public + no auto link",
+        "publicNoAutoLinkDesc": "Anyone with link can view; Airi will not auto-attach link",
+        "publicNoAutoLinkDescShort": "Public article, but Airi will not auto-attach link",
+        "aiContextOnly": "AI context only (not public)",
+        "aiContextOnlyShort": "AI context only",
+        "aiContextOnlyDesc": "Used by Airi context, hidden from public KB",
+        "aiContextOnlyDescShort": "Hidden from public KB and no auto-link in replies",
+        "publishToAiContext": "Publish to AI context",
+        "autoLinkDisabled": "Airi auto-link embedding is disabled for this publish mode."
+      }
+    },
+    "search": {
+      "placeholder": "Search articles...",
+      "noResults": "No articles found",
+      "startTyping": "Start typing to search articles",
+      "searching": "Searching...",
+      "failed": "Could not search articles",
+      "retry": "Retry"
+    },
+    "navigation": {
+      "knowledgeBase": "Knowledge Base",
+      "kb": "KB"
+    },
+    "breadcrumbs": {
+      "workspace": "Workspace",
+      "knowledgeBase": "Knowledge Base",
+      "editArticle": "Edit Article",
+      "newArticle": "New Article"
+    },
+    "metadata": {
+      "published": "Published",
+      "readingTime": "min read"
+    },
+    "actions": {
+      "copyMarkdown": "Copy Markdown",
+      "copyForLLM": "Copy for LLM",
+      "copiedMarkdown": "Markdown copied",
+      "copiedForLLM": "LLM text copied",
+      "copyFailed": "Could not copy"
+    },
+    "localeFallbackNotice": "This article isn't published in {requestedLanguage} yet. Showing the {renderedLanguage} version.",
+    "articleNotFound": "Article not found",
+    "emptyPublicKb": "No published articles yet. Check back soon.",
+    "languageControl": {
+      "articleLanguage": "Article language",
+      "newTranslation": "New translation",
+      "published": "Published",
+      "publishedDraft": "Published + draft",
+      "draft": "Draft",
+      "languageActions": "Language actions",
+      "duplicateFrom": "Duplicate from...",
+      "translateFrom": "Translate from...",
+      "copyPublicLink": "Copy public link",
+      "deleteTranslation": "Delete translation",
+      "createVersion": "Create {language} version",
+      "createVersionDescription": "Start a language draft without changing the workspace UI language.",
+      "startEmpty": "Start empty",
+      "startEmptyDesc": "Keep the current title and write new content.",
+      "copyFromCurrent": "Copy from current language",
+      "copyFromCurrentDesc": "Duplicate the current draft as a starting point.",
+      "copyFromDefault": "Copy from default language",
+      "copyFromDefaultDesc": "Use {language} as the base.",
+      "translateWithAi": "Translate with AI from current language",
+      "translateWithAiDesc": "Preserve article formatting and links.",
+      "deleteTranslationTitle": "Delete translation?",
+      "deleteTranslationDescription": "This removes the {language} article draft, versions, and locale embeddings. The default language stays intact.",
+      "cancel": "Cancel",
+      "saveFirst": "Save the article before adding translations",
+      "updateFailed": "Could not update translation",
+      "draftReady": "{language} draft is ready",
+      "translationDeleted": "{language} translation deleted",
+      "publicLinkCopied": "Public link copied",
+      "copyPublicLinkFailed": "Could not copy public link",
+      "deleteFailed": "Could not delete translation"
+    },
+    "feedback": {
+      "wasHelpful": "Was this helpful?",
+      "yes": "Yes",
+      "no": "No",
+      "thanks": "Thanks for the feedback."
+    },
+    "newArticle": {
+      "title": "Create New Article"
+    },
+    "delete": {
+      "title": "Delete Article",
+      "confirmation": "Are you sure you want to delete \"{title}\"? This action cannot be undone. This will permanently delete the article and all its versions, feedback, and related data.",
+      "deleting": "Deleting..."
+    }
+  }
+}

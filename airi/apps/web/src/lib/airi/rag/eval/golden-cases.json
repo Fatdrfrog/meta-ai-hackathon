@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "planner": [
+    {
+      "id": "greeting-hyde-off",
+      "vertical": "generic",
+      "query": "Hello!",
+      "language": "en",
+      "expect": {
+        "plannerMode": "heuristic",
+        "hydeRecommended": false,
+        "factualIntent": "none"
+      }
+    },
+    {
+      "id": "short-factual-hyde-on",
+      "vertical": "support",
+      "query": "What is your refund policy?",
+      "language": "en",
+      "expect": {
+        "plannerMode": "heuristic",
+        "hydeRecommended": true,
+        "factualIntent": "factual"
+      }
+    },
+    {
+      "id": "pinned-short-followup-hyde-off",
+      "vertical": "support",
+      "query": "yes please",
+      "language": "en",
+      "pinnedSourceIds": ["snippet-pin-1"],
+      "expect": {
+        "plannerMode": "heuristic",
+        "hydeRecommended": false
+      }
+    },
+    {
+      "id": "procedural-intent",
+      "vertical": "support",
+      "query": "How do I reset my password?",
+      "language": "en",
+      "expect": {
+        "factualIntent": "procedural",
+        "plannerMode": "heuristic",
+        "hydeRecommended": true
+      }
+    },
+    {
+      "id": "navigational-intent",
+      "vertical": "support",
+      "query": "Where is your office?",
+      "language": "en",
+      "expect": {
+        "factualIntent": "navigational",
+        "plannerMode": "heuristic"
+      }
+    }
+  ],
+  "citation": [
+    {
+      "id": "strict-enforcement-bump",
+      "vertical": "support",
+      "planOverrides": {
+        "normalizedQuery": "What does it cost?",
+        "standaloneQuery": "What does it cost?",
+        "factualIntent": "factual",
+        "requiredCitationStrength": "none",
+        "plannerMode": "heuristic",
+        "hydeRecommended": true
+      },
+      "groundedStrictEnforcement": true,
+      "hasRetrievedSources": true,
+      "expectEffectiveCitation": "preferred"
+    },
+    {
+      "id": "no-bump-without-sources",
+      "vertical": "support",
+      "planOverrides": {
+        "normalizedQuery": "What does it cost?",
+        "standaloneQuery": "What does it cost?",
+        "factualIntent": "factual",
+        "requiredCitationStrength": "none",
+        "plannerMode": "heuristic",
+        "hydeRecommended": true
+      },
+      "groundedStrictEnforcement": true,
+      "hasRetrievedSources": false,
+      "expectEffectiveCitation": "none"
+    }
+  ],
+  "ranking": [
+    {
+      "id": "fused-score-beats-higher-cosine-only-similarity",
+      "vertical": "kb",
+      "limit": 8,
+      "expectOrder": ["chunk-strong-fts", "chunk-vector-only"],
+      "metric": { "precisionAt1": true, "note": "Top hit must be higher fused_score, not higher raw similarity" },
+      "articles": [
+        {
+          "id": "chunk-vector-only",
+          "title": "Vector-strong",
+          "fullContent": "Body A",
+          "similarity": 0.96,
+          "locale": "en",
+          "sourceType": "kb_article",
+          "retrievalMethod": "knowledge_chunk",
+          "contextFormat": "preview",
+          "chunkFusedScore": 0.02,
+          "chunkAuthorityScore": 0.5,
+          "chunkFreshnessAt": null
+        },
+        {
+          "id": "chunk-strong-fts",
+          "title": "FTS match",
+          "fullContent": "Body B",
+          "similarity": 0.88,
+          "locale": "en",
+          "sourceType": "kb_article",
+          "retrievalMethod": "knowledge_chunk",
+          "contextFormat": "preview",
+          "chunkFusedScore": 0.07,
+          "chunkAuthorityScore": 0.5,
+          "chunkFreshnessAt": null
+        }
+      ]
+    },
+    {
+      "id": "tie-fused-authority-breaks",
+      "vertical": "kb",
+      "limit": 8,
+      "expectOrder": ["chunk-high-auth", "chunk-low-auth"],
+      "articles": [
+        {
+          "id": "chunk-low-auth",
+          "title": "Low",
+          "fullContent": "x",
+          "similarity": 0.9,
+          "locale": "en",
+          "sourceType": "kb_article",
+          "retrievalMethod": "knowledge_chunk",
+          "contextFormat": "preview",
+          "chunkFusedScore": 0.04,
+          "chunkAuthorityScore": 0.35,
+          "chunkFreshnessAt": null
+        },
+        {
+          "id": "chunk-high-auth",
+          "title": "High",
+          "fullContent": "y",
+          "similarity": 0.9,
+          "locale": "en",
+          "sourceType": "kb_article",
+          "retrievalMethod": "knowledge_chunk",
+          "contextFormat": "preview",
+          "chunkFusedScore": 0.04,
+          "chunkAuthorityScore": 0.92,
+          "chunkFreshnessAt": null
+        }
+      ]
+    }
+  ]
+}

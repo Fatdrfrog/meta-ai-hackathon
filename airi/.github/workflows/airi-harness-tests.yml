@@ -1,0 +1,166 @@
+name: Airi harness tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "apps/web/src/lib/airi-chats/**"
+      - "apps/web/src/components/ai/**"
+      - "apps/web/src/lib/meta-ads/mcp/**"
+      - "apps/web/src/app/api/workspaces/**/airi-chats/**"
+      - "apps/web/src/lib/ai/**"
+      - "apps/web/src/models/airi-chat-*"
+      - "apps/web/tests/airi-chat-browser*"
+      - "apps/web/tests/whatsapp-templates-browser-navigation.ts"
+      - "apps/web/tests/whatsapp-templates-browser-dynamic.tsx"
+      # Non-Airi files the components/ai suites and the browser smoke load;
+      # validation-workflow-contracts.test.mjs keeps this list complete.
+      - "apps/web/messages/*.json"
+      - "apps/web/messages/scenarios/en/**"
+      - "apps/web/messages/templates/en/**"
+      - "apps/web/jest.mocks/**"
+      - "apps/web/src/test-support/**"
+      - "apps/web/src/i18n/**"
+      - "apps/web/src/app/globals.css"
+      - "apps/web/src/components/ui/**"
+      - "apps/web/src/components/assets/**"
+      - "apps/web/src/components/composer/**"
+      - "apps/web/src/components/integrations/**"
+      - "apps/web/src/components/whatsapp-templates/**"
+      - "apps/web/src/components/scenarios/builders/whatsapp/**"
+      - "apps/web/src/components/scenarios/scenario-editor-chunks.ts"
+      - "apps/web/src/components/scenarios/scenario-lazy-chunk*"
+      - "apps/web/src/components/i18n/scoped-intl-provider.tsx"
+      - "apps/web/src/features/panel/shared/routing/**"
+      - "apps/web/src/hooks/use-company-limits.ts"
+      - "apps/web/src/hooks/use-transition-owner-key.ts"
+      - "apps/web/src/lib/auth/auth-context.tsx"
+      - "apps/web/src/lib/composer/**"
+      - "apps/web/src/lib/date-utils.ts"
+      - "apps/web/src/lib/utils.ts"
+      - "apps/web/src/lib/meta-ads/connect-meta-ads-mcp-client.ts"
+      - "apps/web/src/lib/whatsapp/flows/client.ts"
+      - "apps/web/src/lib/whatsapp/templates/**"
+      - "packages/airi-runtime/**"
+      - "packages/scenario-contracts/**"
+      - "packages/shared/**"
+      - "packages/whatsapp/**"
+      - "apps/web/package.json"
+      - "apps/web/jest*"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/airi-harness-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/src/lib/airi-chats/**"
+      - "apps/web/src/components/ai/**"
+      - "apps/web/src/lib/meta-ads/mcp/**"
+      - "apps/web/src/app/api/workspaces/**/airi-chats/**"
+      - "apps/web/src/lib/ai/**"
+      - "apps/web/src/models/airi-chat-*"
+      - "apps/web/tests/airi-chat-browser*"
+      - "apps/web/tests/whatsapp-templates-browser-navigation.ts"
+      - "apps/web/tests/whatsapp-templates-browser-dynamic.tsx"
+      # Non-Airi files the components/ai suites and the browser smoke load;
+      # validation-workflow-contracts.test.mjs keeps this list complete.
+      - "apps/web/messages/*.json"
+      - "apps/web/messages/scenarios/en/**"
+      - "apps/web/messages/templates/en/**"
+      - "apps/web/jest.mocks/**"
+      - "apps/web/src/test-support/**"
+      - "apps/web/src/i18n/**"
+      - "apps/web/src/app/globals.css"
+      - "apps/web/src/components/ui/**"
+      - "apps/web/src/components/assets/**"
+      - "apps/web/src/components/composer/**"
+      - "apps/web/src/components/integrations/**"
+      - "apps/web/src/components/whatsapp-templates/**"
+      - "apps/web/src/components/scenarios/builders/whatsapp/**"
+      - "apps/web/src/components/scenarios/scenario-editor-chunks.ts"
+      - "apps/web/src/components/scenarios/scenario-lazy-chunk*"
+      - "apps/web/src/components/i18n/scoped-intl-provider.tsx"
+      - "apps/web/src/features/panel/shared/routing/**"
+      - "apps/web/src/hooks/use-company-limits.ts"
+      - "apps/web/src/hooks/use-transition-owner-key.ts"
+      - "apps/web/src/lib/auth/auth-context.tsx"
+      - "apps/web/src/lib/composer/**"
+      - "apps/web/src/lib/date-utils.ts"
+      - "apps/web/src/lib/utils.ts"
+      - "apps/web/src/lib/meta-ads/connect-meta-ads-mcp-client.ts"
+      - "apps/web/src/lib/whatsapp/flows/client.ts"
+      - "apps/web/src/lib/whatsapp/templates/**"
+      - "packages/airi-runtime/**"
+      - "packages/scenario-contracts/**"
+      - "packages/shared/**"
+      - "packages/whatsapp/**"
+      - "apps/web/package.json"
+      - "apps/web/jest*"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/airi-harness-tests.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: airi-harness-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  airi-harness:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Airi runtime package tests
+        run: pnpm --filter @icecore/airi-runtime test
+      # These suites stub Mongo, Supabase and the provider SDKs. No
+      # MONGODB_URI or provider key is set on purpose, so they never reach a
+      # live service.
+      - name: Airi chat, Meta MCP and text facade tests
+        if: ${{ !cancelled() }}
+        run: >-
+          pnpm --filter @icecore/web exec jest --ci --runInBand
+          src/lib/airi-chats/
+          src/components/ai/
+          src/lib/meta-ads/mcp/
+          src/lib/ai/
+          "src/app/api/workspaces/.*/airi-chats/"
+
+  airi-browser-smoke:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    # ubuntu-latest moved to 26.04 on 2026-10-22, which Playwright 1.56 cannot
+    # install Chromium on. Unpin after upgrading Playwright to a release that
+    # supports it.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm --filter @icecore/web exec playwright install --with-deps chromium
+      # The real Airi workspace in Chromium against a stubbed Airi API; see
+      # apps/web/tests/airi-chat-browser.md.
+      - name: Airi chat browser smoke
+        run: >-
+          pnpm --filter @icecore/web exec playwright test
+          --config tests/airi-chat-browser.config.ts

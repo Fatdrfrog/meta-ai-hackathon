@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`branch visibility snapshots collapse, shared reachability, loops and orphans together 1`] = `
+{
+  "edges": [
+    {
+      "id": "root-b",
+      "source": "root",
+      "sourceHandle": "b",
+      "target": "b",
+    },
+    {
+      "id": "b-shared",
+      "source": "b",
+      "target": "shared",
+    },
+    {
+      "id": "shared-root",
+      "source": "shared",
+      "target": "root",
+    },
+  ],
+  "nodes": [
+    {
+      "data": {
+        "kind": "trigger",
+      },
+      "id": "root",
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "type": "triggerNode",
+    },
+    {
+      "data": {
+        "actionType": "reply",
+        "kind": "action",
+      },
+      "id": "b",
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "type": "actionNode",
+    },
+    {
+      "data": {
+        "actionType": "reply",
+        "kind": "action",
+      },
+      "id": "shared",
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "type": "actionNode",
+    },
+    {
+      "data": {
+        "actionType": "reply",
+        "kind": "action",
+      },
+      "id": "orphan",
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "type": "actionNode",
+    },
+  ],
+}
+`;

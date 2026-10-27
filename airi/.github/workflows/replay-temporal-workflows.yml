@@ -1,0 +1,100 @@
+name: Replay Temporal Workflows
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "apps/temporal-worker/src/workflows/**"
+      - "apps/temporal-worker/src/activities/airi-auto-reply.ts"
+      - "apps/temporal-worker/src/airi-conversation*.test.ts"
+      - "apps/temporal-worker/src/testing/**"
+      - "apps/web/src/lib/temporal/airi-turn-execution*"
+      # The worker program checks the SDK against these runtime-loaded surfaces.
+      - "apps/web/src/lib/temporal/sdk.ts"
+      - "apps/web/src/lib/temporal/sdk-types.ts"
+      - "apps/temporal-worker/src/web-temporal-sdk-types.type-test.ts"
+      - "packages/otp-runtime/src/temporal-starter.ts"
+      - "packages/airi-runtime/src/job-runner*"
+      - "packages/temporal/src/**"
+      - "apps/temporal-worker/src/export-replay-histories.ts"
+      - "apps/temporal-worker/src/replay-histories.ts"
+      - "apps/temporal-worker/replay-histories/**/*.json"
+      - "apps/temporal-worker/replay-histories/README.md"
+      - "apps/temporal-worker/package.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: replay-temporal-workflows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replay:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check worker types
+        run: pnpm --filter @icecore/temporal-worker check-types
+
+      - name: Install Temporal CLI for isolated workflow tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEMPORAL_INSTALL_DIR="$HOME/.temporalio"
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/temporalio/cli/main/install.sh \
+            --output /tmp/install-temporal.sh
+          sh /tmp/install-temporal.sh --dir "$TEMPORAL_INSTALL_DIR"
+          echo "$TEMPORAL_INSTALL_DIR/bin" >> "$GITHUB_PATH"
+
+      - name: Exercise conversation recovery on local Temporal
+        env:
+          TEMPORAL_WORKFLOW_TESTS: "1"
+        run: pnpm --filter @icecore/temporal-worker exec tsx --test src/airi-conversation-workflow.integration.test.ts
+
+      - name: Check replay fixture presence
+        id: replay-fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if find apps/temporal-worker/replay-histories -type f -name '*.json' | grep -q .; then
+            echo "has_fixtures=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "has_fixtures=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Temporal replay"
+            echo ""
+            echo "No committed replay fixtures were found, so PR replay was skipped."
+            echo "Production deploy still exports live histories from the deployed worker pool and replays them before rollout."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Replay workflow histories
+        if: ${{ steps.replay-fixtures.outputs.has_fixtures == 'true' }}
+        run: pnpm --filter @icecore/temporal-worker replay:histories:strict
