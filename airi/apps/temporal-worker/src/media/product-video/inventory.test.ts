@@ -7,10 +7,12 @@ import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 
 import {
   inventoryChecks,
+  modelDoubtSubject,
   parseInventory,
   presentationWindows,
   quoteInTranscript,
   readProductInventory,
+  reviewClipWindow,
   type InventoryItem,
 } from "./inventory";
 
@@ -432,5 +434,104 @@ test("a quote copied across a time mark still matches the narration", () => {
       transcript,
     ),
     [[]],
+  );
+});
+
+test("a review clip runs from the time mark before the spoken price to the next one", () => {
+  const promo = [
+    "[3.0] Мынау біздің шежіре, [4.6] әр отбасына арналған, [6.2] бағасы он бес мың [7.8] бес жүз теңгеден басталады.",
+    "[11.0] Келесі тауар.",
+  ].join("\n");
+  const panel = item({
+    priceQuote: "он бес мың бес жүз теңгеден",
+    priceQuoteSeconds: 3,
+  });
+
+  // The price's words start after the 6.2 mark and run past the 7.8 one.
+  assert.deepEqual(reviewClipWindow(panel, promo, 40), {
+    fromSeconds: 5.9,
+    toSeconds: 11,
+  });
+  // A sentence start the model got wrong: the sentence with the words wins.
+  assert.deepEqual(
+    reviewClipWindow({ ...panel, priceQuoteSeconds: 12 }, promo, 40),
+    { fromSeconds: 5.9, toSeconds: 11 },
+  );
+  // A short sentence runs to the next one, at most 6 s.
+  assert.deepEqual(reviewClipWindow(item(), TRANSCRIPT, 60), {
+    fromSeconds: 9.5,
+    toSeconds: 15.5,
+  });
+  assert.deepEqual(
+    reviewClipWindow(
+      item({ priceQuote: "бес жүз теңге", priceQuoteSeconds: 1.2 }),
+      TRANSCRIPT,
+      60,
+    ),
+    { fromSeconds: 0.9, toSeconds: 6.9 },
+  );
+  // Near the end of the video it starts earlier, to last 2 s.
+  assert.deepEqual(reviewClipWindow(item(), TRANSCRIPT, 10.5), {
+    fromSeconds: 8.5,
+    toSeconds: 10.5,
+  });
+});
+
+test("without a spoken price, the clip is 4 s around the featured item's clearest moment", () => {
+  const options = [
+    {
+      description: "round panel",
+      samPhrase: "round panel",
+      firstSeenSeconds: 2,
+      clearestMomentSeconds: 3,
+    },
+    {
+      description: "star plaque",
+      samPhrase: "star plaque",
+      firstSeenSeconds: 6,
+      clearestMomentSeconds: 6.5,
+    },
+  ];
+  const onScreen = item({
+    priceSource: "on_screen",
+    priceQuote: "15 500 ₸",
+    priceQuoteSeconds: null,
+    options,
+    featuredOption: 1,
+  });
+
+  assert.deepEqual(reviewClipWindow(onScreen, TRANSCRIPT, 60), {
+    fromSeconds: 4.5,
+    toSeconds: 8.5,
+  });
+  // A quote the narration doesn't have is treated the same way.
+  assert.deepEqual(
+    reviewClipWindow(
+      item({ priceQuote: "жиырма мың", options, featuredOption: 0 }),
+      TRANSCRIPT,
+      60,
+    ),
+    { fromSeconds: 1, toSeconds: 5 },
+  );
+  assert.equal(
+    reviewClipWindow(
+      item({ price: null, priceQuote: null, priceSource: null, options: [] }),
+      TRANSCRIPT,
+      60,
+    ),
+    null,
+  );
+});
+
+test("the model's doubts that name a price or a number are about the price", () => {
+  assert.equal(modelDoubtSubject("Is it 500 or 5000?"), "price");
+  assert.equal(
+    modelDoubtSubject("The price may belong to the earrings."),
+    "price",
+  );
+  assert.equal(modelDoubtSubject("An unusual currency was said."), "price");
+  assert.equal(
+    modelDoubtSubject("The name said doesn't match the box shown."),
+    "product",
   );
 });

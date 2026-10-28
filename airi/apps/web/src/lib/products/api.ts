@@ -16,6 +16,8 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   video_not_found: "That video wasn't found in this workspace",
   import_not_found: "That import wasn't found",
   import_unavailable: "The import couldn't be started",
+  product_not_found: "That product wasn't found",
+  save_failed: "The change couldn't be saved",
 };
 
 export const productsJson = (data: unknown, status = 200) =>

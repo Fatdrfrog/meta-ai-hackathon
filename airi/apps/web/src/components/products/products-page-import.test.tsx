@@ -27,6 +27,10 @@ jest.mock("@/hooks/use-realtime", () => ({
   }),
 }));
 
+// The page's address, as Next gives it; null outside the app router.
+let mockSearch: URLSearchParams | null = null;
+jest.mock("next/navigation", () => ({ useSearchParams: () => mockSearch }));
+
 const mockCheck = jest.fn();
 jest.mock("./products-client", () => ({
   ...jest.requireActual("./products-client"),
@@ -96,6 +100,8 @@ const draft = (
 beforeEach(() => {
   calls.length = 0;
   realtimeHandlers.clear();
+  mockSearch = null;
+  window.history.replaceState(null, "", "/panel/workspace-1/products");
   mockCheck.mockReset().mockResolvedValue(null);
   routes = {
     [`GET ${BASE}/products`]: () => respond(200, { products: [] }),
@@ -443,4 +449,85 @@ test("says what a finished import found, or that it found nothing", async () => 
   expect(
     screen.getByText(/No products were found in this video/)
   ).toBeInTheDocument();
+});
+
+test("a finished import offers its check, which opens in place and Back closes", async () => {
+  routes[`GET ${BASE}/products/imports`] = () =>
+    respond(200, {
+      imports: [
+        record({ status: "ready", stage: null, photoDone: 3, photoTotal: 3 }),
+      ],
+    });
+  routes[`GET ${BASE}/products/imports/import-1`] = () =>
+    respond(200, {
+      import: record({ status: "ready", stage: null }),
+      products: [
+        draft("p1", "Шежіре", { method: "restored", imageUrl: null }),
+        draft("p2", "Медаль ілгіш", { method: "restored", imageUrl: null }),
+      ],
+    });
+  renderPage();
+
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Check products" })
+  );
+
+  expect(
+    screen.getByRole("heading", { name: "Check your products" })
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByRole("article", { name: "Шежіре" })
+  ).toBeInTheDocument();
+  expect(window.location.search).toBe("?review=import-1");
+  // The page's own controls wait behind the review.
+  expect(
+    screen.queryByRole("button", { name: "Upload a video" })
+  ).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Products" }));
+  expect(
+    screen.queryByRole("heading", { name: "Check your products" })
+  ).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole("button", { name: "Check products" })
+  ).toBeInTheDocument();
+  await waitFor(() => expect(window.location.search).toBe(""));
+});
+
+test("opens the review straight from its address, and closing leaves the page", async () => {
+  const importId = "651f1f77bcf86cd799439061";
+  mockSearch = new URLSearchParams(`review=${importId}`);
+  window.history.replaceState(
+    null,
+    "",
+    `/panel/workspace-1/products?review=${importId}`
+  );
+  routes[`GET ${BASE}/products/imports/${importId}`] = () =>
+    respond(200, {
+      import: record({ id: importId, status: "ready", stage: null }),
+      products: [draft("p1", "Шежіре", { method: "restored", imageUrl: null })],
+    });
+  renderPage();
+
+  expect(
+    await screen.findByRole("article", { name: "Шежіре" })
+  ).toBeInTheDocument();
+  fireEvent.keyDown(window, { key: "Escape" });
+
+  expect(
+    screen.queryByRole("heading", { name: "Check your products" })
+  ).not.toBeInTheDocument();
+  expect(window.location.search).toBe("");
+});
+
+test("an address with no import id in it opens no review", async () => {
+  mockSearch = new URLSearchParams("review=../../admin");
+  renderPage();
+
+  expect(
+    await screen.findByText("Your products will appear here")
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: "Check your products" })
+  ).not.toBeInTheDocument();
 });

@@ -6,11 +6,14 @@ import {
 import { WorkspaceProduct } from "@/models/workspace-product";
 import {
   MAX_LISTED_PRODUCTS,
+  PRODUCT_DOUBT_SUBJECTS,
   PRODUCT_PHOTO_METHODS,
   PRODUCT_TEXT_SOURCES,
   WORKSPACE_PRODUCT_STATUSES,
   type DraftProductOptionRecord,
   type DraftProductRecord,
+  type ProductDoubt,
+  type ProductDoubtSubject,
   type ProductPhotoMethod,
   type ProductTextSource,
   type StoredFileRef,
@@ -29,9 +32,10 @@ type OptionRow = Record<string, unknown> & {
   };
 };
 
-type ProductRow = Record<string, unknown> & {
+export type ProductRow = Record<string, unknown> & {
   options?: OptionRow[];
   featuredOption?: unknown;
+  clip?: { video?: Partial<StoredFileRef> } | null;
 };
 
 const featuredIndex = (row: ProductRow): number => {
@@ -48,6 +52,20 @@ const featuredIndex = (row: ProductRow): number => {
 const texts = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((entry): entry is string => typeof entry === "string")
+    : [];
+
+/** Doubts as the review shows them; one stored as bare text is about the product. */
+const doubtsOf = (value: unknown): ProductDoubt[] =>
+  Array.isArray(value)
+    ? value.flatMap((entry): ProductDoubt[] => {
+        if (typeof entry === "string")
+          return [{ about: "product", text: entry }];
+        const { about, text } = (entry ?? {}) as Record<string, unknown>;
+        return typeof text === "string" &&
+          (PRODUCT_DOUBT_SUBJECTS as readonly unknown[]).includes(about)
+          ? [{ about: about as ProductDoubtSubject, text }]
+          : [];
+      })
     : [];
 
 function toIsoOrNull(value: unknown): string | null {
@@ -116,6 +134,46 @@ export async function listPublishedProducts(
   );
 }
 
+/** The fields a product is checked by, as `toDraftRecord` reads them. */
+export const DRAFT_PRODUCT_FIELDS =
+  "status name englishName nameSource price priceIsFrom priceQuote priceSource doubts options featuredOption clip updatedAt";
+
+/**
+ * A product as the owner checks it, from a row with `DRAFT_PRODUCT_FIELDS`;
+ * its links are signed, so call it inside `withProductPhotoUrls`.
+ */
+export async function toDraftRecord(
+  workspaceId: string,
+  row: ProductRow
+): Promise<DraftProductRecord> {
+  return {
+    ...(await toRecord(workspaceId, row)),
+    status: (WORKSPACE_PRODUCT_STATUSES as readonly unknown[]).includes(
+      row.status
+    )
+      ? (row.status as WorkspaceProductStatus)
+      : "draft",
+    englishName: text(row.englishName),
+    nameSource: (PRODUCT_TEXT_SOURCES as readonly unknown[]).includes(
+      row.nameSource
+    )
+      ? (row.nameSource as ProductTextSource)
+      : null,
+    priceQuote: text(row.priceQuote),
+    priceSource: (PRODUCT_TEXT_SOURCES as readonly unknown[]).includes(
+      row.priceSource
+    )
+      ? (row.priceSource as ProductTextSource)
+      : null,
+    doubts: doubtsOf(row.doubts),
+    options: await Promise.all(
+      (row.options ?? []).map(option => toOptionRecord(workspaceId, option))
+    ),
+    featuredOption: featuredIndex(row),
+    clipUrl: await productPhotoUrl(workspaceId, row.clip?.video),
+  };
+}
+
 /** The products one import found, in the order they were filmed, for the owner to check. */
 export async function listImportProducts(
   workspaceId: string,
@@ -123,41 +181,9 @@ export async function listImportProducts(
 ): Promise<DraftProductRecord[]> {
   const rows = await WorkspaceProduct.find({ workspaceId, importId })
     .sort({ importIndex: 1, _id: 1 })
-    .select(
-      "status name englishName nameSource price priceIsFrom priceQuote priceSource doubts options featuredOption updatedAt"
-    )
+    .select(DRAFT_PRODUCT_FIELDS)
     .lean<ProductRow[]>();
   return withProductPhotoUrls(() =>
-    Promise.all(
-      rows.map(async (row): Promise<DraftProductRecord> => {
-        return {
-          ...(await toRecord(workspaceId, row)),
-          status: (WORKSPACE_PRODUCT_STATUSES as readonly unknown[]).includes(
-            row.status
-          )
-            ? (row.status as WorkspaceProductStatus)
-            : "draft",
-          englishName: text(row.englishName),
-          nameSource: (PRODUCT_TEXT_SOURCES as readonly unknown[]).includes(
-            row.nameSource
-          )
-            ? (row.nameSource as ProductTextSource)
-            : null,
-          priceQuote: text(row.priceQuote),
-          priceSource: (PRODUCT_TEXT_SOURCES as readonly unknown[]).includes(
-            row.priceSource
-          )
-            ? (row.priceSource as ProductTextSource)
-            : null,
-          doubts: texts(row.doubts),
-          options: await Promise.all(
-            (row.options ?? []).map(option =>
-              toOptionRecord(workspaceId, option)
-            )
-          ),
-          featuredOption: featuredIndex(row),
-        };
-      })
-    )
+    Promise.all(rows.map(row => toDraftRecord(workspaceId, row)))
   );
 }

@@ -189,11 +189,14 @@ export function ImportProgress({
   workspaceId,
   record,
   preview,
+  onReview,
 }: {
   workspaceId: string;
   record: ProductVideoImportRecord;
   /** The local file's link, when it was uploaded from this page. */
   preview: string | null;
+  /** Opens the review of the products it found. */
+  onReview: (importId: string) => void;
 }) {
   const running = isImportRunning(record);
   const { data } = useSWR<ProductVideoImportResponse>(
@@ -264,6 +267,11 @@ export function ImportProgress({
         label={PRODUCTS_COPY.readyToCheck(
           data ? drafts.length : record.productTotal
         )}
+        actions={
+          <Button size="sm" onClick={() => onReview(record.id)}>
+            {PRODUCTS_COPY.checkProducts}
+          </Button>
+        }
       />
     );
   }

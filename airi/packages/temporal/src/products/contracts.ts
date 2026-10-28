@@ -82,6 +82,16 @@ export type ProductPhotoMethod = (typeof PRODUCT_PHOTO_METHODS)[number];
 export const PRODUCT_TEXT_SOURCES = ["spoken", "on_screen"] as const;
 export type ProductTextSource = (typeof PRODUCT_TEXT_SOURCES)[number];
 
+/**
+ * What a doubt about a found product is about: its price, which the owner
+ * settles by setting it, or the product as a whole.
+ */
+export const PRODUCT_DOUBT_SUBJECTS = ["price", "product"] as const;
+export type ProductDoubtSubject = (typeof PRODUCT_DOUBT_SUBJECTS)[number];
+
+/** Something the owner should confirm about a found product, in English. */
+export type ProductDoubt = { about: ProductDoubtSubject; text: string };
+
 export type ProductVideoImportWorkflowInput = {
   contractVersion: number;
   workspaceId: string;

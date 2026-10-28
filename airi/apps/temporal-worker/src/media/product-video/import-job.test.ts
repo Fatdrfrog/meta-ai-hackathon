@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import test, { type TestContext } from "node:test";
 import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 import sharp from "sharp";
@@ -11,10 +11,12 @@ import {
   classifyImportError,
   ProductVideoImportFailure,
   runProductVideoImport,
+  type ClipWindow,
   type ImportJobPorts,
   type NewDraftOption,
   type NewDraftProduct,
   type ProductPhoto,
+  type StoredFileRef,
 } from "./import-job";
 import type {
   InventoryItem,
@@ -85,9 +87,10 @@ type FakeOption = NewDraftOption & {
   photo: ProductPhoto | { method: "pending" };
   notes: string[];
 };
-type FakeProduct = Omit<NewDraftProduct, "options"> & {
+type FakeProduct = Omit<NewDraftProduct, "options" | "clip"> & {
   id: string;
   options: FakeOption[];
+  clip: (ClipWindow & { video?: StoredFileRef }) | null;
 };
 
 /** A product a previous run saved, with one option in the given state. */
@@ -118,6 +121,7 @@ const savedProduct = (
       notes: [],
     },
   ],
+  clip: { fromSeconds: 0.7, toSeconds: 4 },
 });
 
 async function setUp(
@@ -133,6 +137,10 @@ async function setUp(
     /** The import's presenter as a previous run left it. */
     presenter?: { momentSeconds: number; photo: unknown } | null;
     cutOutPresenter?: (workDir: string) => Promise<PresenterCutout | null>;
+    /** How cutting a review clip fails, by product id. */
+    clipFails?: Record<string, Error>;
+    /** Whether the video has sound. */
+    audio?: boolean;
   } = {},
 ) {
   const workDir = await mkdtemp(join(tmpdir(), "import-job-"));
@@ -159,6 +167,11 @@ async function setUp(
     emits: [] as string[],
     spend: [] as string[],
     saved: [] as string[],
+    clips: [] as Array<{
+      productId: string;
+      soundPath: string | null;
+      window: ClipWindow;
+    }>,
   };
 
   const photoFile = async (dir: string, name: string, kind: "jpeg" | "png") => {
@@ -230,6 +243,11 @@ async function setUp(
               videoWindow: o.videoWindow,
               photoMethod: o.photo.method,
             })),
+            clip: p.clip && {
+              fromSeconds: p.clip.fromSeconds,
+              toSeconds: p.clip.toSeconds,
+              saved: Boolean(p.clip.video),
+            },
           }));
       },
       async createProducts(drafts) {
@@ -252,6 +270,10 @@ async function setUp(
         product.options[optionIndex]!.photo = photo;
         product.options[optionIndex]!.notes.push(...notes);
       },
+      async saveClip(productId, video) {
+        const product = state.products.find((p) => p.id === productId)!;
+        product.clip = { ...product.clip!, video };
+      },
     },
     storage: {
       async downloadVideo() {},
@@ -265,6 +287,10 @@ async function setUp(
       async savePresenterPhoto(file) {
         calls.saved.push(`presenter/${file.fileName}:${file.mimeType}`);
         return { bucket: "media", path: `photos/presenter/${file.fileName}` };
+      },
+      async saveClip(productId, file) {
+        calls.saved.push(`${productId}/${file.fileName}:${file.mimeType}`);
+        return { bucket: "media", path: `clips/${productId}/${file.fileName}` };
       },
     },
     spend:
@@ -293,11 +319,20 @@ async function setUp(
     workDir,
     prepare: async () => ({
       videoPath: join(workDir, "video.mp4"),
-      audioPath: join(workDir, "narration.mp3"),
+      audioPath:
+        options.audio === false ? null : join(workDir, "narration.mp3"),
       durationSeconds: 30,
       width: 720,
       height: 1280,
     }),
+    extractClip: async (source, window, outPath) => {
+      const productId = basename(outPath, ".mp4");
+      calls.clips.push({ productId, soundPath: source.soundPath, window });
+      const failure = options.clipFails?.[productId];
+      if (failure) throw failure;
+      await mkdir(dirname(outPath), { recursive: true });
+      await writeFile(outPath, "mp4");
+    },
     readInventory: async (_request, deps) => {
       calls.inventory++;
       deps?.onCost?.(0.04, "inventory");
@@ -363,10 +398,12 @@ test("runs an import from video to products with photos, saving each step", asyn
   assert.equal(doll!.englishName, "LOL doll");
   assert.equal(doll!.nameSource, "spoken");
   assert.deepEqual(doll!.doubts, []);
-  // The model's doubt first, then our own checks.
-  assert.deepEqual(cup!.doubts, ["Is it 500 or 5000?"]);
+  // The model's doubt first, then our own checks, each with what it's about.
+  assert.deepEqual(cup!.doubts, [
+    { about: "price", text: "Is it 500 or 5000?" },
+  ]);
   assert.deepEqual(rooster!.doubts, [
-    "No price was said or shown for this product.",
+    { about: "price", text: "No price was said or shown for this product." },
   ]);
   assert.equal(doll!.priceSource, "spoken");
   assert.equal(doll!.priceIsFrom, false);
@@ -732,4 +769,86 @@ test("a retry cuts out only the presenter a previous run didn't finish", async (
     (state.import.presenter as { momentSeconds: number }).momentSeconds,
     6,
   );
+});
+
+test("cuts each product's review clip after its photos, with the video's own sound", async (t) => {
+  const { ports, state, calls } = await setUp(t);
+
+  await runProductVideoImport(ports);
+
+  const sourcePath = join(ports.workDir, "source");
+  assert.deepEqual(calls.clips, [
+    // The doll's price is said in the first sentence, which runs to the next.
+    {
+      productId: "p0",
+      soundPath: sourcePath,
+      window: { fromSeconds: 0.7, toSeconds: 6.7 },
+    },
+    // The cup's sentence is the last one: 6 s at most.
+    {
+      productId: "p1",
+      soundPath: sourcePath,
+      window: { fromSeconds: 8.7, toSeconds: 14.7 },
+    },
+    // No price was said for the rooster: 4 s around its clearest moment.
+    {
+      productId: "p2",
+      soundPath: sourcePath,
+      window: { fromSeconds: 20, toSeconds: 24 },
+    },
+  ]);
+  assert.ok(calls.saved.includes("p0/clip.mp4:video/mp4"));
+  assert.deepEqual(state.products[0]!.clip, {
+    fromSeconds: 0.7,
+    toSeconds: 6.7,
+    video: { bucket: "media", path: "clips/p0/clip.mp4" },
+  });
+  assert.equal(state.import.status, "ready");
+});
+
+test("a video without sound gets silent review clips", async (t) => {
+  const { ports, calls } = await setUp(t, { audio: false });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(calls.clips.length, 3);
+  assert.ok(calls.clips.every((clip) => clip.soundPath === null));
+});
+
+test("a retry cuts only the review clips a previous run didn't save", async (t) => {
+  const done = savedProduct(0, "LOL doll", { method: "restored" });
+  done.clip = {
+    fromSeconds: 0.7,
+    toSeconds: 4,
+    video: { bucket: "media", path: "clips/p0/clip.mp4" },
+  };
+  const { ports, calls } = await setUp(t, {
+    transcript: TRANSCRIPT,
+    products: [done, savedProduct(1, "Frosted cup", { method: "restored" })],
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.deepEqual(
+    calls.clips.map((clip) => clip.productId),
+    ["p1"],
+  );
+});
+
+test("a clip ffmpeg can't make is left out; any other failure is retried", async (t) => {
+  const broken = await setUp(t, {
+    clipFails: { p1: new Error("ffmpeg exited with code 1: Invalid data") },
+  });
+
+  await runProductVideoImport(broken.ports);
+
+  assert.equal(broken.state.import.status, "ready");
+  assert.equal(broken.state.products[1]!.clip!.video, undefined);
+  assert.ok(broken.state.products[2]!.clip!.video);
+
+  const stuck = await setUp(t, {
+    clipFails: { p0: new Error("ffmpeg timed out after 300000 ms") },
+  });
+  await assert.rejects(runProductVideoImport(stuck.ports), /timed out/);
+  assert.equal(stuck.state.import.status, "processing");
 });

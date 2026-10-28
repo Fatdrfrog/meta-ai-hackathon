@@ -42,6 +42,50 @@ export const PRODUCTS_COPY = {
       : `${count} products found. Check them before they go on your shelf.`,
   nothingFound:
     "No products were found in this video. Film your shelf again, saying each product's name and price.",
+  checkProducts: "Check products",
+
+  // Checking what a video found, one card at a time.
+  review: {
+    title: "Check your products",
+    back: "Products",
+    acceptAll: (count: number) => `Accept all (${count})`,
+    add: "Add to shelf",
+    skip: "Skip",
+    undo: "Undo",
+    sound: "Play your voice on each card",
+    hear: "Hear what you said",
+    pause: "Pause",
+    polished: "Polished",
+    original: "Original",
+    photo: "Photo",
+    changeName: "Change the name",
+    changePrice: "Change the price",
+    priceInTenge: "Price in tenge",
+    noPrice: "No price yet",
+    chooseShown: "Choose the one your shelf shows",
+    showOption: (description: string) => `Show ${description} on your shelf`,
+    stampAdd: "Add",
+    stampSkip: "Skip",
+    added: (name: string) => `${name} added to your shelf.`,
+    skipped: (name: string) => `${name} skipped.`,
+    allAdded: (count: number) =>
+      count === 1
+        ? "1 product added to your shelf."
+        : `${count} products added to your shelf.`,
+    undone: "Undone.",
+    saveFailed: "That change couldn't be saved, so it was undone. Try again.",
+    loadFailed: "These products couldn't be loaded.",
+    nothingLeft: "Nothing is left to check in this video.",
+    done: (added: number) =>
+      added === 0
+        ? "Nothing was added to your shelf."
+        : added === 1
+          ? "1 product is on your shelf."
+          : `${added} products are on your shelf.`,
+    skippedCount: (skipped: number) =>
+      skipped === 1 ? "1 skipped." : `${skipped} skipped.`,
+    backToProducts: "Back to products",
+  },
   uploadErrors: {
     not_a_video: "That file isn't a video. Choose an MP4 or MOV.",
     too_big: `The video is larger than ${MAX_GB} GB. Film a shorter one and upload it.`,

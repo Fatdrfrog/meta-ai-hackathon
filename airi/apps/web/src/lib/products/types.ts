@@ -29,18 +29,23 @@ export type ProductVideoImportStatus =
 
 // The import job's own vocabulary, shared with the worker that runs it.
 export {
+  PRODUCT_DOUBT_SUBJECTS,
   PRODUCT_PHOTO_METHODS,
   PRODUCT_TEXT_SOURCES,
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
+  PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
   PRODUCT_VIDEO_IMPORT_STAGES,
   PRODUCT_VIDEO_MAX_BYTES,
   PRODUCT_VIDEO_MAX_SECONDS,
+  type ProductDoubt,
+  type ProductDoubtSubject,
   type ProductPhotoMethod,
   type ProductTextSource,
   type ProductVideoImportErrorCode,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
 import type {
+  ProductDoubt,
   ProductPhotoMethod,
   ProductTextSource,
   ProductVideoImportErrorCode,
@@ -99,12 +104,14 @@ export type DraftProductRecord = WorkspaceProductRecord & {
   /** The narration's words, or the video's text, the price came from. */
   priceQuote: string | null;
   priceSource: ProductTextSource | null;
-  /** What the owner should confirm, in English. */
-  doubts: string[];
+  /** What the owner should confirm, in English; those about the price go once it's set. */
+  doubts: ProductDoubt[];
   /** The items shown for it, in the order shown. */
   options: DraftProductOptionRecord[];
   /** The option the shelf shows, as an index into `options`. */
   featuredOption: number;
+  /** A short clip of the video with sound: the owner saying its price. */
+  clipUrl: string | null;
 };
 
 export type ProductVideoImportRecord = {
@@ -137,6 +144,35 @@ export type ProductVideoImportResponse = {
   products: DraftProductRecord[];
 };
 
+/** The longest name a product may have. */
+export const MAX_PRODUCT_NAME_LENGTH = 160;
+/** A sanity cap on prices, in whole tenge. */
+export const MAX_PRODUCT_PRICE = 1_000_000_000;
+
+/**
+ * What the owner may change about a product while checking it: its name,
+ * its price (null for none yet), and which option the shelf shows.
+ */
+export type ProductChanges = {
+  name?: string;
+  price?: number | null;
+  featuredOption?: number;
+};
+
+export type ProductUpdateResponse = { product: DraftProductRecord };
+
+/**
+ * The owner's decision on some of an import's products: published adds them
+ * to the shelf, rejected skips them, and draft undoes either.
+ */
+export type ProductReviewRequest = {
+  productIds: string[];
+  status: WorkspaceProductStatus;
+};
+
+/** How many of the products changed; those already in that state don't count. */
+export type ProductReviewResponse = { changed: number };
+
 /**
  * The imports the Products page shows, newest first: running ones, finished
  * ones with products left to check, and those that recently failed or found
@@ -159,6 +195,8 @@ export const PRODUCTS_ERROR_CODES = [
   "video_not_found",
   "import_not_found",
   "import_unavailable",
+  "product_not_found",
+  "save_failed",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 

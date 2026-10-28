@@ -6,6 +6,7 @@ import test, { type TestContext } from "node:test";
 
 import {
   extractProductClip,
+  extractReviewClip,
   MAX_PRODUCT_VIDEO_SECONDS,
   prepareProductVideo,
   ProductVideoError,
@@ -153,4 +154,35 @@ test("a long video stops being transcoded a second past the limit; a timeout isn
     (error: unknown) =>
       !(error instanceof ProductVideoError) && /timed out/.test(String(error)),
   );
+});
+
+test("a review clip is small, with the original file's sound when it has any", async (t) => {
+  const dir = await workDir(t);
+  const { calls, runProcess } = fakeProcesses();
+  const outPath = join(dir, "clips", "p1.mp4");
+
+  await extractReviewClip(
+    { videoPath: "C:/w/video.mp4", soundPath: "C:/w/source" },
+    { fromSeconds: 12.25, toSeconds: 16 },
+    outPath,
+    { runProcess },
+  );
+  await extractReviewClip(
+    { videoPath: "C:/w/video.mp4", soundPath: null },
+    { fromSeconds: 0, toSeconds: 4 },
+    join(dir, "clips", "p2.mp4"),
+    { runProcess },
+  );
+
+  assert.ok((await stat(join(dir, "clips"))).isDirectory());
+  const [withSound, silent] = calls.map((call) => call.args.join(" "));
+  assert.match(
+    withSound!,
+    /-ss 12\.250 -i C:\/w\/video\.mp4 -ss 12\.250 -i C:\/w\/source -t 3\.750 -map 0:v:0 -map 1:a:0 /,
+  );
+  assert.match(withSound!, /-c:a aac -b:a 64k -ac 1 /);
+  assert.match(withSound!, /min\(360,iw\)/);
+  assert.ok(withSound!.endsWith(outPath));
+  assert.doesNotMatch(silent!, /source|1:a:0|aac/);
+  assert.match(silent!, / -an /);
 });

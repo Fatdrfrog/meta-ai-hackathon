@@ -8,6 +8,7 @@ import {
   PRODUCT_VIDEO_IMPORT_MAX_PHOTOS,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
   PRODUCT_VIDEO_MAX_BYTES,
+  type ProductDoubt,
   type ProductPhotoMethod,
   type ProductTextSource,
   type ProductVideoImportErrorCode,
@@ -17,17 +18,23 @@ import sharp from "sharp";
 import { cutOutProduct, type ProductCutout } from "./cutout";
 import {
   inventoryChecks,
+  modelDoubtSubject,
   presentationWindows,
   readProductInventory,
+  reviewClipWindow,
 } from "./inventory";
-import { prepareProductVideo, ProductVideoError } from "./media";
+import {
+  extractReviewClip,
+  prepareProductVideo,
+  ProductVideoError,
+} from "./media";
 import { cutOutPresenter } from "./presenter";
 
 // One product video import, start to finish, written against small ports so
 // the Temporal activity supplies Mongo, storage, spend and realtime, and
 // tests supply fakes. Every step is saved as it finishes (the transcript, the
-// draft products, each option's photo), so a retried run skips what is done
-// and pays only for what isn't.
+// draft products, each option's photo, each product's review clip), so a
+// retried run skips what is done and pays only for what isn't.
 
 /** Photos made at once: each mostly waits on Meta's models. */
 const CUT_CONCURRENCY = 4;
@@ -86,11 +93,15 @@ export type ImportOption = {
   photoMethod: ProductPhotoMethod;
 };
 
+export type ClipWindow = { fromSeconds: number; toSeconds: number };
+
 export type ImportProduct = {
   id: string;
   /** The catalog name in English. */
   englishName: string;
   options: ImportOption[];
+  /** Its review clip's stretch of the video, and whether the clip is saved; null without one. */
+  clip: (ClipWindow & { saved: boolean }) | null;
 };
 
 export type NewDraftOption = {
@@ -110,10 +121,12 @@ export type NewDraftProduct = {
   priceQuote: string | null;
   priceSource: ProductTextSource | null;
   priceIsFrom: boolean;
-  doubts: string[];
+  doubts: ProductDoubt[];
   options: NewDraftOption[];
   /** The option the shelf shows for the product. */
   featuredOption: number;
+  /** The stretch of the video its review card plays, with the owner saying its price. */
+  clip: ClipWindow | null;
 };
 
 export type ProductPhoto = {
@@ -142,6 +155,7 @@ export type ImportJobPorts = {
       photo: ProductPhoto,
       notes: string[],
     ): Promise<void>;
+    saveClip(productId: string, video: StoredFileRef): Promise<void>;
   };
   storage: {
     downloadVideo(video: StoredFileRef, destination: string): Promise<void>;
@@ -154,6 +168,10 @@ export type ImportJobPorts = {
       mimeType: string;
       fileName: string;
     }): Promise<StoredFileRef>;
+    saveClip(
+      productId: string,
+      file: { buffer: Buffer; mimeType: string; fileName: string },
+    ): Promise<StoredFileRef>;
   };
   /** Null where the workspace's AI isn't billed to airi, so nothing is reserved. */
   spend: {
@@ -182,6 +200,7 @@ export type ImportJobPorts = {
   readInventory?: typeof readProductInventory;
   cutOut?: typeof cutOutProduct;
   cutOutPresenter?: typeof cutOutPresenter;
+  extractClip?: typeof extractReviewClip;
 };
 
 export async function runProductVideoImport(
@@ -300,13 +319,28 @@ export async function runProductVideoImport(
         priceQuote: item.priceQuote,
         priceSource: item.priceSource,
         priceIsFrom: item.priceIsFrom,
-        doubts: [...(item.doubt ? [item.doubt] : []), ...(checks[index] ?? [])],
+        // The model's doubt first, then our own checks, which are all about
+        // the price.
+        doubts: [
+          ...(item.doubt
+            ? [{ about: modelDoubtSubject(item.doubt), text: item.doubt }]
+            : []),
+          ...(checks[index] ?? []).map((text) => ({
+            about: "price" as const,
+            text,
+          })),
+        ],
         options: item.options.map((option) => ({
           description: option.description,
           samPhrase: option.samPhrase,
           videoWindow: windows[window++]!,
         })),
         featuredOption: item.featuredOption,
+        clip: reviewClipWindow(
+          item,
+          transcript ?? "",
+          prepared.durationSeconds,
+        ),
       })),
     );
     products = await store.listProducts();
@@ -334,6 +368,13 @@ export async function runProductVideoImport(
     ({ product, option }) =>
       cutAndSave(ports, prepared.videoPath, product, option, language),
   );
+  for (const { id, clip } of products) {
+    if (clip && !clip.saved)
+      await cutAndSaveClip(ports, prepared, sourcePath, id, {
+        fromSeconds: clip.fromSeconds,
+        toSeconds: clip.toSeconds,
+      });
+  }
   if (presenter && !presenter.done) {
     await cutAndSavePresenter(ports, prepared, presenter.momentSeconds);
   }
@@ -425,6 +466,41 @@ async function cutAndSave(
   await ports.store.savePhoto(product.id, option.index, photo, cutout.notes);
   await ports.store.updateImport({}, { photoDone: 1 });
   await ports.emit("photo", product.id);
+}
+
+/**
+ * Cuts a product's review clip, with the owner's own voice, and saves it. A
+ * clip ffmpeg can't make leaves the card without one rather than failing
+ * the import; anything else is thrown, for a retry.
+ */
+async function cutAndSaveClip(
+  ports: ImportJobPorts,
+  prepared: { videoPath: string; audioPath: string | null },
+  sourcePath: string,
+  productId: string,
+  window: ClipWindow,
+): Promise<void> {
+  const clipPath = join(ports.workDir, "clips", `${productId}.mp4`);
+  try {
+    await (ports.extractClip ?? extractReviewClip)(
+      {
+        videoPath: prepared.videoPath,
+        soundPath: prepared.audioPath ? sourcePath : null,
+      },
+      window,
+      clipPath,
+      { signal: ports.signal, pulse: ports.pulse },
+    );
+  } catch (error) {
+    if (!/exited with code/.test(messageOf(error))) throw error;
+    return;
+  }
+  const video = await ports.storage.saveClip(productId, {
+    buffer: await readFile(clipPath),
+    mimeType: "video/mp4",
+    fileName: "clip.mp4",
+  });
+  await ports.store.saveClip(productId, video);
 }
 
 /** The WebP copy the shelf and lists show, about twice its display height. */

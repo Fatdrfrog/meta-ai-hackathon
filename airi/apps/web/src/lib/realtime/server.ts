@@ -50,11 +50,14 @@ export type CrmBoardChangedRealtimePayload = {
   ownerUserId?: string | null;
 };
 
-/** A product video import moved on, or one of its products got its photo. */
+/**
+ * A product video import moved on, one of its products got its photo, or
+ * the owner checked some of its products (review).
+ */
 export type ProductsChangedRealtimeInput = {
   workspaceId: string;
   importId: string;
-  reason: "import" | "products_found" | "photo";
+  reason: "import" | "products_found" | "photo" | "review";
   productId?: string | null;
 };
 

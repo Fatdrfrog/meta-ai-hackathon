@@ -14,7 +14,10 @@ export function withProductPhotoUrls<T>(work: () => Promise<T>): Promise<T> {
   return withCreativeAssetDisplayReadUrlCache(work);
 }
 
-/** A signed link to a product photo, or null when it has none or signing fails. */
+/**
+ * A signed link to one of a product's files (a photo, or its review clip),
+ * or null when it has none or signing fails.
+ */
 export async function productPhotoUrl(
   workspaceId: string,
   ref: Partial<StoredFileRef> | null | undefined

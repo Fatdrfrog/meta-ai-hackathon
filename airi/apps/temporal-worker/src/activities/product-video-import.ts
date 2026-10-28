@@ -82,7 +82,7 @@ function mongoStore(
       const docs = await WorkspaceProduct.find(productFilter)
         .sort({ importIndex: 1 })
         .select(
-          "name englishName options.description options.samPhrase options.videoWindow options.photo.method",
+          "name englishName options.description options.samPhrase options.videoWindow options.photo.method clip",
         )
         .lean();
       return docs.map(
@@ -100,6 +100,15 @@ function mongoStore(
             videoWindow: option.videoWindow ?? { fromSeconds: 0, toSeconds: 0 },
             photoMethod: option.photo?.method ?? "pending",
           })),
+          clip:
+            typeof doc.clip?.fromSeconds === "number" &&
+            typeof doc.clip.toSeconds === "number"
+              ? {
+                  fromSeconds: doc.clip.fromSeconds,
+                  toSeconds: doc.clip.toSeconds,
+                  saved: Boolean(doc.clip.video?.path),
+                }
+              : null,
         }),
       );
     },
@@ -143,6 +152,12 @@ function mongoStore(
             ? { $push: { [`options.${optionIndex}.notes`]: { $each: notes } } }
             : {}),
         },
+      );
+    },
+    async saveClip(productId, video) {
+      await WorkspaceProduct.updateOne(
+        { _id: productId, ...productFilter },
+        { $set: { "clip.video": video } },
       );
     },
   };
@@ -219,6 +234,18 @@ export async function productVideoImportActivity(
               productId,
               importId: input.importId,
             },
+          });
+          return { bucket: stored.bucket, path: stored.path };
+        },
+        async saveClip(productId, file) {
+          const stored = await uploadGcsCreativeAssetBuffer({
+            workspaceId: input.workspaceId,
+            assetId: `product-${productId}-clip-${Date.now().toString(36)}`,
+            kind: "video",
+            buffer: file.buffer,
+            mimeType: file.mimeType,
+            fileName: file.fileName,
+            customMetadata: { productId, importId: input.importId },
           });
           return { bucket: stored.bucket, path: stored.path };
         },

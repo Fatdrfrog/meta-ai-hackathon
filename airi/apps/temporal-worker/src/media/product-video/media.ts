@@ -6,8 +6,8 @@ import { probeVideoFile } from "../video-probe";
 import { PULSE_INTERVAL_MS } from "./pulse";
 
 // ffmpeg steps of a product video import: one upright, silent H.264 copy for
-// Meta's models, the narration as MP3 for speech-to-text, and per-product
-// clips and frames.
+// Meta's models, the narration as MP3 for speech-to-text, per-product clips
+// and frames, and the short clips with sound the owner reviews products by.
 
 export type RunProcess = (
   input: ProcessRunInput,
@@ -188,6 +188,53 @@ export async function extractProductClip(
       "20",
       "-pix_fmt",
       "yuv420p",
+      "-movflags",
+      "+faststart",
+      outPath,
+    ],
+    deps,
+  );
+}
+
+/**
+ * A short clip with sound for a product's review card, so the owner hears
+ * themself say its price: the upright video, small, with the sound of the
+ * original file (`soundPath`, null for a video without sound), which is
+ * clearer than the narration's MP3 made for speech-to-text.
+ */
+export async function extractReviewClip(
+  source: { videoPath: string; soundPath: string | null },
+  window: { fromSeconds: number; toSeconds: number },
+  outPath: string,
+  deps: ProductVideoMediaDeps = {},
+): Promise<void> {
+  await mkdir(dirname(outPath), { recursive: true });
+  const start = Math.max(0, window.fromSeconds).toFixed(3);
+  const sound = source.soundPath;
+  await ffmpeg(
+    [
+      "-ss",
+      start,
+      "-i",
+      source.videoPath,
+      ...(sound ? ["-ss", start, "-i", sound] : []),
+      "-t",
+      Math.max(0.1, window.toSeconds - window.fromSeconds).toFixed(3),
+      "-map",
+      "0:v:0",
+      ...(sound ? ["-map", "1:a:0"] : []),
+      // A review card shows it at most about 180 px wide.
+      "-vf",
+      "scale='if(gt(iw,ih),-2,min(360,iw))':'if(gt(iw,ih),min(360,ih),-2)'",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "26",
+      "-pix_fmt",
+      "yuv420p",
+      ...(sound ? ["-c:a", "aac", "-b:a", "64k", "-ac", "1"] : ["-an"]),
       "-movflags",
       "+faststart",
       outPath,

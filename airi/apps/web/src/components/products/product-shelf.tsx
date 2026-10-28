@@ -149,7 +149,7 @@ function ShelfPhoto({
   );
 }
 
-function NameInitial({ name }: { name: string }) {
+export function NameInitial({ name }: { name: string }) {
   return (
     <span
       aria-hidden="true"

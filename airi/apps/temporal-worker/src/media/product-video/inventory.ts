@@ -12,6 +12,7 @@ import {
 import {
   PRODUCT_TEXT_SOURCES,
   PRODUCT_VIDEO_IMPORT_MAX_OPTIONS,
+  type ProductDoubtSubject,
   type ProductTextSource,
 } from "@icecore/temporal";
 import { whilePulsing } from "./pulse";
@@ -544,4 +545,142 @@ export function presentationWindows(
     windows[index] = window;
   });
   return windows;
+}
+
+/**
+ * What the model's own doubt is about. It is asked to doubt an unusual
+ * currency, an unclear number, a price that may belong to another product,
+ * or a name that doesn't match what is shown: a doubt that names a price, a
+ * currency or a number is about the price, which the owner settles by
+ * setting it; any other is about the product.
+ */
+export function modelDoubtSubject(doubt: string): ProductDoubtSubject {
+  return /price|cost|currenc|tenge|amount|number|\d/i.test(doubt)
+    ? "price"
+    : "product";
+}
+
+// A product's review clip: the owner saying its price, from a little before
+// the time mark the price's words start after.
+const CLIP_LEAD_SECONDS = 0.3;
+const MIN_CLIP_SECONDS = 2;
+const MAX_CLIP_SECONDS = 6;
+// Without a spoken price, this long around its featured item's clearest moment.
+const SHOWN_CLIP_SECONDS = 4;
+
+/** Each line of the narration as its pieces between time marks, in order. */
+function timedPieces(
+  transcript: string,
+): Array<Array<{ at: number; text: string }>> {
+  return transcript.split(/\r?\n/).flatMap((line) => {
+    const parts = line.trim().split(/\[(\d+(?:\.\d+)?)\]\s*/);
+    // A line starts with its time: ["", "1.0", "text", "2.5", "more", …].
+    if (parts.length < 3 || parts[0] !== "") return [];
+    const pieces: Array<{ at: number; text: string }> = [];
+    for (let i = 1; i + 1 < parts.length; i += 2)
+      pieces.push({ at: Number(parts[i]), text: parts[i + 1]! });
+    return [pieces];
+  });
+}
+
+/**
+ * When the owner says a quoted price: from the time mark before its words
+ * to the mark, or the next sentence, after them. The sentence is the one
+ * starting at `atSeconds` when its words are in it, otherwise the nearest
+ * one that has them; null when none does.
+ */
+function spokenQuoteWindow(
+  quote: string,
+  atSeconds: number | null,
+  transcript: string,
+): { from: number; to: number } | null {
+  const needle = normalizeText(withoutTimeMarks(quote));
+  if (!needle) return null;
+  const lines = timedPieces(transcript);
+  let best: { line: number; offset: number; distance: number } | null = null;
+  for (const [line, pieces] of lines.entries()) {
+    const offset = joinedText(pieces).text.indexOf(needle);
+    if (offset < 0) continue;
+    const distance =
+      atSeconds === null ? line : Math.abs(pieces[0]!.at - atSeconds);
+    if (!best || distance < best.distance) best = { line, offset, distance };
+  }
+  if (!best) return null;
+  const { line, offset } = best;
+  const pieces = lines[line]!;
+  const { starts } = joinedText(pieces);
+  let first = 0;
+  let last = 0;
+  starts.forEach((start, index) => {
+    if (start <= offset) first = index;
+    if (start < offset + needle.length) last = index;
+  });
+  const next = pieces[last + 1]?.at ?? lines[line + 1]?.[0]?.at;
+  return {
+    from: pieces[first]!.at,
+    to: next ?? Number.POSITIVE_INFINITY,
+  };
+}
+
+/** A line's pieces as one normalized text, and where each piece starts in it. */
+function joinedText(pieces: Array<{ text: string }>): {
+  text: string;
+  starts: number[];
+} {
+  let text = "";
+  const starts = pieces.map((piece) => {
+    const words = normalizeText(piece.text);
+    if (words && text) text += " ";
+    const start = text.length;
+    text += words;
+    return start;
+  });
+  return { text, starts };
+}
+
+/**
+ * The stretch of the video a product's review card plays with its sound:
+ * the owner saying the price, from just before the time mark its words
+ * start after to the next mark or sentence (2 to 6 s); for a price only on
+ * screen, or none, 4 s around the featured item's clearest moment. Null
+ * when it has neither.
+ */
+export function reviewClipWindow(
+  item: Pick<
+    InventoryItem,
+    | "priceQuote"
+    | "priceQuoteSeconds"
+    | "priceSource"
+    | "options"
+    | "featuredOption"
+  >,
+  transcript: string,
+  durationSeconds: number,
+): { fromSeconds: number; toSeconds: number } | null {
+  const spoken =
+    item.priceSource === "spoken" && item.priceQuote
+      ? spokenQuoteWindow(item.priceQuote, item.priceQuoteSeconds, transcript)
+      : null;
+  let from: number;
+  let to: number;
+  if (spoken) {
+    from = spoken.from - CLIP_LEAD_SECONDS;
+    to = spoken.to;
+  } else {
+    const shown = item.options[item.featuredOption] ?? item.options[0];
+    if (!shown) return null;
+    from = shown.clearestMomentSeconds - SHOWN_CLIP_SECONDS / 2;
+    to = from + SHOWN_CLIP_SECONDS;
+  }
+  from = Math.min(Math.max(0, from), durationSeconds);
+  to = Math.min(
+    durationSeconds,
+    Math.max(to, from + MIN_CLIP_SECONDS),
+    from + MAX_CLIP_SECONDS,
+  );
+  // Near the end of the video it starts earlier, to stay long enough.
+  if (to - from < MIN_CLIP_SECONDS) from = Math.max(0, to - MIN_CLIP_SECONDS);
+  if (to - from <= 0) return null;
+  const tenth = (seconds: number) => Math.round(seconds * 10) / 10;
+  return { fromSeconds: tenth(from), toSeconds: tenth(to) };
 }

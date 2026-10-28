@@ -94,7 +94,7 @@ describe("listPublishedProducts", () => {
 });
 
 describe("listImportProducts", () => {
-  it("lists an import's products in filmed order, with every photo and doubt", async () => {
+  it("lists an import's products in filmed order, with every photo, doubt and clip", async () => {
     const query = createFindQuery([
       {
         _id: "651f1f77bcf86cd799439041",
@@ -105,8 +105,22 @@ describe("listImportProducts", () => {
         price: 500,
         priceQuote: "бес жүз теңге",
         priceSource: "spoken",
-        doubts: ["Is it 500 or 5000?", 7],
+        doubts: [
+          {
+            about: "price",
+            text: "Another product's price comes from the same words.",
+          },
+          // One stored as bare text is about the product.
+          "Is it 500 or 5000?",
+          7,
+          { about: "colour", text: "Unknown subject" },
+        ],
         featuredOption: 0,
+        clip: {
+          fromSeconds: 8.7,
+          toSeconds: 12,
+          video: { bucket: "media", path: "p/clip.mp4" },
+        },
         options: [
           {
             description: "frosted cup with logo",
@@ -145,6 +159,9 @@ describe("listImportProducts", () => {
       importId: "651f1f77bcf86cd799439040",
     });
     expect(query.sort).toHaveBeenCalledWith({ importIndex: 1, _id: 1 });
+    expect(query.select).toHaveBeenCalledWith(
+      "status name englishName nameSource price priceIsFrom priceQuote priceSource doubts options featuredOption clip updatedAt"
+    );
     expect(products[0]).toEqual({
       id: "651f1f77bcf86cd799439041",
       status: "draft",
@@ -155,7 +172,14 @@ describe("listImportProducts", () => {
       priceIsFrom: false,
       priceQuote: "бес жүз теңге",
       priceSource: "spoken",
-      doubts: ["Is it 500 or 5000?"],
+      doubts: [
+        {
+          about: "price",
+          text: "Another product's price comes from the same words.",
+        },
+        { about: "product", text: "Is it 500 or 5000?" },
+      ],
+      clipUrl: "https://signed.test/workspace-1/p/clip.mp4",
       imageUrl: "https://signed.test/workspace-1/p/thumb.webp",
       featuredOption: 0,
       options: [
@@ -188,6 +212,7 @@ describe("listImportProducts", () => {
       nameSource: null,
       priceSource: null,
       doubts: [],
+      clipUrl: null,
       imageUrl: null,
       // A featured option out of range falls back to the first.
       featuredOption: 0,

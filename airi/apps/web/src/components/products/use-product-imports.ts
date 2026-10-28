@@ -12,6 +12,7 @@ import {
   fetchProductImports,
   productImportsUrl,
   productImportUrl,
+  productsApiUrl,
 } from "./products-client";
 
 // The import job announces each step on the workspace's realtime channel. The
@@ -29,7 +30,8 @@ export function isImportRunning(
 
 /**
  * The imports the Products page shows, kept live: the list, and each
- * import's own products, refresh when the job reports a step.
+ * import's own products, refresh when the job reports a step; the shelf
+ * too when products were checked, on this device or another.
  */
 export function useProductImports(workspaceId: string) {
   const { data, error, mutate } = useSWR<ProductVideoImportsResponse>(
@@ -60,11 +62,13 @@ export function useProductImports(workspaceId: string) {
   useEffect(() => {
     if (!channel) return;
     const changed = new Set<string>();
+    let reviewed = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const onChange = (event: RealtimeEventEnvelope) => {
       if (event.workspaceId !== workspaceId) return;
-      const { importId } = event.payload;
+      const { importId, reason } = event.payload;
       if (typeof importId === "string") changed.add(importId);
+      if (reason === "review") reviewed = true;
       if (timer) return;
       timer = setTimeout(() => {
         timer = null;
@@ -72,6 +76,8 @@ export function useProductImports(workspaceId: string) {
         for (const id of changed)
           void mutateKey(productImportUrl(workspaceId, id));
         changed.clear();
+        if (reviewed) void mutateKey(productsApiUrl(workspaceId));
+        reviewed = false;
       }, REALTIME_DEBOUNCE_MS);
     };
     channel.bind("products.changed", onChange);

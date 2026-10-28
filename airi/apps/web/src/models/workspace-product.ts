@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import {
+  PRODUCT_DOUBT_SUBJECTS,
   PRODUCT_PHOTO_METHODS,
   PRODUCT_TEXT_SOURCES,
   WORKSPACE_PRODUCT_STATUSES,
+  type ProductDoubt,
   type ProductPhotoMethod,
   type ProductTextSource,
   type StoredFileRef,
@@ -72,12 +74,24 @@ export interface IWorkspaceProduct {
   priceSource?: ProductTextSource | null;
   /** A starting price ("from 15 500"): the final one depends on options. */
   priceIsFrom: boolean;
-  /** What the owner should confirm before publishing, in English. */
-  doubts: string[];
+  /**
+   * What the owner should confirm before publishing, in English. Setting
+   * the price settles the doubts about it.
+   */
+  doubts: ProductDoubt[];
   /** The items shown for it, in the order shown. */
   options: IWorkspaceProductOption[];
   /** The option the shelf shows for it, as an index into `options`. */
   featuredOption: number;
+  /**
+   * The stretch of the video the owner reviews it by, saying its price, and
+   * that stretch as a short clip with sound once it's made.
+   */
+  clip?: {
+    fromSeconds: number;
+    toSeconds: number;
+    video?: StoredFileRef;
+  } | null;
   publishedAt?: Date;
   publishedBy?: string;
   createdAt: Date;
@@ -90,13 +104,14 @@ const WorkspaceProductOptionSchema =
       description: { type: String, required: true, trim: true, maxlength: 120 },
       samPhrase: { type: String, trim: true, maxlength: 80 },
       videoWindow: {
-        type: new mongoose.Schema(
-          { fromSeconds: Number, toSeconds: Number },
-          { _id: false }
-        ),
+        type: new mongoose.Schema<
+          NonNullable<IWorkspaceProductOption["videoWindow"]>
+        >({ fromSeconds: Number, toSeconds: Number }, { _id: false }),
       },
       photo: {
-        type: new mongoose.Schema(
+        type: new mongoose.Schema<
+          NonNullable<IWorkspaceProductOption["photo"]>
+        >(
           {
             method: {
               type: String,
@@ -155,9 +170,35 @@ const WorkspaceProductSchema = new mongoose.Schema<IWorkspaceProduct>(
       default: null,
     },
     priceIsFrom: { type: Boolean, default: false },
-    doubts: { type: [{ type: String, maxlength: 400 }], default: [] },
+    doubts: {
+      type: [
+        new mongoose.Schema<ProductDoubt>(
+          {
+            about: {
+              type: String,
+              required: true,
+              enum: PRODUCT_DOUBT_SUBJECTS,
+            },
+            text: { type: String, required: true, maxlength: 400 },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     options: { type: [WorkspaceProductOptionSchema], default: [] },
     featuredOption: { type: Number, default: 0, min: 0 },
+    clip: {
+      type: new mongoose.Schema<NonNullable<IWorkspaceProduct["clip"]>>(
+        {
+          fromSeconds: Number,
+          toSeconds: Number,
+          video: { bucket: { type: String }, path: { type: String } },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
     publishedAt: { type: Date },
     publishedBy: { type: String },
   },

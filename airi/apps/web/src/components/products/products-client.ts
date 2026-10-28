@@ -6,10 +6,15 @@ import {
 import {
   PRODUCT_VIDEO_MAX_BYTES,
   PRODUCT_VIDEO_MAX_SECONDS,
+  type DraftProductRecord,
+  type ProductChanges,
+  type ProductReviewResponse,
   type ProductsAccessResponse,
   type ProductsListResponse,
+  type ProductUpdateResponse,
   type ProductVideoImportResponse,
   type ProductVideoImportsResponse,
+  type WorkspaceProductStatus,
 } from "@/lib/products/types";
 
 // Requests the Products page and its menu entry make.
@@ -29,6 +34,55 @@ export function productImportsUrl(workspaceId: string): string {
 
 export function productImportUrl(workspaceId: string, importId: string) {
   return `${productImportsUrl(workspaceId)}/${encodeURIComponent(importId)}`;
+}
+
+export function productUrl(workspaceId: string, productId: string) {
+  return `${productsApiUrl(workspaceId)}/${encodeURIComponent(productId)}`;
+}
+
+/** A JSON request whose answer is needed; any failure throws. */
+async function sendJson<T>(url: string, method: string, body: unknown) {
+  const response = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return (await response.json()) as T;
+}
+
+/** Changes a product as the owner checks it; answers with it as the review shows it. */
+export async function updateProduct(
+  workspaceId: string,
+  productId: string,
+  changes: ProductChanges
+): Promise<DraftProductRecord> {
+  const data = await sendJson<ProductUpdateResponse | null>(
+    productUrl(workspaceId, productId),
+    "PATCH",
+    changes
+  );
+  if (!data?.product) throw new Error("Unexpected response");
+  return data.product;
+}
+
+/**
+ * The owner's decision on some of an import's products: published adds them
+ * to the shelf, rejected skips them, draft undoes either.
+ */
+export async function reviewProducts(
+  workspaceId: string,
+  importId: string,
+  productIds: string[],
+  status: WorkspaceProductStatus
+): Promise<number> {
+  const data = await sendJson<ProductReviewResponse | null>(
+    `${productImportUrl(workspaceId, importId)}/review`,
+    "POST",
+    { productIds, status }
+  );
+  if (typeof data?.changed !== "number") throw new Error("Unexpected response");
+  return data.changed;
 }
 
 export async function fetchProductImports(
