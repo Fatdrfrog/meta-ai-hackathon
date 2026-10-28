@@ -15,6 +15,7 @@ import {
   type ProductsErrorCode,
   type ProductsAccessResponse,
   type ProductsListResponse,
+  type ProductsWhatsAppLinkResponse,
   type ProductUpdateResponse,
   type ProductVideoImportResponse,
   type ProductVideoImportsResponse,
@@ -99,6 +100,17 @@ export async function createProductOrderForm(
     `${productImportUrl(workspaceId, importId)}/order-form`
   );
   if (typeof data.flow?.id !== "string") throw new ProductDraftError("failed");
+  return data;
+}
+
+/** A one-time link that opens WhatsApp to airi's number, to link the owner's phone. */
+export async function createProductsWhatsAppLink(
+  workspaceId: string
+): Promise<ProductsWhatsAppLinkResponse> {
+  const data = await postDraft<ProductsWhatsAppLinkResponse>(
+    `${productsApiUrl(workspaceId)}/whatsapp-link`
+  );
+  if (typeof data.url !== "string") throw new ProductDraftError("failed");
   return data;
 }
 

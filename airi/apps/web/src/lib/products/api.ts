@@ -22,6 +22,7 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   not_enough_products: "Not enough products with photos for this draft",
   storage_full: "The company's media storage is full",
   draft_failed: "The draft couldn't be made",
+  whatsapp_intake_unavailable: "Sending videos on WhatsApp isn't set up",
 };
 
 export const productsJson = (data: unknown, status = 200) =>

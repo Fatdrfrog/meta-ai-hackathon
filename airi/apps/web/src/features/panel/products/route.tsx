@@ -3,6 +3,7 @@ import { ErrorState } from "@/components/ui/async-states";
 import { panelWorkspaceAiriHref } from "@/features/panel/shared/routing/hrefs";
 import { getReadOnlySupabaseContext } from "@/features/panel/shared/workspace";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
+import { productsWhatsAppNumberLabel } from "@/lib/products/whatsapp-number";
 import { isCompanyAdminRole } from "@/lib/supabase/company-users";
 import { isWorkspaceFeatureEnabled } from "@/lib/workspace-feature-flags";
 import { redirect } from "next/navigation";
@@ -41,7 +42,11 @@ export default async function ProductsRoute({
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <ProductsPage key={workspaceId} workspaceId={workspaceId} />
+        <ProductsPage
+          key={workspaceId}
+          workspaceId={workspaceId}
+          whatsappNumber={productsWhatsAppNumberLabel()}
+        />
       </div>
     </div>
   );

@@ -12,9 +12,7 @@ import {
   isWhatsAppRecoverableMessageContent,
   isWhatsAppUnavailableMessage,
 } from "@icecore/shared/lib/whatsapp/webhook-automation-eligibility";
-import type {
-  WhatsAppWebhookRuntimeResult,
-} from "@icecore/temporal";
+import type { WhatsAppWebhookRuntimeResult } from "@icecore/temporal";
 import { airiWorkerLogger } from "./logging";
 import {
   buildWhatsAppIntakePlanSkipBody,
@@ -124,6 +122,22 @@ export type WhatsAppWebhookRuntimeDependencies = {
     recipient: WhatsAppRecipientTarget;
     sourceMessageId: string | null;
   }) => Promise<unknown>;
+  /**
+   * Products' intake on airi's own number: a shop owner's link code, their
+   * answer to Airi's question, or a shelf video. A message it handles gets no
+   * Airi reply. Absent where the host doesn't wire it.
+   */
+  handleProductsWhatsAppIntake?: (message: {
+    receivingPhone: string | null;
+    sourceId: string | null;
+    workspaceId: string;
+    conversationId: string;
+    messageId: string;
+    from: string | null;
+    text: string | null;
+    buttonReplyId: string | null;
+    video: { mediaId: string; mimeType: string | null } | null;
+  }) => Promise<{ handled: boolean; outcome?: string }>;
   shouldProcessEvenIfDuplicate: (messageType: any) => boolean;
   shouldQueueWhatsAppAiriIngress: (params: any) => boolean;
   shouldSuppressGeneralWhatsAppAiriReply: (params: any) => boolean;
@@ -327,6 +341,30 @@ function isAccountUpdateValue(value: unknown): value is AccountUpdateValue {
   if (!value || typeof value !== "object") return false;
   const event = (value as { event?: unknown }).event;
   return typeof event === "string" && event.length > 0;
+}
+
+/** A video in an inbound message, sent as a video or as a file. */
+function inboundVideo(
+  message: unknown,
+): { mediaId: string; mimeType: string | null } | null {
+  const record = (message ?? {}) as {
+    type?: unknown;
+    video?: { id?: unknown; mime_type?: unknown };
+    document?: { id?: unknown; mime_type?: unknown };
+  };
+  const media =
+    record.type === "video"
+      ? record.video
+      : record.type === "document" &&
+          typeof record.document?.mime_type === "string" &&
+          /^video\//i.test(record.document.mime_type)
+        ? record.document
+        : null;
+  if (typeof media?.id !== "string" || !media.id) return null;
+  return {
+    mediaId: media.id,
+    mimeType: typeof media.mime_type === "string" ? media.mime_type : null,
+  };
 }
 
 function stringifyId(value: unknown): string | null {
@@ -1569,6 +1607,35 @@ export async function processWhatsAppWebhookPayload(
             status: "ok",
             message: "llm feedback processed",
           });
+        }
+
+        if (!airiIngressSuppressed && deps.handleProductsWhatsAppIntake) {
+          const intake = await deps.handleProductsWhatsAppIntake({
+            receivingPhone: value.metadata?.display_phone_number ?? null,
+            sourceId: source.id ? String(source.id) : null,
+            workspaceId: source.workspace_id,
+            conversationId: String(result.conversationId),
+            messageId: String(newMessage._id),
+            from: contactData?.waId ?? null,
+            text:
+              messageData.type === "text"
+                ? (messageData.text?.body ?? null)
+                : null,
+            buttonReplyId: messageData.interactive?.button_reply?.id ?? null,
+            video: inboundVideo(messageData),
+          });
+          if (intake.handled) {
+            requestLogger.info("WhatsApp products intake handled", {
+              workspaceId: source.workspace_id,
+              conversationId: String(result.conversationId),
+              messageId: String(newMessage._id),
+              outcome: intake.outcome ?? null,
+            });
+            return runtimeJson({
+              status: "ok",
+              message: "products intake processed",
+            });
+          }
         }
 
         // -----------------------------------------------------------------

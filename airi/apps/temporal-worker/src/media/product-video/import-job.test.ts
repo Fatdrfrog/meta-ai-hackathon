@@ -141,6 +141,10 @@ async function setUp(
     clipFails?: Record<string, Error>;
     /** Whether the video has sound. */
     audio?: boolean;
+    /** A video sent on WhatsApp, not yet copied to storage. */
+    whatsapp?: boolean;
+    /** How fetching it from WhatsApp fails. */
+    whatsappFails?: Error;
   } = {},
 ) {
   const workDir = await mkdtemp(join(tmpdir(), "import-job-"));
@@ -154,6 +158,12 @@ async function setUp(
       photoDone: 0,
       costUsd: 0,
       presenter: options.presenter ?? null,
+      video: options.whatsapp
+        ? null
+        : {
+            bucket: "media",
+            path: "workspaces/w1/creative-assets/video/a1/shelf.mov",
+          },
     } as Record<string, unknown>,
     products: [...(options.products ?? [])],
     stages: [] as unknown[],
@@ -172,6 +182,7 @@ async function setUp(
       soundPath: string | null;
       window: ClipWindow;
     }>,
+    downloads: [] as string[],
   };
 
   const photoFile = async (dir: string, name: string, kind: "jpeg" | "png") => {
@@ -206,10 +217,17 @@ async function setUp(
       async loadImport() {
         return {
           status: state.import.status as "queued",
-          video: {
-            bucket: "media",
-            path: "workspaces/w1/creative-assets/video/a1/shelf.mov",
-          },
+          video: state.import.video as { bucket: string; path: string } | null,
+          whatsapp: options.whatsapp
+            ? {
+                sourceId: "airi-source",
+                workspaceId: "airi-workspace",
+                conversationId: "c1",
+                messageId: "m1",
+                mediaId: "wamid-media-1",
+                mimeType: "video/mp4",
+              }
+            : null,
           transcript: state.import.transcript as string | null,
           language: (state.import.language as string | undefined) ?? null,
           presenter: state.import.presenter
@@ -276,7 +294,14 @@ async function setUp(
       },
     },
     storage: {
-      async downloadVideo() {},
+      async downloadVideo(video) {
+        calls.downloads.push(`storage:${video.path}`);
+      },
+      async fetchWhatsAppVideo(video) {
+        calls.downloads.push(`whatsapp:${video.mediaId}`);
+        if (options.whatsappFails) throw options.whatsappFails;
+        return { bucket: "media", path: "videos/whatsapp-video.mp4" };
+      },
       async savePhoto(productId, file) {
         calls.saved.push(`${productId}/${file.fileName}:${file.mimeType}`);
         return {
@@ -656,6 +681,7 @@ test("a finished import does nothing again", async (t) => {
   ports.store.loadImport = async () => ({
     status: "ready",
     video: { bucket: "b", path: "p" },
+    whatsapp: null,
     transcript: TRANSCRIPT,
     language: "kk",
     presenter: { momentSeconds: 4, done: false },
@@ -851,4 +877,45 @@ test("a clip ffmpeg can't make is left out; any other failure is retried", async
   });
   await assert.rejects(runProductVideoImport(stuck.ports), /timed out/);
   assert.equal(stuck.state.import.status, "processing");
+});
+
+test("a video sent on WhatsApp is fetched once and kept, so a retry reads the copy", async (t) => {
+  const first = await setUp(t, { whatsapp: true });
+
+  await runProductVideoImport(first.ports);
+
+  assert.deepEqual(first.calls.downloads, ["whatsapp:wamid-media-1"]);
+  assert.deepEqual(first.state.import.video, {
+    bucket: "media",
+    path: "videos/whatsapp-video.mp4",
+  });
+  assert.equal(first.state.import.status, "ready");
+
+  // Its copy saved, a later run never goes back to WhatsApp.
+  const retry = await setUp(t, { whatsapp: true });
+  retry.state.import.video = {
+    bucket: "media",
+    path: "videos/whatsapp-video.mp4",
+  };
+  await runProductVideoImport(retry.ports);
+  assert.deepEqual(retry.calls.downloads, [
+    "storage:videos/whatsapp-video.mp4",
+  ]);
+});
+
+test("a WhatsApp video that can't be fetched is retried, not given up on", async (t) => {
+  const { ports, calls } = await setUp(t, {
+    whatsapp: true,
+    whatsappFails: new Error("Meta answered 500"),
+  });
+
+  await assert.rejects(
+    runProductVideoImport(ports),
+    (error: unknown) =>
+      error instanceof ProductVideoImportFailure &&
+      error.code === "video_missing" &&
+      error.retryable &&
+      /fetched from WhatsApp: Meta answered 500/.test(error.message),
+  );
+  assert.equal(calls.transcribe, 0);
 });

@@ -165,6 +165,8 @@ export const LEGACY_TEMPORAL_WORKER_WEB_BUDGET = Object.freeze({
   "apps/temporal-worker/src/activities/happyhorse-video.ts": 8,
   // Through its one host module, lib/products/import-worker-host.
   "apps/temporal-worker/src/activities/product-video-import.ts": 1,
+  // The WhatsApp intake for Products, through the same host module.
+  "apps/temporal-worker/src/products/whatsapp-intake.ts": 1,
   "apps/temporal-worker/src/activities/higgsfield-assets.ts": 16,
   "apps/temporal-worker/src/activities/scenario-generative-ai.ts": 10,
   "apps/temporal-worker/src/activities/scenario-generative-source.ts": 3,

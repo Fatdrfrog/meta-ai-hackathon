@@ -87,6 +87,31 @@ export const PRODUCTS_COPY = {
     backToProducts: "Back to products",
   },
 
+  // Sending shelf videos to Airi on WhatsApp, and what Airi writes back.
+  whatsapp: {
+    sendFromWhatsApp: "Send from WhatsApp",
+    panelTitle: "Send videos from your phone",
+    panelSteps: (number: string) =>
+      `Scan this with your phone's camera and press Send in WhatsApp. After that, every shelf video you send to Airi at ${number} turns up here.`,
+    openWhatsApp: "Open WhatsApp",
+    codeLifetime: "The code works once, for 30 minutes.",
+    makingCode: "Making your code…",
+    codeFailed: "The code couldn't be made. Try again.",
+    linkMessage: "Link my shop to Airi",
+    linked: (workspace: string) =>
+      `You're linked to ${workspace}. Send me a video of your products: hold each one up and say its name and price. I'll put them in airi for you to check.`,
+    linkExpired:
+      "That code has expired. Open Products in airi and scan the new one.",
+    askToAdd: (workspace: string) =>
+      `Should I add the products in this video to ${workspace}?`,
+    addButton: "Add them",
+    skipButton: "No",
+    ready: (count: number, link: string) =>
+      count === 1
+        ? `I found 1 product in your video. Check it before it goes on your shelf: ${link}`
+        : `I found ${count} products in your video. Check them before they go on your shelf: ${link}`,
+  },
+
   // What the owner can make on WhatsApp from the products a review added.
   drafts: {
     lead: "Share them on WhatsApp",

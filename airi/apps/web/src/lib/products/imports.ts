@@ -17,7 +17,10 @@ import {
 } from "@/lib/products/types";
 import { startProductVideoImportWorkflow } from "@/lib/temporal/product-video-import";
 import { CreativeAsset } from "@/models/creative-asset";
-import { ProductVideoImport } from "@/models/product-video-import";
+import {
+  ProductVideoImport,
+  type ProductVideoImportWhatsApp,
+} from "@/models/product-video-import";
 import { WorkspaceProduct } from "@/models/workspace-product";
 
 type StoredVideo = StoredFileRef & { mimeType?: string; fileName?: string };
@@ -53,24 +56,48 @@ export async function findUploadedVideo(
   };
 }
 
+const isDuplicateKeyError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { code?: unknown }).code === 11000;
+
 /**
- * Records an import of `video` and starts the job that turns it into draft
- * products. If the job can't start, the import is marked failed and the
- * error goes to the caller.
+ * Records an import and starts the job that turns its video into draft
+ * products: an uploaded `video`, or one sent on WhatsApp, which the job
+ * fetches itself. A WhatsApp message makes one import however often it's
+ * delivered: again, it answers with that import. If the job can't start,
+ * the import is marked failed and the error goes to the caller.
  */
-export async function createProductVideoImport(params: {
-  workspaceId: string;
-  source: ProductVideoImportSource;
-  video: StoredVideo;
-  createdBy?: string;
-}): Promise<{ importId: string }> {
-  const created = await ProductVideoImport.create({
-    workspaceId: params.workspaceId,
-    source: params.source,
-    video: params.video,
-    status: "queued",
-    ...(params.createdBy ? { createdBy: params.createdBy } : {}),
-  });
+export async function createProductVideoImport(
+  params: {
+    workspaceId: string;
+    source: ProductVideoImportSource;
+    createdBy?: string;
+  } & (
+    | { video: StoredVideo; whatsapp?: undefined }
+    | { whatsapp: ProductVideoImportWhatsApp; video?: undefined }
+  )
+): Promise<{ importId: string }> {
+  let created;
+  try {
+    created = await ProductVideoImport.create({
+      workspaceId: params.workspaceId,
+      source: params.source,
+      ...(params.video ? { video: params.video } : {}),
+      ...(params.whatsapp ? { whatsapp: params.whatsapp } : {}),
+      status: "queued",
+      ...(params.createdBy ? { createdBy: params.createdBy } : {}),
+    });
+  } catch (error) {
+    if (!params.whatsapp || !isDuplicateKeyError(error)) throw error;
+    const existing = await ProductVideoImport.findOne({
+      "whatsapp.messageId": params.whatsapp.messageId,
+    })
+      .select("_id")
+      .lean<{ _id: unknown } | null>();
+    if (!existing) throw error;
+    return { importId: String(existing._id) };
+  }
   const importId = String(created._id);
   try {
     const started = await startProductVideoImportWorkflow({

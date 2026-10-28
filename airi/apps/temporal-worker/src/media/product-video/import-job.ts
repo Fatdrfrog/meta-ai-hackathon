@@ -72,9 +72,24 @@ export class ProductVideoImportFailure extends Error {
   }
 }
 
+/**
+ * A video sent to airi's own WhatsApp number: the stored message and its
+ * WhatsApp media, which the job fetches itself.
+ */
+export type WhatsAppVideoRef = {
+  sourceId: string;
+  workspaceId: string;
+  conversationId: string;
+  messageId: string;
+  mediaId: string;
+  mimeType: string | null;
+};
+
 export type ImportRecord = {
   status: "queued" | "processing" | "ready" | "failed";
-  video: StoredFileRef;
+  /** The video in the workspace's media; null for one sent on WhatsApp until it's copied there. */
+  video: StoredFileRef | null;
+  whatsapp: WhatsAppVideoRef | null;
   transcript: string | null;
   /** The language spoken, once the video was watched. */
   language: string | null;
@@ -159,6 +174,11 @@ export type ImportJobPorts = {
   };
   storage: {
     downloadVideo(video: StoredFileRef, destination: string): Promise<void>;
+    /** Fetches a video sent on WhatsApp to `destination`, and keeps a copy in the workspace's media. */
+    fetchWhatsAppVideo(
+      video: WhatsAppVideoRef,
+      destination: string,
+    ): Promise<StoredFileRef>;
     savePhoto(
       productId: string,
       file: { buffer: Buffer; mimeType: string; fileName: string },
@@ -224,12 +244,34 @@ export async function runProductVideoImport(
   await stage("preparing", { status: "processing" });
 
   const sourcePath = join(ports.workDir, "source");
-  try {
-    await ports.storage.downloadVideo(job.video, sourcePath);
-  } catch (error) {
+  if (job.video) {
+    try {
+      await ports.storage.downloadVideo(job.video, sourcePath);
+    } catch (error) {
+      throw new ProductVideoImportFailure(
+        "video_missing",
+        `The uploaded video couldn't be read from storage: ${messageOf(error)}`,
+        false,
+      );
+    }
+  } else if (job.whatsapp) {
+    // The first run copies it into the workspace's media, so a retry reads it
+    // there; WhatsApp keeps media for a limited time.
+    let video: StoredFileRef;
+    try {
+      video = await ports.storage.fetchWhatsAppVideo(job.whatsapp, sourcePath);
+    } catch (error) {
+      throw new ProductVideoImportFailure(
+        "video_missing",
+        `The video couldn't be fetched from WhatsApp: ${messageOf(error)}`,
+        true,
+      );
+    }
+    await store.updateImport({ video });
+  } else {
     throw new ProductVideoImportFailure(
       "video_missing",
-      `The uploaded video couldn't be read from storage: ${messageOf(error)}`,
+      "The import has no video",
       false,
     );
   }

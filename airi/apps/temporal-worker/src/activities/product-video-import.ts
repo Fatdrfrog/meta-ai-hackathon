@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { submitElevenLabsAudioTranscriptionFromUrl } from "@icecore/airi-runtime/elevenlabs-stt";
@@ -56,12 +56,24 @@ function mongoStore(
   return {
     async loadImport() {
       const doc = await ProductVideoImport.findOne(importFilter)
-        .select("status video transcript language presenter")
+        .select("status video whatsapp transcript language presenter")
         .lean();
       if (!doc) return null;
       return {
         status: doc.status,
-        video: { bucket: doc.video.bucket, path: doc.video.path },
+        video: doc.video?.bucket
+          ? { bucket: doc.video.bucket, path: doc.video.path }
+          : null,
+        whatsapp: doc.whatsapp
+          ? {
+              sourceId: doc.whatsapp.sourceId,
+              workspaceId: doc.whatsapp.workspaceId,
+              conversationId: doc.whatsapp.conversationId,
+              messageId: doc.whatsapp.messageId,
+              mediaId: doc.whatsapp.mediaId,
+              mimeType: doc.whatsapp.mimeType ?? null,
+            }
+          : null,
         transcript: doc.transcript ?? null,
         language: doc.language ?? null,
         presenter: doc.presenter
@@ -163,6 +175,28 @@ function mongoStore(
   };
 }
 
+// What a video sent on WhatsApp is kept as in the workspace's media.
+const WHATSAPP_VIDEO_EXTENSIONS: Record<string, string> = {
+  "video/3gpp": "3gp",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
+};
+
+/**
+ * Tells the owner of an import sent on WhatsApp how it went; an upload, or
+ * an owner already told, is left alone. A failure here never fails the import.
+ */
+async function notifyWhatsAppOwner(host: WebHost, importId: string) {
+  try {
+    await host.notifyProductsWhatsAppOwner(importId);
+  } catch (error) {
+    airiWorkerLogger.warn("products.whatsapp_notify_failed", {
+      importId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 function isDuplicateKeyError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const record = error as { code?: unknown; writeErrors?: unknown };
@@ -221,6 +255,29 @@ export async function productVideoImportActivity(
             destination,
             maxBytes: MAX_SOURCE_VIDEO_BYTES,
           });
+        },
+        async fetchWhatsAppVideo(video, destination) {
+          // From the chat on airi's number it was sent to.
+          const media = await host.downloadOwnedWhatsAppMedia({
+            conversationId: video.conversationId,
+            mediaId: video.mediaId,
+            workspaceId: video.workspaceId,
+            sourceId: video.sourceId,
+            inputMessageId: video.messageId,
+            maxBytes: MAX_SOURCE_VIDEO_BYTES,
+          });
+          await writeFile(destination, media.buffer);
+          const mimeType = media.contentType || video.mimeType || "video/mp4";
+          const stored = await uploadGcsCreativeAssetBuffer({
+            workspaceId: input.workspaceId,
+            assetId: `whatsapp-video-${input.importId}`,
+            kind: "video",
+            buffer: media.buffer,
+            mimeType,
+            fileName: `whatsapp-video.${WHATSAPP_VIDEO_EXTENSIONS[mimeType] ?? "mp4"}`,
+            customMetadata: { importId: input.importId, source: "whatsapp" },
+          });
+          return { bucket: stored.bucket, path: stored.path };
         },
         async savePhoto(productId, file) {
           const stored = await uploadGcsCreativeAssetBuffer({
@@ -323,6 +380,7 @@ export async function productVideoImportActivity(
       attempt: activityInfo().attempt,
       workDir,
     });
+    await notifyWhatsAppOwner(host, input.importId);
     return { importId: input.importId, status: "ready", productCount };
   } catch (error) {
     const failure = classifyImportError(error);
@@ -340,6 +398,7 @@ export async function productVideoImportActivity(
       errorMessage: failure.message.slice(0, 500),
       finishedAt: new Date(),
     });
+    await notifyWhatsAppOwner(host, input.importId);
     throw ApplicationFailure.nonRetryable(
       failure.message,
       "ProductVideoImportRejected",
@@ -389,6 +448,7 @@ export async function productVideoImportFailActivity(
   } catch {
     // The panel also refreshes on its own.
   }
+  await notifyWhatsAppOwner(host, input.importId);
   const productCount = await WorkspaceProduct.countDocuments({
     workspaceId: input.workspaceId,
     importId: input.importId,

@@ -18,8 +18,16 @@ jest.mock("next/navigation", () => ({
   },
 }));
 jest.mock("@/components/products/products-page", () => ({
-  ProductsPage: ({ workspaceId }: { workspaceId: string }) => (
-    <div data-testid="products">{workspaceId}</div>
+  ProductsPage: ({
+    workspaceId,
+    whatsappNumber,
+  }: {
+    workspaceId: string;
+    whatsappNumber: string | null;
+  }) => (
+    <div data-testid="products" data-whatsapp={whatsappNumber ?? "none"}>
+      {workspaceId}
+    </div>
   ),
 }));
 
@@ -45,7 +53,24 @@ beforeEach(() => {
 test("renders Products for an admin with the flag on", async () => {
   render(await ProductsRoute(params()));
   expect(screen.getByTestId("products")).toHaveTextContent("workspace-1");
+  expect(screen.getByTestId("products")).toHaveAttribute(
+    "data-whatsapp",
+    "none"
+  );
   expect(mockFlag).toHaveBeenCalledWith("workspace-1", "products");
+});
+
+test("offers sending videos on WhatsApp once airi's number is set up", async () => {
+  process.env.PRODUCTS_WHATSAPP_NUMBER = "77082609346";
+  try {
+    render(await ProductsRoute(params()));
+    expect(screen.getByTestId("products")).toHaveAttribute(
+      "data-whatsapp",
+      "+77082609346"
+    );
+  } finally {
+    delete process.env.PRODUCTS_WHATSAPP_NUMBER;
+  }
 });
 
 test("with the flag off, an admin goes to Airi", async () => {

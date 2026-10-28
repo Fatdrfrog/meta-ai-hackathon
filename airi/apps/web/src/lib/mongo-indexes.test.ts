@@ -13,7 +13,11 @@ const mockCollections = {
   pendingMutation: { createIndex: jest.fn() },
   whatsappGroup: { createIndex: jest.fn() },
   whatsappGroupEvent: { createIndex: jest.fn() },
-  scenarioFlowEvent: { createIndex: jest.fn(), indexes:jest.fn(), dropIndex:jest.fn() },
+  scenarioFlowEvent: {
+    createIndex: jest.fn(),
+    indexes: jest.fn(),
+    dropIndex: jest.fn(),
+  },
   scenarioFlowSuppression: { createIndex: jest.fn() },
   scenarioTriggerLog: { createIndex: jest.fn() },
   scenarioLinkedCondition: { createIndex: jest.fn() },
@@ -40,8 +44,8 @@ let mockCrossStoreOutboxPersistedIndexes: Array<Record<string, unknown>> = [];
 let mockLlmReviewDuplicateGroups: Array<Record<string, unknown>> = [];
 let mockLlmReviewPersistIndexWrites = true;
 let mockLlmReviewPersistedIndexes: Array<Record<string, unknown>> = [];
-let mockFlowSubmissionPersistedIndexes:Array<Record<string,unknown>>=[];
-let mockFlowSubmissionPersistWrites=true;
+let mockFlowSubmissionPersistedIndexes: Array<Record<string, unknown>> = [];
+let mockFlowSubmissionPersistWrites = true;
 const mockEnsurePlatformCreativeGenerationQuotaIndexes = jest.fn();
 let mockQueryIndexes: Record<string, Array<Record<string, unknown>>> = {};
 let mockDeliveryKeyDuplicateGroups: Array<Record<string, unknown>> = [];
@@ -51,10 +55,12 @@ const mockEnsureRealtimeEventIndexes = jest.fn();
 const mockEnsureScenarioObservabilityIndexes = jest.fn();
 const mockEnsureConversationEngagementIndexes = jest.fn();
 jest.mock("@/lib/engagement/conversation-engagement", () => ({
-  ensureConversationEngagementIndexes: (...args: unknown[]) => mockEnsureConversationEngagementIndexes(...args),
+  ensureConversationEngagementIndexes: (...args: unknown[]) =>
+    mockEnsureConversationEngagementIndexes(...args),
 }));
 jest.mock("@/lib/scenarios/ensure-observability-indexes", () => ({
-  ensureScenarioObservabilityIndexes: (...args: unknown[]) => mockEnsureScenarioObservabilityIndexes(...args),
+  ensureScenarioObservabilityIndexes: (...args: unknown[]) =>
+    mockEnsureScenarioObservabilityIndexes(...args),
 }));
 const mockWhatsAppFlowEndpointSecurityCreateIndexes = jest.fn();
 const mockWhatsAppFlowProvisioningOperationCreateIndexes = jest.fn();
@@ -70,22 +76,58 @@ const mockAiriChatRunCreateIndexes = jest.fn();
 const mockBusinessLocationCreateIndexes = jest.fn();
 const mockWorkspaceProductCreateIndexes = jest.fn();
 const mockProductVideoImportCreateIndexes = jest.fn();
+const mockProductWhatsAppLinkCreateIndexes = jest.fn();
 const mockCreativeVideoPlanCreateIndexes = jest.fn();
 const mockBehaviorIndexes = jest.fn();
 const mockAnalyticsIndexes = jest.fn();
-jest.mock("@/models/analytics-acquisition", () => Object.fromEntries([
-  "AnalyticsAcquisitionEntry", "AnalyticsAcquisitionMessageLink", "AnalyticsConversionFact",
-  "AnalyticsCustomerPurchaseObservation", "AnalyticsAcquisitionCheckpoint", "AnalyticsAcquisitionDaily",
-].map(name => [name, { createIndexes: () => mockAnalyticsIndexes(name) }])));
-jest.mock("@/models/analytics-policy", () => ({ AnalyticsPolicy: { createIndexes: () => mockAnalyticsIndexes("AnalyticsPolicy") } }));
-jest.mock("@/models/analytics-service-lifecycle", () => Object.fromEntries([
-  "AnalyticsServiceLifecycleFact", "AnalyticsServiceLifecycleCheckpoint", "AnalyticsCustomerStageCheckpoint",
-].map(name => [name, { createIndexes: () => mockAnalyticsIndexes(name) }])));
-jest.mock("@/models/whatsapp-template-analytics-daily", () => ({ WhatsAppTemplateAnalyticsDaily: { createIndexes: () => mockAnalyticsIndexes("WhatsAppTemplateAnalyticsDaily") } }));
-jest.mock("@/models/whatsapp-analytics-health-daily", () => ({ WhatsAppAnalyticsHealthDaily: { createIndexes: () => mockAnalyticsIndexes("WhatsAppAnalyticsHealthDaily") } }));
-jest.mock("@/models/website-cart", () => ({ __esModule: true, default: { createIndexes: () => mockBehaviorIndexes("carts") } }));
-jest.mock("@/models/website-commerce-settings", () => ({ __esModule: true, default: { createIndexes: () => mockBehaviorIndexes("commerce_settings") } }));
-jest.mock("@/models/website-commerce-event", () => ({ __esModule: true, default: { createIndexes: () => mockBehaviorIndexes("commerce_events") } }));
+jest.mock("@/models/analytics-acquisition", () =>
+  Object.fromEntries(
+    [
+      "AnalyticsAcquisitionEntry",
+      "AnalyticsAcquisitionMessageLink",
+      "AnalyticsConversionFact",
+      "AnalyticsCustomerPurchaseObservation",
+      "AnalyticsAcquisitionCheckpoint",
+      "AnalyticsAcquisitionDaily",
+    ].map(name => [name, { createIndexes: () => mockAnalyticsIndexes(name) }])
+  )
+);
+jest.mock("@/models/analytics-policy", () => ({
+  AnalyticsPolicy: {
+    createIndexes: () => mockAnalyticsIndexes("AnalyticsPolicy"),
+  },
+}));
+jest.mock("@/models/analytics-service-lifecycle", () =>
+  Object.fromEntries(
+    [
+      "AnalyticsServiceLifecycleFact",
+      "AnalyticsServiceLifecycleCheckpoint",
+      "AnalyticsCustomerStageCheckpoint",
+    ].map(name => [name, { createIndexes: () => mockAnalyticsIndexes(name) }])
+  )
+);
+jest.mock("@/models/whatsapp-template-analytics-daily", () => ({
+  WhatsAppTemplateAnalyticsDaily: {
+    createIndexes: () => mockAnalyticsIndexes("WhatsAppTemplateAnalyticsDaily"),
+  },
+}));
+jest.mock("@/models/whatsapp-analytics-health-daily", () => ({
+  WhatsAppAnalyticsHealthDaily: {
+    createIndexes: () => mockAnalyticsIndexes("WhatsAppAnalyticsHealthDaily"),
+  },
+}));
+jest.mock("@/models/website-cart", () => ({
+  __esModule: true,
+  default: { createIndexes: () => mockBehaviorIndexes("carts") },
+}));
+jest.mock("@/models/website-commerce-settings", () => ({
+  __esModule: true,
+  default: { createIndexes: () => mockBehaviorIndexes("commerce_settings") },
+}));
+jest.mock("@/models/website-commerce-event", () => ({
+  __esModule: true,
+  default: { createIndexes: () => mockBehaviorIndexes("commerce_events") },
+}));
 jest.mock("@/models/customer-event", () => ({
   __esModule: true,
   default: { createIndexes: () => mockBehaviorIndexes("events") },
@@ -137,10 +179,11 @@ jest.mock("@/lib/whatsapp/identity/indexes", () => ({
 }));
 
 jest.mock("@/models/conversation", () => ({
-  CONVERSATION_OFFLINE_EVAL_INDEX: jest.requireActual(
-    "@/models/conversation"
-  ).CONVERSATION_OFFLINE_EVAL_INDEX,
-  ...jest.requireActual("@icecore/airi-runtime/whatsapp-conversation-ownership"),
+  CONVERSATION_OFFLINE_EVAL_INDEX: jest.requireActual("@/models/conversation")
+    .CONVERSATION_OFFLINE_EVAL_INDEX,
+  ...jest.requireActual(
+    "@icecore/airi-runtime/whatsapp-conversation-ownership"
+  ),
   CONVERSATION_REQUESTS_DEPENDENCY_INDEXES: jest.requireActual(
     "@/models/conversation"
   ).CONVERSATION_REQUESTS_DEPENDENCY_INDEXES,
@@ -570,6 +613,9 @@ jest.mock("@/models/business-location", () => ({
 jest.mock("@/models/workspace-product", () => ({
   WorkspaceProduct: { createIndexes: mockWorkspaceProductCreateIndexes },
 }));
+jest.mock("@/models/product-whatsapp-link", () => ({
+  ProductWhatsAppLink: { createIndexes: mockProductWhatsAppLinkCreateIndexes },
+}));
 jest.mock("@/models/product-video-import", () => ({
   ProductVideoImport: { createIndexes: mockProductVideoImportCreateIndexes },
 }));
@@ -602,8 +648,8 @@ describe("ensureIndexes", () => {
     mockEnsureConversationEngagementIndexes.mockResolvedValue(undefined);
     mockAnalyticsIndexes.mockReset();
     mockAnalyticsIndexes.mockResolvedValue(undefined);
-    mockFlowSubmissionPersistedIndexes=[{ name:"_id_", key:{ _id:1 } }];
-    mockFlowSubmissionPersistWrites=true;
+    mockFlowSubmissionPersistedIndexes = [{ name: "_id_", key: { _id: 1 } }];
+    mockFlowSubmissionPersistWrites = true;
     for (const collection of Object.values(mockCollections)) {
       collection.createIndex.mockClear();
       collection.createIndex.mockResolvedValue("ok");
@@ -629,11 +675,26 @@ describe("ensureIndexes", () => {
       toArray: async () => mockDeliveryKeyDuplicateGroups,
     }));
     mockCollections.scenarioFlowEvent.indexes.mockReset();
-    mockCollections.scenarioFlowEvent.indexes.mockImplementation(async()=>mockFlowSubmissionPersistedIndexes);
-    mockCollections.scenarioFlowEvent.createIndex.mockImplementation(async(key,options)=>{
-      if (options?.name && mockFlowSubmissionPersistWrites && !mockFlowSubmissionPersistedIndexes.some(index=>index.name === options.name)) mockFlowSubmissionPersistedIndexes.push({ name:options.name, key, ...options });
-      return options?.name || "ok";
-    });
+    mockCollections.scenarioFlowEvent.indexes.mockImplementation(
+      async () => mockFlowSubmissionPersistedIndexes
+    );
+    mockCollections.scenarioFlowEvent.createIndex.mockImplementation(
+      async (key, options) => {
+        if (
+          options?.name &&
+          mockFlowSubmissionPersistWrites &&
+          !mockFlowSubmissionPersistedIndexes.some(
+            index => index.name === options.name
+          )
+        )
+          mockFlowSubmissionPersistedIndexes.push({
+            name: options.name,
+            key,
+            ...options,
+          });
+        return options?.name || "ok";
+      }
+    );
     mockCollections.scenarioFlowEvent.dropIndex.mockReset();
     mockCollections.scenarioFlowEvent.dropIndex.mockImplementation(
       async name => {
@@ -750,6 +811,7 @@ describe("ensureIndexes", () => {
       mockBusinessLocationCreateIndexes,
       mockWorkspaceProductCreateIndexes,
       mockProductVideoImportCreateIndexes,
+      mockProductWhatsAppLinkCreateIndexes,
       mockCreativeVideoPlanCreateIndexes,
     ]) {
       createIndexes.mockClear();
@@ -790,26 +852,34 @@ describe("ensureIndexes", () => {
     await jest.isolateModulesAsync(async () => {
       const { ensureMongoQueryIndexes } = await import("./mongo");
       await ensureMongoQueryIndexes();
-      expect(mockQueryIndexes.conversation).toContainEqual(expect.objectContaining({
-        key: { createdAt: 1 },
-        name: "conversations_offline_eval_created_v1",
-        partialFilterExpression: {
-          "classification.category": { $exists: true },
-          "shadow_classification.category": { $exists: true },
-        },
-      }));
+      expect(mockQueryIndexes.conversation).toContainEqual(
+        expect.objectContaining({
+          key: { createdAt: 1 },
+          name: "conversations_offline_eval_created_v1",
+          partialFilterExpression: {
+            "classification.category": { $exists: true },
+            "shadow_classification.category": { $exists: true },
+          },
+        })
+      );
     });
   });
 
   it("rejects a drifted offline evaluation index without replacing it", async () => {
-    mockQueryIndexes.conversation = [{
-      key: { createdAt: 1 },
-      name: "conversations_offline_eval_created_v1",
-      partialFilterExpression: { "classification.category": { $exists: true } },
-    }];
+    mockQueryIndexes.conversation = [
+      {
+        key: { createdAt: 1 },
+        name: "conversations_offline_eval_created_v1",
+        partialFilterExpression: {
+          "classification.category": { $exists: true },
+        },
+      },
+    ];
     await jest.isolateModulesAsync(async () => {
       const { ensureMongoQueryIndexes } = await import("./mongo");
-      await expect(ensureMongoQueryIndexes()).rejects.toThrow("Offline evaluation index verification failed");
+      await expect(ensureMongoQueryIndexes()).rejects.toThrow(
+        "Offline evaluation index verification failed"
+      );
       expect(mockCollections.conversation.dropIndex).not.toHaveBeenCalled();
     });
   });
@@ -871,7 +941,9 @@ describe("ensureIndexes", () => {
   it("provisions scenario retention and retries a rejected TTL repair", async () => {
     await jest.isolateModulesAsync(async () => {
       const { ensureIndexes } = await import("./mongo");
-      mockEnsureScenarioObservabilityIndexes.mockRejectedValueOnce(new Error("TTL repair denied"));
+      mockEnsureScenarioObservabilityIndexes.mockRejectedValueOnce(
+        new Error("TTL repair denied")
+      );
       await expect(ensureIndexes()).rejects.toThrow("TTL repair denied");
       await ensureIndexes();
       expect(mockEnsureScenarioObservabilityIndexes).toHaveBeenCalledTimes(2);
@@ -881,7 +953,9 @@ describe("ensureIndexes", () => {
   it("provisions engagement indexes and retries a rejected build", async () => {
     await jest.isolateModulesAsync(async () => {
       const { ensureIndexes } = await import("./mongo");
-      mockEnsureConversationEngagementIndexes.mockRejectedValueOnce(new Error("Engagement index denied"));
+      mockEnsureConversationEngagementIndexes.mockRejectedValueOnce(
+        new Error("Engagement index denied")
+      );
       await expect(ensureIndexes()).rejects.toThrow("Engagement index denied");
       await ensureIndexes();
       expect(mockEnsureConversationEngagementIndexes).toHaveBeenCalledTimes(2);
@@ -910,8 +984,8 @@ describe("ensureIndexes", () => {
       ])
         expect(messageKeys).not.toContain(JSON.stringify(retired));
       expect(
-        mockCollections.scenarioTriggerLog.createIndex.mock.calls.map(
-          ([key]) => JSON.stringify(key)
+        mockCollections.scenarioTriggerLog.createIndex.mock.calls.map(([key]) =>
+          JSON.stringify(key)
         )
       ).not.toContain(JSON.stringify({ workspaceId: 1, evaluationId: 1 }));
     });
@@ -955,7 +1029,11 @@ describe("ensureIndexes", () => {
         { workspaceId: 1, chat: 1, lastMessageAt: -1 },
         { workspaceId: 1, "external_thread.provider": 1 },
         { workspaceId: 1, handled_by_agent_id: 1 },
-        { workspaceId: 1, "followUpAudience.analyzedAt": -1, lastMessageAt: -1 },
+        {
+          workspaceId: 1,
+          "followUpAudience.analyzedAt": -1,
+          lastMessageAt: -1,
+        },
         { workspaceId: 1, "followUpAudience.effectiveCategoryKey": 1 },
         { workspaceId: 1, channel: 1, "followUpAudience.status": 1 },
       ])
@@ -1010,15 +1088,36 @@ describe("ensureIndexes", () => {
       const { ensureIndexes } = await import("./mongo");
       await ensureIndexes();
       expect(mockAnalyticsIndexes.mock.calls.map(([name]) => name)).toEqual([
-        "WhatsAppTemplateAnalyticsDaily", "WhatsAppAnalyticsHealthDaily",
-        "AnalyticsAcquisitionEntry", "AnalyticsAcquisitionMessageLink", "AnalyticsConversionFact",
-        "AnalyticsCustomerPurchaseObservation", "AnalyticsAcquisitionCheckpoint", "AnalyticsAcquisitionDaily",
-        "AnalyticsPolicy", "AnalyticsServiceLifecycleFact", "AnalyticsServiceLifecycleCheckpoint", "AnalyticsCustomerStageCheckpoint",
+        "WhatsAppTemplateAnalyticsDaily",
+        "WhatsAppAnalyticsHealthDaily",
+        "AnalyticsAcquisitionEntry",
+        "AnalyticsAcquisitionMessageLink",
+        "AnalyticsConversionFact",
+        "AnalyticsCustomerPurchaseObservation",
+        "AnalyticsAcquisitionCheckpoint",
+        "AnalyticsAcquisitionDaily",
+        "AnalyticsPolicy",
+        "AnalyticsServiceLifecycleFact",
+        "AnalyticsServiceLifecycleCheckpoint",
+        "AnalyticsCustomerStageCheckpoint",
       ]);
-      expect(mockCollections.message.createIndex).toHaveBeenCalledWith({ workspaceId:1, _id:1 });
-      expect(mockCollections.conversation.createIndex).toHaveBeenCalledWith({ workspaceId:1, _id:1 });
-      expect(mockCollections.customer.createIndex).toHaveBeenCalledWith({ workspaceId:1, _id:1 });
-      expect(mockCollections.message.createIndex).toHaveBeenCalledWith({ workspaceId:1, conversation:1, date:1 });
+      expect(mockCollections.message.createIndex).toHaveBeenCalledWith({
+        workspaceId: 1,
+        _id: 1,
+      });
+      expect(mockCollections.conversation.createIndex).toHaveBeenCalledWith({
+        workspaceId: 1,
+        _id: 1,
+      });
+      expect(mockCollections.customer.createIndex).toHaveBeenCalledWith({
+        workspaceId: 1,
+        _id: 1,
+      });
+      expect(mockCollections.message.createIndex).toHaveBeenCalledWith({
+        workspaceId: 1,
+        conversation: 1,
+        date: 1,
+      });
       await ensureIndexes();
       expect(mockAnalyticsIndexes).toHaveBeenCalledTimes(12);
     });
@@ -1027,53 +1126,103 @@ describe("ensureIndexes", () => {
     await jest.isolateModulesAsync(async () => {
       let failed = false;
       mockAnalyticsIndexes.mockImplementation(async name => {
-        if (name === "AnalyticsAcquisitionMessageLink" && !failed) { failed=true; throw new Error("acquisition identity index unavailable"); }
+        if (name === "AnalyticsAcquisitionMessageLink" && !failed) {
+          failed = true;
+          throw new Error("acquisition identity index unavailable");
+        }
       });
       const { ensureIndexes } = await import("./mongo");
-      await expect(ensureIndexes()).rejects.toThrow("acquisition identity index unavailable");
+      await expect(ensureIndexes()).rejects.toThrow(
+        "acquisition identity index unavailable"
+      );
       await expect(ensureIndexes()).resolves.toBeUndefined();
     });
   });
   it("verifies both Flow submission identities before removing the legacy token fence", async () => {
-    await jest.isolateModulesAsync(async()=>{
-      const model=jest.requireActual("@/models/scenario-flow-event");
-      mockFlowSubmissionPersistedIndexes.push({ name:model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME, key:model.SCENARIO_FLOW_SUBMITTED_TOKEN_INDEX_KEYS, unique:true, partialFilterExpression:{ flowToken:{ $type:"string" }, eventType:"submitted" } });
-      const originalDrop=mockCollections.scenarioFlowEvent.dropIndex.getMockImplementation()!;
-      mockCollections.scenarioFlowEvent.dropIndex.mockImplementation(async name=>{
-        expect(mockFlowSubmissionPersistedIndexes.some(index=>index.name === model.SCENARIO_FLOW_SUBMITTED_MESSAGE_INDEX_NAME)).toBe(true);
-        expect(mockFlowSubmissionPersistedIndexes.some(index=>index.name === model.SCENARIO_FLOW_SUBMITTED_TOKEN_INDEX_NAME)).toBe(true);
-        return originalDrop(name);
+    await jest.isolateModulesAsync(async () => {
+      const model = jest.requireActual("@/models/scenario-flow-event");
+      mockFlowSubmissionPersistedIndexes.push({
+        name: model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME,
+        key: model.SCENARIO_FLOW_SUBMITTED_TOKEN_INDEX_KEYS,
+        unique: true,
+        partialFilterExpression: {
+          flowToken: { $type: "string" },
+          eventType: "submitted",
+        },
       });
-      const { ensureIndexes }=await import("./mongo");
+      const originalDrop =
+        mockCollections.scenarioFlowEvent.dropIndex.getMockImplementation()!;
+      mockCollections.scenarioFlowEvent.dropIndex.mockImplementation(
+        async name => {
+          expect(
+            mockFlowSubmissionPersistedIndexes.some(
+              index =>
+                index.name === model.SCENARIO_FLOW_SUBMITTED_MESSAGE_INDEX_NAME
+            )
+          ).toBe(true);
+          expect(
+            mockFlowSubmissionPersistedIndexes.some(
+              index =>
+                index.name === model.SCENARIO_FLOW_SUBMITTED_TOKEN_INDEX_NAME
+            )
+          ).toBe(true);
+          return originalDrop(name);
+        }
+      );
+      const { ensureIndexes } = await import("./mongo");
       await ensureIndexes();
-      expect(mockCollections.scenarioFlowEvent.dropIndex).toHaveBeenCalledWith(model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME);
+      expect(mockCollections.scenarioFlowEvent.dropIndex).toHaveBeenCalledWith(
+        model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME
+      );
     });
   });
-  it("keeps the legacy Flow fence when replacement identity indexes cannot be verified", async()=>{
-    await jest.isolateModulesAsync(async()=>{
-      const model=jest.requireActual("@/models/scenario-flow-event");
-      mockFlowSubmissionPersistedIndexes.push({ name:model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME, key:model.SCENARIO_FLOW_SUBMITTED_TOKEN_INDEX_KEYS, unique:true, partialFilterExpression:{ flowToken:{ $type:"string" }, eventType:"submitted" } });
-      mockFlowSubmissionPersistWrites=false;
-      const { ensureIndexes }=await import("./mongo");
-      await expect(ensureIndexes()).rejects.toThrow("Flow submission replacement indexes not verified");
-      expect(mockCollections.scenarioFlowEvent.dropIndex).not.toHaveBeenCalled();
+  it("keeps the legacy Flow fence when replacement identity indexes cannot be verified", async () => {
+    await jest.isolateModulesAsync(async () => {
+      const model = jest.requireActual("@/models/scenario-flow-event");
+      mockFlowSubmissionPersistedIndexes.push({
+        name: model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME,
+        key: model.SCENARIO_FLOW_SUBMITTED_TOKEN_INDEX_KEYS,
+        unique: true,
+        partialFilterExpression: {
+          flowToken: { $type: "string" },
+          eventType: "submitted",
+        },
+      });
+      mockFlowSubmissionPersistWrites = false;
+      const { ensureIndexes } = await import("./mongo");
+      await expect(ensureIndexes()).rejects.toThrow(
+        "Flow submission replacement indexes not verified"
+      );
+      expect(
+        mockCollections.scenarioFlowEvent.dropIndex
+      ).not.toHaveBeenCalled();
     });
   });
-  it("refuses to remove an unknown Flow legacy index definition", async()=>{
-    await jest.isolateModulesAsync(async()=>{
-      const model=jest.requireActual("@/models/scenario-flow-event");
-      mockFlowSubmissionPersistedIndexes.push({ name:model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME, key:{ workspaceId:1 }, unique:true });
-      const { ensureIndexes }=await import("./mongo");
-      await expect(ensureIndexes()).rejects.toThrow("Unknown Flow submission legacy index definition");
-      expect(mockCollections.scenarioFlowEvent.dropIndex).not.toHaveBeenCalled();
+  it("refuses to remove an unknown Flow legacy index definition", async () => {
+    await jest.isolateModulesAsync(async () => {
+      const model = jest.requireActual("@/models/scenario-flow-event");
+      mockFlowSubmissionPersistedIndexes.push({
+        name: model.SCENARIO_FLOW_SUBMITTED_LEGACY_INDEX_NAME,
+        key: { workspaceId: 1 },
+        unique: true,
+      });
+      const { ensureIndexes } = await import("./mongo");
+      await expect(ensureIndexes()).rejects.toThrow(
+        "Unknown Flow submission legacy index definition"
+      );
+      expect(
+        mockCollections.scenarioFlowEvent.dropIndex
+      ).not.toHaveBeenCalled();
     });
   });
 
   it("keeps an existing scenario list index under another name and carries on", async () => {
-    mockScenarioReadIndexes.mockResolvedValue([{
-      name: "custom_scenario_list",
-      key: { workspaceId: 1, deletedAt: 1, priority: -1, _id: 1 },
-    }]);
+    mockScenarioReadIndexes.mockResolvedValue([
+      {
+        name: "custom_scenario_list",
+        key: { workspaceId: 1, deletedAt: 1, priority: -1, _id: 1 },
+      },
+    ]);
     mockScenarioCreateIndex.mockReset();
     mockScenarioCreateIndex.mockImplementation((keys: { deletedAt?: 1 }) =>
       keys.deletedAt === 1
@@ -1134,23 +1283,29 @@ describe("ensureIndexes", () => {
     }
   });
 
-  it.each(["conversations_whatsapp_identity_owner_v1", "conversations_whatsapp_identity_aliases_v1"])("fails deployment when WhatsApp ownership index %s is unavailable and retries", async name => {
-    const createIndex = mockCollections.conversation.createIndex;
-    const provision = createIndex.getMockImplementation()!;
-    let fail = true;
-    createIndex.mockImplementation(async (key, options) => {
-      if (options?.name === name && fail) {
-        fail = false;
-        throw new Error("ownership index denied");
-      }
-      return provision(key, options);
-    });
-    await jest.isolateModulesAsync(async () => {
-      const { ensureIndexes } = await import("./mongo");
-      await expect(ensureIndexes()).rejects.toThrow("ownership index denied");
-      await expect(ensureIndexes()).resolves.toBeUndefined();
-    });
-  });
+  it.each([
+    "conversations_whatsapp_identity_owner_v1",
+    "conversations_whatsapp_identity_aliases_v1",
+  ])(
+    "fails deployment when WhatsApp ownership index %s is unavailable and retries",
+    async name => {
+      const createIndex = mockCollections.conversation.createIndex;
+      const provision = createIndex.getMockImplementation()!;
+      let fail = true;
+      createIndex.mockImplementation(async (key, options) => {
+        if (options?.name === name && fail) {
+          fail = false;
+          throw new Error("ownership index denied");
+        }
+        return provision(key, options);
+      });
+      await jest.isolateModulesAsync(async () => {
+        const { ensureIndexes } = await import("./mongo");
+        await expect(ensureIndexes()).rejects.toThrow("ownership index denied");
+        await expect(ensureIndexes()).resolves.toBeUndefined();
+      });
+    }
+  );
 
   it("propagates mission-control index failures and allows provisioning to retry", async () => {
     const createIndex = mockCollections.conversation.createIndex;
@@ -1165,7 +1320,9 @@ describe("ensureIndexes", () => {
     });
     await jest.isolateModulesAsync(async () => {
       const { ensureIndexes } = await import("./mongo");
-      await expect(ensureIndexes()).rejects.toThrow("conversation index denied");
+      await expect(ensureIndexes()).rejects.toThrow(
+        "conversation index denied"
+      );
       await expect(ensureIndexes()).resolves.toBeUndefined();
     });
   });
@@ -1239,7 +1396,9 @@ describe("ensureIndexes", () => {
       const { ensureIndexes } = await import("./mongo");
       await ensureIndexes();
 
-      expect(mockCollections.requestListItem.createIndex).toHaveBeenCalledTimes(1);
+      expect(mockCollections.requestListItem.createIndex).toHaveBeenCalledTimes(
+        1
+      );
       expect(mockCollections.requestListItem.createIndex).toHaveBeenCalledWith(
         { workspaceId: 1, sortAt: -1, _id: -1 },
         {
@@ -1262,9 +1421,13 @@ describe("ensureIndexes", () => {
       );
       const { ensureIndexes } = await import("./mongo");
 
-      await expect(ensureIndexes()).rejects.toThrow("optional unread index denied");
+      await expect(ensureIndexes()).rejects.toThrow(
+        "optional unread index denied"
+      );
       await expect(ensureIndexes()).resolves.toBeUndefined();
-      expect(mockCollections.requestListItem.createIndex).toHaveBeenCalledTimes(2);
+      expect(mockCollections.requestListItem.createIndex).toHaveBeenCalledTimes(
+        2
+      );
     });
   });
 
@@ -1718,6 +1881,7 @@ describe("ensureIndexes", () => {
         mockBusinessLocationCreateIndexes,
         mockWorkspaceProductCreateIndexes,
         mockProductVideoImportCreateIndexes,
+        mockProductWhatsAppLinkCreateIndexes,
       ]) {
         expect(createIndexes).toHaveBeenCalledTimes(1);
       }

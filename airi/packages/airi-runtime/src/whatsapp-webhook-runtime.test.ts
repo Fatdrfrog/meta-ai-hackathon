@@ -24,7 +24,8 @@ import {
 
 const CommonJsCapacityDeferredError = createRequire(import.meta.url)(
   "@icecore/shared/lib/company-runtime-capacity",
-).CompanyRuntimeCapacityDeferredError as typeof CompanyRuntimeCapacityDeferredError;
+)
+  .CompanyRuntimeCapacityDeferredError as typeof CompanyRuntimeCapacityDeferredError;
 
 class FakeObjectId {
   constructor(private readonly value: string) {}
@@ -124,7 +125,12 @@ function createRuntimeDeps(overrides: Partial<RuntimeDeps> = {}): RuntimeDeps {
       await overrides.realtime?.trigger(
         `private-conversation-${input.conversationId}`,
         input.recoveryRevision ? "message-updated" : "new-message",
-        {...input.message, ...(input.recoveryRevision ? {messageId: String(input.message._id)} : {})},
+        {
+          ...input.message,
+          ...(input.recoveryRevision
+            ? { messageId: String(input.message._id) }
+            : {}),
+        },
       );
     },
     extractWhatsAppIdentifiersFromWebhookValue: () => ({}),
@@ -1849,18 +1855,38 @@ test("hands media to durable ingress without waiting for optional Temporal work"
   let accepted = 0;
   const deps = createRuntimeDeps({
     processWhatsAppMessage: async () => ({
-      message: {_id: "message_1", direction: "inbound", text: "", mediaType: "audio"},
-      conversationId: "conversation_1", messageWasNew: true, mediaAnalysisType: "audio",
-      conversation: {_id: "conversation_1", chat: "chat_1", sourceId: "source_1"},
-      chat: {_id: "chat_1", sourceId: "source_1"},
+      message: {
+        _id: "message_1",
+        direction: "inbound",
+        text: "",
+        mediaType: "audio",
+      },
+      conversationId: "conversation_1",
+      messageWasNew: true,
+      mediaAnalysisType: "audio",
+      conversation: {
+        _id: "conversation_1",
+        chat: "chat_1",
+        sourceId: "source_1",
+      },
+      chat: { _id: "chat_1", sourceId: "source_1" },
     }),
-    directIngressAiriConversation: async () => { accepted++; return {}; },
+    directIngressAiriConversation: async () => {
+      accepted++;
+      return {};
+    },
   });
-  const result = await processWhatsAppWebhookPayload(deps, {body: buildInboundWebhookBody({type: "audio", audio: {id: "media_1"}})});
+  const result = await processWhatsAppWebhookPayload(deps, {
+    body: buildInboundWebhookBody({ type: "audio", audio: { id: "media_1" } }),
+  });
   assert.equal(result.ok, true);
   assert.equal(accepted, 1);
-  deps.directIngressAiriConversation = async () => { throw new Error("durable persistence unavailable"); };
-  const failed = await processWhatsAppWebhookPayload(deps, {body: buildInboundWebhookBody({type: "audio", audio: {id: "media_1"}})});
+  deps.directIngressAiriConversation = async () => {
+    throw new Error("durable persistence unavailable");
+  };
+  const failed = await processWhatsAppWebhookPayload(deps, {
+    body: buildInboundWebhookBody({ type: "audio", audio: { id: "media_1" } }),
+  });
   assert.equal(failed.ok, false);
   assert.equal(failed.retryable, true);
 });
@@ -1972,23 +1998,32 @@ test("routes template status lifecycle events before generic account updates", a
   assert.equal(lifecycleCalls, 1);
 });
 
-
 test("retries missing durable realtime intent for an already saved message before duplicate return", async () => {
   let attempts = 0;
   const deps = createRuntimeDeps({
     isWhatsAppAiriRuntimeEnabled: () => false,
     processWhatsAppMessage: async () => ({
-      message: {_id: "message_1", conversation: "conversation_1", direction: "inbound", text: "saved"},
-      conversationId: "conversation_1", messageWasNew: false,
+      message: {
+        _id: "message_1",
+        conversation: "conversation_1",
+        direction: "inbound",
+        text: "saved",
+      },
+      conversationId: "conversation_1",
+      messageWasNew: false,
     }),
     enqueueMessageRealtime: async () => {
       attempts += 1;
       if (attempts === 1) throw new Error("outbox unavailable");
     },
   });
-  const first = await processWhatsAppWebhookPayload(deps, {body: buildInboundWebhookBody()});
+  const first = await processWhatsAppWebhookPayload(deps, {
+    body: buildInboundWebhookBody(),
+  });
   assert.equal(first.ok, false);
-  const retry = await processWhatsAppWebhookPayload(deps, {body: buildInboundWebhookBody()});
+  const retry = await processWhatsAppWebhookPayload(deps, {
+    body: buildInboundWebhookBody(),
+  });
   assert.equal(retry.ok, true);
   assert.equal(attempts, 2);
 });
@@ -1997,12 +2032,21 @@ test("repairs deferred referral handoff on duplicate retry before returning succ
   let attempts = 0;
   const deps = createRuntimeDeps({
     isWhatsAppAiriRuntimeEnabled: () => false,
-    processWhatsAppMessage: async () => ({message: {_id: "message_1", direction: "inbound"}, conversationId: "conversation_1", messageWasNew: false}),
-    enqueueReferralEnrichment: async () => { attempts++; if (attempts === 1) throw new Error("outbox offline"); },
+    processWhatsAppMessage: async () => ({
+      message: { _id: "message_1", direction: "inbound" },
+      conversationId: "conversation_1",
+      messageWasNew: false,
+    }),
+    enqueueReferralEnrichment: async () => {
+      attempts++;
+      if (attempts === 1) throw new Error("outbox offline");
+    },
   });
-  const body = buildInboundWebhookBody({referral: {source_type: "ad", source_id: "ad_1"}});
-  assert.equal((await processWhatsAppWebhookPayload(deps, {body})).ok, false);
-  assert.equal((await processWhatsAppWebhookPayload(deps, {body})).ok, true);
+  const body = buildInboundWebhookBody({
+    referral: { source_type: "ad", source_id: "ad_1" },
+  });
+  assert.equal((await processWhatsAppWebhookPayload(deps, { body })).ok, false);
+  assert.equal((await processWhatsAppWebhookPayload(deps, { body })).ok, true);
   assert.equal(attempts, 2);
 });
 
@@ -2206,4 +2250,85 @@ test("statuses and calls never consult the intake plan gate", async () => {
     assert.equal(result.message, handler);
   }
   assert.equal(planChecks, 0);
+});
+
+test("hands a shop owner's video on airi's own number to the Products intake, with no Airi reply", async () => {
+  const body = buildInboundWebhookBody({
+    type: "video",
+    video: { id: "media_1", mime_type: "video/mp4" },
+  });
+  const intakeMessages: Record<string, unknown>[] = [];
+  let ingressCalls = 0;
+  const saved = (text: string) => async () => ({
+    message: {
+      _id: new FakeObjectId("message_1"),
+      conversation: new FakeObjectId("conversation_1"),
+      direction: "inbound",
+      text,
+    },
+    conversationId: "conversation_1",
+    isNewConversation: false,
+    messageWasNew: true,
+    reopenedConversation: false,
+    userId: "user_1",
+    chatId: "chat_1",
+    conversation: {
+      _id: new FakeObjectId("conversation_1"),
+      sourceId: "source_1",
+      airi_bot_enabled: true,
+    },
+    chat: { _id: new FakeObjectId("chat_1") },
+  });
+  const deps = createRuntimeDeps({
+    processWhatsAppMessage: saved("[video attachment]"),
+    handleProductsWhatsAppIntake: async (message) => {
+      intakeMessages.push(message);
+      return { handled: true, outcome: "import_started" };
+    },
+    directIngressAiriConversation: async () => {
+      ingressCalls += 1;
+      return { workflowId: "airi-workflow" };
+    },
+  });
+
+  const result = await processWhatsAppWebhookPayload(deps, {
+    body,
+    rawBody: JSON.stringify(body),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.message, "products intake processed");
+  assert.equal(ingressCalls, 0);
+  assert.deepEqual(intakeMessages, [
+    {
+      receivingPhone: "+15550000000",
+      sourceId: "source_1",
+      workspaceId: "workspace_1",
+      conversationId: "conversation_1",
+      messageId: "message_1",
+      from: "15551111111",
+      text: null,
+      buttonReplyId: null,
+      video: { mediaId: "media_1", mimeType: "video/mp4" },
+    },
+  ]);
+
+  // A message the intake leaves alone gets the usual handling.
+  const textBody = buildInboundWebhookBody({ text: { body: "hello" } });
+  const passOn = createRuntimeDeps({
+    processWhatsAppMessage: saved("hello"),
+    handleProductsWhatsAppIntake: async () => ({
+      handled: false,
+      outcome: "not_a_video",
+    }),
+    directIngressAiriConversation: async () => {
+      ingressCalls += 1;
+      return { workflowId: "airi-workflow" };
+    },
+  });
+  await processWhatsAppWebhookPayload(passOn, {
+    body: textBody,
+    rawBody: JSON.stringify(textBody),
+  });
+  assert.equal(ingressCalls, 1);
 });

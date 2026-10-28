@@ -125,6 +125,7 @@ import { AiriChatThread } from "@/models/airi-chat-thread";
 import { BusinessLocation } from "@/models/business-location";
 import { WorkspaceProduct } from "@/models/workspace-product";
 import { ProductVideoImport } from "@/models/product-video-import";
+import { ProductWhatsAppLink } from "@/models/product-whatsapp-link";
 import CrossStoreOutbox, {
   CROSS_STORE_OUTBOX_INDEX_SPECS,
 } from "@/models/cross-store-outbox";
@@ -553,10 +554,12 @@ export async function ensureMongoQueryIndexes(): Promise<void> {
     auditUniqueDuplicates: async () => {},
     createIndex: spec =>
       Conversation.collection.createIndex(spec.key, spec.options),
-    indexes: [{
-      key: CONVERSATION_OFFLINE_EVAL_INDEX.keys,
-      options: CONVERSATION_OFFLINE_EVAL_INDEX.options,
-    }],
+    indexes: [
+      {
+        key: CONVERSATION_OFFLINE_EVAL_INDEX.keys,
+        options: CONVERSATION_OFFLINE_EVAL_INDEX.options,
+      },
+    ],
     label: "Offline evaluation",
     readIndexes: () => Conversation.collection.indexes(),
   });
@@ -651,9 +654,7 @@ async function ensureScenarioFlowSubmissionIndexes() {
   const installed = await readIndexes();
   if (
     !specs.every(spec =>
-      installed.some(
-        index => matchesManagedMongoIndex(index, spec)
-      )
+      installed.some(index => matchesManagedMongoIndex(index, spec))
     )
   )
     throw new Error("Flow submission replacement indexes not verified");
@@ -742,6 +743,7 @@ async function createIndexes() {
   await BusinessLocation.createIndexes();
   await WorkspaceProduct.createIndexes();
   await ProductVideoImport.createIndexes();
+  await ProductWhatsAppLink.createIndexes();
   await CustomerEvent.createIndexes();
   await ensureScenarioFlowSubmissionIndexes();
   await ScenarioFlowEvent.collection.createIndex({
@@ -784,7 +786,10 @@ async function createIndexes() {
   await ensureCrossStoreOutboxIndexes();
   await ensureLlmEvaluationReviewItemIndexes();
   // Provision ownership before activating writers; failures must fail deployment.
-  for (const spec of [CONVERSATION_WHATSAPP_IDENTITY_INDEX_SPEC, CONVERSATION_WHATSAPP_ALIAS_INDEX_SPEC]) {
+  for (const spec of [
+    CONVERSATION_WHATSAPP_IDENTITY_INDEX_SPEC,
+    CONVERSATION_WHATSAPP_ALIAS_INDEX_SPEC,
+  ]) {
     await Conversation.collection.createIndex(spec.keys, spec.options);
   }
   // Conversation indexes (some are defined in schema too)

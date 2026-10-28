@@ -97,6 +97,7 @@ import {
 } from "./whatsapp-template-lifecycle.js";
 import * as IdentityChange from "./whatsapp-identity-change.js";
 import { findExistingWhatsAppMessageByExternalId } from "./whatsapp-message-dedupe.js";
+import { handleProductsWhatsAppIntake } from "./products/whatsapp-intake.js";
 import * as WhatsAppMarketingConsent from "@/lib/whatsapp/marketing-consent";
 import { workerRealtime } from "./worker-realtime.js";
 
@@ -901,7 +902,11 @@ const recordWhatsAppMessageDeliveryStatus =
 
 const tryHandleWhatsAppStatusWebhook = createWhatsAppStatusWebhookHandler({
   buildWhatsAppWebhookSourceSkipPayload,
-  findOpenWhatsAppConversationByChatId: async ({ chatId, workspaceId, sourceId }) => {
+  findOpenWhatsAppConversationByChatId: async ({
+    chatId,
+    workspaceId,
+    sourceId,
+  }) => {
     const conversation = (await conversationModel.Conversation.findOne({
       chat: chatId,
       workspaceId,
@@ -984,8 +989,10 @@ export const whatsappWebhookRuntimeDependencies: WhatsAppWebhookRuntimeDependenc
         ? await realtimeServer.enqueueWhatsAppMessageRealtimeEvent(input)
         : null;
       scheduleWhatsAppOptionalWork(async () => {
-        if (created) await realtimeServer.publishPendingRealtimeOutboxEvent(created);
-        if (updated) await realtimeServer.publishPendingRealtimeOutboxEvent(updated);
+        if (created)
+          await realtimeServer.publishPendingRealtimeOutboxEvent(created);
+        if (updated)
+          await realtimeServer.publishPendingRealtimeOutboxEvent(updated);
       });
     },
     extractWhatsAppIdentifiersFromWebhookValue,
@@ -994,6 +1001,7 @@ export const whatsappWebhookRuntimeDependencies: WhatsAppWebhookRuntimeDependenc
     getWhatsAppPrimaryIdentifier,
     getWhatsAppWebhookSourceSkip,
     getWhatsAppIntakePlanSkip: whatsappIntakePlanGate.getIntakeSkip,
+    handleProductsWhatsAppIntake,
     handleAccountUpdateWebhook: accountUpdateHandler.handleAccountUpdateWebhook,
     handleUserChangedNumber: identityChange.handleUserChangedNumber,
     handleUserChangedUserId: identityChange.handleUserChangedUserId,

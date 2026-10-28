@@ -25,6 +25,7 @@ import {
   ProductShelfSkeleton,
 } from "./product-shelf";
 import { ImportProgress, UploadProgress } from "./product-video-intake";
+import { WhatsAppLinkButton } from "./product-whatsapp-link";
 import { fetchProducts, productsApiUrl } from "./products-client";
 import { useProductImports } from "./use-product-imports";
 import { useProductVideoUpload } from "./use-product-video-upload";
@@ -50,7 +51,14 @@ function reviewAddress(importId: string | null): string {
 }
 
 /** Products: the workspace's own catalog, which the owner fills by filming their shelf. */
-export function ProductsPage({ workspaceId }: { workspaceId: string }) {
+export function ProductsPage({
+  workspaceId,
+  whatsappNumber = null,
+}: {
+  workspaceId: string;
+  /** Airi's number shop owners send videos to, when that's set up. */
+  whatsappNumber?: string | null;
+}) {
   const { data, error, isValidating, mutate } = useSWR<ProductsListResponse>(
     productsApiUrl(workspaceId),
     fetchProducts,
@@ -210,7 +218,15 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
           {PRODUCTS_COPY.emptyDescription}
         </p>
         <div className="mt-3 flex flex-col items-center gap-1.5">
-          {uploadButton("default")}
+          <div className="flex flex-wrap justify-center gap-2">
+            {uploadButton("default")}
+            {whatsappNumber ? (
+              <WhatsAppLinkButton
+                workspaceId={workspaceId}
+                number={whatsappNumber}
+              />
+            ) : null}
+          </div>
           <p className="text-xs text-muted-foreground">
             {PRODUCTS_COPY.uploadHint}
           </p>
@@ -276,7 +292,13 @@ export function ProductsPage({ workspaceId }: { workspaceId: string }) {
       {reviewing ? null : (
         <>
           {pageButton ? (
-            <div className="-mb-6 flex justify-end">
+            <div className="-mb-6 flex flex-wrap justify-end gap-2">
+              {whatsappNumber ? (
+                <WhatsAppLinkButton
+                  workspaceId={workspaceId}
+                  number={whatsappNumber}
+                />
+              ) : null}
               {uploadButton("outline")}
             </div>
           ) : null}

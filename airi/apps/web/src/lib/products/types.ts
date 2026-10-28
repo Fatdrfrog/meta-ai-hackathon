@@ -197,6 +197,17 @@ export type ProductCarouselDraft = {
 
 export type ProductCarouselDraftResponse = { draft: ProductCarouselDraft };
 
+/**
+ * A one-time link that opens WhatsApp to airi's own number with a code
+ * written in; sending it links the owner's phone to the workspace, so the
+ * shelf videos they send from it turn into imports.
+ */
+export type ProductsWhatsAppLinkResponse = {
+  url: string;
+  /** When the code stops working, if unused. */
+  expiresAt: string;
+};
+
 /** The order form, saved on Meta as a draft Flow for the owner to publish. */
 export type ProductOrderFormResponse = {
   flow: { id: string; name: string };
@@ -232,6 +243,7 @@ export const PRODUCTS_ERROR_CODES = [
   "not_enough_products",
   "storage_full",
   "draft_failed",
+  "whatsapp_intake_unavailable",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 

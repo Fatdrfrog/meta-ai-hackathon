@@ -47,11 +47,11 @@ jobs:
         run: node .github/scripts/verify-dependency-direction.mjs
       - name: Dependency direction tests
         run: node --test .github/scripts/verify-dependency-direction.test.mjs
-      - name: Meta Model API client tests
+      - name: Meta Model API client and WhatsApp webhook runtime tests
         run: >-
           pnpm --filter @icecore/airi-runtime exec tsx --test
           src/meta-model-api.test.ts src/meta-sam.test.ts src/llm-pricing.test.ts
-          src/elevenlabs-stt.test.ts
+          src/elevenlabs-stt.test.ts src/whatsapp-webhook-runtime.test.ts
       - name: Video-to-products pipeline and import job tests
         run: >-
           pnpm --filter @icecore/temporal-worker exec tsx --test
