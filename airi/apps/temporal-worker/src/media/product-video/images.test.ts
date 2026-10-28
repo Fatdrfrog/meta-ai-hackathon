@@ -16,6 +16,7 @@ import {
   rotateCutout,
   shotAround,
   tiltOf,
+  turnAndPad,
   WHITE,
 } from "./images";
 import { boxInPixels } from "./locate";
@@ -26,7 +27,12 @@ import {
   type FrameCandidate,
   type Mask,
 } from "./masks";
-import { chooseBackdrop, restorePrompt, restoreSize } from "./restore";
+import {
+  chooseBackdrop,
+  exampleName,
+  restorePrompt,
+  restoreSize,
+} from "./restore";
 
 // A 100×100 white image with a red 40×40 square at (30, 30), and SAM's mask
 // of it at half size, the way SAM sends masks smaller than their bounds.
@@ -54,9 +60,8 @@ const halfSizeMask: Mask = {
 };
 
 test("cuts out with smooth edges, trimmed to the product", async () => {
-  const png = await cutOutWithMask(await redSquare(), halfSizeMask, {
-    backdrop: WHITE,
-  });
+  // As filmed, with no plain backdrop: the edge comes from the mask alone.
+  const png = await cutOutWithMask(await redSquare(), halfSizeMask);
   const { data, info } = await sharp(png)
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -72,6 +77,17 @@ test("cuts out with smooth edges, trimmed to the product", async () => {
   );
   const centre = (24 * 48 + 24) * 4;
   assert.deepEqual([...data.subarray(centre, centre + 4)], [255, 0, 0, 255]);
+
+  // On a plain backdrop, the edge follows the photo's own: this square's is
+  // sharp, and stays exactly where it is.
+  const onBackdrop = await cutOutWithMask(await redSquare(), halfSizeMask, {
+    backdrop: WHITE,
+  });
+  const edge = await sharp(onBackdrop).raw().toBuffer();
+  for (let x = 0; x < 48; x++) {
+    const opacity = edge[(24 * 48 + x) * 4 + 3]!;
+    assert.equal(opacity, x >= 4 && x < 44 ? 255 : 0, `x ${x}`);
+  }
 });
 
 // Pixels that would show as a pale ring on a dark background: visible, and
@@ -320,32 +336,47 @@ test("asks Muse Image for the crop's shape and an honest restore", () => {
     restorePrompt("grey stone vase", "white"),
     /plain pure white background/,
   );
+  assert.match(
+    restorePrompt("white medal hanger", "charcoal"),
+    /plain, flat dark charcoal background/,
+  );
+  assert.match(prompt, /Light it evenly from the front/);
 });
 
 test("restores on grey, unless the product has noticeable grey", () => {
-  // A white medal hanger, a carved wooden panel, a dark table.
-  assert.deepEqual(chooseBackdrop({ white: 0.6, grey: 0 }), {
+  // A frosted white cup, a carved wooden panel, a dark table.
+  assert.deepEqual(chooseBackdrop({ white: 0.8, grey: 0, dark: 0.02 }), {
     backdrop: "grey",
     holes: true,
   });
-  assert.deepEqual(chooseBackdrop({ white: 0.01, grey: 0.005 }), {
+  assert.deepEqual(chooseBackdrop({ white: 0.01, grey: 0.005, dark: 0 }), {
     backdrop: "grey",
     holes: true,
   });
-  // A white hanger filmed with grey shading: still grey, holes still cut.
-  assert.deepEqual(chooseBackdrop({ white: 0.5, grey: 0.1 }), {
+  assert.deepEqual(chooseBackdrop({ white: 0, grey: 0.01, dark: 0.5 }), {
     backdrop: "grey",
+    holes: true,
+  });
+  // A white medal hanger as filmed, its shading grey: charcoal, holes cut.
+  assert.deepEqual(chooseBackdrop({ white: 0.47, grey: 0.13, dark: 0.08 }), {
+    backdrop: "charcoal",
     holes: true,
   });
   // A grey stone vase: white, with holes cut while it has little white.
-  assert.deepEqual(chooseBackdrop({ white: 0.01, grey: 0.4 }), {
+  assert.deepEqual(chooseBackdrop({ white: 0.01, grey: 0.4, dark: 0.1 }), {
     backdrop: "white",
     holes: true,
   });
-  // Grey and white both: holes stay, so no part of it is lost with them.
-  assert.deepEqual(chooseBackdrop({ white: 0.3, grey: 0.4 }), {
+  // Grey and white both, and more dark: holes stay on white, so no part of
+  // it is lost with them.
+  assert.deepEqual(chooseBackdrop({ white: 0.3, grey: 0.4, dark: 0.5 }), {
     backdrop: "white",
     holes: false,
+  });
+  // Mostly white with some grey and more dark: grey stays the least risk.
+  assert.deepEqual(chooseBackdrop({ white: 0.33, grey: 0.03, dark: 0.48 }), {
+    backdrop: "grey",
+    holes: true,
   });
 });
 
@@ -427,7 +458,61 @@ test("takes a grey backdrop back out of the edge pixels, not white", async () =>
   }
 });
 
-test("measures how much of a product is white and how much grey", async () => {
+// A white letter on Muse Image's charcoal, its outline soft like a real
+// render's, and SAM's mask 2 px too big all round, as when its smaller mask
+// is scaled back up.
+test("reads opacity along the outline from colour, so no rim of backdrop shows", async () => {
+  const charcoal = { r: 44, g: 43, b: 43 };
+  const image = await sharp(
+    await sharp({
+      create: { width: 100, height: 100, channels: 3, background: charcoal },
+    })
+      .composite([
+        {
+          input: {
+            create: {
+              width: 40,
+              height: 20,
+              channels: 3,
+              background: "#ececec",
+            },
+          },
+          left: 30,
+          top: 40,
+        },
+      ])
+      .png()
+      .toBuffer(),
+  )
+    .blur(0.7)
+    .png()
+    .toBuffer();
+  const mask: Mask = {
+    raster: new Uint8Array(44 * 24).fill(1),
+    width: 44,
+    height: 24,
+    bounds: { left: 28, top: 38, right: 72, bottom: 62 },
+    confidence: 0.9,
+  };
+
+  const png = await cutOutWithMask(image, mask, { backdrop: charcoal });
+
+  const { data } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+  let visible = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3]! < 40) continue;
+    visible++;
+    // Every visible pixel is the letter's white, none the charcoal's grey.
+    assert.ok(
+      data[i]! > 200,
+      `pixel ${i / 4} is ${data[i]} at opacity ${data[i + 3]}`,
+    );
+  }
+  // And none of the letter is lost.
+  assert.ok(visible >= 40 * 20, `${visible} visible pixels`);
+});
+
+test("measures how much of a product is white, grey and dark", async () => {
   const square = (background: string) =>
     sharp({ create: { width: 10, height: 10, channels: 4, background } })
       .png()
@@ -435,19 +520,28 @@ test("measures how much of a product is white and how much grey", async () => {
   assert.deepEqual(await backdropShares(await square("#f2f2f0")), {
     white: 1,
     grey: 0,
+    dark: 0,
   });
   assert.deepEqual(await backdropShares(await square("#8c8c8c")), {
     white: 0,
     grey: 1,
+    dark: 0,
+  });
+  assert.deepEqual(await backdropShares(await square("#2b2b2b")), {
+    white: 0,
+    grey: 0,
+    dark: 1,
   });
   assert.deepEqual(await backdropShares(await square("#e0115f")), {
     white: 0,
     grey: 0,
+    dark: 0,
   });
-  // Nothing opaque: nothing of either.
+  // Nothing opaque: nothing of any.
   assert.deepEqual(await backdropShares(await square("#20202000")), {
     white: 0,
     grey: 0,
+    dark: 0,
   });
 });
 
@@ -510,6 +604,127 @@ test("lets the backdrop through the product's holes, and only with holes on", as
 
   const filled = await cutOutWithMask(image, hanger, { backdrop: grey });
   assert.equal(await alphaAt(filled, 44, 19), 255);
+});
+
+// A white plate with a narrow gap, like a letter's counter, its backdrop
+// shaded 6 darker than the rest: let through on charcoal, where a shadow
+// barely changes the colour, but kept on grey, where 6 off is grey print.
+// A warm dark print beside it, and neutral ones on a dark medal and on a
+// bright gold one, all as close to charcoal, stay.
+test("lets a shaded gap through on a dark backdrop, not on grey", async () => {
+  const plate = async (backdrop: string, gap: string) =>
+    sharp({
+      create: { width: 120, height: 80, channels: 3, background: backdrop },
+    })
+      .composite([
+        {
+          input: {
+            create: {
+              width: 80,
+              height: 40,
+              channels: 3,
+              background: "#f4f4f4",
+            },
+          },
+          left: 20,
+          top: 20,
+        },
+        {
+          input: {
+            create: { width: 6, height: 24, channels: 3, background: gap },
+          },
+          left: 57,
+          top: 28,
+        },
+        {
+          input: {
+            create: {
+              width: 12,
+              height: 12,
+              channels: 3,
+              background: "#322b25",
+            },
+          },
+          left: 30,
+          top: 30,
+        },
+        // A dark medal with a neutral dark print on it, as close.
+        {
+          input: {
+            create: {
+              width: 16,
+              height: 16,
+              channels: 3,
+              background: "#5a461e",
+            },
+          },
+          left: 76,
+          top: 30,
+        },
+        {
+          input: {
+            create: { width: 8, height: 8, channels: 3, background: "#262626" },
+          },
+          left: 80,
+          top: 34,
+        },
+        {
+          input: {
+            create: {
+              width: 12,
+              height: 12,
+              channels: 3,
+              background: "#d2aa3c",
+            },
+          },
+          left: 24,
+          top: 44,
+        },
+        {
+          input: {
+            create: { width: 6, height: 6, channels: 3, background: "#262626" },
+          },
+          left: 27,
+          top: 47,
+        },
+      ])
+      .png()
+      .toBuffer();
+  const mask: Mask = {
+    raster: new Uint8Array(80 * 40).fill(1),
+    width: 80,
+    height: 40,
+    bounds: { left: 20, top: 20, right: 100, bottom: 60 },
+    confidence: 0.9,
+  };
+  // In the cut-out that starts 4 px before the plate: the gap's middle, and
+  // the prints'.
+  const alphaAt = async (png: Buffer, x: number, y: number) => {
+    const { data, info } = await sharp(png)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return data[(y * info.width + x) * 4 + 3]!;
+  };
+  const gapAlpha = (png: Buffer) => alphaAt(png, 44, 24);
+
+  const onCharcoal = await cutOutWithMask(
+    await plate("#2c2b2b", "#262525"),
+    mask,
+    {
+      backdrop: { r: 44, g: 43, b: 43 },
+      holes: true,
+    },
+  );
+  assert.equal(await gapAlpha(onCharcoal), 0);
+  assert.equal(await alphaAt(onCharcoal, 20, 20), 255);
+  assert.equal(await alphaAt(onCharcoal, 68, 22), 255);
+  assert.equal(await alphaAt(onCharcoal, 14, 34), 255);
+
+  const onGrey = await cutOutWithMask(await plate("#8c8c8c", "#868686"), mask, {
+    backdrop: { r: 140, g: 140, b: 140 },
+    holes: true,
+  });
+  assert.equal(await gapAlpha(onGrey), 255);
 });
 
 // A 300×60 bar on a transparent canvas, turned the way an owner holds a
@@ -625,6 +840,41 @@ test("takes a presenter in front of a product out of its mask", () => {
   assert.equal(left.mask.confidence, 0.8);
   assert.equal(left.mask.raster.length, 30 * 20);
 
+  // SAM's product mask took in the presenter, top to bottom of the frame,
+  // and its mask of her is a pixel narrower: the strip left along her edge
+  // reaches both edges of the frame, unless her mask is grown first.
+  const withPresenter: Mask = {
+    raster: new Uint8Array(70 * 50).map((_, i) =>
+      i % 70 < 40 && Math.floor(i / 70) >= 10 && Math.floor(i / 70) < 30
+        ? 1
+        : i % 70 >= 39
+          ? 1
+          : 0,
+    ),
+    width: 70,
+    height: 50,
+    bounds: { left: 10, top: 0, right: 80, bottom: 50 },
+    confidence: 0.8,
+  };
+  const narrower: Mask = {
+    ...presenter,
+    raster: new Uint8Array(30 * 50).fill(1),
+    height: 50,
+    bounds: { left: 50, top: 0, right: 80, bottom: 50 },
+  };
+  const strip = subtractMasks(withPresenter, [narrower], 80, 50);
+  assert.ok(strip);
+  assert.deepEqual([strip.mask.bounds.top, strip.mask.bounds.bottom], [0, 50]);
+  const cleaned = subtractMasks(withPresenter, [narrower], 80, 50, 2);
+  assert.ok(cleaned);
+  // The product loses the 2 px it shared an edge with her, and nothing else.
+  assert.deepEqual(cleaned.mask.bounds, {
+    left: 10,
+    top: 10,
+    right: 48,
+    bottom: 30,
+  });
+
   // Nothing left when the presenter covers all of it.
   assert.equal(
     subtractMasks(
@@ -634,5 +884,126 @@ test("takes a presenter in front of a product out of its mask", () => {
       50,
     ),
     null,
+  );
+});
+
+// A white bar with a short 4 px leg below it, on Muse's grey; SAM's mask,
+// made smaller than the image, covers the bar but not the leg.
+test("refines a mask by colour, keeping thin parts SAM missed", async () => {
+  const image = await sharp({
+    create: { width: 120, height: 80, channels: 3, background: "#8c8c8c" },
+  })
+    .composite([
+      {
+        input: {
+          create: { width: 60, height: 16, channels: 3, background: "#f6f6f6" },
+        },
+        left: 30,
+        top: 20,
+      },
+      {
+        input: {
+          create: { width: 4, height: 8, channels: 3, background: "#f6f6f6" },
+        },
+        left: 58,
+        top: 36,
+      },
+    ])
+    .png()
+    .toBuffer();
+  const bar: Mask = {
+    raster: new Uint8Array(30 * 8).fill(1),
+    width: 30,
+    height: 8,
+    bounds: { left: 30, top: 20, right: 90, bottom: 36 },
+    confidence: 0.9,
+  };
+  const grey = { r: 140, g: 140, b: 140 };
+  const alphaAt = async (png: Buffer, x: number, y: number) => {
+    const { data, info } = await sharp(png)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return data[(y * info.width + x) * 4 + 3]!;
+  };
+
+  const refined = await cutOutWithMask(image, bar, {
+    backdrop: grey,
+    refine: true,
+  });
+  const { height } = await sharp(refined).metadata();
+  // The leg is kept: the cut-out reaches below the bar, and it is opaque.
+  assert.ok(height! > 16 + 8, `height ${height}`);
+  assert.ok((await alphaAt(refined, 33, 24)) > 200);
+  // The grey beside the leg is still background.
+  assert.equal(await alphaAt(refined, 22, 24), 0);
+
+  const plain = await cutOutWithMask(image, bar, { backdrop: grey });
+  assert.equal((await sharp(plain).metadata()).height, 16 + 8);
+});
+
+test("turns a crop and gives it room for Muse Image to complete the product", async () => {
+  const crop = await sharp({
+    create: { width: 200, height: 100, channels: 3, background: "#d0b090" },
+  })
+    .jpeg()
+    .toBuffer();
+
+  const padded = await sharp(
+    await turnAndPad(crop, { degrees: 0, pad: true }),
+  ).metadata();
+  assert.deepEqual([padded.width, padded.height], [260, 130]);
+  assert.equal(padded.format, "jpeg");
+
+  const turned = await sharp(
+    await turnAndPad(crop, { degrees: 90, pad: false }),
+  ).metadata();
+  assert.deepEqual([turned.width, turned.height], [100, 200]);
+});
+
+test("writes an example name in the narration's language where lettering is hidden", () => {
+  assert.equal(exampleName("Kazakh"), "Айбек Нұрланұлы");
+  assert.equal(exampleName("kk"), "Айбек Нұрланұлы");
+  assert.equal(exampleName("Russian"), "Алексей Смирнов");
+  assert.equal(exampleName(null), "Anna Smith");
+  // The hidden names of one family tree don't all read the same.
+  assert.equal(exampleName("kk", 1), "Ерлан Асқарұлы");
+  assert.equal(exampleName(null, 6), "Anna Smith");
+  const prompt = restorePrompt("medal hanger", "grey", { completes: true });
+  assert.match(prompt, /Never write garbled letters/);
+  assert.match(prompt, /make it match the other end/);
+  assert.doesNotMatch(restorePrompt("medal hanger"), /runs past the edges/);
+  // With nothing hidden, no words are written in: a table's caption once
+  // became a name on its leg.
+  assert.doesNotMatch(prompt, /Айбек|its lettering is hidden/);
+
+  const piece = (text: string, readable: boolean, personName = false) => ({
+    where: "",
+    text,
+    readable,
+    personName,
+  });
+  // A family tree, more names than Muse Spark lists: only the hidden ones
+  // are written in, and the rest kept, so no name plate is dropped.
+  const tree = restorePrompt("family tree panel", "grey", {
+    lettering: [
+      piece("АРҒЫН", true),
+      piece("Әлібек", true, true),
+      piece("Бозымбай", true, true),
+      piece("Айбек Нұрланұлы", false, true),
+      piece("Жәнібек", true, true),
+      piece("Ерлан Асқарұлы", false, true),
+    ],
+  });
+  assert.match(
+    tree,
+    /in place of any letters that show there: "Айбек Нұрланұлы"; "Ерлан Асқарұлы"\. Keep all its other lettering as it is\./,
+  );
+  assert.doesNotMatch(tree, /Әлібек|АРҒЫН/);
+  // A clock's hidden maker mark, no name: written in, the rest kept.
+  assert.match(
+    restorePrompt("wall clock", "grey", {
+      lettering: [piece("12", true), piece("Quartz", false)],
+    }),
+    /in place of any letters that show there: "Quartz"\. Keep all its other/,
   );
 });

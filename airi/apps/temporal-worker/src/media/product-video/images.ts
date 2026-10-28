@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { labelPieces, type Box, type Mask } from "./masks";
+import { grow, labelPieces, type Box, type Mask } from "./masks";
 
 /** Sharpness of one region of a frame, so a sharp background can't make a blurred product look good. */
 export async function regionSharpness(
@@ -116,13 +116,13 @@ export async function productBox(
 }
 
 /**
- * How much of a cut-out is near-white and how much neutral mid-grey: the two
- * backdrops Muse Image restores on. A product restored on a colour it is made
- * of loses those parts to the backdrop when cut out.
+ * How much of a cut-out is near-white, neutral mid-grey and neutral dark: the
+ * three backdrops Muse Image restores on. A product restored on a colour it
+ * is made of loses those parts to the backdrop when cut out.
  */
 export async function backdropShares(
   cutout: Buffer,
-): Promise<{ white: number; grey: number }> {
+): Promise<{ white: number; grey: number; dark: number }> {
   const { data } = await sharp(cutout)
     .ensureAlpha()
     .raw()
@@ -130,6 +130,7 @@ export async function backdropShares(
   let opaque = 0;
   let white = 0;
   let grey = 0;
+  let dark = 0;
   for (let i = 0; i < data.length; i += 4) {
     if (data[i + 3]! < 200) continue;
     opaque++;
@@ -137,10 +138,11 @@ export async function backdropShares(
     const high = Math.max(data[i]!, data[i + 1]!, data[i + 2]!);
     if (low >= 200 && high - low <= 30) white++;
     else if (low >= 100 && high <= 180 && high - low <= 16) grey++;
+    else if (high <= 80 && high - low <= 16) dark++;
   }
   return opaque > 0
-    ? { white: white / opaque, grey: grey / opaque }
-    : { white: 0, grey: 0 };
+    ? { white: white / opaque, grey: grey / opaque, dark: dark / opaque }
+    : { white: 0, grey: 0, dark: 0 };
 }
 
 const GRID_TILE_LONG_SIDE = 640;
@@ -323,11 +325,29 @@ function dropStrayPieces(mask: Buffer, width: number): Box | null {
 // sits on the backdrop's colour: its pixels within HOLE_TOLERANCE of it and
 // within HOLE_MAX_MEAN_DIFFERENCE on average. On a restored medal hanger,
 // holes averaged 0.9-2.4 from the grey; parts of its grey lettering and
-// shading 5-21, which a looser test had cut away with the holes.
+// shading 5-21, which a looser test had cut away with the holes. A shadow
+// darkens by a share of the brightness, so on a dark backdrop (brightest
+// channel below DARK_BACKDROP) the shading Muse leaves in narrow gaps stays
+// close: 4.5-7.6 in the counters of a white hanger's letters on charcoal.
+// There a patch up to HOLE_MAX_MEAN_DIFFERENCE_DARK off is a hole if it is
+// as neutral as the backdrop (its channels on average within
+// HOLE_MAX_SPREAD of each other) and white product surrounds it (the product
+// HOLE_RING_REACH pixels around it at least HOLE_MIN_RING bright on average,
+// its channels within HOLE_MAX_RING_SPREAD): over five restores the
+// counters' spread was 1.2-2.5, their surroundings 144-214 bright and 2-7
+// tinted, while the dark prints on the hanger's medals, 5.4-8.4 off, were
+// tinted 5.3-8.6 or, drawn neutral, sat in 48-78 bright surroundings tinted
+// 19-47 (a bright gold medal is as tinted).
 const HOLE_MIN_SHARE = 0.00003;
 const HOLE_MIN_PIXELS = 16;
 const HOLE_TOLERANCE = 12;
 const HOLE_MAX_MEAN_DIFFERENCE = 4;
+const HOLE_MAX_MEAN_DIFFERENCE_DARK = 8;
+const HOLE_MAX_SPREAD = 3;
+const HOLE_RING_REACH = 3;
+const HOLE_MIN_RING = 120;
+const HOLE_MAX_RING_SPREAD = 15;
+const DARK_BACKDROP = 100;
 
 /**
  * Takes the backdrop showing through holes in the product out of the mask,
@@ -354,29 +374,197 @@ function punchBackdropHoles(
   }
   const { label, sizes } = labelPieces(showsBackdrop, width);
   const total = new Array<number>(sizes.length).fill(0);
-  for (let i = 0; i < mask.length; i++) total[label[i]!]! += difference[i]!;
-  const minimum = Math.max(HOLE_MIN_PIXELS, mask.length * HOLE_MIN_SHARE);
+  const spread = new Array<number>(sizes.length).fill(0);
+  const ring = new Array<number>(sizes.length).fill(0);
+  const ringSpread = new Array<number>(sizes.length).fill(0);
+  const ringCount = new Array<number>(sizes.length).fill(0);
+  const reach = HOLE_RING_REACH;
   for (let i = 0; i < mask.length; i++) {
     const piece = label[i]!;
-    if (
-      piece > 0 &&
-      sizes[piece]! >= minimum &&
-      total[piece]! / sizes[piece]! <= HOLE_MAX_MEAN_DIFFERENCE
-    )
-      mask[i] = 0;
+    if (piece === 0) continue;
+    total[piece]! += difference[i]!;
+    spread[piece]! +=
+      Math.max(rgb[i * 3]!, rgb[i * 3 + 1]!, rgb[i * 3 + 2]!) -
+      Math.min(rgb[i * 3]!, rgb[i * 3 + 1]!, rgb[i * 3 + 2]!);
+    const x = i % width;
+    const around = [
+      x >= reach ? i - reach : -1,
+      x + reach < width ? i + reach : -1,
+      i - reach * width,
+      i + reach * width,
+    ];
+    for (const j of around) {
+      if (j < 0 || j >= mask.length || mask[j]! < 128 || showsBackdrop[j])
+        continue;
+      ring[piece]! += (rgb[j * 3]! + rgb[j * 3 + 1]! + rgb[j * 3 + 2]!) / 3;
+      ringSpread[piece]! +=
+        Math.max(rgb[j * 3]!, rgb[j * 3 + 1]!, rgb[j * 3 + 2]!) -
+        Math.min(rgb[j * 3]!, rgb[j * 3 + 1]!, rgb[j * 3 + 2]!);
+      ringCount[piece]!++;
+    }
+  }
+  const minimum = Math.max(HOLE_MIN_PIXELS, mask.length * HOLE_MIN_SHARE);
+  const dark = Math.max(...levels) < DARK_BACKDROP;
+  const isHole = (piece: number) => {
+    const size = sizes[piece]!;
+    if (piece === 0 || size < minimum) return false;
+    const mean = total[piece]! / size;
+    return (
+      mean <= HOLE_MAX_MEAN_DIFFERENCE ||
+      (dark &&
+        mean <= HOLE_MAX_MEAN_DIFFERENCE_DARK &&
+        spread[piece]! / size <= HOLE_MAX_SPREAD &&
+        ringCount[piece]! > 0 &&
+        ring[piece]! / ringCount[piece]! >= HOLE_MIN_RING &&
+        ringSpread[piece]! / ringCount[piece]! <= HOLE_MAX_RING_SPREAD)
+    );
+  };
+  const holes = sizes.map((_, piece) => isHole(piece));
+  for (let i = 0; i < mask.length; i++) if (holes[label[i]!]) mask[i] = 0;
+}
+
+// Refining SAM's mask by colour on Muse Image's flat backdrop: within the
+// mask grown by REFINE_GROW_SHARE of the image's longer side (at least
+// REFINE_MIN_GROW pixels), a pixel at
+// least REFINE_PRODUCT_DIFFERENCE from the backdrop's colour is product.
+// SAM sends masks at about 70% of their size, and scaled back up they lost a
+// medal hanger's thin connecting bars.
+const REFINE_GROW_SHARE = 0.012;
+const REFINE_MIN_GROW = 8;
+const REFINE_PRODUCT_DIFFERENCE = 40;
+
+/**
+ * Adds to the 0-255 mask, in place, what clearly isn't backdrop near it, and
+ * returns those clearly-product pixels (1), in it or added, which the shrink
+ * that takes off SAM's generous edge then leaves alone.
+ */
+function refineByColour(
+  mask: Buffer,
+  rgb: Buffer,
+  width: number,
+  backdrop: Rgb,
+): Uint8Array {
+  const height = mask.length / width;
+  const on = new Uint8Array(mask.length);
+  for (let i = 0; i < mask.length; i++) on[i] = mask[i]! >= 128 ? 1 : 0;
+  const near = grow(
+    on,
+    width,
+    Math.max(
+      REFINE_MIN_GROW,
+      Math.round(Math.max(width, height) * REFINE_GROW_SHARE),
+    ),
+  );
+  const levels = [backdrop.r, backdrop.g, backdrop.b];
+  const product = new Uint8Array(mask.length);
+  for (let i = 0; i < mask.length; i++) {
+    if (!near[i]) continue;
+    let largest = 0;
+    for (let c = 0; c < 3; c++)
+      largest = Math.max(largest, Math.abs(rgb[i * 3 + c]! - levels[c]!));
+    if (largest < REFINE_PRODUCT_DIFFERENCE) continue;
+    product[i] = 1;
+    mask[i] = 255;
+  }
+  return product;
+}
+
+// Along the product's outline, opacity is read from colour. Muse Image's edge
+// pixels mix product and backdrop, C = aF + (1 - a)B, so with F the product's
+// colour just inside, a is how far C lies from B towards F. SAM's mask,
+// scaled up from its smaller size, can sit a pixel off the outline: on
+// charcoal, those pixels of backdrop drew a dark rim round a white medal
+// hanger's letters. Pixels within EDGE_REACH of the outline take F from the
+// nearest pixel deeper inside (within EDGE_SEARCH) that is EDGE_MIN_CONTRAST
+// from the backdrop and that C lies within EDGE_MAX_OFF of the line towards,
+// so a dark rim the product really has isn't read as backdrop.
+const EDGE_REACH = 2;
+const EDGE_SEARCH = 4;
+const EDGE_MIN_CONTRAST = 80;
+const EDGE_MAX_OFF = 16;
+
+/** Sets the 0-255 opacity of pixels along the outline from their colour, in place. */
+function opacityFromColour(
+  opacity: Uint8Array,
+  rgb: Buffer,
+  width: number,
+  backdrop: Rgb,
+): void {
+  const height = opacity.length / width;
+  const notSolid = new Uint8Array(opacity.length);
+  const shown = new Uint8Array(opacity.length);
+  for (let i = 0; i < opacity.length; i++) {
+    notSolid[i] = opacity[i]! < 255 ? 1 : 0;
+    shown[i] = opacity[i]! > 0 ? 1 : 0;
+  }
+  // Solidly inside: no pixel within EDGE_REACH is less than opaque.
+  const nearOutline = grow(notSolid, width, EDGE_REACH);
+  const nearProduct = grow(shown, width, 1);
+  const levels = [backdrop.r, backdrop.g, backdrop.b];
+  // Nearest first, so F is the product's colour right inside.
+  const offsets: Array<{ dx: number; dy: number }> = [];
+  for (let dy = -EDGE_SEARCH; dy <= EDGE_SEARCH; dy++)
+    for (let dx = -EDGE_SEARCH; dx <= EDGE_SEARCH; dx++)
+      if (dx || dy) offsets.push({ dx, dy });
+  offsets.sort((a, b) => a.dx ** 2 + a.dy ** 2 - (b.dx ** 2 + b.dy ** 2));
+
+  const read = Uint8Array.from(opacity);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      if (!nearOutline[i] || !nearProduct[i]) continue;
+      const v0 = rgb[i * 3]! - levels[0]!;
+      const v1 = rgb[i * 3 + 1]! - levels[1]!;
+      const v2 = rgb[i * 3 + 2]! - levels[2]!;
+      for (const { dx, dy } of offsets) {
+        const fx = x + dx;
+        const fy = y + dy;
+        if (fx < 0 || fy < 0 || fx >= width || fy >= height) continue;
+        const f = fy * width + fx;
+        if (nearOutline[f] || read[f]! < 255) continue;
+        const d0 = rgb[f * 3]! - levels[0]!;
+        const d1 = rgb[f * 3 + 1]! - levels[1]!;
+        const d2 = rgb[f * 3 + 2]! - levels[2]!;
+        if (
+          Math.max(Math.abs(d0), Math.abs(d1), Math.abs(d2)) < EDGE_MIN_CONTRAST
+        )
+          continue;
+        const along =
+          (v0 * d0 + v1 * d1 + v2 * d2) / (d0 ** 2 + d1 ** 2 + d2 ** 2);
+        const off = Math.hypot(
+          v0 - along * d0,
+          v1 - along * d1,
+          v2 - along * d2,
+        );
+        if (off > EDGE_MAX_OFF) continue;
+        opacity[i] = Math.round(Math.max(0, Math.min(1, along)) * 255);
+        break;
+      }
+    }
   }
 }
 
 /**
- * The mask with its outermost pixels removed. SAM's edge is often a pixel
- * generous, and that pixel is background colour, which shows as a ring.
+ * The mask with its outermost pixels removed, except `keep`'s. SAM's edge is
+ * often a pixel generous, and that pixel is background colour, which shows as
+ * a ring; a pixel known to be product by its colour is no ring.
  */
-function shrinkByOnePixel(mask: Buffer, width: number, height: number): Buffer {
+function shrinkByOnePixel(
+  mask: Buffer,
+  width: number,
+  height: number,
+  keep?: Uint8Array,
+): Buffer {
   const out = Buffer.alloc(mask.length);
   const on = (i: number) => mask[i]! >= 128;
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
       const i = y * width + x;
+      if (keep?.[i] && on(i)) {
+        out[i] = 255;
+        continue;
+      }
+      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) continue;
       if (on(i) && on(i - 1) && on(i + 1) && on(i - width) && on(i + width))
         out[i] = 255;
     }
@@ -397,7 +585,7 @@ function shrinkByOnePixel(mask: Buffer, width: number, height: number): Buffer {
 export async function cutOutWithMask(
   image: Buffer | string,
   masks: Mask | Mask[],
-  options: { backdrop?: Rgb; holes?: boolean } = {},
+  options: { backdrop?: Rgb; holes?: boolean; refine?: boolean } = {},
 ): Promise<Buffer> {
   const { width = 0, height = 0 } = await sharp(image).metadata();
   const all = Array.isArray(masks) ? masks : [masks];
@@ -434,11 +622,15 @@ export async function cutOutWithMask(
     }
   }
   const { backdrop } = options;
+  const product =
+    backdrop && options.refine
+      ? refineByColour(placed, rgb, width, backdrop)
+      : undefined;
   if (backdrop && options.holes)
     punchBackdropHoles(placed, rgb, width, backdrop);
   const bounds = dropStrayPieces(placed, width);
   if (!bounds) throw new Error("The mask is outside its image");
-  const alpha = await sharp(shrinkByOnePixel(placed, width, height), {
+  const alpha = await sharp(shrinkByOnePixel(placed, width, height, product), {
     raw: { width, height, channels: 1 },
   })
     .blur(0.8)
@@ -446,15 +638,19 @@ export async function cutOutWithMask(
     .raw()
     .toBuffer();
 
-  const backdropLevels = backdrop && [backdrop.r, backdrop.g, backdrop.b];
-  const rgba = Buffer.alloc(width * height * 4);
-  for (let i = 0; i < width * height; i++) {
-    // The faint rim the blur spreads past the edge is background: drop it.
-    const opacity = Math.max(
+  // The faint rim the blur spreads past the edge is background: drop it.
+  const opacity = new Uint8Array(width * height);
+  for (let i = 0; i < opacity.length; i++)
+    opacity[i] = Math.max(
       0,
       Math.min(255, Math.round(((alpha[i]! - RIM) * 255) / (255 - RIM))),
     );
-    const a = opacity / 255;
+  if (backdrop) opacityFromColour(opacity, rgb, width, backdrop);
+
+  const backdropLevels = backdrop && [backdrop.r, backdrop.g, backdrop.b];
+  const rgba = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < width * height; i++) {
+    const a = opacity[i]! / 255;
     for (let c = 0; c < 3; c++) {
       const value = rgb[i * 3 + c]!;
       rgba[i * 4 + c] =
@@ -468,7 +664,7 @@ export async function cutOutWithMask(
             )
           : value;
     }
-    rgba[i * 4 + 3] = opacity;
+    rgba[i * 4 + 3] = opacity[i]!;
   }
 
   const left = Math.max(0, bounds.left - CUTOUT_PADDING);
@@ -644,5 +840,42 @@ export async function rotateCutout(
       withoutEnlargement: true,
     })
     .png()
+    .toBuffer();
+}
+
+// Room left around a product the frame cut off, a share of its crop's size on
+// each side, for Muse Image to complete it in; and the grey that fills it and
+// the corners a turn uncovers, close to the backdrop Muse is asked for.
+const COMPLETE_PADDING = 0.15;
+const RESTORE_FILL = { r: 140, g: 140, b: 140, alpha: 1 };
+
+/**
+ * A crop turned `degrees` clockwise and, with `pad`, given room on every
+ * side, as a JPEG for Muse Image to restore.
+ */
+export async function turnAndPad(
+  image: Buffer,
+  options: { degrees: number; pad: boolean },
+): Promise<Buffer> {
+  let turned = image;
+  if (options.degrees) {
+    turned = await sharp(image)
+      .rotate(options.degrees, { background: RESTORE_FILL })
+      .png()
+      .toBuffer();
+  }
+  const { width = 0, height = 0 } = await sharp(turned).metadata();
+  const padX = options.pad ? Math.round(width * COMPLETE_PADDING) : 0;
+  const padY = options.pad ? Math.round(height * COMPLETE_PADDING) : 0;
+  return sharp(turned)
+    .extend({
+      left: padX,
+      right: padX,
+      top: padY,
+      bottom: padY,
+      background: RESTORE_FILL,
+    })
+    .flatten({ background: RESTORE_FILL })
+    .jpeg({ quality: 92 })
     .toBuffer();
 }

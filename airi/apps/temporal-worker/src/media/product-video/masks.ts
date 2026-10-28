@@ -44,6 +44,38 @@ export function maskFromRecord(record: SegmentationMaskRecord): Mask {
 export const maskArea = (mask: Mask): number =>
   mask.raster.reduce((sum, value) => sum + value, 0);
 
+/** The 0/1 raster grown by `radius` pixels in every direction (a square). */
+export function grow(
+  on: Uint8Array,
+  width: number,
+  radius: number,
+): Uint8Array {
+  const height = on.length / width;
+  const across = new Uint8Array(on.length);
+  for (let y = 0; y < height; y++) {
+    let last = -Infinity;
+    for (let x = 0; x < width; x++)
+      if (on[y * width + x]) ((last = x), (across[y * width + x] = 1));
+      else if (x - last <= radius) across[y * width + x] = 1;
+    last = Infinity;
+    for (let x = width - 1; x >= 0; x--)
+      if (on[y * width + x]) last = x;
+      else if (last - x <= radius) across[y * width + x] = 1;
+  }
+  const out = new Uint8Array(on.length);
+  for (let x = 0; x < width; x++) {
+    let last = -Infinity;
+    for (let y = 0; y < height; y++)
+      if (across[y * width + x]) ((last = y), (out[y * width + x] = 1));
+      else if (y - last <= radius) out[y * width + x] = 1;
+    last = Infinity;
+    for (let y = height - 1; y >= 0; y--)
+      if (across[y * width + x]) last = y;
+      else if (last - y <= radius) out[y * width + x] = 1;
+  }
+  return out;
+}
+
 /**
  * The 4-connected pieces of a row-major raster's "on" pixels: each pixel's
  * piece number (0 when off) and each piece's size, indexed by its number.
@@ -170,23 +202,36 @@ function onImage(mask: Mask, width: number, height: number): Uint8Array {
   return out;
 }
 
+// Pieces left smaller than this share of the biggest are scraps of what was
+// taken out, outside the other masks.
+const SCRAP_SHARE = 0.15;
+
 /**
- * The product's mask without what the other masks cover, at full size, and
- * the share of the product left; null when nothing is. Takes a presenter
- * standing in front of a product out of its filmed cut-out.
+ * The product's mask without what the other masks cover, grown by `margin`
+ * pixels, at full size, and the share of the product left; null when nothing
+ * is. Takes a presenter standing behind a product out of its mask: SAM draws
+ * the two outlines a few pixels apart, and the margin takes the strip of
+ * presenter between them too.
  */
 export function subtractMasks(
   product: Mask,
   others: Mask[],
   width: number,
   height: number,
+  margin = 0,
 ): { mask: Mask; kept: number } | null {
   const covered = onImage(product, width, height);
   const before = covered.reduce((sum, value) => sum + value, 0);
   for (const other of others) {
     const drawn = onImage(other, width, height);
-    for (let i = 0; i < covered.length; i++) if (drawn[i]) covered[i] = 0;
+    const taken = margin > 0 ? grow(drawn, width, margin) : drawn;
+    for (let i = 0; i < covered.length; i++) if (taken[i]) covered[i] = 0;
   }
+  const { label, sizes } = labelPieces(covered, width);
+  let biggest = 0;
+  for (const size of sizes) biggest = Math.max(biggest, size);
+  for (let i = 0; i < covered.length; i++)
+    if (covered[i] && sizes[label[i]!]! < biggest * SCRAP_SHARE) covered[i] = 0;
   const bounds = { left: width, top: height, right: 0, bottom: 0 };
   let after = 0;
   for (let i = 0; i < covered.length; i++) {

@@ -68,6 +68,8 @@ export type ImportRecord = {
   status: "queued" | "processing" | "ready" | "failed";
   video: StoredFileRef;
   transcript: string | null;
+  /** The language spoken, once the video was watched. */
+  language: string | null;
   /** The person presenting the products, once the video was watched; null when no one does. */
   presenter: { momentSeconds: number; done: boolean } | null;
 };
@@ -237,6 +239,7 @@ export async function runProductVideoImport(
   }
 
   let presenter = job.presenter;
+  let language = job.language;
   let products = await store.listProducts();
   if (products.length === 0) {
     await stage("watching");
@@ -306,8 +309,9 @@ export async function runProductVideoImport(
       })),
     );
     products = await store.listProducts();
+    language = inventory.language || null;
     await store.updateImport({
-      language: inventory.language || null,
+      language,
       productTotal: products.length,
       photoTotal: products.reduce(
         (total, product) => total + product.options.length,
@@ -327,7 +331,7 @@ export async function runProductVideoImport(
     pending,
     CUT_CONCURRENCY,
     ({ product, option }) =>
-      cutAndSave(ports, prepared.videoPath, product, option),
+      cutAndSave(ports, prepared.videoPath, product, option, language),
   );
   if (presenter && !presenter.done) {
     await cutAndSavePresenter(ports, prepared, presenter.momentSeconds);
@@ -348,6 +352,7 @@ async function cutAndSave(
   videoPath: string,
   product: ImportProduct,
   option: ImportOption,
+  language: string | null,
 ): Promise<void> {
   let cutout: ProductCutout;
   try {
@@ -363,6 +368,7 @@ async function cutAndSave(
             window: option.videoWindow,
             name: option.description || product.englishName,
             samPhrase: option.samPhrase,
+            language,
             workDir: join(
               ports.workDir,
               "products",

@@ -49,6 +49,12 @@ const frame = (background = "#d8d2c8") =>
     },
   ]);
 
+type RestoreBody = {
+  prompt: string;
+  images: Array<{ image_url: string }>;
+  size?: string;
+};
+
 type Scenario = {
   sameProduct?: boolean;
   difference?: string | null;
@@ -62,6 +68,15 @@ type Scenario = {
   shows?: boolean[];
   /** The clip's first frame is from another scene, as after a cut. */
   cutAfterFirstFrame?: boolean;
+  /** The product reaches the frame's right edge, as when it runs past it. */
+  atEdge?: boolean;
+  /** What Muse Spark reads on the product. */
+  lettering?: Array<{
+    where: string;
+    text: string;
+    readable: boolean;
+    person_name: boolean;
+  }>;
 };
 
 async function setUp(t: TestContext, scenario: Scenario = {}) {
@@ -127,6 +142,8 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
   const restoredPng = await frame().png().toBuffer();
 
   const requests: string[] = [];
+  const restores: RestoreBody[] = [];
+  const questions: string[] = [];
   const samImagePrompts: string[] = [];
   const shows = [...(scenario.shows ?? [])];
   const sameAnswers = [...(scenario.sameAnswers ?? [])];
@@ -142,6 +159,7 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
     }
     if (path === "/v1/images/edits") {
       requests.push("restore");
+      restores.push(JSON.parse(String(init.body)) as RestoreBody);
       if (scenario.restoreStatus)
         return Response.json(
           { error: { message: scenario.restoreMessage ?? "refused" } },
@@ -163,11 +181,19 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
         samImagePrompts.push(
           content.find((part) => part.type === "input_text")!.text!,
         );
+      const output = video
+        ? TRACKED_OUTPUT
+        : (scenario.samImageOutput ?? SAM_OUTPUT);
       return sse(
-        video ? TRACKED_OUTPUT : (scenario.samImageOutput ?? SAM_OUTPUT),
+        scenario.atEdge
+          ? output
+              .replaceAll("x1=211;", "x1=259;")
+              .replaceAll("x2=270;", "x2=318;")
+          : output,
       );
     }
     const question = content.find((part) => part.type === "input_text")!.text!;
+    questions.push(question);
     if (question.includes("numbered frames")) {
       requests.push("pick frame");
       return answer({ best: 1 });
@@ -185,6 +211,10 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
     if (question.includes("main subject")) {
       requests.push("check crop");
       return answer({ shows: shows.shift() ?? true });
+    }
+    if (question.includes("List the lettering")) {
+      requests.push("read lettering");
+      return answer({ lettering: scenario.lettering ?? [] });
     }
     requests.push("same product");
     return answer({
@@ -209,7 +239,17 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
     samPhrase: "blonde doll in blue dress",
     workDir,
   };
-  return { deps, request, requests, costs, pulses, samImagePrompts, workDir };
+  return {
+    deps,
+    request,
+    requests,
+    restores,
+    questions,
+    costs,
+    pulses,
+    samImagePrompts,
+    workDir,
+  };
 }
 
 test("restores the product, cuts it out and keeps the filmed crop", async (t) => {
@@ -220,11 +260,11 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
 
   assert.equal(cutout.method, "restored");
   assert.deepEqual(cutout.notes, []);
-  // Nobody is looked for when the restored photo is used.
-  assert.ok(!costs.includes("find people"));
   // Frame 1 of the clip, SAM's surest view: 4 s + 1/10 s.
   assert.equal(cutout.frameTimeSeconds, 4.1);
   assert.equal(cutout.samConfidence, 0.95);
+  // People in the frame are found, to take them out of the product's mask
+  // before it's measured; here "they" are the product itself, so it stays.
   assert.deepEqual(requests, [
     "pick frame",
     "box",
@@ -232,16 +272,21 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
     "sam video",
     "delete",
     "check crop",
+    "sam image",
+    "read lettering",
     "restore",
     "sam image",
     "sam image",
     "same product",
   ]);
+  assert.equal(samImagePrompts[0], "person");
   assert.deepEqual(costs, [
     "pick frame",
     "box product",
     "track product",
     "check crop",
+    "find people",
+    "read lettering",
     "restore photo",
     "cut out restored photo",
     "cut out restored photo",
@@ -347,7 +392,7 @@ test("uses the filmed product when the restored photo looks different twice", as
   assert.equal(requests.filter((r) => r === "restore").length, 2);
   assert.equal(cutout.method, "tracked");
   assert.equal(cutout.straightenedDegrees, 0);
-  // The filmed photo is checked for a presenter standing in front of it.
+  // The filmed photo was checked for a presenter standing behind it.
   assert.ok(costs.includes("find people"));
   assert.deepEqual(cutout.notes, [
     "The cleaned-up photo looked different (The doll's dress is red instead of blue), so the original is used.",
@@ -355,7 +400,7 @@ test("uses the filmed product when the restored photo looks different twice", as
   assert.equal((await sharp(cutout.cutoutPath!).metadata()).channels, 4);
 });
 
-test("uses the filmed product when Muse Image refuses the photo", async (t) => {
+test("uses the filmed product when Muse Image refuses the photo twice", async (t) => {
   const { deps, request, requests } = await setUp(t, {
     restoreStatus: 400,
     restoreMessage: "The image was blocked by our safety system.",
@@ -367,6 +412,8 @@ test("uses the filmed product when Muse Image refuses the photo", async (t) => {
   assert.deepEqual(cutout.notes, [
     "The photo couldn't be cleaned up, so the hand may still show.",
   ]);
+  // The filter isn't consistent, so a refusal gets a second try.
+  assert.equal(requests.filter((r) => r === "restore").length, 2);
   assert.ok(!requests.includes("same product"));
 });
 
@@ -390,8 +437,9 @@ test("finds the product by name when Muse can't box it, and shows the frame when
   const byName = await cutOutProduct(found.request, found.deps);
   assert.equal(byName.method, "restored");
   assert.ok(!found.requests.includes("sam video"));
-  // Once by name on the frame, then box and name on the restored photo.
-  assert.equal(found.requests.filter((r) => r === "sam image").length, 3);
+  // Once by name on the frame and once for people on it, then box and name
+  // on the restored photo.
+  assert.equal(found.requests.filter((r) => r === "sam image").length, 4);
 
   t.mock.restoreAll();
   const nothing = await setUp(t, {
@@ -407,4 +455,94 @@ test("finds the product by name when Muse can't box it, and shows the frame when
   const original = await sharp(none.originalPath).metadata();
   assert.deepEqual([original.width, original.height], [WIDTH, HEIGHT]);
   assert.ok((await readdir(nothing.workDir)).includes("original.jpg"));
+});
+
+test("completes a product the frame cut off, given room around it", async (t) => {
+  const { deps, request, restores, questions } = await setUp(t, {
+    atEdge: true,
+  });
+
+  const cutout = await cutOutProduct({ ...request, language: "Kazakh" }, deps);
+
+  assert.equal(cutout.method, "restored");
+  const [restore] = restores;
+  assert.match(
+    restore!.prompt,
+    /runs past the edges of the photo: complete the parts that are cut off/,
+  );
+  // The crop sent to Muse Image has room on every side.
+  const sent = await sharp(
+    Buffer.from(restore!.images[0]!.image_url.split(",")[1]!, "base64"),
+  ).metadata();
+  const original = await sharp(cutout.originalPath).metadata();
+  assert.ok(
+    sent.width! > original.width!,
+    `${sent.width} vs ${original.width}`,
+  );
+  assert.ok(sent.height! > original.height!);
+  // And the check knows the completed parts are expected.
+  assert.ok(
+    questions.some((q) => q.includes("runs past the edges of image 1")),
+  );
+});
+
+test("asks for completion only when the product reaches the frame's edge", async (t) => {
+  const { deps, request, restores } = await setUp(t);
+
+  await cutOutProduct(request, deps);
+
+  assert.doesNotMatch(restores[0]!.prompt, /runs past the edges/);
+});
+
+test("writes words the video hid as examples, a person's name as a default one", async (t) => {
+  const { deps, request, restores, questions } = await setUp(t, {
+    lettering: [
+      {
+        where: "top bar",
+        text: "KAZAKHSTAN",
+        readable: true,
+        person_name: false,
+      },
+      // Muse Spark's guess from the letters that showed is not used.
+      {
+        where: "name plate",
+        text: "Марат Оспанов",
+        readable: false,
+        person_name: true,
+      },
+      {
+        where: "maker mark",
+        text: "QAZ CRAFT",
+        readable: false,
+        person_name: false,
+      },
+      {
+        where: "back plate",
+        text: "Марат Оспанов",
+        readable: false,
+        person_name: true,
+      },
+    ],
+  });
+
+  const cutout = await cutOutProduct({ ...request, language: "Kazakh" }, deps);
+
+  assert.equal(cutout.method, "restored");
+  // A personalised product with a few pieces of lettering: all of them, so
+  // the half of the name that showed goes too.
+  const prompt = restores[0]!.prompt;
+  assert.match(
+    prompt,
+    /even partly visible ones: "KAZAKHSTAN" \(top bar\); "Айбек Нұрланұлы" \(name plate\); "QAZ CRAFT" \(maker mark\); "Ерлан Асқарұлы" \(back plate\)\./,
+  );
+  assert.doesNotMatch(prompt, /Оспанов/);
+  assert.deepEqual(cutout.notes, [
+    '"Айбек Нұрланұлы", "Ерлан Асқарұлы" on the photo are examples: the names were hidden in the video.',
+  ]);
+  // A caption Muse Image kept on the product fails the check.
+  assert.ok(
+    questions.some((q) =>
+      q.includes("shown in image 2 as if printed on the product is one"),
+    ),
+  );
 });

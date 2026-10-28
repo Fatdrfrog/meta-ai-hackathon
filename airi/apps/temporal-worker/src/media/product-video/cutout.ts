@@ -27,6 +27,7 @@ import {
   regionSharpness,
   rotateCutout,
   shotAround,
+  turnAndPad,
   tiltOf,
   type Rgb,
 } from "./images";
@@ -54,6 +55,7 @@ import {
   chooseBackdrop,
   cutoutForMuse,
   prefersLevel,
+  readLettering,
   restoreProductPhoto,
   type RestoreBackdrop,
   type RestoreDeps,
@@ -104,6 +106,8 @@ export type CutOutProductRequest = {
   name: string;
   /** Specific English noun phrase for SAM, e.g. "blonde doll in blue dress". */
   samPhrase: string;
+  /** The narration's language, so lettering Muse can't read gets an example in it. */
+  language?: string | null;
   /** Where clips, frames and the results are written. */
   workDir: string;
 };
@@ -264,49 +268,65 @@ export async function cutOutProduct(
     samConfidence: found.mask.confidence,
   };
 
-  const filmed = await cutOutWithMask(framePath, found.mask);
+  const mask = await withoutPeople(
+    { framePath, mask: found.mask },
+    deps,
+    options,
+  );
+  const filmed = await cutOutWithMask(framePath, mask);
+  // Levelled, and given room when the frame cut it off, before Muse Image
+  // restores it: a medal hanger filmed at a slant and running past the frame
+  // came back straight and whole that way, where levelling the finished
+  // cut-out had left its cut ends slanted.
+  const turn = await levelTurn(filmed, request.name, deps, options);
+  const completes = touchesEdge(mask.bounds, width, height);
   const restored = await restoreAndCheck(
     {
       crop,
+      input: await turnAndPad(crop.image, { degrees: turn, pad: completes }),
+      completes,
       name: request.name,
       samPhrase: request.samPhrase,
+      language: request.language ?? null,
       ...chooseBackdrop(await backdropShares(filmed)),
     },
     deps,
     options,
   );
-  const result = restored.cutout
-    ? { cutout: restored.cutout, method: "restored" as const, notes: [] }
-    : {
-        cutout: await filmedWithoutPeople(
-          { framePath, mask: found.mask, filmed },
-          deps,
-          options,
-        ),
-        method: found.method,
-        notes: [restored.note],
-      };
-  const level = await levelIfTurned(result.cutout, request.name, deps, options);
-  await writeFile(cutoutPath, level.image);
+  if (restored.cutout) {
+    await writeFile(cutoutPath, restored.cutout);
+    return {
+      ...base,
+      method: "restored",
+      notes: restored.notes,
+      straightenedDegrees: turn,
+    };
+  }
+  await writeFile(cutoutPath, turn ? await rotateCutout(filmed, turn) : filmed);
   return {
     ...base,
-    method: result.method,
-    notes: result.notes,
-    straightenedDegrees: level.degrees,
+    method: found.method,
+    notes: [restored.note],
+    straightenedDegrees: turn,
   };
 }
 
+// People's masks are grown by this share of the frame's longer side before
+// they come out of the product's (see subtractMasks).
+const PEOPLE_MARGIN_SHARE = 0.004;
+
 /**
- * The filmed cut-out without any person in the frame. In an edited promo the
- * presenter stands in front of the products, and SAM's mask of a product can
- * take in part of them. Kept as it was when that would leave less than half
- * of the product.
+ * The product's mask without any person in the frame. In an edited promo the
+ * presenter stands right behind the products, and SAM's mask of a product
+ * can take in part of them: a medal hanger's took in her white blouse, which
+ * hid the hanger's slant from levelling. Kept as it was when that would
+ * leave less than half of the product, as for clothes she wears.
  */
-async function filmedWithoutPeople(
-  request: { framePath: string; mask: Mask; filmed: Buffer },
+async function withoutPeople(
+  request: { framePath: string; mask: Mask },
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
-): Promise<Buffer> {
+): Promise<Mask> {
   const { width = 0, height = 0 } = await sharp(request.framePath).metadata();
   const { result, costUsd } = await whilePulsing(deps.pulse, async () =>
     (deps.segmentMetaImage ?? samImage)(
@@ -316,30 +336,36 @@ async function filmedWithoutPeople(
   );
   deps.onCost?.(costUsd, "find people");
   const people = recordsOfKind(result.records, "mask").map(maskFromRecord);
-  if (people.length === 0) return request.filmed;
-  const left = subtractMasks(request.mask, people, width, height);
-  if (!left || left.kept < 0.5) return request.filmed;
-  return cutOutWithMask(request.framePath, left.mask);
+  if (people.length === 0) return request.mask;
+  const left = subtractMasks(
+    request.mask,
+    people,
+    width,
+    height,
+    Math.max(2, Math.round(Math.max(width, height) * PEOPLE_MARGIN_SHARE)),
+  );
+  return left && left.kept >= 0.5 ? left.mask : request.mask;
 }
 
 /**
- * The cut-out turned to stand level when it is a box-like product filmed at
- * a slant, like a medal hanger held diagonally, and Muse Spark agrees it
- * looks right that way. Level means horizontal or vertical, whichever is
- * nearer: a quarter turn between them later needs no redrawing.
+ * Degrees to turn a product filmed at a slant, clockwise, so it stands
+ * level: when its outline is plainly box-like, like a medal hanger held
+ * diagonally, and Muse Spark agrees it looks right straight; 0 otherwise.
+ * Level means horizontal or vertical, whichever is nearer: a quarter turn
+ * between them later needs no redrawing.
  */
-async function levelIfTurned(
-  cutout: Buffer,
+async function levelTurn(
+  filmed: Buffer,
   product: string,
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
-): Promise<{ image: Buffer; degrees: number }> {
-  const tilt = await tiltOf(cutout);
-  if (tilt === null) return { image: cutout, degrees: 0 };
-  const level = await rotateCutout(cutout, -tilt);
-  return (await prefersLevel({ turned: cutout, level, product }, deps, options))
-    ? { image: level, degrees: -tilt }
-    : { image: cutout, degrees: 0 };
+): Promise<number> {
+  const tilt = await tiltOf(filmed);
+  if (tilt === null) return 0;
+  const level = await rotateCutout(filmed, -tilt);
+  return (await prefersLevel({ turned: filmed, level, product }, deps, options))
+    ? -tilt
+    : 0;
 }
 
 async function trackAndChoose(
@@ -421,18 +447,45 @@ async function trackAndChoose(
  */
 async function restoreAndCheck(
   request: {
+    /** The product as filmed, which the restored photo is checked against. */
     crop: { image: Buffer; box: Box };
+    /** What Muse Image restores: the crop levelled, with room to complete it. */
+    input: Buffer;
+    /** The product runs past the frame, and Muse is asked to complete it. */
+    completes: boolean;
     name: string;
     samPhrase: string;
+    language: string | null;
     backdrop: RestoreBackdrop;
     holes: boolean;
   },
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
 ): Promise<
-  { cutout: Buffer; note?: undefined } | { cutout: null; note: string }
+  | { cutout: Buffer; note?: undefined; notes: string[] }
+  | { cutout: null; note: string }
 > {
   const { crop } = request;
+  const input = await sharp(request.input).metadata();
+  const lettering = await readLettering(
+    { crop: crop.image, product: request.name, language: request.language },
+    deps,
+    options,
+  );
+  // The owner should know which names on the photo are made up. Other
+  // hidden words are Muse Spark's guess, like "KAZAKHSTAN" under a sticker.
+  const examples = [
+    ...new Set(
+      lettering
+        .filter((piece) => !piece.readable && piece.personName)
+        .map((piece) => `"${piece.text}"`),
+    ),
+  ];
+  const notes = examples.length
+    ? [
+        `${examples.join(", ")} on the photo ${examples.length === 1 ? "is an example: the name was" : "are examples: the names were"} hidden in the video.`,
+      ]
+    : [];
   let note = "";
   // Muse Image doesn't answer the same way twice: on the edited promo, one
   // restore of a medal hanger painted the video's caption onto it and the
@@ -442,24 +495,26 @@ async function restoreAndCheck(
     try {
       restored = await restoreProductPhoto(
         {
-          crop: crop.image,
-          width: crop.box.right - crop.box.left,
-          height: crop.box.bottom - crop.box.top,
+          crop: request.input,
+          width: input.width ?? 1,
+          height: input.height ?? 1,
           product: request.name,
           backdrop: request.backdrop,
+          completes: request.completes,
+          lettering,
         },
         deps,
         options,
       );
     } catch (error) {
-      // Refused by a safety filter: show the product as filmed. Anything
-      // else, like a wrong model name, fails loudly instead of quietly
-      // downgrading every photo.
+      // Refused by a safety filter: tried once more, then the product is
+      // shown as filmed. The filter isn't consistent: a medal hanger's
+      // refused restore went through three times out of three replayed.
+      // Anything else, like a wrong model name, fails loudly instead of
+      // quietly downgrading every photo.
       if (isMetaModelRefusal(error)) {
-        return {
-          cutout: null,
-          note: "The photo couldn't be cleaned up, so the hand may still show.",
-        };
+        note = "The photo couldn't be cleaned up, so the hand may still show.";
+        continue;
       }
       throw error;
     }
@@ -480,6 +535,7 @@ async function restoreAndCheck(
     const cutout = await cutOutWithMask(restored, masks, {
       backdrop,
       holes: request.holes,
+      refine: true,
     });
 
     // The check sees the cut-out a buyer will see, so a part lost by the cut
@@ -489,11 +545,12 @@ async function restoreAndCheck(
         original: crop.image,
         restored: await cutoutForMuse(cutout),
         product: request.name,
+        completed: request.completes,
       },
       deps,
       options,
     );
-    if (check.same) return { cutout };
+    if (check.same) return { cutout, notes };
     note = `The cleaned-up photo looked different${check.difference ? ` (${check.difference.replace(/\.$/, "")})` : ""}, so the original is used.`;
   }
   return { cutout: null, note };

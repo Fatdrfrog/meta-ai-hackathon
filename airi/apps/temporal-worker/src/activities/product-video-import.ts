@@ -56,13 +56,14 @@ function mongoStore(
   return {
     async loadImport() {
       const doc = await ProductVideoImport.findOne(importFilter)
-        .select("status video transcript presenter")
+        .select("status video transcript language presenter")
         .lean();
       if (!doc) return null;
       return {
         status: doc.status,
         video: { bucket: doc.video.bucket, path: doc.video.path },
         transcript: doc.transcript ?? null,
+        language: doc.language ?? null,
         presenter: doc.presenter
           ? {
               momentSeconds: doc.presenter.momentSeconds,

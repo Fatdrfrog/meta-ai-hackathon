@@ -154,6 +154,7 @@ async function setUp(
     transcribe: 0,
     inventory: 0,
     cutOut: [] as string[],
+    languages: [] as Array<string | null>,
     presenter: 0,
     emits: [] as string[],
     spend: [] as string[],
@@ -197,6 +198,7 @@ async function setUp(
             path: "workspaces/w1/creative-assets/video/a1/shelf.mov",
           },
           transcript: state.import.transcript as string | null,
+          language: (state.import.language as string | undefined) ?? null,
           presenter: state.import.presenter
             ? {
                 momentSeconds: (
@@ -309,6 +311,7 @@ async function setUp(
     },
     cutOut: async (request, deps) => {
       calls.cutOut.push(request.name);
+      calls.languages.push(request.language ?? null);
       deps?.onCost?.(0.05, "restore photo");
       return (options.cutOut ?? defaultCutOut)(request.name, request.workDir);
     },
@@ -408,6 +411,8 @@ test("runs an import from video to products with photos, saving each step", asyn
   ]);
   assert.ok(calls.spend.includes("reserve photo:p1:0:attempt-1 meta 150000"));
   assert.ok(calls.spend.includes("settle photo:p1:0:attempt-1 50000"));
+  // Lettering Muse can't read gets an example in the narration's language.
+  assert.deepEqual(calls.languages, ["kk", "kk", "kk"]);
 });
 
 test("photographs every option of a product shown in several designs", async (t) => {
@@ -615,6 +620,7 @@ test("a finished import does nothing again", async (t) => {
     status: "ready",
     video: { bucket: "b", path: "p" },
     transcript: TRANSCRIPT,
+    language: "kk",
     presenter: { momentSeconds: 4, done: false },
   });
 
