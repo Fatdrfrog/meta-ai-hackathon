@@ -22,7 +22,8 @@ On October 27 the project moved inside airi.chat, where shop owners already run 
 - **Videos that don't follow the brief:** owners don't always film the way they're asked. An edited promo with cuts, a presenter, subtitles and price stickers works too: tracking never crosses a cut, Muse checks every crop shows the product before it's restored, subtitles, people and neighbouring items are removed, a product filmed at a slant is levelled to horizontal or vertical, ends the frame cut off are completed to match, a buyer's name hidden under a sticker becomes a default name the owner is told about, the background shows through holes and openwork, prices only written on screen and "from" prices are read and flagged, and the person presenting is kept as a cut-out, without the subtitles over them, to reuse later.
 - **Upload on the Products page:** choose or drop a video; it goes straight to storage with its progress shown, after the page checks it's a video of 5 minutes at most. Then the page follows the import live: each stage, and the products it finds landing on a dashed shelf as their photos are made. It also shows imports started elsewhere, and why one failed.
 - **Swipe-through review:** one card per product, with a round clip of the owner saying its price. What Airi isn't sure of is in red with why. Swipe right (or →) to add it to the shelf, left (or ←) to skip, undo, or accept all; tap the name or price to fix it, or choose which item the shelf shows.
-- **Next:** WhatsApp carousel and order-form drafts, and sending a video to Airi on WhatsApp.
+- **WhatsApp drafts:** after the review, one tap makes a carousel template (the products on white cards, opened in airi's template editor to send to Meta) or an order form (saved on WhatsApp as a draft Flow to publish), both written for buyers in the language the owner spoke.
+- **Next:** sending a video to Airi on WhatsApp.
 
 **Prototype** (root):
 

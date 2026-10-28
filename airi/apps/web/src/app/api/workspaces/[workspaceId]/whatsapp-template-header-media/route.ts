@@ -1,12 +1,8 @@
 import { verifyWorkspaceAccess } from "@/lib/sources/utils";
-import {
-  ensureBusinessMediaBucket,
-  resolveBusinessMediaBucket,
-} from "@/lib/media/business-media-bucket";
+import { ensureBusinessMediaBucket } from "@/lib/media/business-media-bucket";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   createReservedSupabaseUpload,
-  storeSupabaseWorkspaceBuffer,
   StorageQuotaError,
 } from "@icecore/airi-runtime/storage-quota";
 import { createClient } from "@/lib/supabase/server";
@@ -17,7 +13,11 @@ import {
   type WhatsAppTemplateHeaderMediaFormat,
 } from "@/lib/whatsapp/media-types";
 import { getWhatsAppTemplateHeaderMediaValidationIssue } from "@/lib/whatsapp/templates/header-media-constraints";
-import crypto from "crypto";
+import {
+  createWhatsAppTemplateHeaderMediaPath,
+  getWhatsAppTemplateHeaderMediaBucket,
+  storeWhatsAppTemplateHeaderMedia,
+} from "@/lib/whatsapp/templates/header-media-storage";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeStorageFilename } from "@icecore/shared/lib/storage-filename";
 
@@ -44,15 +44,6 @@ const MEDIA_TYPE_BY_FORMAT: Record<
   VIDEO: "video",
   DOCUMENT: "document",
 };
-
-function sanitizePathSegment(segment: string): string {
-  return (
-    segment
-      .replace(/[^a-zA-Z0-9_-]/g, "-")
-      .replace(/-+/g, "-")
-      .slice(0, 80) || "workspace"
-  );
-}
 
 function parseHeaderFormat(
   value: FormDataEntryValue | null
@@ -123,22 +114,6 @@ function getMetadataValidationError(params: {
   }
 
   return null;
-}
-
-function createStoragePath(params: {
-  fileName: string;
-  workspaceId: string;
-}): string {
-  const random = crypto.randomBytes(8).toString("hex");
-  return `whatsapp-template-headers/${sanitizePathSegment(
-    params.workspaceId
-  )}/${Date.now()}-${random}-${params.fileName}`;
-}
-
-function getBucketName(): string {
-  return resolveBusinessMediaBucket(
-    process.env.SUPABASE_WHATSAPP_TEMPLATE_MEDIA_BUCKET
-  );
 }
 
 export const runtime = "nodejs";
@@ -214,9 +189,9 @@ export async function POST(
         );
       }
 
-      const bucketName = getBucketName();
+      const bucketName = getWhatsAppTemplateHeaderMediaBucket();
       await ensureBusinessMediaBucket(supabaseAdmin.storage, bucketName);
-      const storagePath = createStoragePath({
+      const storagePath = createWhatsAppTemplateHeaderMediaPath({
         fileName: safeName,
         workspaceId,
       });
@@ -287,33 +262,19 @@ export async function POST(
       );
     }
 
-    const bucketName = getBucketName();
-    await ensureBusinessMediaBucket(supabaseAdmin.storage, bucketName);
-    const storagePath = createStoragePath({
+    const stored = await storeWhatsAppTemplateHeaderMedia({
+      workspaceId,
       fileName: safeName,
-      workspaceId,
-    });
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await storeSupabaseWorkspaceBuffer({
-      storage: supabaseAdmin.storage,
-      workspaceId,
-      bucket: bucketName,
-      path: storagePath,
-      buffer,
+      buffer: Buffer.from(await file.arrayBuffer()),
       mimeType,
     });
-
-    const {
-      data: { publicUrl },
-    } = supabaseAdmin.storage.from(bucketName).getPublicUrl(storagePath);
 
     return NextResponse.json({
       success: true,
       media: {
-        url: publicUrl,
-        bucket: bucketName,
-        path: storagePath,
+        url: stored.url,
+        bucket: stored.bucket,
+        path: stored.path,
         mimeType,
         fileName: file.name || safeName,
         fileSize: file.size,

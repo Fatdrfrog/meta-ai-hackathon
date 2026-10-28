@@ -70,6 +70,8 @@ jobs:
           src/lib/airi/__tests__/llm-pricing.test.ts
           src/lib/airi/__tests__/llm-analytics-events.test.ts
           src/lib/google/gcs-resumable-upload.test.ts
+          "src/app/api/workspaces/\[workspaceId\]/whatsapp-template-header-media"
+          src/components/whatsapp-templates/template-editor-draft.test.ts
       - name: Type checks
         env:
           NODE_OPTIONS: --max-old-space-size=6144

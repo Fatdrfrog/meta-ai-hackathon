@@ -32,6 +32,7 @@ import {
   type ReactNode,
 } from "react";
 import { NameInitial } from "./product-shelf";
+import { WhatsAppDrafts } from "./product-whatsapp-drafts";
 import { useProductReview, type ReviewMove } from "./use-product-review";
 
 const COPY = PRODUCTS_COPY.review;
@@ -203,6 +204,8 @@ export function ProductReview({
   } else if (!top) {
     content = (
       <ReviewDone
+        workspaceId={workspaceId}
+        importId={importId}
         products={products}
         canUndo={lastMove !== null}
         onUndo={undo}
@@ -1152,13 +1155,17 @@ function OptionPicker({
   );
 }
 
-/** Once every product is checked: what went on the shelf. */
+/** Once every product is checked: what went on the shelf, and what to make of it on WhatsApp. */
 function ReviewDone({
+  workspaceId,
+  importId,
   products,
   canUndo,
   onUndo,
   onClose,
 }: {
+  workspaceId: string;
+  importId: string;
   products: DraftProductRecord[];
   canUndo: boolean;
   onUndo: () => void;
@@ -1192,6 +1199,15 @@ function ReviewDone({
           </Button>
         ) : null}
       </div>
+      {added.length > 0 ? (
+        <div className="mt-12 w-full">
+          <WhatsAppDrafts
+            workspaceId={workspaceId}
+            importId={importId}
+            added={added}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -18,6 +18,10 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   import_unavailable: "The import couldn't be started",
   product_not_found: "That product wasn't found",
   save_failed: "The change couldn't be saved",
+  whatsapp_not_connected: "No WhatsApp number is connected to this workspace",
+  not_enough_products: "Not enough products with photos for this draft",
+  storage_full: "The company's media storage is full",
+  draft_failed: "The draft couldn't be made",
 };
 
 export const productsJson = (data: unknown, status = 200) =>

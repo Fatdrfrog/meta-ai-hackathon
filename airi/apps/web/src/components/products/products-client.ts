@@ -7,8 +7,12 @@ import {
   PRODUCT_VIDEO_MAX_BYTES,
   PRODUCT_VIDEO_MAX_SECONDS,
   type DraftProductRecord,
+  type ProductCarouselDraft,
+  type ProductCarouselDraftResponse,
   type ProductChanges,
+  type ProductOrderFormResponse,
   type ProductReviewResponse,
+  type ProductsErrorCode,
   type ProductsAccessResponse,
   type ProductsListResponse,
   type ProductUpdateResponse,
@@ -49,6 +53,53 @@ async function sendJson<T>(url: string, method: string, body: unknown) {
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return (await response.json()) as T;
+}
+
+/** Why a WhatsApp draft couldn't be made, as the API's code; "failed" for anything else. */
+export class ProductDraftError extends Error {
+  constructor(readonly code: ProductsErrorCode | "failed") {
+    super(`Product draft failed: ${code}`);
+    this.name = "ProductDraftError";
+  }
+}
+
+async function postDraft<T>(url: string): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(url, { method: "POST" });
+  } catch {
+    throw new ProductDraftError("failed");
+  }
+  const data = (await response.json().catch(() => null)) as
+    | (T & { code?: ProductsErrorCode })
+    | null;
+  if (!response.ok || !data)
+    throw new ProductDraftError(data?.code ?? "failed");
+  return data;
+}
+
+/** The cards of a WhatsApp carousel made from the products an import added. */
+export async function prepareProductCarousel(
+  workspaceId: string,
+  importId: string
+): Promise<ProductCarouselDraft> {
+  const data = await postDraft<ProductCarouselDraftResponse>(
+    `${productImportUrl(workspaceId, importId)}/carousel`
+  );
+  if (!Array.isArray(data.draft?.cards)) throw new ProductDraftError("failed");
+  return data.draft;
+}
+
+/** Saves an order form for the products an import added, as a draft Flow. */
+export async function createProductOrderForm(
+  workspaceId: string,
+  importId: string
+): Promise<ProductOrderFormResponse> {
+  const data = await postDraft<ProductOrderFormResponse>(
+    `${productImportUrl(workspaceId, importId)}/order-form`
+  );
+  if (typeof data.flow?.id !== "string") throw new ProductDraftError("failed");
+  return data;
 }
 
 /** Changes a product as the owner checks it; answers with it as the review shows it. */

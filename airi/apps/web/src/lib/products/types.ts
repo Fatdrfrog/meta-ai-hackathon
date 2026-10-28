@@ -174,6 +174,37 @@ export type ProductReviewRequest = {
 export type ProductReviewResponse = { changed: number };
 
 /**
+ * A carousel template made from the products a video added to the shelf,
+ * for the owner to finish in airi's template editor and send to Meta.
+ */
+export type ProductCarouselDraft = {
+  /** A template name Meta takes, such as "products_20261028_1432". */
+  name: string;
+  /** Meta's code for the language the owner spoke: kk, ru or en. */
+  language: string;
+  /** The message above the cards. */
+  bodyText: string;
+  /** One per product: its picture on white (a public link), name and price, and an order button. */
+  cards: Array<{
+    productId: string;
+    imageUrl: string;
+    bodyText: string;
+    buttonText: string;
+  }>;
+  /** Added products not on a card: past the 10 a carousel holds, or without a photo. */
+  leftOut: number;
+};
+
+export type ProductCarouselDraftResponse = { draft: ProductCarouselDraft };
+
+/** The order form, saved on Meta as a draft Flow for the owner to publish. */
+export type ProductOrderFormResponse = {
+  flow: { id: string; name: string };
+  /** Added products not on the form, past the 20 it lists. */
+  leftOut: number;
+};
+
+/**
  * The imports the Products page shows, newest first: running ones, finished
  * ones with products left to check, and those that recently failed or found
  * nothing.
@@ -197,6 +228,10 @@ export const PRODUCTS_ERROR_CODES = [
   "import_unavailable",
   "product_not_found",
   "save_failed",
+  "whatsapp_not_connected",
+  "not_enough_products",
+  "storage_full",
+  "draft_failed",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 

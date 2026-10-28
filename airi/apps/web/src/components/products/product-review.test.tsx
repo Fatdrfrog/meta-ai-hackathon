@@ -14,6 +14,10 @@ import { ProductReview } from "./product-review";
 // Checking what a video found, one card at a time: deciding, undoing,
 // accepting the rest, and fixing a product on its card.
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
 const BASE = "/api/workspaces/workspace-1";
 const IMPORT_URL = `${BASE}/products/imports/import-1`;
 type Route = (init?: RequestInit) => Promise<unknown> | unknown;
@@ -262,6 +266,14 @@ describe("ProductReview", () => {
     );
     const back = screen.getByRole("button", { name: "Back to products" });
     expect(back).toHaveFocus();
+    // What was added can go to WhatsApp next.
+    expect(screen.getByText("Share them on WhatsApp")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Make a carousel" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Make an order form" })
+    ).toBeInTheDocument();
     fireEvent.click(back);
     expect(onClose).toHaveBeenCalled();
   });

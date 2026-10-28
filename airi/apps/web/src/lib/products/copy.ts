@@ -86,6 +86,40 @@ export const PRODUCTS_COPY = {
       skipped === 1 ? "1 skipped." : `${skipped} skipped.`,
     backToProducts: "Back to products",
   },
+
+  // What the owner can make on WhatsApp from the products a review added.
+  drafts: {
+    lead: "Share them on WhatsApp",
+    carousel: "WhatsApp carousel",
+    carouselAbout:
+      "Buyers swipe through your products in one message. It opens in Templates for you to check and send to Meta.",
+    carouselTooFew: "A carousel needs at least 2 products with photos.",
+    carouselFirstTen: "The first 10 go on the cards.",
+    makeCarousel: "Make a carousel",
+    makingCarousel: "Making the cards…",
+    openingTemplates: "Opening Templates…",
+    replaceNewTemplate:
+      "You have a new template you haven't saved. Replace it with this carousel?",
+    replace: "Replace it",
+    keep: "Keep it",
+    orderForm: "Order form",
+    orderFormAbout:
+      "Buyers tick what they want and leave their name and address. It's saved as a draft in WhatsApp Flows for you to check and publish.",
+    orderFormFirstTwenty: "The form lists the first 20.",
+    makeOrderForm: "Make an order form",
+    makingOrderForm: "Saving the form to WhatsApp…",
+    orderFormSaved: (name: string) => `Saved as a draft: ${name}.`,
+    openFlows: "Open WhatsApp Flows",
+    connectWhatsApp: "Connect WhatsApp",
+    errors: {
+      whatsapp_not_connected: "Connect your WhatsApp number first.",
+      not_enough_products:
+        "These products don't have photos to put on the cards.",
+      storage_full:
+        "Your company's media storage is full. Delete some files in Assets, then try again.",
+      failed: "That didn't work. Try again.",
+    },
+  },
   uploadErrors: {
     not_a_video: "That file isn't a video. Choose an MP4 or MOV.",
     too_big: `The video is larger than ${MAX_GB} GB. Film a shorter one and upload it.`,
