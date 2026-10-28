@@ -13,6 +13,9 @@ function Progress({
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
+      // Radix reads it for aria-valuenow; without it, every bar is announced
+      // as indeterminate.
+      value={value}
       className={cn(
         "relative flex h-2 w-full items-center overflow-x-hidden rounded-2xl bg-muted",
         className

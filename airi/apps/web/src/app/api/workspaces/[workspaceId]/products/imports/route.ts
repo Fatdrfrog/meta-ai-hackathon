@@ -9,12 +9,35 @@ import {
 import {
   createProductVideoImport,
   findUploadedVideo,
+  listShownProductVideoImports,
 } from "@/lib/products/imports";
+import type { ProductVideoImportsResponse } from "@/lib/products/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type Context = { params: Promise<{ workspaceId: string }> };
+
+/**
+ * The imports the Products page shows: running ones, finished ones with
+ * products left to check, and those that recently failed or found nothing.
+ */
+export async function GET(_request: Request, { params }: Context) {
+  const { workspaceId } = await params;
+  try {
+    const access = await requireProductsAdmin(workspaceId);
+    if ("response" in access) return access.response;
+    await connectDB();
+    const imports = await listShownProductVideoImports(workspaceId);
+    return productsJson({ imports } satisfies ProductVideoImportsResponse);
+  } catch (error) {
+    logger.error("[Products API] imports GET failed", error, {
+      event: "products.imports_list_failed",
+      workspaceId,
+    });
+    return productsFail("load_failed", 503);
+  }
+}
 
 /**
  * Starts importing products from a video the owner uploaded to the

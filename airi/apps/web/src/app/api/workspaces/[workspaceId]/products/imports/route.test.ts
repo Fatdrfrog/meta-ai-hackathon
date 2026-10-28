@@ -5,6 +5,7 @@ const mockFeatureEnabled = jest.fn();
 const mockConnect = jest.fn();
 const mockFindVideo = jest.fn();
 const mockCreateImport = jest.fn();
+const mockListImports = jest.fn();
 const mockLoggerError = jest.fn();
 
 jest.mock("@/lib/auth/workspace-membership", () => ({
@@ -25,9 +26,11 @@ jest.mock("@/lib/logger", () => ({
 jest.mock("@/lib/products/imports", () => ({
   findUploadedVideo: (...args: unknown[]) => mockFindVideo(...args),
   createProductVideoImport: (...args: unknown[]) => mockCreateImport(...args),
+  listShownProductVideoImports: (...args: unknown[]) =>
+    mockListImports(...args),
 }));
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 const workspaceId = "workspace-1";
 const assetId = "651f1f77bcf86cd799439051";
@@ -115,6 +118,59 @@ describe("product imports API", () => {
       "[Products API] import POST failed",
       expect.any(Error),
       expect.objectContaining({ event: "products.import_create_failed" })
+    );
+  });
+});
+
+describe("listing product imports", () => {
+  const get = () =>
+    GET(
+      new Request(
+        `https://local.test/api/workspaces/${workspaceId}/products/imports`
+      ),
+      context
+    );
+  const running = {
+    id: "import-1",
+    status: "processing",
+    stage: "watching",
+    productTotal: 0,
+    photoTotal: 0,
+    photoDone: 0,
+    errorCode: null,
+    presenter: null,
+    createdAt: "2026-10-28T09:00:00.000Z",
+    finishedAt: null,
+  };
+
+  it("lists the imports the Products page shows, for an admin", async () => {
+    mockListImports.mockResolvedValue([running]);
+
+    const response = await get();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ imports: [running] });
+    expect(mockListImports).toHaveBeenCalledWith(workspaceId);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("refuses managers before reading anything", async () => {
+    allowRole("manager");
+    expect((await get()).status).toBe(403);
+    expect(mockListImports).not.toHaveBeenCalled();
+  });
+
+  it("answers 503 and logs when the list can't be read", async () => {
+    mockListImports.mockRejectedValue(new Error("Mongo down"));
+
+    const response = await get();
+
+    expect(response.status).toBe(503);
+    expect((await response.json()).code).toBe("load_failed");
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      "[Products API] imports GET failed",
+      expect.any(Error),
+      expect.objectContaining({ event: "products.imports_list_failed" })
     );
   });
 });

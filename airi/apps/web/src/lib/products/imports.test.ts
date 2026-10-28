@@ -1,6 +1,8 @@
 const mockImportCreate = jest.fn();
 const mockImportUpdate = jest.fn();
 const mockImportFindOne = jest.fn();
+const mockImportFind = jest.fn();
+const mockProductDistinct = jest.fn();
 const mockAssetFindOne = jest.fn();
 const mockStart = jest.fn();
 const mockListImportProducts = jest.fn();
@@ -11,6 +13,12 @@ jest.mock("@/models/product-video-import", () => ({
     create: (...args: unknown[]) => mockImportCreate(...args),
     updateOne: (...args: unknown[]) => mockImportUpdate(...args),
     findOne: (...args: unknown[]) => mockImportFindOne(...args),
+    find: (...args: unknown[]) => mockImportFind(...args),
+  },
+}));
+jest.mock("@/models/workspace-product", () => ({
+  WorkspaceProduct: {
+    distinct: (...args: unknown[]) => mockProductDistinct(...args),
   },
 }));
 jest.mock("@/models/creative-asset", () => ({
@@ -38,6 +46,7 @@ jest.mock("@/lib/logger", () => ({
 import {
   createProductVideoImport,
   findUploadedVideo,
+  listShownProductVideoImports,
   loadProductVideoImport,
 } from "./imports";
 
@@ -222,5 +231,105 @@ describe("loadProductVideoImport", () => {
     mockImportFindOne.mockReturnValue(query(null));
     expect(await loadProductVideoImport("workspace-2", "x")).toBeNull();
     expect(mockListImportProducts).not.toHaveBeenCalled();
+  });
+});
+
+describe("listShownProductVideoImports", () => {
+  const now = new Date("2026-10-28T12:00:00.000Z");
+  const hoursAgo = (hours: number) =>
+    new Date(now.getTime() - hours * 60 * 60 * 1000);
+  const listQuery = (result: unknown) => ({
+    sort: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockResolvedValue(result),
+  });
+
+  it("shows running imports, ones with products to check, and a day of failures", async () => {
+    const found = listQuery([
+      { _id: "running", status: "processing", stage: "cutting" },
+      { _id: "queued", status: "queued" },
+      {
+        _id: "to-check",
+        status: "ready",
+        productTotal: 4,
+        finishedAt: hoursAgo(50),
+      },
+      {
+        _id: "checked",
+        status: "ready",
+        productTotal: 4,
+        finishedAt: hoursAgo(2),
+      },
+      {
+        _id: "nothing-found",
+        status: "ready",
+        productTotal: 0,
+        finishedAt: hoursAgo(2),
+      },
+      {
+        _id: "nothing-found-long-ago",
+        status: "ready",
+        productTotal: 0,
+        finishedAt: hoursAgo(30),
+      },
+      {
+        _id: "failed",
+        status: "failed",
+        errorCode: "video_too_long",
+        finishedAt: hoursAgo(3),
+      },
+      {
+        _id: "failed-long-ago",
+        status: "failed",
+        finishedAt: hoursAgo(25),
+      },
+    ]);
+    mockImportFind.mockReturnValue(found);
+    mockProductDistinct.mockResolvedValue(["to-check"]);
+
+    const shown = await listShownProductVideoImports("workspace-1", now);
+
+    expect(shown.map(entry => entry.id)).toEqual([
+      "running",
+      "queued",
+      "to-check",
+      "nothing-found",
+      "failed",
+    ]);
+    expect(shown[4]).toMatchObject({
+      status: "failed",
+      errorCode: "video_too_long",
+    });
+    // The last week of this workspace, newest first.
+    expect(mockImportFind).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      createdAt: { $gte: new Date("2026-10-21T12:00:00.000Z") },
+    });
+    expect(found.sort).toHaveBeenCalledWith({ createdAt: -1 });
+    // Draft products are looked for only among finished imports.
+    expect(mockProductDistinct).toHaveBeenCalledWith("importId", {
+      workspaceId: "workspace-1",
+      importId: {
+        $in: ["to-check", "checked", "nothing-found", "nothing-found-long-ago"],
+      },
+      status: "draft",
+    });
+  });
+
+  it("shows a few at most, and asks for no drafts when nothing has finished", async () => {
+    mockImportFind.mockReturnValue(
+      listQuery(
+        Array.from({ length: 7 }, (_, index) => ({
+          _id: `running-${index}`,
+          status: "processing",
+        }))
+      )
+    );
+
+    const shown = await listShownProductVideoImports("workspace-1", now);
+
+    expect(shown).toHaveLength(5);
+    expect(mockProductDistinct).not.toHaveBeenCalled();
   });
 });

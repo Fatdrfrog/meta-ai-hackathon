@@ -21,13 +21,27 @@ const SET_DOWN_STAGGERED = 8;
 
 export function ProductShelf({
   products,
+  label = PRODUCTS_COPY.title,
+  draft = false,
+  pendingIds,
 }: {
   products: WorkspaceProductRecord[];
+  label?: string;
+  /** Products found in a video but not on the shelf yet: a dashed rail. */
+  draft?: boolean;
+  /** Products whose photo is still being made. */
+  pendingIds?: ReadonlySet<string>;
 }) {
   return (
-    <ul className={SHELF_GRID} aria-label={PRODUCTS_COPY.title}>
+    <ul className={SHELF_GRID} aria-label={label}>
       {products.map((product, index) => (
-        <ShelfItem key={product.id} product={product} index={index} />
+        <ShelfItem
+          key={product.id}
+          product={product}
+          index={index}
+          draft={draft}
+          pending={pendingIds?.has(product.id) ?? false}
+        />
       ))}
     </ul>
   );
@@ -36,14 +50,20 @@ export function ProductShelf({
 function ShelfItem({
   product,
   index,
+  draft,
+  pending,
 }: {
   product: WorkspaceProductRecord;
   index: number;
+  draft: boolean;
+  pending: boolean;
 }) {
   return (
     <li className="flex min-w-0 flex-col">
       <div className={STAGE}>
-        {product.imageUrl ? (
+        {pending ? (
+          <PendingPhoto />
+        ) : product.imageUrl ? (
           // Keyed by URL: a refreshed signed link is tried again even after
           // the old one expired and failed.
           <ShelfPhoto
@@ -56,7 +76,7 @@ function ShelfItem({
           <NameInitial name={product.name} />
         )}
       </div>
-      <ShelfRail />
+      <ShelfRail dashed={draft} />
       <div className="flex flex-col px-3 pt-3 text-center">
         <p
           className="order-last mt-0.5 line-clamp-2 text-[13px] leading-snug break-words text-muted-foreground"
@@ -140,11 +160,24 @@ function NameInitial({ name }: { name: string }) {
   );
 }
 
-function ShelfRail() {
+/** Where a product's photo lands once it's made. */
+function PendingPhoto() {
   return (
     <div
       aria-hidden="true"
-      className="h-3 border-t border-foreground/20 bg-linear-to-b from-foreground/[0.07] to-transparent"
+      className="h-24 w-2/5 animate-pulse rounded-xl bg-foreground/[0.06]"
+    />
+  );
+}
+
+function ShelfRail({ dashed = false }: { dashed?: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "h-3 border-t border-foreground/20 bg-linear-to-b from-foreground/[0.07] to-transparent",
+        dashed && "border-dashed"
+      )}
     />
   );
 }

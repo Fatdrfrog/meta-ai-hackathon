@@ -19,7 +19,9 @@ The project started as a standalone prototype and, on October 27, moved inside [
 | Buyer | **WhatsApp**, on the shop's own number, connected to airi.chat | See products in carousels, ask, order |
 | Judges | The prototype's **web chat** | The AI seller from the prototype, without needing a phone number |
 
-Built so far in airi.chat: the Products section, the Meta Model API client, the pipeline and the import job that runs it. Uploading from the Products page, the review, the WhatsApp drafts and sending a video to Airi on WhatsApp come next, in that order.
+Built so far in airi.chat: the Products section, the Meta Model API client, the pipeline, the import job that runs it, and uploading from the Products page with the import followed live. The review, the WhatsApp drafts and sending a video to Airi on WhatsApp come next, in that order.
+
+On the Products page the owner chooses a video or drops it on the page. The page checks it first (a video, at most 5 minutes and 1 GB, the import's own limits), then uploads it the way the Assets page does, straight to storage through a signed link, showing the bytes sent. Once the import starts, the page follows it: the job announces each step on the workspace's realtime channel, and the page also asks again every 10 seconds while it runs, in case an event is lost. The products the job finds stand on a dashed shelf, each photo landing as it's made, until the owner checks them. The page shows imports started anywhere (another device, or WhatsApp later): running ones, ones with products left to check, and for a day those that failed or found nothing, with why.
 
 The owner never makes decisions inside WhatsApp. Since October 1, 2026, Meta bills every service message after the first 1,000 per number each month, so a review dialogue in chat would cost money on every tap. The Products section does the same job for free.
 
@@ -82,7 +84,8 @@ In airi.chat:
 - `airi/packages/airi-runtime/src/meta-model-api.ts`, `meta-sam.ts`: the Meta Model API client (Muse Spark, Muse Image, SAM 3.1 through `@meta-sam/parser`, file upload), with timeouts and retries Temporal can rely on.
 - `airi/apps/temporal-worker/src/media/product-video/`: the pipeline above, and `import-job.ts`, which runs it for one import.
 - `airi/apps/temporal-worker/src/workflows/product-video-import.ts` and `activities/product-video-import.ts`: the Temporal workflow and its activity, on the media queue.
-- `airi/apps/web/src/lib/products/imports.ts` and `app/api/workspaces/[workspaceId]/products/imports/`: starting an import from an uploaded video, and following it.
+- `airi/apps/web/src/lib/products/imports.ts` and `app/api/workspaces/[workspaceId]/products/imports/`: starting an import from an uploaded video, listing the imports the Products page shows, and following one.
+- `airi/apps/web/src/components/products/products-client.ts`, `use-product-video-upload.ts`, `use-product-imports.ts`, `product-video-intake.tsx`: checking and uploading a video, and following its import live.
 - `airi/supabase/migrations/20261028090000_workspace_ai_spend_meta_provider.sql`: lets Meta calls count against a workspace's AI spend.
 - `airi/apps/web/src/components/products/`, `lib/products/`, `models/workspace-product.ts`: the Products section and its data.
 

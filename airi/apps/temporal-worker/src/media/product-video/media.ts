@@ -1,5 +1,6 @@
 import { mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { PRODUCT_VIDEO_MAX_SECONDS } from "@icecore/temporal";
 import { runProcess, type ProcessRunInput } from "../process-runner";
 import { probeVideoFile } from "../video-probe";
 import { PULSE_INTERVAL_MS } from "./pulse";
@@ -20,7 +21,7 @@ export type ProductVideoMediaDeps = {
 };
 
 /** Longer videos cost too much to read, and are rarely one shelf. */
-export const MAX_PRODUCT_VIDEO_SECONDS = 300;
+export const MAX_PRODUCT_VIDEO_SECONDS = PRODUCT_VIDEO_MAX_SECONDS;
 const FFMPEG_TIMEOUT_MS = 5 * 60_000;
 // Local files only, in the containers phones and WhatsApp send.
 const INPUT_GUARD = [

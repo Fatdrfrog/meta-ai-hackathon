@@ -7,6 +7,7 @@ import {
 import {
   PRODUCT_VIDEO_IMPORT_MAX_PHOTOS,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
+  PRODUCT_VIDEO_MAX_BYTES,
   type ProductPhotoMethod,
   type ProductTextSource,
   type ProductVideoImportErrorCode,
@@ -31,7 +32,7 @@ import { cutOutPresenter } from "./presenter";
 /** Photos made at once: each mostly waits on Meta's models. */
 const CUT_CONCURRENCY = 4;
 /** Videos larger than this aren't downloaded; phones film a few minutes in well under it. */
-export const MAX_SOURCE_VIDEO_BYTES = 1024 * 1024 * 1024;
+export const MAX_SOURCE_VIDEO_BYTES = PRODUCT_VIDEO_MAX_BYTES;
 const THUMB_HEIGHT = 352;
 
 // Spend reserved before each paid step, in micro-dollars, and settled with

@@ -5,6 +5,11 @@ import { SWRConfig, useSWRConfig } from "swr";
 import { ProductShelf } from "./product-shelf";
 import { ProductsPage } from "./products-page";
 
+jest.mock("@/hooks/use-realtime", () => ({
+  useRealtime: () => ({ channel: null, isConnected: false }),
+}));
+
+// The products list; the page's import list answers empty on its own.
 const fetchMock = jest.fn();
 
 function respond(status: number, body: unknown) {
@@ -21,7 +26,10 @@ function renderPage() {
 
 beforeEach(() => {
   fetchMock.mockReset();
-  global.fetch = fetchMock as unknown as typeof fetch;
+  global.fetch = ((url: string, init?: RequestInit) =>
+    url.endsWith("/products/imports")
+      ? Promise.resolve(respond(200, { imports: [] }))
+      : fetchMock(url, init)) as unknown as typeof fetch;
 });
 
 test("asks the workspace's Products API", async () => {

@@ -33,6 +33,8 @@ export {
   PRODUCT_TEXT_SOURCES,
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
   PRODUCT_VIDEO_IMPORT_STAGES,
+  PRODUCT_VIDEO_MAX_BYTES,
+  PRODUCT_VIDEO_MAX_SECONDS,
   type ProductPhotoMethod,
   type ProductTextSource,
   type ProductVideoImportErrorCode,
@@ -133,6 +135,15 @@ export type ProductVideoImportRecord = {
 export type ProductVideoImportResponse = {
   import: ProductVideoImportRecord;
   products: DraftProductRecord[];
+};
+
+/**
+ * The imports the Products page shows, newest first: running ones, finished
+ * ones with products left to check, and those that recently failed or found
+ * nothing.
+ */
+export type ProductVideoImportsResponse = {
+  imports: ProductVideoImportRecord[];
 };
 
 /** Whether this user sees the Products section: the flag is on and they're an admin. */

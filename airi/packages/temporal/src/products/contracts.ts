@@ -29,6 +29,15 @@ export const PRODUCT_VIDEO_IMPORT_MAX_OPTIONS = 8;
 /** Photos one video may make, one per option; caps an import's cost at a few dollars. */
 export const PRODUCT_VIDEO_IMPORT_MAX_PHOTOS = 60;
 
+/**
+ * The longest video an import reads, and the biggest file it downloads. The
+ * panel checks a video against both before uploading it. Longer videos cost
+ * too much to read and are rarely one shelf; phones film a few minutes in
+ * well under the size.
+ */
+export const PRODUCT_VIDEO_MAX_SECONDS = 300;
+export const PRODUCT_VIDEO_MAX_BYTES = 1024 * 1024 * 1024;
+
 /** Where a running import is, for the progress the owner sees. */
 export const PRODUCT_VIDEO_IMPORT_STAGES = [
   "preparing",
