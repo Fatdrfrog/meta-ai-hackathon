@@ -27,6 +27,34 @@ export async function pickProductFrame(
   return Math.min(request.count - 1, Math.max(0, best - 1));
 }
 
+/**
+ * Whether a crop shows the product itself as its main subject. Tracking can
+ * end on the wrong thing: in an edited promo, SAM followed the product across
+ * a cut onto a subtitle.
+ */
+export async function showsProduct(
+  request: { image: Buffer; product: string },
+  deps: AskMuseDeps = {},
+  options?: MetaRequestOptions,
+): Promise<boolean> {
+  const answer = await askMuseAboutImages<{ shows: boolean }>(
+    {
+      images: [request.image],
+      question: `This crop from a shop's video should show a ${request.product}. Is that product its main subject, even if a hand, a person or a caption covers part of it, or it is cut off at an edge? Answer false if the crop mainly shows something else, like text, a person or a different item.`,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["shows"],
+        properties: { shows: { type: "boolean" } },
+      },
+      purpose: "check crop",
+    },
+    deps,
+    options,
+  );
+  return answer.shows === true;
+}
+
 export type NormalizedBox = {
   visible: boolean;
   x_min: number;

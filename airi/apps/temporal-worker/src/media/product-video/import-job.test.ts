@@ -17,6 +17,7 @@ import {
 } from "./import-job";
 import type { InventoryItem } from "./inventory";
 import { ProductVideoError } from "./media";
+import type { PresenterCutout } from "./presenter";
 
 const TRANSCRIPT =
   "[1.0] Кукла Лол, бес мың теңге.\n[9.0] Кружка, бес жүз теңге.";
@@ -29,6 +30,9 @@ const item = (overrides: Partial<InventoryItem>): InventoryItem => ({
   price: 5000,
   currency: "KZT",
   priceQuote: "бес мың теңге",
+  priceQuoteSeconds: 1,
+  priceSource: "spoken",
+  priceIsFrom: false,
   firstSeenSeconds: 0,
   clearestMomentSeconds: 2,
   doubt: null,
@@ -37,6 +41,7 @@ const item = (overrides: Partial<InventoryItem>): InventoryItem => ({
 
 const INVENTORY = {
   language: "kk",
+  presenter: null as { clearestMomentSeconds: number } | null,
   items: [
     item({}),
     item({
@@ -55,6 +60,8 @@ const INVENTORY = {
       samPhrase: "white rooster",
       price: null,
       priceQuote: null,
+      priceQuoteSeconds: null,
+      priceSource: null,
       firstSeenSeconds: 20,
       clearestMomentSeconds: 22,
     }),
@@ -73,6 +80,11 @@ async function setUp(
     products?: FakeProduct[];
     cutOut?: (name: string, workDir: string) => Promise<ProductCutout>;
     tracked?: boolean;
+    /** When the inventory says someone presents the products. */
+    presenterMoment?: number;
+    /** The import's presenter as a previous run left it. */
+    presenter?: { momentSeconds: number; photo: unknown } | null;
+    cutOutPresenter?: (workDir: string) => Promise<PresenterCutout | null>;
   } = {},
 ) {
   const workDir = await mkdtemp(join(tmpdir(), "import-job-"));
@@ -85,6 +97,7 @@ async function setUp(
       transcript: options.transcript ?? null,
       productDone: 0,
       costUsd: 0,
+      presenter: options.presenter ?? null,
     } as Record<string, unknown>,
     products: [...(options.products ?? [])],
     stages: [] as unknown[],
@@ -93,6 +106,7 @@ async function setUp(
     transcribe: 0,
     inventory: 0,
     cutOut: [] as string[],
+    presenter: 0,
     emits: [] as string[],
     spend: [] as string[],
     saved: [] as string[],
@@ -134,6 +148,16 @@ async function setUp(
             path: "workspaces/w1/creative-assets/video/a1/shelf.mov",
           },
           transcript: state.import.transcript as string | null,
+          presenter: state.import.presenter
+            ? {
+                momentSeconds: (
+                  state.import.presenter as { momentSeconds: number }
+                ).momentSeconds,
+                done: Boolean(
+                  (state.import.presenter as { photo: unknown }).photo,
+                ),
+              }
+            : null,
         };
       },
       async updateImport(set, inc) {
@@ -179,6 +203,10 @@ async function setUp(
           path: `photos/${productId}/${file.fileName}`,
         };
       },
+      async savePresenterPhoto(file) {
+        calls.saved.push(`presenter/${file.fileName}:${file.mimeType}`);
+        return { bucket: "media", path: `photos/presenter/${file.fileName}` };
+      },
     },
     spend:
       options.tracked === false
@@ -214,12 +242,32 @@ async function setUp(
     readInventory: async (_request, deps) => {
       calls.inventory++;
       deps?.onCost?.(0.04, "inventory");
-      return structuredClone(INVENTORY);
+      return {
+        ...structuredClone(INVENTORY),
+        presenter:
+          options.presenterMoment === undefined
+            ? null
+            : { clearestMomentSeconds: options.presenterMoment },
+      };
     },
     cutOut: async (request, deps) => {
       calls.cutOut.push(request.name);
       deps?.onCost?.(0.05, "restore photo");
       return (options.cutOut ?? defaultCutOut)(request.name, request.workDir);
+    },
+    cutOutPresenter: async (request, deps) => {
+      calls.presenter++;
+      // Products come first: the presenter is cut out after every photo.
+      assert.equal(state.import.productDone, state.products.length);
+      deps?.onCost?.(0.01, "find presenter");
+      if (options.cutOutPresenter)
+        return options.cutOutPresenter(request.workDir);
+      return {
+        frameTimeSeconds: 4.2,
+        originalPath: await photoFile(request.workDir, "original.jpg", "jpeg"),
+        cutoutPath: await photoFile(request.workDir, "cutout.png", "png"),
+        cleaned: true,
+      };
     },
   };
   return { ports, state, calls };
@@ -252,7 +300,15 @@ test("runs an import from video to products with photos, saving each step", asyn
   assert.deepEqual(doll!.doubts, []);
   // The model's doubt first, then our own checks.
   assert.deepEqual(cup!.doubts, ["Is it 500 or 5000?"]);
-  assert.deepEqual(rooster!.doubts, ["No price was said for this product."]);
+  assert.deepEqual(rooster!.doubts, [
+    "No price was said or shown for this product.",
+  ]);
+  assert.equal(doll!.priceSource, "spoken");
+  assert.equal(doll!.priceIsFrom, false);
+  assert.equal(rooster!.priceSource, null);
+  // Nobody presents the products in this video.
+  assert.equal(state.import.presenter, null);
+  assert.equal(calls.presenter, 0);
   assert.deepEqual(doll!.videoWindow, { fromSeconds: 0, toSeconds: 8 });
   assert.deepEqual(doll!.photo, {
     method: "restored",
@@ -297,6 +353,8 @@ test("a retry resumes: no second transcription, inventory or photo for a finishe
     price: 5000,
     currency: "KZT",
     priceQuote: null,
+    priceSource: "spoken",
+    priceIsFrom: false,
     samPhrase: "blonde doll",
     doubts: [],
     videoWindow: { fromSeconds: 0, toSeconds: 8 },
@@ -434,11 +492,15 @@ test("a finished import does nothing again", async (t) => {
     status: "ready",
     video: { bucket: "b", path: "p" },
     transcript: TRANSCRIPT,
+    presenter: { momentSeconds: 4, done: false },
   });
 
   await runProductVideoImport(ports);
 
-  assert.equal(calls.transcribe + calls.inventory + calls.cutOut.length, 0);
+  assert.equal(
+    calls.transcribe + calls.inventory + calls.cutOut.length + calls.presenter,
+    0,
+  );
   assert.deepEqual(calls.emits, []);
 });
 
@@ -481,4 +543,80 @@ test("errors map to what the owner sees and whether to retry", () => {
     assert.equal(failure.code, code, String(error));
     assert.equal(failure.retryable, retryable, String(error));
   }
+});
+
+test("cuts out the person presenting the products after the photos, and saves them on the import", async (t) => {
+  const { ports, state, calls } = await setUp(t, { presenterMoment: 4 });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.equal(calls.presenter, 1);
+  assert.deepEqual(state.import.presenter, {
+    momentSeconds: 4,
+    photo: {
+      original: { bucket: "media", path: "photos/presenter/original.jpg" },
+      cutout: { bucket: "media", path: "photos/presenter/cutout.png" },
+      thumb: { bucket: "media", path: "photos/presenter/thumb.webp" },
+      frameTimeSeconds: 4.2,
+    },
+  });
+  assert.ok(calls.saved.includes("presenter/thumb.webp:image/webp"));
+  assert.ok(calls.spend.includes("reserve presenter:attempt-1 meta 50000"));
+  assert.ok(calls.spend.includes("settle presenter:attempt-1 10000"));
+});
+
+test("a presenter who can't be cut out is dropped, and the import still finishes", async (t) => {
+  const missing = await setUp(t, {
+    presenterMoment: 4,
+    cutOutPresenter: async () => null,
+  });
+  await runProductVideoImport(missing.ports);
+  assert.equal(missing.state.import.status, "ready");
+  assert.equal(missing.state.import.presenter, null);
+
+  const failing = await setUp(t, {
+    presenterMoment: 4,
+    cutOutPresenter: async () => {
+      throw new ProductVideoError("no_frames", "No frames at 4s");
+    },
+  });
+  await runProductVideoImport(failing.ports);
+  assert.equal(failing.state.import.status, "ready");
+  assert.equal(failing.state.import.presenter, null);
+});
+
+test("a retry cuts out only the presenter a previous run didn't finish", async (t) => {
+  const done: FakeProduct = {
+    id: "p0",
+    importIndex: 0,
+    name: "Кукла Лол",
+    englishName: "LOL doll",
+    category: "toy",
+    price: 5000,
+    currency: "KZT",
+    priceQuote: null,
+    priceSource: "spoken",
+    priceIsFrom: false,
+    samPhrase: "blonde doll",
+    doubts: [],
+    videoWindow: { fromSeconds: 0, toSeconds: 8 },
+    photo: { method: "restored" },
+  };
+  const { ports, state, calls } = await setUp(t, {
+    transcript: TRANSCRIPT,
+    products: [done],
+    presenter: { momentSeconds: 6, photo: null },
+  });
+  state.import.productDone = 1;
+
+  await runProductVideoImport(ports);
+
+  assert.equal(calls.inventory, 0);
+  assert.deepEqual(calls.cutOut, []);
+  assert.equal(calls.presenter, 1);
+  assert.equal(
+    (state.import.presenter as { momentSeconds: number }).momentSeconds,
+    6,
+  );
 });

@@ -24,6 +24,13 @@ jest.mock("@/lib/temporal/product-video-import", () => ({
 jest.mock("@/lib/products/store", () => ({
   listImportProducts: (...args: unknown[]) => mockListImportProducts(...args),
 }));
+jest.mock("@/lib/products/photo-urls", () => ({
+  withProductPhotoUrls: (work: () => Promise<unknown>) => work(),
+  productPhotoUrl: async (
+    workspaceId: string,
+    ref: { bucket?: string; path?: string } | null | undefined
+  ) => (ref?.path ? `https://signed.test/${workspaceId}/${ref.path}` : null),
+}));
 jest.mock("@/lib/logger", () => ({
   logger: { error: (...args: unknown[]) => mockLoggerError(...args) },
 }));
@@ -156,6 +163,7 @@ describe("loadProductVideoImport", () => {
         productTotal: 7,
         productDone: 2,
         errorCode: null,
+        presenter: null,
         createdAt: "2026-10-28T09:00:00.000Z",
         finishedAt: null,
       },
@@ -165,6 +173,47 @@ describe("loadProductVideoImport", () => {
       _id: "651f1f77bcf86cd799439071",
       workspaceId: "workspace-1",
     });
+  });
+
+  it("links the presenter's photos once their cut-out is made", async () => {
+    mockImportFindOne.mockReturnValue(
+      query({
+        _id: "651f1f77bcf86cd799439072",
+        status: "ready",
+        presenter: {
+          momentSeconds: 4.5,
+          photo: {
+            cutout: { bucket: "media", path: "presenter/cutout.png" },
+            thumb: { bucket: "media", path: "presenter/thumb.webp" },
+            original: { bucket: "media", path: "presenter/original.jpg" },
+          },
+        },
+      })
+    );
+    mockListImportProducts.mockResolvedValue([]);
+
+    const loaded = await loadProductVideoImport(
+      "workspace-1",
+      "651f1f77bcf86cd799439072"
+    );
+
+    expect(loaded?.import.presenter).toEqual({
+      imageUrl: "https://signed.test/workspace-1/presenter/thumb.webp",
+      photoUrl: "https://signed.test/workspace-1/presenter/cutout.png",
+      originalUrl: "https://signed.test/workspace-1/presenter/original.jpg",
+    });
+
+    // Found in the video, but not cut out yet.
+    mockImportFindOne.mockReturnValue(
+      query({
+        _id: "x",
+        status: "processing",
+        presenter: { momentSeconds: 4.5 },
+      })
+    );
+    expect(
+      (await loadProductVideoImport("workspace-1", "x"))?.import.presenter
+    ).toBeNull();
   });
 
   it("finds nothing in another workspace", async () => {

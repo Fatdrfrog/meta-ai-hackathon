@@ -36,6 +36,21 @@ export interface IProductVideoImport {
   productCount: number;
   /** List-price cost of the Meta model calls, in US dollars. */
   costUsd: number;
+  /**
+   * The person who presents the products, when someone does: the moment
+   * they're clearest, and their cut-out once made. An asset to reuse later,
+   * for example beside the products on carousel cards.
+   */
+  presenter?: {
+    momentSeconds: number;
+    photo?: {
+      /** Transparent PNG cut-out, its small WebP copy, and the filmed frame. */
+      cutout?: StoredFileRef;
+      thumb?: StoredFileRef;
+      original?: StoredFileRef;
+      frameTimeSeconds?: number;
+    } | null;
+  } | null;
   /** Why it failed, as a code the panel explains. */
   errorCode?: ProductVideoImportErrorCode | null;
   /** The failure in words, for support; not shown to the owner. */
@@ -82,6 +97,27 @@ const ProductVideoImportSchema = new mongoose.Schema<IProductVideoImport>(
     productDone: { type: Number, default: 0, min: 0 },
     productCount: { type: Number, default: 0, min: 0 },
     costUsd: { type: Number, default: 0, min: 0 },
+    presenter: {
+      type: new mongoose.Schema(
+        {
+          momentSeconds: { type: Number, required: true, min: 0 },
+          photo: {
+            type: new mongoose.Schema(
+              {
+                cutout: { bucket: { type: String }, path: { type: String } },
+                thumb: { bucket: { type: String }, path: { type: String } },
+                original: { bucket: { type: String }, path: { type: String } },
+                frameTimeSeconds: Number,
+              },
+              { _id: false }
+            ),
+            default: null,
+          },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
     errorCode: {
       type: String,
       enum: [...PRODUCT_VIDEO_IMPORT_ERROR_CODES, null],

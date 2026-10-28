@@ -16,13 +16,19 @@ import {
 } from "@icecore/airi-runtime/meta-sam";
 import sharp from "sharp";
 import {
+  backdropColor,
   cropAroundProduct,
   cutOutWithMask,
-  nonWhiteBox,
+  frameDifferences,
+  isMostlyLight,
+  jpegDataUrl,
   numberedGrid,
+  productBox,
   regionSharpness,
+  shotAround,
+  type Rgb,
 } from "./images";
-import { boxProduct, pickProductFrame } from "./locate";
+import { boxProduct, pickProductFrame, showsProduct } from "./locate";
 import {
   chooseFrame,
   largestComponent,
@@ -43,17 +49,20 @@ import { whilePulsing } from "./pulse";
 import {
   checkSameProduct,
   restoreProductPhoto,
+  type RestoreBackdrop,
   type RestoreDeps,
 } from "./restore";
 
 const CLIP_FPS = 10;
 const GRID_FRAMES = 8;
+const RESTORE_ATTEMPTS = 2;
 
 /**
  * restored: Muse Image's whole, upright product, checked to be the same one.
  * tracked:  the product as filmed, from the best frame SAM tracked it in.
- * phrase:   as filmed, found by its name on one frame when tracking failed.
- * none:     nothing could be cut out; the frame stands in.
+ * phrase:   as filmed, found on Muse's frame alone, by its box or its name,
+ *           when tracking failed or ended on something else.
+ * none:     no view of the product was found; the frame stands in.
  */
 export type ProductCutoutMethod = "restored" | "tracked" | "phrase" | "none";
 
@@ -91,18 +100,17 @@ export type CutOutProductRequest = {
   workDir: string;
 };
 
-const jpegDataUrl = async (image: Buffer | string) =>
-  `data:image/jpeg;base64,${(
-    await sharp(image)
-      .flatten({ background: "#ffffff" })
-      .jpeg({ quality: 92 })
-      .toBuffer()
-  ).toString("base64")}`;
+type Found = {
+  frameIndex: number;
+  mask: Mask;
+  method: "tracked" | "phrase";
+};
 
 // Muse Spark picks a frame and boxes the product once; SAM 3.1 follows that
-// one object through the clip, and the frame is chosen by measuring its mask in
-// every frame. Muse Image then restores what the hand hid, and SAM cuts the
-// restored product out again.
+// one object through the shot, and the frame is chosen by measuring its mask
+// in every frame. Muse Spark confirms the crop shows the product, Muse Image
+// restores what hands, people or captions hid, and SAM cuts the restored
+// product out again.
 export async function cutOutProduct(
   request: CutOutProductRequest,
   deps: CutOutProductDeps = {},
@@ -160,34 +168,64 @@ export async function cutOutProduct(
     options,
   );
 
-  let found: {
-    frameIndex: number;
-    mask: Mask;
-    method: "tracked" | "phrase";
-  } | null = null;
-  if (box) {
-    const best = await trackAndChoose(
-      { clipPath, frames, seed, box, width, height },
-      deps,
-      options,
-    );
-    if (best) found = { ...best, method: "tracked" };
-  }
-  if (!found) {
-    // Fallback: the product's phrase on the frame Muse picked.
+  // An edited promo cuts from scene to scene. Tracking stays inside the shot
+  // Muse picked: past a cut, SAM followed the product's box onto a subtitle.
+  const shot = shotAround(await frameDifferences(frames), seed);
+
+  // Ways to find the product, best first: tracked through the shot, then on
+  // Muse's frame alone by its box, then by its name. The first whose crop
+  // Muse confirms shows the product is used.
+  const onSeedFrame = async (prompt: string): Promise<Found | null> => {
     const imageUrl = await jpegDataUrl(frames[seed]!);
     const { result, costUsd } = await whilePulsing(deps.pulse, () =>
-      (deps.segmentMetaImage ?? samImage)(
-        { imageUrl, prompt: request.samPhrase },
-        options,
-      ),
+      (deps.segmentMetaImage ?? samImage)({ imageUrl, prompt }, options),
     );
     deps.onCost?.(costUsd, "find product");
     const record = bestMetaSamMask(result.records);
-    if (record) {
-      const { mask } = largestComponent(maskFromRecord(record));
-      if (maskArea(mask) > 0)
-        found = { frameIndex: seed, mask, method: "phrase" };
+    if (!record) return null;
+    const { mask } = largestComponent(maskFromRecord(record));
+    return maskArea(mask) > 0
+      ? { frameIndex: seed, mask, method: "phrase" }
+      : null;
+  };
+  const finders: Array<() => Promise<Found | null>> = [];
+  if (box) {
+    finders.push(async () => {
+      const best = await trackAndChoose(
+        { clipPath, frames, seed, box, width, height, shot },
+        deps,
+        options,
+      );
+      return best ? { ...best, method: "tracked" } : null;
+    });
+    finders.push(() =>
+      onSeedFrame(
+        buildObjectPrompt({
+          size: { width, height },
+          objects: [{ id: 0, prompts: [{ frame: 0, box }] }],
+        }),
+      ),
+    );
+  }
+  finders.push(() => onSeedFrame(request.samPhrase));
+
+  let found: (Found & { crop: { image: Buffer; box: Box } }) | null = null;
+  for (const find of finders) {
+    const candidate = await find();
+    if (!candidate) continue;
+    const crop = await cropAroundProduct(
+      frames[candidate.frameIndex]!,
+      candidate.mask.bounds,
+    );
+    if (
+      await showsProduct(
+        { image: crop.image, product: request.samPhrase },
+        deps,
+        options,
+      )
+    ) {
+      found = { ...candidate, crop };
+      break;
     }
   }
 
@@ -201,13 +239,13 @@ export async function cutOutProduct(
       cutoutPath: null,
       samConfidence: null,
       notes: [
-        "The product couldn't be found in the video, so the whole frame is shown.",
+        "No clear view of this product was found in the video, so the whole frame is shown.",
       ],
     };
   }
 
   const framePath = frames[found.frameIndex]!;
-  const crop = await cropAroundProduct(framePath, found.mask.bounds);
+  const { crop } = found;
   await writeFile(originalPath, crop.image);
   const cutoutPath = join(workDir, "cutout.png");
   const base = {
@@ -217,8 +255,14 @@ export async function cutOutProduct(
     samConfidence: found.mask.confidence,
   };
 
+  const filmed = await cutOutWithMask(framePath, found.mask);
   const restored = await restoreAndCheck(
-    { crop, name: request.name, samPhrase: request.samPhrase },
+    {
+      crop,
+      name: request.name,
+      samPhrase: request.samPhrase,
+      backdrop: (await isMostlyLight(filmed)) ? "grey" : "white",
+    },
     deps,
     options,
   );
@@ -226,7 +270,7 @@ export async function cutOutProduct(
     await writeFile(cutoutPath, restored.cutout);
     return { ...base, method: "restored", notes: [] };
   }
-  await writeFile(cutoutPath, await cutOutWithMask(framePath, found.mask));
+  await writeFile(cutoutPath, filmed);
   return { ...base, method: found.method, notes: [restored.note] };
 }
 
@@ -238,6 +282,7 @@ async function trackAndChoose(
     box: Box;
     width: number;
     height: number;
+    shot: { first: number; last: number };
   },
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
@@ -280,7 +325,12 @@ async function trackAndChoose(
   for (const record of recordsOfKind(result.records, "mask")) {
     const frameIndex = frameIndexOf(record) ?? 0;
     const frame = request.frames[frameIndex];
-    if (!frame) continue;
+    if (
+      !frame ||
+      frameIndex < request.shot.first ||
+      frameIndex > request.shot.last
+    )
+      continue;
     const { mask, share } = largestComponent(maskFromRecord(record));
     const area = maskArea(mask);
     if (area === 0) continue;
@@ -306,6 +356,7 @@ async function restoreAndCheck(
     crop: { image: Buffer; box: Box };
     name: string;
     samPhrase: string;
+    backdrop: RestoreBackdrop;
   },
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
@@ -313,86 +364,91 @@ async function restoreAndCheck(
   { cutout: Buffer; note?: undefined } | { cutout: null; note: string }
 > {
   const { crop } = request;
-  let restored: Buffer;
-  try {
-    restored = await restoreProductPhoto(
+  let note = "";
+  // Muse Image doesn't answer the same way twice: on the edited promo, one
+  // restore of a medal hanger painted the video's caption onto it and the
+  // next was clean. A rejected photo gets one more try.
+  for (let attempt = 1; attempt <= RESTORE_ATTEMPTS; attempt++) {
+    let restored: Buffer;
+    try {
+      restored = await restoreProductPhoto(
+        {
+          crop: crop.image,
+          width: crop.box.right - crop.box.left,
+          height: crop.box.bottom - crop.box.top,
+          product: request.name,
+          backdrop: request.backdrop,
+        },
+        deps,
+        options,
+      );
+    } catch (error) {
+      // Refused by a safety filter: show the product as filmed. Anything
+      // else, like a wrong model name, fails loudly instead of quietly
+      // downgrading every photo.
+      if (isMetaModelRefusal(error)) {
+        return {
+          cutout: null,
+          note: "The photo couldn't be cleaned up, so the hand may still show.",
+        };
+      }
+      throw error;
+    }
+
+    const backdrop = await backdropColor(restored);
+    const masks = await segmentRestored(
+      restored,
+      request.samPhrase,
+      backdrop,
+      deps,
+      options,
+    );
+    if (masks.length === 0) {
+      note =
+        "The cleaned-up photo didn't show the product, so the original is used.";
+      continue;
+    }
+    const cutout = await cutOutWithMask(restored, masks, {
+      backdrop,
+    });
+
+    // The check sees the cut-out a buyer will see, so a part lost by the cut
+    // counts as a difference too.
+    const check = await checkSameProduct(
       {
-        crop: crop.image,
-        width: crop.box.right - crop.box.left,
-        height: crop.box.bottom - crop.box.top,
+        original: crop.image,
+        restored: await sharp(cutout)
+          .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
+          .flatten({ background: "#ffffff" })
+          .jpeg({ quality: 88 })
+          .toBuffer(),
         product: request.name,
       },
       deps,
       options,
     );
-  } catch (error) {
-    // Refused by a safety filter: show the product as filmed. Anything else,
-    // like a wrong model name, fails loudly instead of quietly downgrading
-    // every photo.
-    if (isMetaModelRefusal(error)) {
-      return {
-        cutout: null,
-        note: "The photo couldn't be cleaned up, so the hand may still show.",
-      };
-    }
-    throw error;
+    if (check.same) return { cutout };
+    note = `The cleaned-up photo looked different${check.difference ? ` (${check.difference.replace(/\.$/, "")})` : ""}, so the original is used.`;
   }
-
-  const masks = await segmentRestored(
-    restored,
-    request.samPhrase,
-    deps,
-    options,
-  );
-  if (masks.length === 0) {
-    return {
-      cutout: null,
-      note: "The cleaned-up photo didn't show the product, so the original is used.",
-    };
-  }
-  const cutout = await cutOutWithMask(restored, masks, {
-    whiteBackground: true,
-  });
-
-  // The check sees the cut-out a buyer will see, so a part lost by the cut
-  // counts as a difference too.
-  const check = await checkSameProduct(
-    {
-      original: crop.image,
-      restored: await sharp(cutout)
-        .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
-        .flatten({ background: "#ffffff" })
-        .jpeg({ quality: 88 })
-        .toBuffer(),
-      product: request.name,
-    },
-    deps,
-    options,
-  );
-  if (!check.same) {
-    return {
-      cutout: null,
-      note: `The cleaned-up photo looked different${check.difference ? ` (${check.difference.replace(/\.$/, "")})` : ""}, so the original is used.`,
-    };
-  }
-  return { cutout };
+  return { cutout: null, note };
 }
 
 /**
  * The restored product's masks, from two prompts joined: the box around
- * everything that isn't white (on Muse's white background, the product) and
+ * everything that isn't backdrop (on Muse's plain backdrop, the product) and
  * the product's name. Each alone lost parts in tests: asked for "phone stand",
  * SAM cut out only the stand's base; shown the toy phone's box, only its
  * frame. Nothing else is in the picture, so joining them is safe.
  */
-async function segmentRestored(
+export async function segmentRestored(
   image: Buffer,
   samPhrase: string,
+  backdrop: Rgb,
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
 ): Promise<Mask[]> {
   const { width = 0, height = 0 } = await sharp(image).metadata();
-  const box = await nonWhiteBox(image);
+  const box = await productBox(image, backdrop);
   if (!box) return [];
   const imageUrl = await jpegDataUrl(image);
   const prompts = [

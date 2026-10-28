@@ -31,13 +31,13 @@ const TRACKED_OUTPUT = [0.5, 0.95, 0.7]
 const WIDTH = 320;
 const HEIGHT = 334;
 
-const frame = () =>
+const frame = (background = "#d8d2c8") =>
   sharp({
     create: {
       width: WIDTH,
       height: HEIGHT,
       channels: 3,
-      background: "#d8d2c8",
+      background,
     },
   }).composite([
     {
@@ -56,6 +56,12 @@ type Scenario = {
   restoreMessage?: string;
   boxVisible?: boolean;
   samImageOutput?: string;
+  /** Muse's same-product answers, in order; then `sameProduct`. */
+  sameAnswers?: boolean[];
+  /** Muse's answers to "does this crop show the product?", in order; then yes. */
+  shows?: boolean[];
+  /** The clip's first frame is from another scene, as after a cut. */
+  cutAfterFirstFrame?: boolean;
 };
 
 async function setUp(t: TestContext, scenario: Scenario = {}) {
@@ -71,7 +77,9 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
     const out = args.at(-1)!;
     if (out.endsWith("frame-%04d.jpg")) {
       for (let i = 1; i <= 12; i++) {
-        await frame()
+        await frame(
+          scenario.cutAfterFirstFrame && i === 1 ? "#203040" : undefined,
+        )
           .jpeg()
           .toFile(out.replace("%04d", String(i).padStart(4, "0")));
       }
@@ -120,6 +128,8 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
 
   const requests: string[] = [];
   const samImagePrompts: string[] = [];
+  const shows = [...(scenario.shows ?? [])];
+  const sameAnswers = [...(scenario.sameAnswers ?? [])];
   t.mock.method(globalThis, "fetch", async (url: string, init: RequestInit) => {
     const path = new URL(url).pathname;
     if (path === "/v1/files") {
@@ -172,9 +182,13 @@ async function setUp(t: TestContext, scenario: Scenario = {}) {
         y_max: 765,
       });
     }
+    if (question.includes("main subject")) {
+      requests.push("check crop");
+      return answer({ shows: shows.shift() ?? true });
+    }
     requests.push("same product");
     return answer({
-      same: scenario.sameProduct ?? true,
+      same: sameAnswers.shift() ?? scenario.sameProduct ?? true,
       difference: scenario.difference ?? null,
     });
   });
@@ -215,6 +229,7 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
     "upload",
     "sam video",
     "delete",
+    "check crop",
     "restore",
     "sam image",
     "sam image",
@@ -224,6 +239,7 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
     "pick frame",
     "box product",
     "track product",
+    "check crop",
     "restore photo",
     "cut out restored photo",
     "cut out restored photo",
@@ -241,22 +257,92 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
   // The restored product is asked for by its box and by its name, joined.
   const [byBox, byName] = samImagePrompts.slice(-2);
   assert.ok(
-    byBox!.includes("<|box;x1=0;y1=0;x2=319;y2=333;w=320;h=334"),
+    byBox!.includes("<|box;x1=211;y1=228;x2=270;y2=254;w=320;h=334"),
     `box prompt: ${byBox}`,
   );
   assert.equal(byName, "blonde doll in blue dress");
-  // Each of the seven Meta calls heartbeats while it runs.
-  assert.ok(pulses.count >= 7, `${pulses.count} pulses`);
+  // Each of the eight Meta calls heartbeats while it runs.
+  assert.ok(pulses.count >= 8, `${pulses.count} pulses`);
 });
 
-test("uses the filmed product when the restored photo looks different", async (t) => {
-  const { deps, request } = await setUp(t, {
+test("tracking stays in the shot Muse picked, never past a cut", async (t) => {
+  // Muse picks frame 0; the cut after it leaves SAM's surer frames 1 and 2 in
+  // another scene, where tracking follows the box onto something else.
+  const { deps, request } = await setUp(t, { cutAfterFirstFrame: true });
+
+  const cutout = await cutOutProduct(request, deps);
+
+  assert.equal(cutout.method, "restored");
+  assert.equal(cutout.frameTimeSeconds, 4);
+  assert.equal(cutout.samConfidence, 0.5);
+});
+
+test("a tracked view of something else falls back to Muse's frame, found by its box", async (t) => {
+  const { deps, request, requests, samImagePrompts } = await setUp(t, {
+    shows: [false],
+  });
+
+  const cutout = await cutOutProduct(request, deps);
+
+  assert.equal(cutout.method, "restored");
+  assert.equal(cutout.frameTimeSeconds, 4);
+  assert.deepEqual(requests.slice(0, 8), [
+    "pick frame",
+    "box",
+    "upload",
+    "sam video",
+    "delete",
+    "check crop",
+    "sam image",
+    "check crop",
+  ]);
+  // Muse's box, 650-850 × 680-765 of 1000, in the 320×334 frame.
+  assert.ok(
+    samImagePrompts[0]!.includes(
+      "<|box;x1=208;y1=227;x2=271;y2=255;w=320;h=334",
+    ),
+    `box prompt: ${samImagePrompts[0]}`,
+  );
+});
+
+test("shows the frame when no view of the product is confirmed", async (t) => {
+  const { deps, request, requests } = await setUp(t, {
+    shows: [false, false, false],
+  });
+
+  const cutout = await cutOutProduct(request, deps);
+
+  assert.equal(cutout.method, "none");
+  assert.equal(cutout.cutoutPath, null);
+  assert.deepEqual(cutout.notes, [
+    "No clear view of this product was found in the video, so the whole frame is shown.",
+  ]);
+  // Tracked, then by box, then by name: each checked, nothing restored.
+  assert.equal(requests.filter((r) => r === "check crop").length, 3);
+  assert.ok(!requests.includes("restore"));
+});
+
+test("restores once more when the first restored photo looks different", async (t) => {
+  const { deps, request, requests } = await setUp(t, {
+    sameAnswers: [false, true],
+  });
+
+  const cutout = await cutOutProduct(request, deps);
+
+  assert.equal(cutout.method, "restored");
+  assert.deepEqual(cutout.notes, []);
+  assert.equal(requests.filter((r) => r === "restore").length, 2);
+});
+
+test("uses the filmed product when the restored photo looks different twice", async (t) => {
+  const { deps, request, requests } = await setUp(t, {
     sameProduct: false,
     difference: "The doll's dress is red instead of blue.",
   });
 
   const cutout = await cutOutProduct(request, deps);
 
+  assert.equal(requests.filter((r) => r === "restore").length, 2);
   assert.equal(cutout.method, "tracked");
   assert.deepEqual(cutout.notes, [
     "The cleaned-up photo looked different (The doll's dress is red instead of blue), so the original is used.",
@@ -311,7 +397,7 @@ test("finds the product by name when Muse can't box it, and shows the frame when
   assert.equal(none.method, "none");
   assert.equal(none.cutoutPath, null);
   assert.deepEqual(none.notes, [
-    "The product couldn't be found in the video, so the whole frame is shown.",
+    "No clear view of this product was found in the video, so the whole frame is shown.",
   ]);
   const original = await sharp(none.originalPath).metadata();
   assert.deepEqual([original.width, original.height], [WIDTH, HEIGHT]);

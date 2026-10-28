@@ -19,13 +19,33 @@ export type RestoreDeps = AskMuseDeps & {
 // position, size, angle" reads as if it fights "upright", but together they
 // kept every part in two runs of 7 out of 7; a version that only asked to
 // keep the filmed side towards the camera dropped a phone stand's base.
-export function restorePrompt(product: string): string {
+// A light product is restored on grey: on white, a white medal hanger lost
+// its edges and parts of its face to the backdrop when cut out.
+// The overlay sentence came from an edited promo: Muse kept a burned-in
+// "from 35 000" caption on a table's legs as if it were printed there, and
+// redrew a half-hidden second panel below a family-tree panel.
+export type RestoreBackdrop = "white" | "grey";
+
+/** What Muse Image is asked to put behind a restored photo. */
+export function backdropWords(backdrop: RestoreBackdrop): string {
+  return backdrop === "grey"
+    ? "a plain, flat mid-grey background, the same grey everywhere"
+    : "a plain pure white background";
+}
+
+export function restorePrompt(
+  product: string,
+  backdrop: RestoreBackdrop = "white",
+): string {
   return (
     `Product photo cleanup of a ${product}. Remove the person's hand and fingers completely. ` +
     `Where the hand covered the ${product}, restore the hidden part so the product is whole, ` +
     `continuing its exact shape, color, material and any print or logo. Do not change anything else ` +
     `about the product: same position, size, angle, colors, text and details. ` +
-    `Replace everything around the product with a plain pure white background. No shadow, no new objects. ` +
+    `Replace everything around the product with ${backdropWords(backdrop)}. No shadow, no new objects. ` +
+    `Also remove whatever is not part of this one product: people, other products or parts of them, and ` +
+    `captions, subtitles, prices, stickers or logos laid over the video, restoring the product underneath. ` +
+    `Text that is printed, engraved or written on the product itself stays. ` +
     `Show the product standing upright and straight, seen from the front, centred. ` +
     `This is a real item for sale: do not retouch, beautify or idealise it; keep its real wear, scuffs, ` +
     `paint marks and imperfections exactly as they are.`
@@ -42,14 +62,20 @@ export function restoreSize(width: number, height: number): string {
 
 /** The product redrawn whole, upright and on white, as an opaque PNG. */
 export async function restoreProductPhoto(
-  request: { crop: Buffer; width: number; height: number; product: string },
+  request: {
+    crop: Buffer;
+    width: number;
+    height: number;
+    product: string;
+    backdrop?: RestoreBackdrop;
+  },
   deps: RestoreDeps = {},
   options?: MetaRequestOptions,
 ): Promise<Buffer> {
   const result = await whilePulsing(deps.pulse, () =>
     (deps.editMetaImage ?? editMetaImage)(
       {
-        prompt: restorePrompt(request.product),
+        prompt: restorePrompt(request.product, request.backdrop),
         images: [{ data: request.crop, mimeType: "image/jpeg" }],
       },
       { ...options, size: restoreSize(request.width, request.height) },
@@ -79,7 +105,8 @@ export async function checkSameProduct(
         `Image 2 is a cleaned-up product photo made from it: the hand removed, the hidden part restored, ` +
         `the background replaced with white, the product stood upright. Is image 2 the same product as image 1, ` +
         `with the same type, shape, colours, print and details? Parts missing from image 2, and details invented on sides image 1 doesn't show, count as ` +
-        `differences. Answer same=false only if a buyer who received ` +
+        `differences. Captions, subtitles, price stickers and logos laid over the video in image 1, and people or other items around the product, ` +
+        `are not part of it, so their absence is not a difference. Answer same=false only if a buyer who received ` +
         `the item in image 1 would feel misled by image 2; then say what differs in one short English sentence ` +
         `as difference, otherwise difference=null.`,
       schema: {

@@ -27,6 +27,9 @@ const item = (overrides: Partial<InventoryItem> = {}): InventoryItem => ({
   price: 5000,
   currency: "KZT",
   priceQuote: "бес мың теңге",
+  priceQuoteSeconds: 9.8,
+  priceSource: "spoken",
+  priceIsFrom: false,
   firstSeenSeconds: 9,
   clearestMomentSeconds: 11,
   doubt: null,
@@ -46,6 +49,9 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
           price: 500,
           currency: "KZT",
           price_quote: "бес жүз теңге",
+          price_quote_s: 1.2,
+          price_source: "none",
+          price_is_from: true,
           first_seen_s: 1,
           clearest_moment_s: -3,
           doubt: null,
@@ -66,6 +72,10 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
     price: 500,
     currency: "KZT",
     priceQuote: "бес жүз теңге",
+    priceQuoteSeconds: 1.2,
+    // A price never goes unchecked: "none" beside a price counts as spoken.
+    priceSource: "spoken",
+    priceIsFrom: true,
     firstSeenSeconds: 1,
     clearestMomentSeconds: 0,
     doubt: null,
@@ -79,11 +89,15 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
     price: null,
     currency: null,
     priceQuote: null,
+    priceQuoteSeconds: null,
+    priceSource: null,
+    priceIsFrom: false,
     firstSeenSeconds: 0,
     clearestMomentSeconds: 0,
     doubt: null,
   });
   assert.equal(inventory.items.length, 2);
+  assert.equal(inventory.presenter, null);
 });
 
 test("a price must come with words the owner said, matching its number", () => {
@@ -110,10 +124,74 @@ test("a price must come with words the owner said, matching its number", () => {
     [
       [],
       ["This price doesn't match anything in the narration."],
-      ["No price was said for this product."],
+      ["No price was said or shown for this product."],
       ["The price is in USD, not tenge."],
       ["The price differs from the number in the narration."],
     ],
+  );
+});
+
+test("a price only written on screen is checked against its own text and flagged", () => {
+  assert.deepEqual(
+    inventoryChecks(
+      [
+        item({
+          priceSource: "on_screen",
+          price: 15500,
+          priceQuote: "15500т бастап",
+        }),
+        item({
+          priceSource: "on_screen",
+          price: 16900,
+          priceQuote: "15 500 ₸",
+        }),
+        item({ priceSource: "on_screen", price: 3000, priceQuote: null }),
+      ],
+      TRANSCRIPT,
+    ),
+    [
+      ["This price was read from text in the video, not said aloud."],
+      [
+        "This price was read from text in the video, not said aloud.",
+        "The price differs from the number shown in the video.",
+      ],
+      [
+        "This price was read from text in the video, not said aloud.",
+        "The video's text for this price is missing.",
+      ],
+    ],
+  );
+});
+
+test("reads the presenter, and on-screen and starting prices", () => {
+  const inventory = parseInventory(
+    JSON.stringify({
+      language: "Kazakh",
+      presenter: { present: true, clearest_moment_s: 4.5 },
+      items: [
+        {
+          name: "Family tree panel",
+          price: 15500,
+          currency: "KZT",
+          price_quote: "15500т бастап",
+          price_source: "on_screen",
+          price_is_from: true,
+        },
+      ],
+    }),
+  );
+
+  assert.deepEqual(inventory.presenter, { clearestMomentSeconds: 4.5 });
+  assert.equal(inventory.items[0]!.priceSource, "on_screen");
+  assert.equal(inventory.items[0]!.priceIsFrom, true);
+  assert.equal(
+    parseInventory(
+      JSON.stringify({
+        items: [],
+        presenter: { present: false, clearest_moment_s: 3 },
+      }),
+    ).presenter,
+    null,
   );
 });
 
@@ -206,7 +284,11 @@ test("uploads the video, asks Muse Spark with the transcript, prices the call an
     },
   );
 
-  assert.deepEqual(inventory, { language: "Kazakh", items: [] });
+  assert.deepEqual(inventory, {
+    language: "Kazakh",
+    items: [],
+    presenter: null,
+  });
   const content = (
     requests[0]!.input as Array<{ content: Array<Record<string, string>> }>
   )[0]!.content;
@@ -242,4 +324,31 @@ test("deletes the upload even when the answer can't be read", async (t) => {
       error.info.transient,
   );
   assert.deepEqual(deleted, ["file_8"]);
+});
+
+test("the same short phrase said of two products, in two sentences, isn't flagged", () => {
+  // QazOner's promo says "from 15 500" twice: of the family-tree panel, and
+  // of panels and clocks together.
+  const transcript = [
+    "[7.5] Шежірелердің бағасы он бес мың бес жүзден басталады.",
+    "[17.9] Этно паннолар мен сағаттар бағасы он бес мың бес жүзден басталады.",
+  ].join("\n");
+  const phrase = "он бес мың бес жүзден басталады";
+  const [tree, panel, clock, untimed] = inventoryChecks(
+    [
+      item({ price: 15500, priceQuote: phrase, priceQuoteSeconds: 7.5 }),
+      item({ price: 15500, priceQuote: phrase, priceQuoteSeconds: 17.9 }),
+      item({ price: 15500, priceQuote: phrase, priceQuoteSeconds: 17.9 }),
+      // A wrong time falls back to the whole narration, still checked.
+      item({ price: 15500, priceQuote: phrase, priceQuoteSeconds: 3 }),
+    ],
+    transcript,
+  );
+
+  assert.deepEqual(tree, []);
+  assert.deepEqual(panel, [
+    "Another product's price comes from the same words.",
+  ]);
+  assert.deepEqual(clock, panel);
+  assert.deepEqual(untimed, []);
 });

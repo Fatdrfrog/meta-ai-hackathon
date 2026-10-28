@@ -56,13 +56,19 @@ function mongoStore(
   return {
     async loadImport() {
       const doc = await ProductVideoImport.findOne(importFilter)
-        .select("status video transcript")
+        .select("status video transcript presenter")
         .lean();
       if (!doc) return null;
       return {
         status: doc.status,
         video: { bucket: doc.video.bucket, path: doc.video.path },
         transcript: doc.transcript ?? null,
+        presenter: doc.presenter
+          ? {
+              momentSeconds: doc.presenter.momentSeconds,
+              done: Boolean(doc.presenter.photo),
+            }
+          : null,
       } satisfies ImportRecord;
     },
     async updateImport(set, inc) {
@@ -196,6 +202,18 @@ export async function productVideoImportActivity(
               productId,
               importId: input.importId,
             },
+          });
+          return { bucket: stored.bucket, path: stored.path };
+        },
+        async savePresenterPhoto(file) {
+          const stored = await uploadGcsCreativeAssetBuffer({
+            workspaceId: input.workspaceId,
+            assetId: `presenter-${input.importId}-${Date.now().toString(36)}`,
+            kind: "image",
+            buffer: file.buffer,
+            mimeType: file.mimeType,
+            fileName: file.fileName,
+            customMetadata: { importId: input.importId, role: "presenter" },
           });
           return { bucket: stored.bucket, path: stored.path };
         },

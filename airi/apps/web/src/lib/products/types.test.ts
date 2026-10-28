@@ -11,4 +11,8 @@ describe("formatProductPrice", () => {
   ])("writes %p as %p", (price, text) => {
     expect(formatProductPrice(price)).toBe(text);
   });
+
+  test("writes a starting price with a no-break 'from'", () => {
+    expect(formatProductPrice(15500, { from: true })).toBe("from 15 500 ₸");
+  });
 });

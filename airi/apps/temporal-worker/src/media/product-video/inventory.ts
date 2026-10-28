@@ -9,6 +9,10 @@ import {
   uploadMetaFile,
   type MetaRequestOptions,
 } from "@icecore/airi-runtime/meta-model-api";
+import {
+  PRODUCT_PRICE_SOURCES,
+  type ProductPriceSource,
+} from "@icecore/temporal";
 import { whilePulsing } from "./pulse";
 
 // Muse Spark watches the silent video with the owner's transcript as text and
@@ -25,8 +29,17 @@ export type InventoryItem = {
   samPhrase: string;
   price: number | null;
   currency: string | null;
-  /** The transcript words the price comes from, verbatim. */
+  /** The transcript words the price comes from, or the text shown on screen, verbatim. */
   priceQuote: string | null;
+  /**
+   * When the narration's sentence the price was said in starts, as the
+   * transcript times it; null for a price on screen or no price.
+   */
+  priceQuoteSeconds: number | null;
+  /** Null when there is no price. */
+  priceSource: ProductPriceSource | null;
+  /** A starting price ("from 15 500"): the final one depends on options. */
+  priceIsFrom: boolean;
   firstSeenSeconds: number;
   clearestMomentSeconds: number;
   /** What the owner should confirm, from the model. */
@@ -36,6 +49,8 @@ export type InventoryItem = {
 export type ProductInventory = {
   language: string;
   items: InventoryItem[];
+  /** A person who presents the products facing the camera, or null. */
+  presenter: { clearestMomentSeconds: number } | null;
 };
 
 export type InventoryDeps = {
@@ -55,9 +70,18 @@ const nullable = (type: string) => ({ type: [type, "null"] });
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["language", "items"],
+  required: ["language", "items", "presenter"],
   properties: {
     language: { type: "string" },
+    presenter: {
+      type: "object",
+      additionalProperties: false,
+      required: ["present", "clearest_moment_s"],
+      properties: {
+        present: { type: "boolean" },
+        clearest_moment_s: { type: "number" },
+      },
+    },
     items: {
       type: "array",
       items: {
@@ -71,6 +95,9 @@ const SCHEMA = {
           "price",
           "currency",
           "price_quote",
+          "price_quote_s",
+          "price_source",
+          "price_is_from",
           "first_seen_s",
           "clearest_moment_s",
           "doubt",
@@ -83,6 +110,12 @@ const SCHEMA = {
           price: nullable("number"),
           currency: nullable("string"),
           price_quote: nullable("string"),
+          price_quote_s: { type: "number" },
+          price_source: {
+            type: "string",
+            enum: [...PRODUCT_PRICE_SOURCES, "none"],
+          },
+          price_is_from: { type: "boolean" },
           first_seen_s: { type: "number" },
           clearest_moment_s: { type: "number" },
           doubt: nullable("string"),
@@ -93,23 +126,27 @@ const SCHEMA = {
 };
 
 export function inventoryPrompt(transcript: string): string {
-  return `A shop owner filmed their products. The video has no sound. Below is a transcript of what they said, from a dedicated speech model, with each sentence's start time in seconds. Trust it for names and prices; use the video to see the products and when each one is shown.
+  return `A shop made this video to show the products it sells. It may be a plain video of products held up to the camera or standing on a shelf, or an edited promo with cuts, a presenter talking to the camera, products shown on screen behind them, captions and price stickers. The video has no sound. Below is a transcript of what was said, from a dedicated speech model, with each sentence's start time in seconds. Trust it for names and prices; use the video to see the products and when each one is shown.
 
 Transcript:
-${transcript.trim() || "(the owner said nothing)"}
+${transcript.trim() || "(nothing was said)"}
 
-List every distinct product the owner presents, in the order presented. Merge repeated sightings of the same item. Ignore background objects the owner does not present.
+List every distinct product offered for sale, in the order shown, whether held, standing or shown on screen. Merge repeated sightings of the same item. When one kind of product is shown in several designs (several family-tree panels, several clocks), list each design that is clearly shown as its own product, with the price said for that kind. Ignore objects nobody offers: background items, the presenter's clothes, and furniture or decor that isn't for sale.
 For each product:
 - name: a short catalog name in English.
-- local_name: the owner's own name for it, in the language they used.
+- local_name: the shop's own name for it, in the language spoken (or written on screen, if nothing was said).
 - category: one or two English words.
 - sam_phrase: a short, specific English noun phrase that picks out this item and not the others in view, for a segmentation model (for example "pink toy phone"). No lists, no negation.
-- price and currency: the price of one item as a number, with an ISO currency code. Use KZT for теңге or тенге, and also when the owner says a number without a currency. If several prices are said for it (an old and a new price, per piece and per pack), use the price a buyer pays for one item now and explain in doubt. If one price is said for a group of products, give it to each and explain in doubt. null if no price was said for it.
-- price_quote: the exact words from the transcript that state this item's price, copied verbatim; null if no price.
-- first_seen_s: when the owner starts presenting it.
-- clearest_moment_s: when it is most clearly visible, held still and in focus.
-- doubt: if the owner should confirm something (an unusual currency, an unclear number, a price that might belong to another item, a name that doesn't match what is shown), say what in one short English sentence; otherwise null.
-language: the language the owner spoke.`;
+- price and currency: the price of one item as a number, with an ISO currency code. Use KZT for теңге or тенге, and also for a number without a currency. If several prices are said for it (an old and a new price, per piece and per pack), use the price a buyer pays for one item now and explain in doubt. If one price is said for a group of products, give it to each and explain in doubt. If no price is said for it but one is written on screen for it (a caption, a sticker, a tag), use that. If what is said and what is written disagree, use what is said and explain in doubt. null if there is no price.
+- price_quote: the exact words from the transcript that state this item's price, copied verbatim; for a price that is only written on screen, the text exactly as written; null if no price.
+- price_quote_s: the start time of the transcript line the spoken price is quoted from, exactly as written in its brackets; -1 for a price only written on screen, or no price.
+- price_source: spoken, on_screen (only written in the video), or none when there is no price.
+- price_is_from: true when it is a starting price ("from", "starting at", "от", "бастап"), because the final price depends on options or personalisation; otherwise false.
+- first_seen_s: when it is first shown.
+- clearest_moment_s: when it is most clearly visible: whole, in focus, and least covered by hands, people or captions.
+- doubt: if the shop should confirm something (an unusual currency, an unclear number, a price that might belong to another item, a name that doesn't match what is shown), say what in one short English sentence; otherwise null.
+presenter: whether a person presents the products while facing the camera (more than just their hands). If so, present is true and clearest_moment_s is when their face and upper body are most clearly in view, least covered by products or captions; otherwise present is false and clearest_moment_s is 0.
+language: the language spoken, or written on screen if nothing was said.`;
 }
 
 const text = (value: unknown, max: number): string =>
@@ -121,7 +158,7 @@ const seconds = (value: unknown): number =>
 
 /** The model's JSON as typed items; malformed or nameless items are dropped. */
 export function parseInventory(raw: string): ProductInventory {
-  let json: { language?: unknown; items?: unknown };
+  let json: { language?: unknown; items?: unknown; presenter?: unknown };
   try {
     json = JSON.parse(raw) as typeof json;
   } catch {
@@ -133,8 +170,16 @@ export function parseInventory(raw: string): ProductInventory {
     });
   }
   const items = Array.isArray(json.items) ? json.items : [];
+  const presenter =
+    json.presenter && typeof json.presenter === "object"
+      ? (json.presenter as Record<string, unknown>)
+      : null;
   return {
     language: text(json.language, 40),
+    presenter:
+      presenter?.present === true
+        ? { clearestMomentSeconds: seconds(presenter.clearest_moment_s) }
+        : null,
     items: items.flatMap((entry): InventoryItem[] => {
       if (!entry || typeof entry !== "object") return [];
       const item = entry as Record<string, unknown>;
@@ -156,6 +201,22 @@ export function parseInventory(raw: string): ProductInventory {
           currency: price === null ? null : optionalText(item.currency, 8),
           priceQuote:
             price === null ? null : optionalText(item.price_quote, 300),
+          priceQuoteSeconds:
+            price !== null &&
+            typeof item.price_quote_s === "number" &&
+            Number.isFinite(item.price_quote_s) &&
+            item.price_quote_s >= 0
+              ? item.price_quote_s
+              : null,
+          // A price with no believable source is held to the stricter,
+          // spoken check.
+          priceSource:
+            price === null
+              ? null
+              : item.price_source === "on_screen"
+                ? "on_screen"
+                : "spoken",
+          priceIsFrom: price !== null && item.price_is_from === true,
           firstSeenSeconds: seconds(item.first_seen_s),
           clearestMomentSeconds: seconds(item.clearest_moment_s),
           doubt: optionalText(item.doubt, 300),
@@ -247,6 +308,40 @@ export function quoteInTranscript(quote: string, transcript: string): boolean {
   return needle !== "" && normalizeText(transcript).includes(needle);
 }
 
+/** The narration's timed sentences, from its "[7.5] text" lines. */
+function timedSentences(
+  transcript: string,
+): Array<{ at: number; text: string }> {
+  return transcript.split(/\r?\n/).flatMap((line) => {
+    const match = /^\[(\d+(?:\.\d+)?)\]\s*(.*)$/.exec(line.trim());
+    return match ? [{ at: Number(match[1]), text: match[2]! }] : [];
+  });
+}
+
+/**
+ * Where in the narration a spoken quote comes from, as a key two products
+ * share only when their prices come from the same words in the same
+ * sentence; null when the quote isn't in the narration. A shop that says
+ * "from 15 500" twice, of different products, uses those words twice.
+ */
+function spokenQuoteSource(
+  quote: string,
+  atSeconds: number | null,
+  transcript: string,
+): string | null {
+  const needle = normalizeText(quote);
+  if (!needle) return null;
+  const sentence =
+    atSeconds === null
+      ? undefined
+      : timedSentences(transcript).find(
+          (candidate) => Math.abs(candidate.at - atSeconds) < 0.05,
+        );
+  if (sentence && normalizeText(sentence.text).includes(needle))
+    return `${sentence.at}|${needle}`;
+  return quoteInTranscript(quote, transcript) ? needle : null;
+}
+
 /** The numbers written with digits in a quote; spoken numbers have none. */
 function quotedNumbers(quote: string): number[] {
   return (normalizeText(quote).match(/\d+/g) ?? []).map(Number);
@@ -260,25 +355,47 @@ export function inventoryChecks(
   items: InventoryItem[],
   transcript: string,
 ): string[][] {
+  const sources = items.map((item) => {
+    if (item.price === null || !item.priceQuote) return null;
+    return item.priceSource === "on_screen"
+      ? `screen|${normalizeText(item.priceQuote)}`
+      : spokenQuoteSource(item.priceQuote, item.priceQuoteSeconds, transcript);
+  });
   const quoteUses = new Map<string, number>();
-  for (const item of items) {
-    if (item.price === null || !item.priceQuote) continue;
-    const key = normalizeText(item.priceQuote);
-    quoteUses.set(key, (quoteUses.get(key) ?? 0) + 1);
+  for (const source of sources) {
+    if (source) quoteUses.set(source, (quoteUses.get(source) ?? 0) + 1);
   }
-  return items.map((item) => {
+  return items.map((item, index) => {
     const checks: string[] = [];
     if (item.price === null) {
-      checks.push("No price was said for this product.");
+      checks.push("No price was said or shown for this product.");
       return checks;
     }
-    if (!item.priceQuote || !quoteInTranscript(item.priceQuote, transcript)) {
-      checks.push("This price doesn't match anything in the narration.");
+    const quote = item.priceQuote;
+    // Text on screen has no transcript to be checked against; it is only
+    // checked against itself.
+    const onScreen = item.priceSource === "on_screen";
+    if (onScreen) {
+      checks.push(
+        "This price was read from text in the video, not said aloud.",
+      );
+    }
+    const source = sources[index];
+    if (!quote || !source) {
+      checks.push(
+        onScreen
+          ? "The video's text for this price is missing."
+          : "This price doesn't match anything in the narration.",
+      );
     } else {
-      const numbers = quotedNumbers(item.priceQuote);
+      const numbers = quotedNumbers(quote);
       if (numbers.length > 0 && !numbers.includes(item.price))
-        checks.push("The price differs from the number in the narration.");
-      if ((quoteUses.get(normalizeText(item.priceQuote)) ?? 0) > 1)
+        checks.push(
+          onScreen
+            ? "The price differs from the number shown in the video."
+            : "The price differs from the number in the narration.",
+        );
+      if ((quoteUses.get(source) ?? 0) > 1)
         checks.push("Another product's price comes from the same words.");
     }
     if (item.currency !== "KZT")

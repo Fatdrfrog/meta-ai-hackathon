@@ -55,6 +55,7 @@ test("lists products with their price, or a note when there is none", async () =
           id: "p1",
           name: "Кукла Лол",
           price: 5000,
+          priceIsFrom: false,
           imageUrl: null,
           updatedAt: null,
         },
@@ -62,6 +63,15 @@ test("lists products with their price, or a note when there is none", async () =
           id: "p2",
           name: "Петух",
           price: null,
+          priceIsFrom: false,
+          imageUrl: null,
+          updatedAt: null,
+        },
+        {
+          id: "p3",
+          name: "Шежіре",
+          price: 15500,
+          priceIsFrom: true,
           imageUrl: null,
           updatedAt: null,
         },
@@ -71,13 +81,17 @@ test("lists products with their price, or a note when there is none", async () =
   renderPage();
 
   const list = await screen.findByRole("list", { name: "Products" });
-  expect(list.querySelectorAll("li")).toHaveLength(2);
+  expect(list.querySelectorAll("li")).toHaveLength(3);
   expect(screen.getByText("Кукла Лол")).toBeInTheDocument();
   // The default normalizer turns the no-break spaces in the page into plain ones.
   expect(
     screen.getByText("5 000 ₸", { normalizer: text => text })
   ).toBeInTheDocument();
   expect(screen.getByText("No price yet")).toBeInTheDocument();
+  // A starting price says so.
+  expect(
+    screen.getByText("from 15 500 ₸", { normalizer: text => text })
+  ).toBeInTheDocument();
   expect(screen.queryByText("2 products")).not.toBeInTheDocument();
 });
 
@@ -89,6 +103,7 @@ test("sets a product's photo on the shelf only once it has loaded", async () => 
           id: "p1",
           name: "Кукла Лол",
           price: 5000,
+          priceIsFrom: false,
           imageUrl: "https://storage.test/doll.png",
           updatedAt: null,
         },
@@ -119,6 +134,7 @@ test("shows the name's first letter when there is no photo or it fails", async (
           id: "p1",
           name: "шежіре",
           price: 18000,
+          priceIsFrom: false,
           imageUrl: null,
           updatedAt: null,
         },
@@ -126,6 +142,7 @@ test("shows the name's first letter when there is no photo or it fails", async (
           id: "p2",
           name: "Broken",
           price: 100,
+          priceIsFrom: false,
           imageUrl: "https://storage.test/expired.png",
           updatedAt: null,
         },
@@ -162,6 +179,7 @@ test("tries a refreshed photo link again after the old one failed", () => {
     id: "p1",
     name: "Кукла Лол",
     price: 5000,
+    priceIsFrom: false,
     imageUrl,
     updatedAt: null,
   });
@@ -198,6 +216,7 @@ test("keeps the shelf when a refresh fails", async () => {
           id: "p1",
           name: "Кукла Лол",
           price: 5000,
+          priceIsFrom: false,
           imageUrl: null,
           updatedAt: null,
         },

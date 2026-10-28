@@ -70,7 +70,7 @@ function ShelfItem({
           </p>
         ) : (
           <p className="text-[15px] font-semibold tracking-tight tabular-nums">
-            {formatProductPrice(product.price)}
+            {formatProductPrice(product.price, { from: product.priceIsFrom })}
           </p>
         )}
       </div>

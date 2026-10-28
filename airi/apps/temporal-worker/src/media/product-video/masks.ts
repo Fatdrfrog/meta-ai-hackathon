@@ -44,18 +44,23 @@ export function maskFromRecord(record: SegmentationMaskRecord): Mask {
 export const maskArea = (mask: Mask): number =>
   mask.raster.reduce((sum, value) => sum + value, 0);
 
-/** Keeps the largest 4-connected piece, dropping specks; `share` is that piece's part of the mask. */
-export function largestComponent(mask: Mask): { mask: Mask; share: number } {
-  const { raster, width } = mask;
+/**
+ * The 4-connected pieces of a row-major raster's "on" pixels: each pixel's
+ * piece number (0 when off) and each piece's size, indexed by its number.
+ */
+export function labelPieces(
+  raster: ArrayLike<number>,
+  width: number,
+  threshold = 1,
+): { label: Int32Array; sizes: number[] } {
+  const on = (i: number) => raster[i]! >= threshold;
   const label = new Int32Array(raster.length);
+  const sizes = [0];
   const stack: number[] = [];
-  let next = 0;
-  let best = 0;
-  let bestSize = 0;
-  let total = 0;
   for (let start = 0; start < raster.length; start++) {
-    if (!raster[start] || label[start]) continue;
-    label[start] = ++next;
+    if (!on(start) || label[start]) continue;
+    const piece = sizes.length;
+    label[start] = piece;
     stack.push(start);
     let size = 0;
     while (stack.length > 0) {
@@ -69,24 +74,30 @@ export function largestComponent(mask: Mask): { mask: Mask; share: number } {
         p + width < raster.length ? p + width : -1,
       ];
       for (const q of neighbours) {
-        if (q >= 0 && raster[q] && !label[q]) {
-          label[q] = next;
+        if (q >= 0 && on(q) && !label[q]) {
+          label[q] = piece;
           stack.push(q);
         }
       }
     }
-    total += size;
-    if (size > bestSize) {
-      bestSize = size;
-      best = next;
-    }
+    sizes.push(size);
   }
-  const kept = new Uint8Array(raster.length);
-  for (let i = 0; i < raster.length; i++)
+  return { label, sizes };
+}
+
+/** Keeps the largest 4-connected piece, dropping specks; `share` is that piece's part of the mask. */
+export function largestComponent(mask: Mask): { mask: Mask; share: number } {
+  const { label, sizes } = labelPieces(mask.raster, mask.width);
+  let best = 0;
+  for (let piece = 1; piece < sizes.length; piece++)
+    if (sizes[piece]! > sizes[best]!) best = piece;
+  const total = sizes.reduce((sum, size) => sum + size, 0);
+  const kept = new Uint8Array(mask.raster.length);
+  for (let i = 0; i < kept.length; i++)
     kept[i] = label[i] === best && best !== 0 ? 1 : 0;
   return {
     mask: { ...mask, raster: kept },
-    share: total ? bestSize / total : 0,
+    share: total ? sizes[best]! / total : 0,
   };
 }
 

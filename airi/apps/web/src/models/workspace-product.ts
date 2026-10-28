@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import {
   PRODUCT_PHOTO_METHODS,
+  PRODUCT_PRICE_SOURCES,
   WORKSPACE_PRODUCT_STATUSES,
   type ProductPhotoMethod,
+  type ProductPriceSource,
   type StoredFileRef,
   type WorkspaceProductStatus,
 } from "@/lib/products/types";
@@ -35,8 +37,12 @@ export interface IWorkspaceProduct {
   category?: string;
   /** The currency the owner said, when it wasn't tenge. */
   currency?: string | null;
-  /** The narration's words the price came from. */
+  /** The narration's words, or the video's text, the price came from. */
   priceQuote?: string | null;
+  /** Said aloud or only written in the video; null without a price. */
+  priceSource?: ProductPriceSource | null;
+  /** A starting price ("from 15 500"): the final one depends on options. */
+  priceIsFrom: boolean;
   /** The English noun phrase SAM 3.1 finds the product by. */
   samPhrase?: string;
   /** What the owner should confirm before publishing, in English. */
@@ -84,6 +90,12 @@ const WorkspaceProductSchema = new mongoose.Schema<IWorkspaceProduct>(
     category: { type: String, trim: true, maxlength: 60 },
     currency: { type: String, trim: true, maxlength: 8, default: null },
     priceQuote: { type: String, trim: true, maxlength: 300, default: null },
+    priceSource: {
+      type: String,
+      enum: [...PRODUCT_PRICE_SOURCES, null],
+      default: null,
+    },
+    priceIsFrom: { type: Boolean, default: false },
     samPhrase: { type: String, trim: true, maxlength: 80 },
     doubts: { type: [{ type: String, maxlength: 400 }], default: [] },
     videoWindow: {

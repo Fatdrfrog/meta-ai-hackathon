@@ -55,6 +55,14 @@ export const PRODUCT_PHOTO_METHODS = [
 ] as const;
 export type ProductPhotoMethod = (typeof PRODUCT_PHOTO_METHODS)[number];
 
+/**
+ * Where a product's price came from. spoken: the owner's narration, checked
+ * word for word against the transcript. on_screen: text in the video, like a
+ * caption or a price sticker, which no transcript can confirm.
+ */
+export const PRODUCT_PRICE_SOURCES = ["spoken", "on_screen"] as const;
+export type ProductPriceSource = (typeof PRODUCT_PRICE_SOURCES)[number];
+
 export type ProductVideoImportWorkflowInput = {
   contractVersion: number;
   workspaceId: string;

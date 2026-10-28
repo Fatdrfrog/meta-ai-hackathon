@@ -7,9 +7,11 @@ import { WorkspaceProduct } from "@/models/workspace-product";
 import {
   MAX_LISTED_PRODUCTS,
   PRODUCT_PHOTO_METHODS,
+  PRODUCT_PRICE_SOURCES,
   WORKSPACE_PRODUCT_STATUSES,
   type DraftProductRecord,
   type ProductPhotoMethod,
+  type ProductPriceSource,
   type StoredFileRef,
   type WorkspaceProductRecord,
   type WorkspaceProductStatus,
@@ -45,6 +47,7 @@ async function toRecord(
     id: String(row._id),
     name: text(row.name) ?? "",
     price: finite(row.price),
+    priceIsFrom: row.priceIsFrom === true,
     // The small copy: the shelf shows products about 176 px tall.
     imageUrl: await productPhotoUrl(workspaceId, row.photo?.thumb),
     updatedAt: toIsoOrNull(row.updatedAt),
@@ -58,7 +61,7 @@ export async function listPublishedProducts(
   const rows = await WorkspaceProduct.find({ workspaceId, status: "published" })
     .sort({ position: 1, _id: 1 })
     .limit(MAX_LISTED_PRODUCTS)
-    .select("name price updatedAt photo.thumb")
+    .select("name price priceIsFrom updatedAt photo.thumb")
     .lean<ProductRow[]>();
   return withProductPhotoUrls(() =>
     Promise.all(rows.map(row => toRecord(workspaceId, row)))
@@ -72,7 +75,9 @@ export async function listImportProducts(
 ): Promise<DraftProductRecord[]> {
   const rows = await WorkspaceProduct.find({ workspaceId, importId })
     .sort({ importIndex: 1, _id: 1 })
-    .select("status name englishName price priceQuote doubts photo updatedAt")
+    .select(
+      "status name englishName price priceIsFrom priceQuote priceSource doubts photo updatedAt"
+    )
     .lean<ProductRow[]>();
   return withProductPhotoUrls(() =>
     Promise.all(
@@ -87,6 +92,11 @@ export async function listImportProducts(
             : "draft",
           englishName: text(row.englishName),
           priceQuote: text(row.priceQuote),
+          priceSource: (PRODUCT_PRICE_SOURCES as readonly unknown[]).includes(
+            row.priceSource
+          )
+            ? (row.priceSource as ProductPriceSource)
+            : null,
           doubts: Array.isArray(row.doubts)
             ? row.doubts.filter(
                 (doubt): doubt is string => typeof doubt === "string"

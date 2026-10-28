@@ -1,5 +1,9 @@
 import "server-only";
 import { logger } from "@/lib/logger";
+import {
+  productPhotoUrl,
+  withProductPhotoUrls,
+} from "@/lib/products/photo-urls";
 import { listImportProducts } from "@/lib/products/store";
 import {
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
@@ -104,13 +108,33 @@ const toIso = (value: unknown): string | null =>
     : null;
 
 /** One import with the products it found so far; null when it isn't this workspace's. */
+type PresenterPhoto = {
+  cutout?: Partial<StoredFileRef>;
+  thumb?: Partial<StoredFileRef>;
+  original?: Partial<StoredFileRef>;
+};
+
+/** The presenter's photos as links, or null until their cut-out is made. */
+async function presenterRecord(
+  workspaceId: string,
+  presenter: unknown
+): Promise<ProductVideoImportRecord["presenter"]> {
+  const photo = (presenter as { photo?: PresenterPhoto | null } | null)?.photo;
+  if (!photo) return null;
+  return withProductPhotoUrls(async () => ({
+    imageUrl: await productPhotoUrl(workspaceId, photo.thumb),
+    photoUrl: await productPhotoUrl(workspaceId, photo.cutout),
+    originalUrl: await productPhotoUrl(workspaceId, photo.original),
+  }));
+}
+
 export async function loadProductVideoImport(
   workspaceId: string,
   importId: string
 ): Promise<ProductVideoImportResponse | null> {
   const doc = await ProductVideoImport.findOne({ _id: importId, workspaceId })
     .select(
-      "status stage productTotal productDone errorCode createdAt finishedAt"
+      "status stage productTotal productDone errorCode presenter createdAt finishedAt"
     )
     .lean<Record<string, unknown>>();
   if (!doc) return null;
@@ -129,6 +153,7 @@ export async function loadProductVideoImport(
     ).includes(doc.errorCode)
       ? (doc.errorCode as ProductVideoImportErrorCode)
       : null,
+    presenter: await presenterRecord(workspaceId, doc.presenter),
     createdAt: toIso(doc.createdAt),
     finishedAt: toIso(doc.finishedAt),
   };

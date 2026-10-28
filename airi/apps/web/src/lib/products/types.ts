@@ -30,14 +30,17 @@ export type ProductVideoImportStatus =
 // The import job's own vocabulary, shared with the worker that runs it.
 export {
   PRODUCT_PHOTO_METHODS,
+  PRODUCT_PRICE_SOURCES,
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
   PRODUCT_VIDEO_IMPORT_STAGES,
   type ProductPhotoMethod,
+  type ProductPriceSource,
   type ProductVideoImportErrorCode,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
 import type {
   ProductPhotoMethod,
+  ProductPriceSource,
   ProductVideoImportErrorCode,
   ProductVideoImportStage,
 } from "@icecore/temporal";
@@ -54,6 +57,8 @@ export type WorkspaceProductRecord = {
   name: string;
   /** Whole tenge, or null while the owner hasn't set a price. */
   price: number | null;
+  /** A starting price, shown as "from …": the final one depends on options. */
+  priceIsFrom: boolean;
   /** The product cut out of the video on a transparent background, or null. */
   imageUrl: string | null;
   updatedAt: string | null;
@@ -68,8 +73,9 @@ export type DraftProductRecord = WorkspaceProductRecord & {
   status: WorkspaceProductStatus;
   /** The catalog name in English, beside the owner's own `name`. */
   englishName: string | null;
-  /** The narration's words the price came from. */
+  /** The narration's words, or the video's text, the price came from. */
   priceQuote: string | null;
+  priceSource: ProductPriceSource | null;
   /** What the owner should confirm, in English. */
   doubts: string[];
   photoMethod: ProductPhotoMethod;
@@ -89,6 +95,18 @@ export type ProductVideoImportRecord = {
   productTotal: number;
   productDone: number;
   errorCode: ProductVideoImportErrorCode | null;
+  /**
+   * The person who presents the products in the video, cut out to reuse
+   * beside them later; null when nobody presents them or it isn't made yet.
+   */
+  presenter: {
+    /** Small WebP copy of the cut-out. */
+    imageUrl: string | null;
+    /** The full-size transparent cut-out. */
+    photoUrl: string | null;
+    /** The frame as filmed. */
+    originalUrl: string | null;
+  } | null;
   createdAt: string | null;
   finishedAt: string | null;
 };
@@ -122,12 +140,16 @@ export type ProductsErrorBody = {
 /**
  * "5 000 ₸", the way shops in Kazakhstan write prices. Grouped by hand with
  * no-break spaces, so the server, every browser and every locale agree, and
- * a price never wraps between its digits and the sign.
+ * a price never wraps between its digits and the sign. A starting price
+ * reads "from 5 000 ₸".
  */
-export function formatProductPrice(price: number): string {
+export function formatProductPrice(
+  price: number,
+  options: { from?: boolean } = {}
+): string {
   const grouped = String(Math.round(price)).replace(
     /\B(?=(\d{3})+(?!\d))/g,
     " "
   );
-  return `${grouped} ₸`;
+  return `${options.from ? "from " : ""}${grouped} ₸`;
 }

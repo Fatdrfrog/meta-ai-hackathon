@@ -44,7 +44,7 @@ describe("listPublishedProducts", () => {
     expect(query.sort).toHaveBeenCalledWith({ position: 1, _id: 1 });
     expect(query.limit).toHaveBeenCalledWith(MAX_LISTED_PRODUCTS);
     expect(query.select).toHaveBeenCalledWith(
-      "name price updatedAt photo.thumb"
+      "name price priceIsFrom updatedAt photo.thumb"
     );
   });
 
@@ -55,6 +55,7 @@ describe("listPublishedProducts", () => {
           _id: "651f1f77bcf86cd799439031",
           name: "Кукла Лол",
           price: 5000,
+          priceIsFrom: true,
           photo: { thumb: { bucket: "media", path: "p1/thumb.webp" } },
           updatedAt: new Date("2026-10-27T09:30:00.000Z"),
         },
@@ -72,6 +73,7 @@ describe("listPublishedProducts", () => {
         id: "651f1f77bcf86cd799439031",
         name: "Кукла Лол",
         price: 5000,
+        priceIsFrom: true,
         imageUrl: "https://signed.test/workspace-1/p1/thumb.webp",
         updatedAt: "2026-10-27T09:30:00.000Z",
       },
@@ -79,6 +81,7 @@ describe("listPublishedProducts", () => {
         id: "651f1f77bcf86cd799439032",
         name: "Петух",
         price: null,
+        priceIsFrom: false,
         imageUrl: null,
         updatedAt: null,
       },
@@ -96,6 +99,7 @@ describe("listImportProducts", () => {
         englishName: "Frosted cup",
         price: 500,
         priceQuote: "бес жүз теңге",
+        priceSource: "spoken",
         doubts: ["Is it 500 or 5000?", 7],
         photo: {
           method: "restored",
@@ -110,6 +114,7 @@ describe("listImportProducts", () => {
         status: "odd",
         name: "Әтеш",
         price: null,
+        priceSource: "shouted",
         photo: { method: "weird" },
       },
     ]);
@@ -131,7 +136,9 @@ describe("listImportProducts", () => {
       name: "Кружка",
       englishName: "Frosted cup",
       price: 500,
+      priceIsFrom: false,
       priceQuote: "бес жүз теңге",
+      priceSource: "spoken",
       doubts: ["Is it 500 or 5000?"],
       photoMethod: "restored",
       imageUrl: "https://signed.test/workspace-1/p/thumb.webp",
@@ -143,6 +150,7 @@ describe("listImportProducts", () => {
     expect(products[1]).toMatchObject({
       status: "draft",
       englishName: null,
+      priceSource: null,
       doubts: [],
       photoMethod: "pending",
       imageUrl: null,

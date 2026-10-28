@@ -6,10 +6,15 @@ import test, { type TestContext } from "node:test";
 import sharp from "sharp";
 
 import {
+  backdropColor,
   cropAroundProduct,
   cutOutWithMask,
-  nonWhiteBox,
+  frameDifferences,
+  isMostlyLight,
   numberedGrid,
+  productBox,
+  shotAround,
+  WHITE,
 } from "./images";
 import { boxInPixels } from "./locate";
 import {
@@ -47,7 +52,7 @@ const halfSizeMask: Mask = {
 
 test("cuts out with smooth edges, trimmed to the product", async () => {
   const png = await cutOutWithMask(await redSquare(), halfSizeMask, {
-    whiteBackground: true,
+    backdrop: WHITE,
   });
   const { data, info } = await sharp(png)
     .raw()
@@ -83,7 +88,7 @@ async function haloPixels(png: Buffer): Promise<number> {
 
 test("leaves no white ring, even when SAM's mask is a pixel too big", async () => {
   const exact = await cutOutWithMask(await redSquare(), halfSizeMask, {
-    whiteBackground: true,
+    backdrop: WHITE,
   });
   const generous = await cutOutWithMask(
     await redSquare(),
@@ -94,11 +99,101 @@ test("leaves no white ring, even when SAM's mask is a pixel too big", async () =
       height: 42,
       bounds: { left: 29, top: 29, right: 71, bottom: 71 },
     },
-    { whiteBackground: true },
+    { backdrop: WHITE },
   );
 
   assert.equal(await haloPixels(exact), 0);
   assert.equal(await haloPixels(generous), 0);
+});
+
+// A second SAM mask that adds a speck far from the product, the way joined
+// masks left white specks beside a clock on the second test video.
+const speckMask = (left: number, top: number, size: number): Mask => ({
+  raster: new Uint8Array(size * size).fill(1),
+  width: size,
+  height: size,
+  bounds: { left, top, right: left + size, bottom: top + size },
+  confidence: 0.9,
+});
+
+test("drops stray pieces of joined masks and trims to the product", async () => {
+  const png = await cutOutWithMask(
+    await redSquare(),
+    [halfSizeMask, speckMask(4, 4, 6), speckMask(84, 80, 5)],
+    { backdrop: WHITE },
+  );
+  const { info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+
+  assert.deepEqual([info.width, info.height], [48, 48]);
+});
+
+test("keeps both halves of a pair", async () => {
+  const pair = await sharp({
+    create: { width: 100, height: 100, channels: 3, background: "#ffffff" },
+  })
+    .composite(
+      [10, 60].map((left) => ({
+        input: {
+          create: { width: 30, height: 30, channels: 3, background: "#ff0000" },
+        },
+        left,
+        top: 30,
+      })),
+    )
+    .png()
+    .toBuffer();
+  const png = await cutOutWithMask(
+    pair,
+    [speckMask(10, 30, 30), speckMask(60, 30, 30)],
+    { backdrop: WHITE },
+  );
+  const { info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+
+  assert.deepEqual([info.width, info.height], [88, 38]);
+});
+
+// Frame-to-frame differences shaped like the test videos': a still edited
+// promo with a hard cut (the medal hanger's clip cut to the next scene at
+// 0.21), and a hand-held video whose fast swing reached 0.16 among busy
+// neighbours.
+const still = (length: number) =>
+  Array.from({ length }, (_, i) => (i === 0 ? 0 : 0.004 + (i % 3) * 0.002));
+
+test("finds the shot a frame belongs to, splitting at hard cuts only", () => {
+  const promo = still(34);
+  promo[32] = 0.21;
+  assert.deepEqual(shotAround(promo, 2), { first: 0, last: 31 });
+  assert.deepEqual(shotAround(promo, 33), { first: 32, last: 33 });
+
+  const handHeld = Array.from({ length: 40 }, (_, i) =>
+    i === 0 ? 0 : 0.03 + (i % 4) * 0.02,
+  );
+  handHeld[20] = 0.13;
+  handHeld[21] = 0.16;
+  handHeld[22] = 0.12;
+  assert.deepEqual(shotAround(handHeld, 5), { first: 0, last: 39 });
+});
+
+test("measures how much each frame differs from the one before", async (t) => {
+  const frame = async (name: string, background: string) => {
+    const path = await tempFile(t, name);
+    await sharp({
+      create: { width: 64, height: 64, channels: 3, background },
+    })
+      .jpeg()
+      .toFile(path);
+    return path;
+  };
+  const black = await frame("a.jpg", "#000000");
+  const differences = await frameDifferences([
+    black,
+    await frame("b.jpg", "#000000"),
+    await frame("c.jpg", "#ffffff"),
+  ]);
+
+  assert.equal(differences.length, 3);
+  assert.deepEqual(differences.slice(0, 2), [0, 0]);
+  assert.ok(differences[2]! > 0.95);
 });
 
 async function tempFile(t: TestContext, name: string) {
@@ -208,10 +303,20 @@ test("asks Muse Image for the crop's shape and an honest restore", () => {
   const prompt = restorePrompt("LOL doll");
   assert.match(prompt, /Remove the person's hand/);
   assert.match(prompt, /do not retouch, beautify or idealise it/);
+  assert.match(
+    prompt,
+    /captions, subtitles, prices, stickers or logos laid over the video/,
+  );
+  assert.match(prompt, /engraved or written on the product itself stays/);
+  assert.match(prompt, /plain pure white background/);
+  assert.match(
+    restorePrompt("medal hanger", "grey"),
+    /plain, flat mid-grey background, the same grey everywhere/,
+  );
 });
 
 test("finds the product on a white background by what isn't white", async () => {
-  assert.deepEqual(await nonWhiteBox(await redSquare()), {
+  assert.deepEqual(await productBox(await redSquare()), {
     left: 30,
     top: 30,
     right: 70,
@@ -222,5 +327,78 @@ test("finds the product on a white background by what isn't white", async () => 
   })
     .png()
     .toBuffer();
-  assert.equal(await nonWhiteBox(blank), null);
+  assert.equal(await productBox(blank), null);
+});
+
+// A white medal hanger on Muse Image's grey: the product is told apart from
+// the backdrop by colour, whatever the backdrop is.
+const onGrey = () =>
+  sharp({
+    create: { width: 100, height: 100, channels: 3, background: "#8c8c8c" },
+  })
+    .composite([
+      {
+        input: {
+          create: { width: 40, height: 20, channels: 3, background: "#f4f4f4" },
+        },
+        left: 20,
+        top: 50,
+      },
+    ])
+    .png()
+    .toBuffer();
+
+test("finds the product on any plain backdrop, and the backdrop's colour", async () => {
+  const image = await onGrey();
+  const grey = await backdropColor(image);
+
+  assert.deepEqual(grey, { r: 140, g: 140, b: 140 });
+  assert.deepEqual(await productBox(image, grey), {
+    left: 20,
+    top: 50,
+    right: 60,
+    bottom: 70,
+  });
+  // Grey is no product, but on white it would be.
+  const blank = await sharp({
+    create: { width: 20, height: 20, channels: 3, background: "#8c8c8c" },
+  })
+    .png()
+    .toBuffer();
+  assert.equal(await productBox(blank, grey), null);
+  assert.notEqual(await productBox(blank, WHITE), null);
+});
+
+test("takes a grey backdrop back out of the edge pixels, not white", async () => {
+  // Softened, like a real photo: edge pixels mix product and backdrop.
+  const image = await sharp(await onGrey())
+    .blur(1.5)
+    .png()
+    .toBuffer();
+  const mask = {
+    raster: new Uint8Array(20 * 10).fill(1),
+    width: 20,
+    height: 10,
+    bounds: { left: 20, top: 50, right: 60, bottom: 70 },
+    confidence: 0.9,
+  };
+  const png = await cutOutWithMask(image, mask, {
+    backdrop: { r: 140, g: 140, b: 140 },
+  });
+  const { data } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+  // Every visible pixel is the product's near-white, none the backdrop's grey.
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3]! < 40) continue;
+    assert.ok(data[i]! > 200, `pixel ${i / 4} is ${data[i]}`);
+  }
+});
+
+test("tells a mostly light product from a darker one", async () => {
+  const square = (background: string) =>
+    sharp({ create: { width: 10, height: 10, channels: 4, background } })
+      .png()
+      .toBuffer();
+  assert.equal(await isMostlyLight(await square("#f2f2f0")), true);
+  assert.equal(await isMostlyLight(await square("#e0115f")), false);
+  assert.equal(await isMostlyLight(await square("#20202000")), false);
 });

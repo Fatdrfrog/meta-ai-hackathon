@@ -7,6 +7,7 @@ import {
 import {
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
   type ProductPhotoMethod,
+  type ProductPriceSource,
   type ProductVideoImportErrorCode,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
@@ -18,6 +19,7 @@ import {
   readProductInventory,
 } from "./inventory";
 import { prepareProductVideo, ProductVideoError } from "./media";
+import { cutOutPresenter } from "./presenter";
 
 // One product video import, start to finish, written against small ports so
 // the Temporal activity supplies Mongo, storage, spend and realtime, and
@@ -39,6 +41,8 @@ const THUMB_HEIGHT = 352;
 const INVENTORY_MAX_COST_MICROS = 300_000;
 const PRODUCT_MAX_COST_MICROS = 150_000;
 const TRANSCRIPTION_MAX_COST_MICROS = 100_000;
+// The presenter: one Muse Spark frame pick and one SAM image, about $0.01.
+const PRESENTER_MAX_COST_MICROS = 50_000;
 
 export type StoredFileRef = { bucket: string; path: string };
 
@@ -63,6 +67,8 @@ export type ImportRecord = {
   status: "queued" | "processing" | "ready" | "failed";
   video: StoredFileRef;
   transcript: string | null;
+  /** The person presenting the products, once the video was watched; null when no one does. */
+  presenter: { momentSeconds: number; done: boolean } | null;
 };
 
 export type ImportProduct = {
@@ -82,6 +88,8 @@ export type NewDraftProduct = {
   price: number | null;
   currency: string | null;
   priceQuote: string | null;
+  priceSource: ProductPriceSource | null;
+  priceIsFrom: boolean;
   samPhrase: string;
   doubts: string[];
   videoWindow: { fromSeconds: number; toSeconds: number };
@@ -117,6 +125,11 @@ export type ImportJobPorts = {
       productId: string,
       file: { buffer: Buffer; mimeType: string; fileName: string },
     ): Promise<StoredFileRef>;
+    savePresenterPhoto(file: {
+      buffer: Buffer;
+      mimeType: string;
+      fileName: string;
+    }): Promise<StoredFileRef>;
   };
   /** Null where the workspace's AI isn't billed to airi, so nothing is reserved. */
   spend: {
@@ -144,6 +157,7 @@ export type ImportJobPorts = {
   prepare?: typeof prepareProductVideo;
   readInventory?: typeof readProductInventory;
   cutOut?: typeof cutOutProduct;
+  cutOutPresenter?: typeof cutOutPresenter;
 };
 
 export async function runProductVideoImport(
@@ -201,6 +215,7 @@ export async function runProductVideoImport(
     await store.updateImport({ transcript });
   }
 
+  let presenter = job.presenter;
   let products = await store.listProducts();
   if (products.length === 0) {
     await stage("watching");
@@ -220,6 +235,17 @@ export async function runProductVideoImport(
     const items = inventory.items.slice(0, PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS);
     const checks = inventoryChecks(items, transcript ?? "");
     const windows = presentationWindows(items, prepared.durationSeconds);
+    // Saved before the products, so a retry that skips watching still knows.
+    presenter = inventory.presenter && {
+      momentSeconds: inventory.presenter.clearestMomentSeconds,
+      done: false,
+    };
+    await store.updateImport({
+      presenter: presenter && {
+        momentSeconds: presenter.momentSeconds,
+        photo: null,
+      },
+    });
     await store.createProducts(
       items.map((item, index) => ({
         importIndex: index,
@@ -229,6 +255,8 @@ export async function runProductVideoImport(
         price: item.price === null ? null : Math.round(item.price),
         currency: item.currency,
         priceQuote: item.priceQuote,
+        priceSource: item.priceSource,
+        priceIsFrom: item.priceIsFrom,
         samPhrase: item.samPhrase,
         doubts: [...(item.doubt ? [item.doubt] : []), ...(checks[index] ?? [])],
         videoWindow: windows[index]!,
@@ -249,6 +277,9 @@ export async function runProductVideoImport(
   await forEachWithConcurrency(pending, CUT_CONCURRENCY, (product) =>
     cutAndSave(ports, prepared.videoPath, product),
   );
+  if (presenter && !presenter.done) {
+    await cutAndSavePresenter(ports, prepared, presenter.momentSeconds);
+  }
 
   await store.updateImport({
     status: "ready",
@@ -320,16 +351,76 @@ async function cutAndSave(
     });
   }
   photo.thumb = await ports.storage.savePhoto(product.id, {
-    buffer: await sharp(shelfSource)
-      .resize({ height: THUMB_HEIGHT, withoutEnlargement: true })
-      .webp({ quality: 82, alphaQuality: 90 })
-      .toBuffer(),
+    buffer: await smallCopy(shelfSource),
     mimeType: "image/webp",
     fileName: "thumb.webp",
   });
   await ports.store.savePhoto(product.id, photo, cutout.notes);
   await ports.store.updateImport({}, { productDone: 1 });
   await ports.emit("photo", product.id);
+}
+
+/** The WebP copy the shelf and lists show, about twice its display height. */
+function smallCopy(image: Buffer): Promise<Buffer> {
+  return sharp(image)
+    .resize({ height: THUMB_HEIGHT, withoutEnlargement: true })
+    .webp({ quality: 82, alphaQuality: 90 })
+    .toBuffer();
+}
+
+/**
+ * Cuts out the person presenting the products and saves them on the import.
+ * They're an extra: when they can't be cut out, the import goes on without
+ * them rather than failing.
+ */
+async function cutAndSavePresenter(
+  ports: ImportJobPorts,
+  prepared: { videoPath: string; durationSeconds: number },
+  momentSeconds: number,
+): Promise<void> {
+  let cutout: Awaited<ReturnType<typeof cutOutPresenter>>;
+  try {
+    cutout = await withSpend(
+      ports,
+      "presenter",
+      "meta",
+      PRESENTER_MAX_COST_MICROS,
+      async (onCost) => ({
+        value: await (ports.cutOutPresenter ?? cutOutPresenter)(
+          {
+            videoPath: prepared.videoPath,
+            momentSeconds,
+            durationSeconds: prepared.durationSeconds,
+            workDir: join(ports.workDir, "presenter"),
+          },
+          { onCost, pulse: ports.pulse, signal: ports.signal },
+          { signal: ports.signal },
+        ),
+      }),
+    );
+  } catch (error) {
+    if (!isPermanentProductError(error)) throw error;
+    cutout = null;
+  }
+  if (!cutout) {
+    await ports.store.updateImport({ presenter: null });
+    return;
+  }
+  const png = await readFile(cutout.cutoutPath);
+  const save = (buffer: Buffer, mimeType: string, fileName: string) =>
+    ports.storage.savePresenterPhoto({ buffer, mimeType, fileName });
+  const photo = {
+    original: await save(
+      await readFile(cutout.originalPath),
+      "image/jpeg",
+      "original.jpg",
+    ),
+    cutout: await save(png, "image/png", "cutout.png"),
+    thumb: await save(await smallCopy(png), "image/webp", "thumb.webp"),
+    frameTimeSeconds: cutout.frameTimeSeconds,
+  };
+  await ports.store.updateImport({ presenter: { momentSeconds, photo } });
+  await ports.emit("import");
 }
 
 function isPermanentProductError(error: unknown): boolean {
