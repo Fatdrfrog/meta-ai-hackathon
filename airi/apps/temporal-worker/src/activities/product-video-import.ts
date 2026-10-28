@@ -80,15 +80,25 @@ function mongoStore(
     async listProducts() {
       const docs = await WorkspaceProduct.find(productFilter)
         .sort({ importIndex: 1 })
-        .select("name englishName samPhrase videoWindow photo.method")
+        .select(
+          "name englishName options.description options.samPhrase options.videoWindow options.photo.method",
+        )
         .lean();
       return docs.map(
         (doc): ImportProduct => ({
           id: String(doc._id),
           englishName: doc.englishName || doc.name,
-          samPhrase: doc.samPhrase || doc.englishName || doc.name,
-          videoWindow: doc.videoWindow ?? { fromSeconds: 0, toSeconds: 0 },
-          photoMethod: doc.photo?.method ?? "pending",
+          options: (doc.options ?? []).map((option, index) => ({
+            index,
+            description: option.description || doc.englishName || doc.name,
+            samPhrase:
+              option.samPhrase ||
+              option.description ||
+              doc.englishName ||
+              doc.name,
+            videoWindow: option.videoWindow ?? { fromSeconds: 0, toSeconds: 0 },
+            photoMethod: option.photo?.method ?? "pending",
+          })),
         }),
       );
     },
@@ -109,7 +119,11 @@ function mongoStore(
             status: "draft",
             importId: input.importId,
             position: base + draft.importIndex,
-            photo: { method: "pending" },
+            options: draft.options.map((option) => ({
+              ...option,
+              photo: { method: "pending" },
+              notes: [],
+            })),
           })),
           { ordered: false },
         );
@@ -119,12 +133,14 @@ function mongoStore(
         if (!isDuplicateKeyError(error)) throw error;
       }
     },
-    async savePhoto(productId, photo, notes) {
+    async savePhoto(productId, optionIndex, photo, notes) {
       await WorkspaceProduct.updateOne(
         { _id: productId, ...productFilter },
         {
-          $set: { photo },
-          ...(notes.length ? { $push: { doubts: { $each: notes } } } : {}),
+          $set: { [`options.${optionIndex}.photo`]: photo },
+          ...(notes.length
+            ? { $push: { [`options.${optionIndex}.notes`]: { $each: notes } } }
+            : {}),
         },
       );
     },

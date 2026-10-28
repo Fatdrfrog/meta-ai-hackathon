@@ -23,4 +23,28 @@ describe("WorkspaceProduct", () => {
   it("starts as a draft", () => {
     expect(product(100).status).toBe("draft");
   });
+
+  it("holds the items shown for it as options, the first featured by default", () => {
+    const panel = new WorkspaceProduct({
+      workspaceId: "workspace-1",
+      name: "Шежіре",
+      price: 15500,
+      options: [
+        { description: "round tree-of-life panel" },
+        { description: "star-shaped plaque", photo: { method: "restored" } },
+      ],
+    });
+
+    expect(panel.validateSync()).toBeUndefined();
+    expect(panel.featuredOption).toBe(0);
+    expect(panel.options[0]?.photo).toBeUndefined();
+    expect(panel.options[1]?.notes).toEqual([]);
+    expect(
+      new WorkspaceProduct({
+        workspaceId: "workspace-1",
+        name: "Шежіре",
+        options: [{ description: "" }],
+      }).validateSync()?.errors["options.0.description"]
+    ).toBeDefined();
+  });
 });

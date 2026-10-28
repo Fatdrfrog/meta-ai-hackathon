@@ -9,21 +9,26 @@ import {
   bestMetaSamMask,
   segmentMetaImage as samImage,
 } from "@icecore/airi-runtime/meta-sam";
-import sharp from "sharp";
 import { askMuseAboutImages } from "./ask-muse";
 import { segmentRestored, type CutOutProductDeps } from "./cutout";
 import {
   backdropColor,
   cropAroundProduct,
   cutOutWithMask,
-  isMostlyLight,
+  backdropShares,
   jpegDataUrl,
   numberedGrid,
 } from "./images";
 import { largestComponent, maskArea, maskFromRecord, type Box } from "./masks";
 import { extractClipFrames, extractProductClip } from "./media";
 import { whilePulsing } from "./pulse";
-import { backdropWords, restoreSize, type RestoreBackdrop } from "./restore";
+import {
+  backdropWords,
+  chooseBackdrop,
+  cutoutForMuse,
+  restoreSize,
+  type RestoreBackdrop,
+} from "./restore";
 
 // Shops often film a person presenting the products: the owner, or someone
 // presenting for them. Their cut-out is kept with the import as an asset to
@@ -154,7 +159,9 @@ async function cleanUpPresenter(
   options?: MetaRequestOptions,
 ): Promise<Buffer | null> {
   const { crop } = request;
-  const backdrop = (await isMostlyLight(request.filmed)) ? "grey" : "white";
+  const { backdrop, holes } = chooseBackdrop(
+    await backdropShares(request.filmed),
+  );
   let restored: Buffer;
   try {
     const result = await whilePulsing(deps.pulse, () =>
@@ -182,17 +189,13 @@ async function cleanUpPresenter(
   const color = await backdropColor(restored);
   const masks = await segmentRestored(restored, "person", color, deps, options);
   if (masks.length === 0) return null;
-  const cutout = await cutOutWithMask(restored, masks, { backdrop: color });
+  const cutout = await cutOutWithMask(restored, masks, {
+    backdrop: color,
+    holes,
+  });
   const answer = await askMuseAboutImages<{ same: boolean }>(
     {
-      images: [
-        crop.image,
-        await sharp(cutout)
-          .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
-          .flatten({ background: "#ffffff" })
-          .jpeg({ quality: 88 })
-          .toBuffer(),
-      ],
+      images: [crop.image, await cutoutForMuse(cutout)],
       question:
         `Image 1 is a frame from a shop's video showing a person, possibly with captions or graphics over it. ` +
         `Image 2 is a cleaned-up photo made from it: overlaid captions and graphics removed and the background replaced. ` +

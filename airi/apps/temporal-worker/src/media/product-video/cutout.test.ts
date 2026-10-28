@@ -220,6 +220,8 @@ test("restores the product, cuts it out and keeps the filmed crop", async (t) =>
 
   assert.equal(cutout.method, "restored");
   assert.deepEqual(cutout.notes, []);
+  // Nobody is looked for when the restored photo is used.
+  assert.ok(!costs.includes("find people"));
   // Frame 1 of the clip, SAM's surest view: 4 s + 1/10 s.
   assert.equal(cutout.frameTimeSeconds, 4.1);
   assert.equal(cutout.samConfidence, 0.95);
@@ -335,7 +337,7 @@ test("restores once more when the first restored photo looks different", async (
 });
 
 test("uses the filmed product when the restored photo looks different twice", async (t) => {
-  const { deps, request, requests } = await setUp(t, {
+  const { deps, request, requests, costs } = await setUp(t, {
     sameProduct: false,
     difference: "The doll's dress is red instead of blue.",
   });
@@ -344,6 +346,9 @@ test("uses the filmed product when the restored photo looks different twice", as
 
   assert.equal(requests.filter((r) => r === "restore").length, 2);
   assert.equal(cutout.method, "tracked");
+  assert.equal(cutout.straightenedDegrees, 0);
+  // The filmed photo is checked for a presenter standing in front of it.
+  assert.ok(costs.includes("find people"));
   assert.deepEqual(cutout.notes, [
     "The cleaned-up photo looked different (The doll's dress is red instead of blue), so the original is used.",
   ]);

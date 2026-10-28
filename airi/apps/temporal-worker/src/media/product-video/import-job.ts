@@ -5,9 +5,10 @@ import {
   MetaModelApiError,
 } from "@icecore/airi-runtime/meta-model-api";
 import {
+  PRODUCT_VIDEO_IMPORT_MAX_PHOTOS,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
   type ProductPhotoMethod,
-  type ProductPriceSource,
+  type ProductTextSource,
   type ProductVideoImportErrorCode,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
@@ -24,10 +25,10 @@ import { cutOutPresenter } from "./presenter";
 // One product video import, start to finish, written against small ports so
 // the Temporal activity supplies Mongo, storage, spend and realtime, and
 // tests supply fakes. Every step is saved as it finishes (the transcript, the
-// draft products, each photo), so a retried run skips what is done and pays
-// only for what isn't.
+// draft products, each option's photo), so a retried run skips what is done
+// and pays only for what isn't.
 
-/** Products cut out at once: each mostly waits on Meta's models. */
+/** Photos made at once: each mostly waits on Meta's models. */
 const CUT_CONCURRENCY = 4;
 /** Videos larger than this aren't downloaded; phones film a few minutes in well under it. */
 export const MAX_SOURCE_VIDEO_BYTES = 1024 * 1024 * 1024;
@@ -35,11 +36,11 @@ const THUMB_HEIGHT = 352;
 
 // Spend reserved before each paid step, in micro-dollars, and settled with
 // what it really cost. Inventory: one Muse Spark call over the whole video
-// (about $0.04 for a minute). A product: about $0.05 of Muse, SAM and Muse
-// Image calls. Transcription: the same flat amount conversation
-// transcription reserves.
+// (about $0.04 for a minute). A photo: about $0.06 of Muse, SAM and Muse
+// Image calls, more when a restore is tried twice. Transcription: the same
+// flat amount conversation transcription reserves.
 const INVENTORY_MAX_COST_MICROS = 300_000;
-const PRODUCT_MAX_COST_MICROS = 150_000;
+const PHOTO_MAX_COST_MICROS = 150_000;
 const TRANSCRIPTION_MAX_COST_MICROS = 100_000;
 // The presenter: one Muse Spark frame pick and one SAM image, about $0.01.
 const PRESENTER_MAX_COST_MICROS = 50_000;
@@ -71,28 +72,45 @@ export type ImportRecord = {
   presenter: { momentSeconds: number; done: boolean } | null;
 };
 
-export type ImportProduct = {
-  id: string;
-  /** The catalog name in English, which the models are prompted with. */
-  englishName: string;
+/** One of a product's options, as the photo step needs it. */
+export type ImportOption = {
+  /** Its place among the product's options. */
+  index: number;
+  /** English words that tell it apart, which the models are prompted with. */
+  description: string;
   samPhrase: string;
   videoWindow: { fromSeconds: number; toSeconds: number };
   photoMethod: ProductPhotoMethod;
+};
+
+export type ImportProduct = {
+  id: string;
+  /** The catalog name in English. */
+  englishName: string;
+  options: ImportOption[];
+};
+
+export type NewDraftOption = {
+  description: string;
+  samPhrase: string;
+  videoWindow: { fromSeconds: number; toSeconds: number };
 };
 
 export type NewDraftProduct = {
   importIndex: number;
   name: string;
   englishName: string;
+  nameSource: ProductTextSource;
   category: string;
   price: number | null;
   currency: string | null;
   priceQuote: string | null;
-  priceSource: ProductPriceSource | null;
+  priceSource: ProductTextSource | null;
   priceIsFrom: boolean;
-  samPhrase: string;
   doubts: string[];
-  videoWindow: { fromSeconds: number; toSeconds: number };
+  options: NewDraftOption[];
+  /** The option the shelf shows for the product. */
+  featuredOption: number;
 };
 
 export type ProductPhoto = {
@@ -101,6 +119,8 @@ export type ProductPhoto = {
   thumb?: StoredFileRef;
   original?: StoredFileRef;
   frameTimeSeconds?: number;
+  /** Degrees the photo was turned to stand level, clockwise; 0 when it wasn't. */
+  straightenedDegrees?: number;
 };
 
 export type ImportJobPorts = {
@@ -108,13 +128,14 @@ export type ImportJobPorts = {
     loadImport(): Promise<ImportRecord | null>;
     updateImport(
       set: Record<string, unknown>,
-      inc?: { productDone?: number; costUsd?: number },
+      inc?: { photoDone?: number; costUsd?: number },
     ): Promise<void>;
     listProducts(): Promise<ImportProduct[]>;
     /** Adds the drafts after everything on the workspace's shelf; a retry adds none twice. */
     createProducts(drafts: NewDraftProduct[]): Promise<void>;
     savePhoto(
       productId: string,
+      optionIndex: number,
       photo: ProductPhoto,
       notes: string[],
     ): Promise<void>;
@@ -232,9 +253,26 @@ export async function runProductVideoImport(
         ),
       }),
     );
-    const items = inventory.items.slice(0, PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS);
+    // Options past the photo cap are left out: the cap holds an import's cost.
+    let photosLeft = PRODUCT_VIDEO_IMPORT_MAX_PHOTOS;
+    const items = inventory.items
+      .slice(0, PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS)
+      .map((item) => {
+        const options = item.options.slice(0, Math.max(0, photosLeft));
+        photosLeft -= options.length;
+        return {
+          ...item,
+          options,
+          featuredOption:
+            item.featuredOption < options.length ? item.featuredOption : 0,
+        };
+      });
     const checks = inventoryChecks(items, transcript ?? "");
-    const windows = presentationWindows(items, prepared.durationSeconds);
+    const windows = presentationWindows(
+      items.flatMap((item) => item.options),
+      prepared.durationSeconds,
+    );
+    let window = 0;
     // Saved before the products, so a retry that skips watching still knows.
     presenter = inventory.presenter && {
       momentSeconds: inventory.presenter.clearestMomentSeconds,
@@ -251,31 +289,45 @@ export async function runProductVideoImport(
         importIndex: index,
         name: item.localName || item.name,
         englishName: item.name,
+        nameSource: item.nameSource,
         category: item.category,
         price: item.price === null ? null : Math.round(item.price),
         currency: item.currency,
         priceQuote: item.priceQuote,
         priceSource: item.priceSource,
         priceIsFrom: item.priceIsFrom,
-        samPhrase: item.samPhrase,
         doubts: [...(item.doubt ? [item.doubt] : []), ...(checks[index] ?? [])],
-        videoWindow: windows[index]!,
+        options: item.options.map((option) => ({
+          description: option.description,
+          samPhrase: option.samPhrase,
+          videoWindow: windows[window++]!,
+        })),
+        featuredOption: item.featuredOption,
       })),
     );
     products = await store.listProducts();
     await store.updateImport({
       language: inventory.language || null,
       productTotal: products.length,
+      photoTotal: products.reduce(
+        (total, product) => total + product.options.length,
+        0,
+      ),
     });
     await ports.emit("products_found");
   }
 
   await stage("cutting");
-  const pending = products.filter(
-    (product) => product.photoMethod === "pending",
+  const pending = products.flatMap((product) =>
+    product.options
+      .filter((option) => option.photoMethod === "pending")
+      .map((option) => ({ product, option })),
   );
-  await forEachWithConcurrency(pending, CUT_CONCURRENCY, (product) =>
-    cutAndSave(ports, prepared.videoPath, product),
+  await forEachWithConcurrency(
+    pending,
+    CUT_CONCURRENCY,
+    ({ product, option }) =>
+      cutAndSave(ports, prepared.videoPath, product, option),
   );
   if (presenter && !presenter.done) {
     await cutAndSavePresenter(ports, prepared, presenter.momentSeconds);
@@ -295,22 +347,28 @@ async function cutAndSave(
   ports: ImportJobPorts,
   videoPath: string,
   product: ImportProduct,
+  option: ImportOption,
 ): Promise<void> {
   let cutout: ProductCutout;
   try {
     cutout = await withSpend(
       ports,
-      `product:${product.id}`,
+      `photo:${product.id}:${option.index}`,
       "meta",
-      PRODUCT_MAX_COST_MICROS,
+      PHOTO_MAX_COST_MICROS,
       async (onCost) => ({
         value: await (ports.cutOut ?? cutOutProduct)(
           {
             videoPath,
-            window: product.videoWindow,
-            name: product.englishName,
-            samPhrase: product.samPhrase,
-            workDir: join(ports.workDir, "products", product.id),
+            window: option.videoWindow,
+            name: option.description || product.englishName,
+            samPhrase: option.samPhrase,
+            workDir: join(
+              ports.workDir,
+              "products",
+              product.id,
+              String(option.index),
+            ),
           },
           { onCost, pulse: ports.pulse, signal: ports.signal },
           { signal: ports.signal },
@@ -318,45 +376,47 @@ async function cutAndSave(
       }),
     );
   } catch (error) {
-    // A problem with this one product (no frames in its stretch, a model
+    // A problem with this one option (no frames in its stretch, a model
     // answer that will fail the same way again): the others carry on, and the
     // owner sees why it has no photo.
     if (!isPermanentProductError(error)) throw error;
-    await ports.store.savePhoto(product.id, { method: "none" }, [
+    await ports.store.savePhoto(product.id, option.index, { method: "none" }, [
       "The photo couldn't be made from the video.",
     ]);
-    await ports.store.updateImport({}, { productDone: 1 });
+    await ports.store.updateImport({}, { photoDone: 1 });
     await ports.emit("photo", product.id);
     return;
   }
 
-  const original = await ports.storage.savePhoto(product.id, {
-    buffer: await readFile(cutout.originalPath),
-    mimeType: "image/jpeg",
-    fileName: "original.jpg",
-  });
+  const save = (buffer: Buffer, mimeType: string, name: string) =>
+    ports.storage.savePhoto(product.id, {
+      buffer,
+      mimeType,
+      fileName: `option-${option.index}-${name}`,
+    });
   const photo: ProductPhoto = {
     method: cutout.method,
-    original,
+    original: await save(
+      await readFile(cutout.originalPath),
+      "image/jpeg",
+      "original.jpg",
+    ),
     frameTimeSeconds: cutout.frameTimeSeconds,
+    straightenedDegrees: cutout.straightenedDegrees,
   };
   const shelfSource = cutout.cutoutPath
     ? await readFile(cutout.cutoutPath)
     : await readFile(cutout.originalPath);
   if (cutout.cutoutPath) {
-    photo.cutout = await ports.storage.savePhoto(product.id, {
-      buffer: shelfSource,
-      mimeType: "image/png",
-      fileName: "cutout.png",
-    });
+    photo.cutout = await save(shelfSource, "image/png", "cutout.png");
   }
-  photo.thumb = await ports.storage.savePhoto(product.id, {
-    buffer: await smallCopy(shelfSource),
-    mimeType: "image/webp",
-    fileName: "thumb.webp",
-  });
-  await ports.store.savePhoto(product.id, photo, cutout.notes);
-  await ports.store.updateImport({}, { productDone: 1 });
+  photo.thumb = await save(
+    await smallCopy(shelfSource),
+    "image/webp",
+    "thumb.webp",
+  );
+  await ports.store.savePhoto(product.id, option.index, photo, cutout.notes);
+  await ports.store.updateImport({}, { photoDone: 1 });
   await ports.emit("photo", product.id);
 }
 

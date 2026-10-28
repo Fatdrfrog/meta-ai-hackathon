@@ -1,5 +1,8 @@
 // The owner's narration as Muse Spark reads it: one sentence per line, each
-// with its start time, like "[12.3] Кукла Лол, бес мың теңге."
+// with its start time, like "[12.3] Кукла Лол, бес мың теңге." A long
+// sentence gets time marks inside it as well, at most MARK_EVERY_SECONDS
+// apart: an edited promo shows several products during one sentence, and
+// Muse needs to know which words were said over which of them.
 //
 // Muse Spark missed spoken prices in most test runs and Muse Voice Transcribe
 // has no Kazakh or Russian, so ElevenLabs Scribe listens and Meta's models
@@ -27,6 +30,32 @@ function scribeWords(payload: unknown): ScribeWord[] {
   });
 }
 
+// Sentences this long get marks inside, at most this far apart.
+const LONG_SENTENCE_SECONDS = 3;
+const MARK_EVERY_SECONDS = 1.5;
+
+/** One sentence as a line: its start time, and marks inside when it runs long. */
+function sentenceLine(words: ScribeWord[]): string {
+  const spoken = words.filter((word) => word.type === "word");
+  const first = spoken[0]?.start ?? 0;
+  const long =
+    spoken.length > 0 && spoken.at(-1)!.start - first >= LONG_SENTENCE_SECONDS;
+  let text = "";
+  let marked = first;
+  for (const word of words) {
+    if (
+      long &&
+      word.type === "word" &&
+      word.start - marked >= MARK_EVERY_SECONDS
+    ) {
+      text += `[${word.start.toFixed(1)}] `;
+      marked = word.start;
+    }
+    text += word.text;
+  }
+  return `[${first.toFixed(1)}] ${text.trim()}`;
+}
+
 /** Lines from a Scribe response with word timestamps; its plain text when it has none. */
 export function scribeTranscriptLines(payload: unknown): string {
   const words = scribeWords(payload);
@@ -38,19 +67,16 @@ export function scribeTranscriptLines(payload: unknown): string {
     return typeof text === "string" ? text.trim() : "";
   }
   const lines: string[] = [];
-  let current = "";
-  let start: number | undefined;
+  let sentence: ScribeWord[] = [];
   for (const word of words) {
     if (word.type === "audio_event") continue;
-    if (start === undefined && word.type === "word") start = word.start;
-    current += word.text;
+    sentence.push(word);
     if (word.type === "word" && /[.!?]$/.test(word.text)) {
-      lines.push(`[${(start ?? 0).toFixed(1)}] ${current.trim()}`);
-      current = "";
-      start = undefined;
+      lines.push(sentenceLine(sentence));
+      sentence = [];
     }
   }
-  if (current.trim())
-    lines.push(`[${(start ?? 0).toFixed(1)}] ${current.trim()}`);
+  if (sentence.some((word) => word.text.trim()))
+    lines.push(sentenceLine(sentence));
   return lines.join("\n");
 }

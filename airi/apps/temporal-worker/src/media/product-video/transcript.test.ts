@@ -34,3 +34,30 @@ test("falls back to plain text, or nothing", () => {
   assert.equal(scribeTranscriptLines({ words: [] }), "");
   assert.equal(scribeTranscriptLines(null), "");
 });
+
+test("marks the time inside a long sentence, so each part has its moment", () => {
+  // QazOner's promo opens with one 7-second sentence over four products;
+  // "бүгін" (today) comes over the third.
+  const said = [
+    ["Кезінде", 0.3],
+    ["небәрі", 0.9],
+    ["он", 1.5],
+    ["жеті", 1.8],
+    ["шаршы", 2.2],
+    ["метр", 2.6],
+    ["аумақтан", 3.0],
+    ["бүгін", 4.1],
+    ["отбасының", 5.2],
+    ["тарихы", 6.4],
+    ["түсірілді.", 7.0],
+  ] as const;
+  const words = said.flatMap(([text, start]) => [
+    { text, type: "word", start },
+    { text: " ", type: "spacing", start },
+  ]);
+
+  assert.equal(
+    scribeTranscriptLines({ words }),
+    "[0.3] Кезінде небәрі он [1.8] жеті шаршы метр аумақтан [4.1] бүгін отбасының [6.4] тарихы түсірілді.",
+  );
+});

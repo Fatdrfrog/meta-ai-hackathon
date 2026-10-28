@@ -12,72 +12,120 @@ import {
   ProductVideoImportFailure,
   runProductVideoImport,
   type ImportJobPorts,
+  type NewDraftOption,
   type NewDraftProduct,
   type ProductPhoto,
 } from "./import-job";
-import type { InventoryItem } from "./inventory";
+import type {
+  InventoryItem,
+  InventoryOption,
+  ProductInventory,
+} from "./inventory";
 import { ProductVideoError } from "./media";
 import type { PresenterCutout } from "./presenter";
 
 const TRANSCRIPT =
   "[1.0] Кукла Лол, бес мың теңге.\n[9.0] Кружка, бес жүз теңге.";
 
+const option = (
+  description: string,
+  firstSeenSeconds: number,
+  clearestMomentSeconds: number,
+): InventoryOption => ({
+  description,
+  samPhrase: description,
+  firstSeenSeconds,
+  clearestMomentSeconds,
+});
+
 const item = (overrides: Partial<InventoryItem>): InventoryItem => ({
   name: "LOL doll",
   localName: "Кукла Лол",
+  nameSource: "spoken",
   category: "toy",
-  samPhrase: "blonde doll",
   price: 5000,
   currency: "KZT",
   priceQuote: "бес мың теңге",
   priceQuoteSeconds: 1,
   priceSource: "spoken",
   priceIsFrom: false,
-  firstSeenSeconds: 0,
-  clearestMomentSeconds: 2,
+  options: [option("blonde doll", 0, 2)],
+  featuredOption: 0,
   doubt: null,
   ...overrides,
 });
 
-const INVENTORY = {
+const INVENTORY: ProductInventory = {
   language: "kk",
-  presenter: null as { clearestMomentSeconds: number } | null,
+  presenter: null,
   items: [
     item({}),
     item({
       name: "Frosted cup",
       localName: "Кружка",
-      samPhrase: "frosted cup",
       price: 500,
       priceQuote: "бес жүз теңге",
-      firstSeenSeconds: 8,
-      clearestMomentSeconds: 9,
+      priceQuoteSeconds: 9,
+      options: [option("frosted cup", 8, 9)],
       doubt: "Is it 500 or 5000?",
     }),
     item({
       name: "Rooster",
       localName: "Әтеш",
-      samPhrase: "white rooster",
       price: null,
       priceQuote: null,
       priceQuoteSeconds: null,
       priceSource: null,
-      firstSeenSeconds: 20,
-      clearestMomentSeconds: 22,
+      options: [option("white rooster", 20, 22)],
     }),
   ],
 };
 
-type FakeProduct = NewDraftProduct & {
-  id: string;
+type FakeOption = NewDraftOption & {
   photo: ProductPhoto | { method: "pending" };
+  notes: string[];
 };
+type FakeProduct = Omit<NewDraftProduct, "options"> & {
+  id: string;
+  options: FakeOption[];
+};
+
+/** A product a previous run saved, with one option in the given state. */
+const savedProduct = (
+  importIndex: number,
+  englishName: string,
+  photo: FakeOption["photo"],
+): FakeProduct => ({
+  id: `p${importIndex}`,
+  importIndex,
+  name: englishName,
+  englishName,
+  nameSource: "spoken",
+  category: "toy",
+  price: 5000,
+  currency: "KZT",
+  priceQuote: null,
+  priceSource: "spoken",
+  priceIsFrom: false,
+  doubts: [],
+  featuredOption: 0,
+  options: [
+    {
+      description: englishName,
+      samPhrase: englishName,
+      videoWindow: { fromSeconds: 0, toSeconds: 8 },
+      photo,
+      notes: [],
+    },
+  ],
+});
 
 async function setUp(
   t: TestContext,
   options: {
     transcript?: string | null;
     products?: FakeProduct[];
+    inventory?: ProductInventory;
     cutOut?: (name: string, workDir: string) => Promise<ProductCutout>;
     tracked?: boolean;
     /** When the inventory says someone presents the products. */
@@ -95,7 +143,7 @@ async function setUp(
       status: "queued" as const,
       stage: null as unknown,
       transcript: options.transcript ?? null,
-      productDone: 0,
+      photoDone: 0,
       costUsd: 0,
       presenter: options.presenter ?? null,
     } as Record<string, unknown>,
@@ -135,6 +183,7 @@ async function setUp(
     originalPath: await photoFile(dir, "original.jpg", "jpeg"),
     cutoutPath: await photoFile(dir, "cutout.png", "png"),
     samConfidence: 0.95,
+    straightenedDegrees: 0,
     notes: [],
   });
 
@@ -172,9 +221,13 @@ async function setUp(
           .map((p) => ({
             id: p.id,
             englishName: p.englishName,
-            samPhrase: p.samPhrase,
-            videoWindow: p.videoWindow,
-            photoMethod: p.photo.method,
+            options: p.options.map((o, index) => ({
+              index,
+              description: o.description,
+              samPhrase: o.samPhrase,
+              videoWindow: o.videoWindow,
+              photoMethod: o.photo.method,
+            })),
           }));
       },
       async createProducts(drafts) {
@@ -184,14 +237,18 @@ async function setUp(
           state.products.push({
             ...draft,
             id: `p${draft.importIndex}`,
-            photo: { method: "pending" },
+            options: draft.options.map((o) => ({
+              ...o,
+              photo: { method: "pending" },
+              notes: [],
+            })),
           });
         }
       },
-      async savePhoto(productId, photo, notes) {
+      async savePhoto(productId, optionIndex, photo, notes) {
         const product = state.products.find((p) => p.id === productId)!;
-        product.photo = photo;
-        product.doubts.push(...notes);
+        product.options[optionIndex]!.photo = photo;
+        product.options[optionIndex]!.notes.push(...notes);
       },
     },
     storage: {
@@ -243,7 +300,7 @@ async function setUp(
       calls.inventory++;
       deps?.onCost?.(0.04, "inventory");
       return {
-        ...structuredClone(INVENTORY),
+        ...structuredClone(options.inventory ?? INVENTORY),
         presenter:
           options.presenterMoment === undefined
             ? null
@@ -258,7 +315,10 @@ async function setUp(
     cutOutPresenter: async (request, deps) => {
       calls.presenter++;
       // Products come first: the presenter is cut out after every photo.
-      assert.equal(state.import.productDone, state.products.length);
+      assert.equal(
+        state.import.photoDone,
+        state.products.reduce((total, p) => total + p.options.length, 0),
+      );
       deps?.onCost?.(0.01, "find presenter");
       if (options.cutOutPresenter)
         return options.cutOutPresenter(request.workDir);
@@ -290,13 +350,15 @@ test("runs an import from video to products with photos, saving each step", asyn
   assert.equal(state.import.transcript, TRANSCRIPT);
   assert.equal(state.import.language, "kk");
   assert.equal(state.import.productTotal, 3);
-  assert.equal(state.import.productDone, 3);
-  // Inventory $0.04 plus three products at $0.05.
+  assert.equal(state.import.photoTotal, 3);
+  assert.equal(state.import.photoDone, 3);
+  // Inventory $0.04 plus three photos at $0.05.
   assert.ok(Math.abs((state.import.costUsd as number) - 0.19) < 1e-9);
 
   const [doll, cup, rooster] = state.products;
   assert.equal(doll!.name, "Кукла Лол");
   assert.equal(doll!.englishName, "LOL doll");
+  assert.equal(doll!.nameSource, "spoken");
   assert.deepEqual(doll!.doubts, []);
   // The model's doubt first, then our own checks.
   assert.deepEqual(cup!.doubts, ["Is it 500 or 5000?"]);
@@ -309,15 +371,20 @@ test("runs an import from video to products with photos, saving each step", asyn
   // Nobody presents the products in this video.
   assert.equal(state.import.presenter, null);
   assert.equal(calls.presenter, 0);
-  assert.deepEqual(doll!.videoWindow, { fromSeconds: 0, toSeconds: 8 });
-  assert.deepEqual(doll!.photo, {
-    method: "restored",
-    original: { bucket: "media", path: "photos/p0/original.jpg" },
-    frameTimeSeconds: 1.5,
-    cutout: { bucket: "media", path: "photos/p0/cutout.png" },
-    thumb: { bucket: "media", path: "photos/p0/thumb.webp" },
+  assert.equal(doll!.featuredOption, 0);
+  assert.deepEqual(doll!.options[0]!.videoWindow, {
+    fromSeconds: 0,
+    toSeconds: 8,
   });
-  assert.ok(calls.saved.includes("p0/thumb.webp:image/webp"));
+  assert.deepEqual(doll!.options[0]!.photo, {
+    method: "restored",
+    original: { bucket: "media", path: "photos/p0/option-0-original.jpg" },
+    frameTimeSeconds: 1.5,
+    straightenedDegrees: 0,
+    cutout: { bucket: "media", path: "photos/p0/option-0-cutout.png" },
+    thumb: { bucket: "media", path: "photos/p0/option-0-thumb.webp" },
+  });
+  assert.ok(calls.saved.includes("p0/option-0-thumb.webp:image/webp"));
 
   assert.deepEqual(calls.emits.slice(0, 4), [
     "import",
@@ -339,37 +406,86 @@ test("runs an import from video to products with photos, saving each step", asyn
     "reserve inventory:attempt-1 meta 300000",
     "settle inventory:attempt-1 40000",
   ]);
-  assert.ok(calls.spend.includes("reserve product:p1:attempt-1 meta 150000"));
-  assert.ok(calls.spend.includes("settle product:p1:attempt-1 50000"));
+  assert.ok(calls.spend.includes("reserve photo:p1:0:attempt-1 meta 150000"));
+  assert.ok(calls.spend.includes("settle photo:p1:0:attempt-1 50000"));
 });
 
-test("a retry resumes: no second transcription, inventory or photo for a finished product", async (t) => {
-  const done: FakeProduct = {
-    id: "p0",
-    importIndex: 0,
-    name: "Кукла Лол",
-    englishName: "LOL doll",
-    category: "toy",
-    price: 5000,
-    currency: "KZT",
-    priceQuote: null,
-    priceSource: "spoken",
-    priceIsFrom: false,
-    samPhrase: "blonde doll",
-    doubts: [],
-    videoWindow: { fromSeconds: 0, toSeconds: 8 },
-    photo: { method: "restored" },
-  };
-  const pending: FakeProduct = {
-    ...done,
-    id: "p1",
-    importIndex: 1,
-    englishName: "Frosted cup",
-    photo: { method: "pending" },
-  };
+test("photographs every option of a product shown in several designs", async (t) => {
+  const { ports, state, calls } = await setUp(t, {
+    inventory: {
+      ...INVENTORY,
+      items: [
+        item({
+          name: "Family tree panel",
+          localName: "Шежіре",
+          nameSource: "on_screen",
+          price: 15500,
+          priceIsFrom: true,
+          options: [
+            option("round tree-of-life panel", 2, 3),
+            option("star-shaped plaque", 6, 6.5),
+          ],
+          featuredOption: 1,
+        }),
+      ],
+    },
+  });
+
+  await runProductVideoImport(ports);
+
+  const [panel] = state.products;
+  assert.equal(panel!.nameSource, "on_screen");
+  assert.equal(panel!.featuredOption, 1);
+  assert.deepEqual(
+    panel!.options.map((o) => o.description),
+    ["round tree-of-life panel", "star-shaped plaque"],
+  );
+  // Each design is filmed in its own stretch, and photographed by its words.
+  assert.deepEqual(panel!.options[0]!.videoWindow, {
+    fromSeconds: 2,
+    toSeconds: 6,
+  });
+  assert.deepEqual([...calls.cutOut].sort(), [
+    "round tree-of-life panel",
+    "star-shaped plaque",
+  ]);
+  assert.ok(panel!.options.every((o) => o.photo.method === "restored"));
+  assert.ok(calls.saved.includes("p0/option-1-cutout.png:image/png"));
+  assert.equal(state.import.productTotal, 1);
+  assert.equal(state.import.photoTotal, 2);
+  assert.equal(state.import.photoDone, 2);
+});
+
+test("leaves options past the photo cap out, keeping an import's cost bounded", async (t) => {
+  // Eight products of eight designs: 64 options, four more than the cap.
+  const designs = Array.from({ length: 8 }, (_, i) =>
+    option(`design ${i}`, 0, 1),
+  );
+  const { ports, state } = await setUp(t, {
+    inventory: {
+      ...INVENTORY,
+      items: Array.from({ length: 8 }, (_, i) =>
+        item({ name: `Panel ${i}`, options: designs, featuredOption: 7 }),
+      ),
+    },
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.photoTotal, 60);
+  const last = state.products.at(-1)!;
+  assert.equal(last.options.length, 4);
+  // Its featured option was left out: the first stands in.
+  assert.equal(last.featuredOption, 0);
+});
+
+test("a retry resumes: no second transcription, inventory or photo for a finished option", async (t) => {
   const { ports, state, calls } = await setUp(t, {
     transcript: TRANSCRIPT,
-    products: [done, pending],
+    products: [
+      savedProduct(0, "LOL doll", { method: "restored" }),
+      savedProduct(1, "Frosted cup", { method: "pending" }),
+    ],
   });
   ports.attempt = 2;
 
@@ -379,92 +495,99 @@ test("a retry resumes: no second transcription, inventory or photo for a finishe
   assert.equal(calls.inventory, 0);
   assert.deepEqual(calls.cutOut, ["Frosted cup"]);
   assert.deepEqual(calls.spend, [
-    "reserve product:p1:attempt-2 meta 150000",
-    "settle product:p1:attempt-2 50000",
+    "reserve photo:p1:0:attempt-2 meta 150000",
+    "settle photo:p1:0:attempt-2 50000",
   ]);
   assert.equal(state.import.status, "ready");
 });
 
-test("a product its video can't give a photo is noted, and the others carry on", async (t) => {
+test("an option its video can't give a photo is noted, and the others carry on", async (t) => {
   const { ports, state } = await setUp(t, {
     cutOut: async (name, dir) => {
-      if (name === "Frosted cup")
+      if (name === "frosted cup")
         throw new ProductVideoError(
           "no_frames",
           "No frames between 8s and 20s",
         );
+      await mkdir(dir, { recursive: true });
+      const originalPath = join(dir, "original.jpg");
+      await sharp({
+        create: { width: 20, height: 20, channels: 3, background: "#123456" },
+      })
+        .jpeg()
+        .toFile(originalPath);
       return {
         method: "tracked",
         frameTimeSeconds: 3,
-        originalPath: await sharp({
-          create: { width: 20, height: 20, channels: 3, background: "#123456" },
-        })
-          .jpeg()
-          .toFile(join(dir, "..", `${name}.jpg`))
-          .then(() => join(dir, "..", `${name}.jpg`)),
+        originalPath,
         cutoutPath: null,
         samConfidence: null,
+        straightenedDegrees: 0,
         notes: [
           "The photo couldn't be cleaned up, so the hand may still show.",
         ],
       };
     },
   });
-  await mkdir(join(ports.workDir, "products"), { recursive: true });
 
   await runProductVideoImport(ports);
 
   const [doll, cup] = state.products;
-  assert.equal(cup!.photo.method, "none");
-  assert.deepEqual(
-    cup!.doubts.at(-1),
+  assert.equal(cup!.options[0]!.photo.method, "none");
+  assert.deepEqual(cup!.options[0]!.notes, [
     "The photo couldn't be made from the video.",
-  );
+  ]);
   // A filmed photo without a cut-out still gets its shelf copy, from the original.
-  assert.equal(doll!.photo.method, "tracked");
-  assert.ok("thumb" in doll!.photo && doll!.photo.thumb);
-  assert.ok(!("cutout" in doll!.photo));
-  assert.deepEqual(doll!.doubts, [
+  const dollPhoto = doll!.options[0]!.photo;
+  assert.equal(dollPhoto.method, "tracked");
+  assert.ok("thumb" in dollPhoto && dollPhoto.thumb);
+  assert.ok(!("cutout" in dollPhoto));
+  // A photo's notes stay with its option; the product's doubts are about it.
+  assert.deepEqual(doll!.options[0]!.notes, [
     "The photo couldn't be cleaned up, so the hand may still show.",
   ]);
-  assert.equal(state.import.productDone, 3);
+  assert.deepEqual(doll!.doubts, []);
+  assert.equal(state.import.photoDone, 3);
   assert.equal(state.import.status, "ready");
 });
 
 test("a failure a retry may fix stops the run, keeping finished photos and the unknown cost reserved", async (t) => {
   const { ports, state, calls } = await setUp(t, {
     cutOut: async (name, dir) => {
-      if (name === "Rooster")
+      if (name === "white rooster")
         throw new MetaModelApiError({
           kind: "server",
           transient: true,
           message: "502",
         });
+      await mkdir(dir, { recursive: true });
+      const originalPath = join(dir, "original.jpg");
+      await sharp({
+        create: { width: 10, height: 10, channels: 3, background: "#fff" },
+      })
+        .jpeg()
+        .toFile(originalPath);
       return {
         method: "restored",
         frameTimeSeconds: 1,
-        originalPath: await sharp({
-          create: { width: 10, height: 10, channels: 3, background: "#fff" },
-        })
-          .jpeg()
-          .toFile(join(dir, "..", `${name}.jpg`))
-          .then(() => join(dir, "..", `${name}.jpg`)),
+        originalPath,
         cutoutPath: null,
         samConfidence: 1,
+        straightenedDegrees: 0,
         notes: [],
       };
     },
   });
-  await mkdir(join(ports.workDir, "products"), { recursive: true });
 
   await assert.rejects(runProductVideoImport(ports), /502/);
 
   assert.notEqual(state.import.status, "ready");
   assert.equal(
-    state.products.filter((p) => p.photo.method !== "pending").length,
+    state.products.filter((p) => p.options[0]!.photo.method !== "pending")
+      .length,
     2,
   );
-  assert.ok(calls.spend.includes("settle product:p2:attempt-1 null"));
+  assert.ok(calls.spend.includes("settle photo:p2:0:attempt-1 null"));
 });
 
 test("without tracked spend nothing is reserved; a missing upload is reported, not retried", async (t) => {
@@ -587,28 +710,12 @@ test("a presenter who can't be cut out is dropped, and the import still finishes
 });
 
 test("a retry cuts out only the presenter a previous run didn't finish", async (t) => {
-  const done: FakeProduct = {
-    id: "p0",
-    importIndex: 0,
-    name: "Кукла Лол",
-    englishName: "LOL doll",
-    category: "toy",
-    price: 5000,
-    currency: "KZT",
-    priceQuote: null,
-    priceSource: "spoken",
-    priceIsFrom: false,
-    samPhrase: "blonde doll",
-    doubts: [],
-    videoWindow: { fromSeconds: 0, toSeconds: 8 },
-    photo: { method: "restored" },
-  };
   const { ports, state, calls } = await setUp(t, {
     transcript: TRANSCRIPT,
-    products: [done],
+    products: [savedProduct(0, "LOL doll", { method: "restored" })],
     presenter: { momentSeconds: 6, photo: null },
   });
-  state.import.productDone = 1;
+  state.import.photoDone = 1;
 
   await runProductVideoImport(ports);
 

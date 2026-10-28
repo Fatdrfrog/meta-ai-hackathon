@@ -22,16 +22,23 @@ const TRANSCRIPT = [
 const item = (overrides: Partial<InventoryItem> = {}): InventoryItem => ({
   name: "LOL doll",
   localName: "Кукла Лол",
+  nameSource: "spoken",
   category: "toy",
-  samPhrase: "blonde doll in blue dress",
   price: 5000,
   currency: "KZT",
   priceQuote: "бес мың теңге",
   priceQuoteSeconds: 9.8,
   priceSource: "spoken",
   priceIsFrom: false,
-  firstSeenSeconds: 9,
-  clearestMomentSeconds: 11,
+  options: [
+    {
+      description: "blonde doll in blue dress",
+      samPhrase: "blonde doll in blue dress",
+      firstSeenSeconds: 9,
+      clearestMomentSeconds: 11,
+    },
+  ],
+  featuredOption: 0,
   doubt: null,
   ...overrides,
 });
@@ -44,16 +51,25 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
         {
           name: " Frosted cup ",
           local_name: "кружка",
+          name_source: "spoken",
           category: "kitchen",
-          sam_phrase: "frosted plastic cup",
           price: 500,
           currency: "KZT",
           price_quote: "бес жүз теңге",
           price_quote_s: 1.2,
           price_source: "none",
           price_is_from: true,
-          first_seen_s: 1,
-          clearest_moment_s: -3,
+          options: [
+            {
+              description: " frosted cup with logo ",
+              sam_phrase: "frosted plastic cup",
+              first_seen_s: 1,
+              clearest_moment_s: -3,
+            },
+            { description: "", sam_phrase: "" },
+            "not an option",
+          ],
+          featured_option: 4,
           doubt: null,
         },
         { name: "", price: 10 },
@@ -67,8 +83,8 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
   assert.deepEqual(inventory.items[0], {
     name: "Frosted cup",
     localName: "кружка",
+    nameSource: "spoken",
     category: "kitchen",
-    samPhrase: "frosted plastic cup",
     price: 500,
     currency: "KZT",
     priceQuote: "бес жүз теңге",
@@ -76,24 +92,33 @@ test("reads the model's JSON into typed items, dropping nameless ones", () => {
     // A price never goes unchecked: "none" beside a price counts as spoken.
     priceSource: "spoken",
     priceIsFrom: true,
-    firstSeenSeconds: 1,
-    clearestMomentSeconds: 0,
+    // Options with no words are dropped; a featured option out of range
+    // falls back to the first.
+    options: [
+      {
+        description: "frosted cup with logo",
+        samPhrase: "frosted plastic cup",
+        firstSeenSeconds: 1,
+        clearestMomentSeconds: 0,
+      },
+    ],
+    featuredOption: 0,
     doubt: null,
   });
   // A negative price is no price, and takes its quote and currency with it.
   assert.deepEqual(inventory.items[1], {
     name: "Phone stand",
     localName: "Phone stand",
+    nameSource: "spoken",
     category: "",
-    samPhrase: "Phone stand",
     price: null,
     currency: null,
     priceQuote: null,
     priceQuoteSeconds: null,
     priceSource: null,
     priceIsFrom: false,
-    firstSeenSeconds: 0,
-    clearestMomentSeconds: 0,
+    options: [],
+    featuredOption: 0,
     doubt: null,
   });
   assert.equal(inventory.items.length, 2);
@@ -351,4 +376,61 @@ test("the same short phrase said of two products, in two sentences, isn't flagge
   ]);
   assert.deepEqual(clock, panel);
   assert.deepEqual(untimed, []);
+});
+
+test("reads a product named on screen, with several options and its featured one", () => {
+  const options = Array.from({ length: 10 }, (_, i) => ({
+    description: `design ${i + 1}`,
+    sam_phrase: `family tree panel design ${i + 1}`,
+    first_seen_s: 7 + i * 0.1,
+    clearest_moment_s: 8,
+  }));
+  const [panel] = parseInventory(
+    JSON.stringify({
+      language: "Kazakh",
+      items: [
+        {
+          name: "Family tree panel",
+          local_name: "Шежіре",
+          name_source: "on_screen",
+          price: 15500,
+          currency: "KZT",
+          price_quote: "он бес мың бес жүзден басталады",
+          price_quote_s: 7.5,
+          price_source: "spoken",
+          price_is_from: true,
+          options,
+          featured_option: 2,
+        },
+      ],
+    }),
+  ).items;
+
+  assert.equal(panel!.nameSource, "on_screen");
+  // At most eight options a product.
+  assert.equal(panel!.options.length, 8);
+  assert.equal(panel!.options[7]!.description, "design 8");
+  assert.equal(panel!.featuredOption, 2);
+});
+
+test("a quote copied across a time mark still matches the narration", () => {
+  const transcript =
+    "[7.5] Шежірелердің бағасы он бес [9.6] мың бес жүзден басталады.";
+  assert.equal(
+    quoteInTranscript("он бес мың бес жүзден басталады", transcript),
+    true,
+  );
+  assert.deepEqual(
+    inventoryChecks(
+      [
+        item({
+          price: 15500,
+          priceQuote: "он бес мың бес жүзден басталады",
+          priceQuoteSeconds: 7.5,
+        }),
+      ],
+      transcript,
+    ),
+    [[]],
+  );
 });

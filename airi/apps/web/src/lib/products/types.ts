@@ -30,17 +30,17 @@ export type ProductVideoImportStatus =
 // The import job's own vocabulary, shared with the worker that runs it.
 export {
   PRODUCT_PHOTO_METHODS,
-  PRODUCT_PRICE_SOURCES,
+  PRODUCT_TEXT_SOURCES,
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
   PRODUCT_VIDEO_IMPORT_STAGES,
   type ProductPhotoMethod,
-  type ProductPriceSource,
+  type ProductTextSource,
   type ProductVideoImportErrorCode,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
 import type {
   ProductPhotoMethod,
-  ProductPriceSource,
+  ProductTextSource,
   ProductVideoImportErrorCode,
   ProductVideoImportStage,
 } from "@icecore/temporal";
@@ -59,7 +59,7 @@ export type WorkspaceProductRecord = {
   price: number | null;
   /** A starting price, shown as "from …": the final one depends on options. */
   priceIsFrom: boolean;
-  /** The product cut out of the video on a transparent background, or null. */
+  /** Its featured option cut out of the video on a transparent background, or null. */
   imageUrl: string | null;
   updatedAt: string | null;
 };
@@ -68,32 +68,51 @@ export type ProductsListResponse = {
   products: WorkspaceProductRecord[];
 };
 
+/** One item shown for a product, as the owner checks its photo. */
+export type DraftProductOptionRecord = {
+  /** A few English words that tell it apart from the product's other options. */
+  description: string;
+  photoMethod: ProductPhotoMethod;
+  /** Small WebP copy of the cut-out. */
+  imageUrl: string | null;
+  /** The full-size cut-out. */
+  photoUrl: string | null;
+  /** The item as filmed, to compare the cleaned-up photo with. */
+  originalUrl: string | null;
+  /** Seconds into the video where the photo was taken. */
+  videoMomentSeconds: number | null;
+  /** Degrees the photo was turned to stand level, clockwise; 0 when it wasn't. */
+  straightenedDegrees: number;
+  /** What the owner should know about the photo, in English. */
+  notes: string[];
+};
+
 /** A product an import found, as the owner checks it before publishing. */
 export type DraftProductRecord = WorkspaceProductRecord & {
   status: WorkspaceProductStatus;
   /** The catalog name in English, beside the owner's own `name`. */
   englishName: string | null;
+  /** Whether `name` was said in the video or only written on screen. */
+  nameSource: ProductTextSource | null;
   /** The narration's words, or the video's text, the price came from. */
   priceQuote: string | null;
-  priceSource: ProductPriceSource | null;
+  priceSource: ProductTextSource | null;
   /** What the owner should confirm, in English. */
   doubts: string[];
-  photoMethod: ProductPhotoMethod;
-  /** The full-size cut-out; `imageUrl` is its small copy. */
-  photoUrl: string | null;
-  /** The product as filmed, to compare the cleaned-up photo with. */
-  originalUrl: string | null;
-  /** Seconds into the video where the photo was taken. */
-  videoMomentSeconds: number | null;
+  /** The items shown for it, in the order shown. */
+  options: DraftProductOptionRecord[];
+  /** The option the shelf shows, as an index into `options`. */
+  featuredOption: number;
 };
 
 export type ProductVideoImportRecord = {
   id: string;
   status: ProductVideoImportStatus;
   stage: ProductVideoImportStage | null;
-  /** Products found so far, and how many of them have their photo. */
+  /** Products found so far, their options' photos, and how many photos are made. */
   productTotal: number;
-  productDone: number;
+  photoTotal: number;
+  photoDone: number;
   errorCode: ProductVideoImportErrorCode | null;
   /**
    * The person who presents the products in the video, cut out to reuse

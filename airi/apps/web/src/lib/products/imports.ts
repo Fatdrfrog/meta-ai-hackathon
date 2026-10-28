@@ -134,7 +134,7 @@ export async function loadProductVideoImport(
 ): Promise<ProductVideoImportResponse | null> {
   const doc = await ProductVideoImport.findOne({ _id: importId, workspaceId })
     .select(
-      "status stage productTotal productDone errorCode presenter createdAt finishedAt"
+      "status stage productTotal photoTotal photoDone errorCode presenter createdAt finishedAt"
     )
     .lean<Record<string, unknown>>();
   if (!doc) return null;
@@ -147,7 +147,8 @@ export async function loadProductVideoImport(
       ? (doc.stage as ProductVideoImportStage)
       : null,
     productTotal: typeof doc.productTotal === "number" ? doc.productTotal : 0,
-    productDone: typeof doc.productDone === "number" ? doc.productDone : 0,
+    photoTotal: typeof doc.photoTotal === "number" ? doc.photoTotal : 0,
+    photoDone: typeof doc.photoDone === "number" ? doc.photoDone : 0,
     errorCode: (
       PRODUCT_VIDEO_IMPORT_ERROR_CODES as readonly unknown[]
     ).includes(doc.errorCode)

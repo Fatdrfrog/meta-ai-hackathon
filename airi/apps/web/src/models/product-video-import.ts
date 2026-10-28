@@ -29,9 +29,10 @@ export interface IProductVideoImport {
   transcript?: string | null;
   /** The language the owner spoke, as Muse Spark named it. */
   language?: string | null;
-  /** Products found, and how many of them have their photo. */
+  /** Products found, their options' photos, and how many photos are made. */
   productTotal: number;
-  productDone: number;
+  photoTotal: number;
+  photoDone: number;
   /** Draft products the video produced; set once it's ready. */
   productCount: number;
   /** List-price cost of the Meta model calls, in US dollars. */
@@ -94,7 +95,8 @@ const ProductVideoImportSchema = new mongoose.Schema<IProductVideoImport>(
     transcript: { type: String, maxlength: 40_000, default: null },
     language: { type: String, trim: true, maxlength: 40, default: null },
     productTotal: { type: Number, default: 0, min: 0 },
-    productDone: { type: Number, default: 0, min: 0 },
+    photoTotal: { type: Number, default: 0, min: 0 },
+    photoDone: { type: Number, default: 0, min: 0 },
     productCount: { type: Number, default: 0, min: 0 },
     costUsd: { type: Number, default: 0, min: 0 },
     presenter: {

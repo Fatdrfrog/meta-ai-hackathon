@@ -51,7 +51,8 @@ const BACKDROP_SLACK = 24;
 
 /**
  * The plain colour Muse Image put behind a restored photo: the median of its
- * outermost pixels, which never show the product.
+ * outermost pixels, which show the backdrop even where the product reaches
+ * the edge.
  */
 export async function backdropColor(image: Buffer): Promise<Rgb> {
   const { data, info } = await sharp(image)
@@ -115,25 +116,31 @@ export async function productBox(
 }
 
 /**
- * Whether a cut-out is mostly near-white. Restored on white, such a product
- * (a white medal hanger, a white blouse) loses its edges and highlights to the
- * backdrop, so it is restored on grey instead.
+ * How much of a cut-out is near-white and how much neutral mid-grey: the two
+ * backdrops Muse Image restores on. A product restored on a colour it is made
+ * of loses those parts to the backdrop when cut out.
  */
-export async function isMostlyLight(cutout: Buffer): Promise<boolean> {
+export async function backdropShares(
+  cutout: Buffer,
+): Promise<{ white: number; grey: number }> {
   const { data } = await sharp(cutout)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
   let opaque = 0;
-  let light = 0;
+  let white = 0;
+  let grey = 0;
   for (let i = 0; i < data.length; i += 4) {
     if (data[i + 3]! < 200) continue;
     opaque++;
     const low = Math.min(data[i]!, data[i + 1]!, data[i + 2]!);
     const high = Math.max(data[i]!, data[i + 1]!, data[i + 2]!);
-    if (low >= 190 && high - low <= 30) light++;
+    if (low >= 200 && high - low <= 30) white++;
+    else if (low >= 100 && high <= 180 && high - low <= 16) grey++;
   }
-  return opaque > 0 && light / opaque >= 0.5;
+  return opaque > 0
+    ? { white: white / opaque, grey: grey / opaque }
+    : { white: 0, grey: 0 };
 }
 
 const GRID_TILE_LONG_SIDE = 640;
@@ -310,6 +317,56 @@ function dropStrayPieces(mask: Buffer, width: number): Box | null {
   return box;
 }
 
+// A patch of backdrop colour inside the mask is a hole the backdrop shows
+// through, like the slots of a medal hanger or a carved table leg's openwork,
+// when it is at least this share of the image (and HOLE_MIN_PIXELS), and
+// sits on the backdrop's colour: its pixels within HOLE_TOLERANCE of it and
+// within HOLE_MAX_MEAN_DIFFERENCE on average. On a restored medal hanger,
+// holes averaged 0.9-2.4 from the grey; parts of its grey lettering and
+// shading 5-21, which a looser test had cut away with the holes.
+const HOLE_MIN_SHARE = 0.00003;
+const HOLE_MIN_PIXELS = 16;
+const HOLE_TOLERANCE = 12;
+const HOLE_MAX_MEAN_DIFFERENCE = 4;
+
+/**
+ * Takes the backdrop showing through holes in the product out of the mask,
+ * in place. SAM's mask covers a product's holes along with it; on Muse
+ * Image's plain backdrop, the holes are exactly the backdrop's colour. Only
+ * safe on a backdrop the product itself isn't coloured like.
+ */
+function punchBackdropHoles(
+  mask: Buffer,
+  rgb: Buffer,
+  width: number,
+  backdrop: Rgb,
+): void {
+  const levels = [backdrop.r, backdrop.g, backdrop.b];
+  const difference = new Uint8Array(mask.length);
+  const showsBackdrop = new Uint8Array(mask.length);
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i]! < 128) continue;
+    let largest = 0;
+    for (let c = 0; c < 3; c++)
+      largest = Math.max(largest, Math.abs(rgb[i * 3 + c]! - levels[c]!));
+    difference[i] = largest;
+    if (largest <= HOLE_TOLERANCE) showsBackdrop[i] = 1;
+  }
+  const { label, sizes } = labelPieces(showsBackdrop, width);
+  const total = new Array<number>(sizes.length).fill(0);
+  for (let i = 0; i < mask.length; i++) total[label[i]!]! += difference[i]!;
+  const minimum = Math.max(HOLE_MIN_PIXELS, mask.length * HOLE_MIN_SHARE);
+  for (let i = 0; i < mask.length; i++) {
+    const piece = label[i]!;
+    if (
+      piece > 0 &&
+      sizes[piece]! >= minimum &&
+      total[piece]! / sizes[piece]! <= HOLE_MAX_MEAN_DIFFERENCE
+    )
+      mask[i] = 0;
+  }
+}
+
 /**
  * The mask with its outermost pixels removed. SAM's edge is often a pixel
  * generous, and that pixel is background colour, which shows as a ring.
@@ -334,15 +391,21 @@ function shrinkByOnePixel(mask: Buffer, width: number, height: number): Buffer {
  * (scaling it pixel by pixel gave staircase edges), then the whole is shrunk
  * by a pixel and softened. On Muse Image's plain backdrop, the backdrop
  * colour B blended into edge pixels is taken back out (C = aF + (1 - a)B, so
- * F = (C - (1 - a)B) / a), so no halo shows on any other background.
+ * F = (C - (1 - a)B) / a), so no halo shows on any other background, and
+ * with `holes` the backdrop showing through the product's holes goes too.
  */
 export async function cutOutWithMask(
   image: Buffer | string,
   masks: Mask | Mask[],
-  options: { backdrop?: Rgb } = {},
+  options: { backdrop?: Rgb; holes?: boolean } = {},
 ): Promise<Buffer> {
   const { width = 0, height = 0 } = await sharp(image).metadata();
   const all = Array.isArray(masks) ? masks : [masks];
+  const rgb = await sharp(image)
+    .flatten({ background: "#ffffff" })
+    .removeAlpha()
+    .raw()
+    .toBuffer();
 
   const placed = Buffer.alloc(width * height);
   for (const mask of all) {
@@ -370,6 +433,9 @@ export async function cutOutWithMask(
       }
     }
   }
+  const { backdrop } = options;
+  if (backdrop && options.holes)
+    punchBackdropHoles(placed, rgb, width, backdrop);
   const bounds = dropStrayPieces(placed, width);
   if (!bounds) throw new Error("The mask is outside its image");
   const alpha = await sharp(shrinkByOnePixel(placed, width, height), {
@@ -380,12 +446,6 @@ export async function cutOutWithMask(
     .raw()
     .toBuffer();
 
-  const rgb = await sharp(image)
-    .flatten({ background: "#ffffff" })
-    .removeAlpha()
-    .raw()
-    .toBuffer();
-  const { backdrop } = options;
   const backdropLevels = backdrop && [backdrop.r, backdrop.g, backdrop.b];
   const rgba = Buffer.alloc(width * height * 4);
   for (let i = 0; i < width * height; i++) {
@@ -419,6 +479,165 @@ export async function cutOutWithMask(
       top,
       width: Math.min(width, bounds.right + CUTOUT_PADDING) - left,
       height: Math.min(height, bounds.bottom + CUTOUT_PADDING) - top,
+    })
+    .resize(CUTOUT_MAX_SIDE, CUTOUT_MAX_SIDE, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .png()
+    .toBuffer();
+}
+
+// A box-like product is levelled only when its tightest rectangle sits at
+// least TILT_MIN_DEGREES off level, is much smaller than its upright box (the
+// turn is plain), and its outline fills that rectangle well (it is box-like:
+// a figurine or a folded triangle has no level to find).
+const TILT_MIN_DEGREES = 1.5;
+const TILT_MAX_AREA_RATIO = 0.85;
+const TILT_MIN_FILL = 0.7;
+const TILT_SAMPLE_SIDE = 400;
+
+type Point = { x: number; y: number };
+
+function convexHull(points: Point[]): Point[] {
+  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+  if (sorted.length < 3) return sorted;
+  const cross = (o: Point, a: Point, b: Point) =>
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const half = (ordered: Point[]) => {
+    const chain: Point[] = [];
+    for (const point of ordered) {
+      while (
+        chain.length >= 2 &&
+        cross(chain[chain.length - 2]!, chain[chain.length - 1]!, point) <= 0
+      )
+        chain.pop();
+      chain.push(point);
+    }
+    chain.pop();
+    return chain;
+  };
+  return [...half(sorted), ...half([...sorted].reverse())];
+}
+
+/**
+ * How many degrees a cut-out is turned from level, clockwise positive, when
+ * it is plainly a turned box-like shape, like a medal hanger held at a slant;
+ * null otherwise. The angle is that of the tightest rectangle around its
+ * outline (rotating calipers over the convex hull), folded to within 45° of
+ * level, so levelling leaves it horizontal or vertical, whichever is nearer,
+ * and turning it a quarter later needs no redrawing.
+ */
+export async function tiltOf(cutout: Buffer): Promise<number | null> {
+  const { data, info } = await sharp(cutout)
+    .ensureAlpha()
+    .extractChannel(3)
+    .resize(TILT_SAMPLE_SIDE, TILT_SAMPLE_SIDE, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  // Each row's outermost opaque pixels outline the shape well enough.
+  const points: Point[] = [];
+  for (let y = 0; y < info.height; y++) {
+    let first = -1;
+    let last = -1;
+    for (let x = 0; x < info.width; x++) {
+      if (data[y * info.width + x]! < 128) continue;
+      if (first < 0) first = x;
+      last = x;
+    }
+    if (first < 0) continue;
+    points.push(
+      { x: first, y },
+      { x: first, y: y + 1 },
+      { x: last + 1, y },
+      { x: last + 1, y: y + 1 },
+    );
+  }
+  const hull = convexHull(points);
+  if (hull.length < 3) return null;
+  let doubledArea = 0;
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i]!;
+    const b = hull[(i + 1) % hull.length]!;
+    doubledArea += a.x * b.y - b.x * a.y;
+  }
+  const hullArea = Math.abs(doubledArea) / 2;
+  const boxArea = (degrees: number) => {
+    const cos = Math.cos((degrees * Math.PI) / 180);
+    const sin = Math.sin((degrees * Math.PI) / 180);
+    let minU = Infinity;
+    let maxU = -Infinity;
+    let minV = Infinity;
+    let maxV = -Infinity;
+    for (const { x, y } of hull) {
+      const u = x * cos + y * sin;
+      const v = y * cos - x * sin;
+      minU = Math.min(minU, u);
+      maxU = Math.max(maxU, u);
+      minV = Math.min(minV, v);
+      maxV = Math.max(maxV, v);
+    }
+    return (maxU - minU) * (maxV - minV);
+  };
+  const candidates = hull.map((a, i) => {
+    const b = hull[(i + 1) % hull.length]!;
+    const angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+    const folded = ((angle % 90) + 90) % 90;
+    const degrees = folded > 45 ? folded - 90 : folded;
+    return { degrees, area: boxArea(degrees) };
+  });
+  const smallest = Math.min(...candidates.map((candidate) => candidate.area));
+  // Of near-equal fits, the least turn: a rectangle fits a triangle as well
+  // along any of its sides.
+  const best = candidates
+    .filter((candidate) => candidate.area <= smallest * 1.03)
+    .sort((a, b) => Math.abs(a.degrees) - Math.abs(b.degrees))[0]!;
+  if (
+    Math.abs(best.degrees) < TILT_MIN_DEGREES ||
+    best.area > boxArea(0) * TILT_MAX_AREA_RATIO ||
+    hullArea / best.area < TILT_MIN_FILL
+  )
+    return null;
+  return Math.round(best.degrees * 10) / 10;
+}
+
+/** The cut-out turned `degrees` clockwise (negative: anticlockwise), trimmed to the product. */
+export async function rotateCutout(
+  cutout: Buffer,
+  degrees: number,
+): Promise<Buffer> {
+  const { data, info } = await sharp(cutout)
+    .rotate(degrees, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let left = info.width;
+  let top = info.height;
+  let right = 0;
+  let bottom = 0;
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      if (data[(y * info.width + x) * 4 + 3]! < 8) continue;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x + 1);
+      bottom = Math.max(bottom, y + 1);
+    }
+  }
+  if (right <= left) return cutout;
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .extract({ left, top, width: right - left, height: bottom - top })
+    .extend({
+      top: CUTOUT_PADDING,
+      bottom: CUTOUT_PADDING,
+      left: CUTOUT_PADDING,
+      right: CUTOUT_PADDING,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
     })
     .resize(CUTOUT_MAX_SIDE, CUTOUT_MAX_SIDE, {
       fit: "inside",

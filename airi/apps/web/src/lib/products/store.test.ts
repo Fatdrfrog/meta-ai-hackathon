@@ -44,11 +44,11 @@ describe("listPublishedProducts", () => {
     expect(query.sort).toHaveBeenCalledWith({ position: 1, _id: 1 });
     expect(query.limit).toHaveBeenCalledWith(MAX_LISTED_PRODUCTS);
     expect(query.select).toHaveBeenCalledWith(
-      "name price priceIsFrom updatedAt photo.thumb"
+      "name price priceIsFrom updatedAt featuredOption options.photo.thumb"
     );
   });
 
-  it("maps rows to records, with the photo's small copy signed", async () => {
+  it("maps rows to records, with the featured option's small copy signed", async () => {
     mockFind.mockReturnValue(
       createFindQuery([
         {
@@ -56,7 +56,11 @@ describe("listPublishedProducts", () => {
           name: "Кукла Лол",
           price: 5000,
           priceIsFrom: true,
-          photo: { thumb: { bucket: "media", path: "p1/thumb.webp" } },
+          featuredOption: 1,
+          options: [
+            { photo: { thumb: { bucket: "media", path: "p1/a.webp" } } },
+            { photo: { thumb: { bucket: "media", path: "p1/thumb.webp" } } },
+          ],
           updatedAt: new Date("2026-10-27T09:30:00.000Z"),
         },
         {
@@ -97,17 +101,27 @@ describe("listImportProducts", () => {
         status: "draft",
         name: "Кружка",
         englishName: "Frosted cup",
+        nameSource: "on_screen",
         price: 500,
         priceQuote: "бес жүз теңге",
         priceSource: "spoken",
         doubts: ["Is it 500 or 5000?", 7],
-        photo: {
-          method: "restored",
-          cutout: { bucket: "media", path: "p/cutout.png" },
-          thumb: { bucket: "media", path: "p/thumb.webp" },
-          original: { bucket: "media", path: "p/original.jpg" },
-          frameTimeSeconds: 9.4,
-        },
+        featuredOption: 0,
+        options: [
+          {
+            description: "frosted cup with logo",
+            photo: {
+              method: "restored",
+              cutout: { bucket: "media", path: "p/cutout.png" },
+              thumb: { bucket: "media", path: "p/thumb.webp" },
+              original: { bucket: "media", path: "p/original.jpg" },
+              frameTimeSeconds: 9.4,
+              straightenedDegrees: -31.2,
+            },
+            notes: ["Turned to stand level.", 3],
+          },
+          { description: "cup without lid" },
+        ],
       },
       {
         _id: "651f1f77bcf86cd799439042",
@@ -115,7 +129,8 @@ describe("listImportProducts", () => {
         name: "Әтеш",
         price: null,
         priceSource: "shouted",
-        photo: { method: "weird" },
+        featuredOption: 5,
+        options: [{ photo: { method: "weird" } }],
       },
     ]);
     mockFind.mockReturnValue(query);
@@ -135,28 +150,48 @@ describe("listImportProducts", () => {
       status: "draft",
       name: "Кружка",
       englishName: "Frosted cup",
+      nameSource: "on_screen",
       price: 500,
       priceIsFrom: false,
       priceQuote: "бес жүз теңге",
       priceSource: "spoken",
       doubts: ["Is it 500 or 5000?"],
-      photoMethod: "restored",
       imageUrl: "https://signed.test/workspace-1/p/thumb.webp",
-      photoUrl: "https://signed.test/workspace-1/p/cutout.png",
-      originalUrl: "https://signed.test/workspace-1/p/original.jpg",
-      videoMomentSeconds: 9.4,
+      featuredOption: 0,
+      options: [
+        {
+          description: "frosted cup with logo",
+          photoMethod: "restored",
+          imageUrl: "https://signed.test/workspace-1/p/thumb.webp",
+          photoUrl: "https://signed.test/workspace-1/p/cutout.png",
+          originalUrl: "https://signed.test/workspace-1/p/original.jpg",
+          videoMomentSeconds: 9.4,
+          straightenedDegrees: -31.2,
+          notes: ["Turned to stand level."],
+        },
+        {
+          description: "cup without lid",
+          photoMethod: "pending",
+          imageUrl: null,
+          photoUrl: null,
+          originalUrl: null,
+          videoMomentSeconds: null,
+          straightenedDegrees: 0,
+          notes: [],
+        },
+      ],
       updatedAt: null,
     });
     expect(products[1]).toMatchObject({
       status: "draft",
       englishName: null,
+      nameSource: null,
       priceSource: null,
       doubts: [],
-      photoMethod: "pending",
       imageUrl: null,
-      photoUrl: null,
-      originalUrl: null,
-      videoMomentSeconds: null,
+      // A featured option out of range falls back to the first.
+      featuredOption: 0,
+      options: [{ description: "", photoMethod: "pending", imageUrl: null }],
     });
   });
 });

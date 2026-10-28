@@ -7,23 +7,26 @@ import sharp from "sharp";
 
 import {
   backdropColor,
+  backdropShares,
   cropAroundProduct,
   cutOutWithMask,
   frameDifferences,
-  isMostlyLight,
   numberedGrid,
   productBox,
+  rotateCutout,
   shotAround,
+  tiltOf,
   WHITE,
 } from "./images";
 import { boxInPixels } from "./locate";
 import {
   chooseFrame,
   largestComponent,
+  subtractMasks,
   type FrameCandidate,
   type Mask,
 } from "./masks";
-import { restorePrompt, restoreSize } from "./restore";
+import { chooseBackdrop, restorePrompt, restoreSize } from "./restore";
 
 // A 100×100 white image with a red 40×40 square at (30, 30), and SAM's mask
 // of it at half size, the way SAM sends masks smaller than their bounds.
@@ -308,11 +311,42 @@ test("asks Muse Image for the crop's shape and an honest restore", () => {
     /captions, subtitles, prices, stickers or logos laid over the video/,
   );
   assert.match(prompt, /engraved or written on the product itself stays/);
-  assert.match(prompt, /plain pure white background/);
+  assert.match(prompt, /openwork, that background shows through them/);
   assert.match(
-    restorePrompt("medal hanger", "grey"),
+    prompt,
     /plain, flat mid-grey background, the same grey everywhere/,
   );
+  assert.match(
+    restorePrompt("grey stone vase", "white"),
+    /plain pure white background/,
+  );
+});
+
+test("restores on grey, unless the product has noticeable grey", () => {
+  // A white medal hanger, a carved wooden panel, a dark table.
+  assert.deepEqual(chooseBackdrop({ white: 0.6, grey: 0 }), {
+    backdrop: "grey",
+    holes: true,
+  });
+  assert.deepEqual(chooseBackdrop({ white: 0.01, grey: 0.005 }), {
+    backdrop: "grey",
+    holes: true,
+  });
+  // A white hanger filmed with grey shading: still grey, holes still cut.
+  assert.deepEqual(chooseBackdrop({ white: 0.5, grey: 0.1 }), {
+    backdrop: "grey",
+    holes: true,
+  });
+  // A grey stone vase: white, with holes cut while it has little white.
+  assert.deepEqual(chooseBackdrop({ white: 0.01, grey: 0.4 }), {
+    backdrop: "white",
+    holes: true,
+  });
+  // Grey and white both: holes stay, so no part of it is lost with them.
+  assert.deepEqual(chooseBackdrop({ white: 0.3, grey: 0.4 }), {
+    backdrop: "white",
+    holes: false,
+  });
 });
 
 test("finds the product on a white background by what isn't white", async () => {
@@ -393,12 +427,212 @@ test("takes a grey backdrop back out of the edge pixels, not white", async () =>
   }
 });
 
-test("tells a mostly light product from a darker one", async () => {
+test("measures how much of a product is white and how much grey", async () => {
   const square = (background: string) =>
     sharp({ create: { width: 10, height: 10, channels: 4, background } })
       .png()
       .toBuffer();
-  assert.equal(await isMostlyLight(await square("#f2f2f0")), true);
-  assert.equal(await isMostlyLight(await square("#e0115f")), false);
-  assert.equal(await isMostlyLight(await square("#20202000")), false);
+  assert.deepEqual(await backdropShares(await square("#f2f2f0")), {
+    white: 1,
+    grey: 0,
+  });
+  assert.deepEqual(await backdropShares(await square("#8c8c8c")), {
+    white: 0,
+    grey: 1,
+  });
+  assert.deepEqual(await backdropShares(await square("#e0115f")), {
+    white: 0,
+    grey: 0,
+  });
+  // Nothing opaque: nothing of either.
+  assert.deepEqual(await backdropShares(await square("#20202000")), {
+    white: 0,
+    grey: 0,
+  });
+});
+
+// A white 80×40 hanger with a 20×10 slot, restored on Muse's grey, and a
+// 12×8 name plate printed in a grey close to the backdrop's; SAM's mask
+// covers the slot and the plate along with the hanger.
+test("lets the backdrop through the product's holes, and only with holes on", async () => {
+  const image = await sharp({
+    create: { width: 120, height: 80, channels: 3, background: "#8c8c8c" },
+  })
+    .composite([
+      {
+        input: {
+          create: { width: 80, height: 40, channels: 3, background: "#f4f4f4" },
+        },
+        left: 20,
+        top: 20,
+      },
+      {
+        input: {
+          create: { width: 20, height: 10, channels: 3, background: "#8c8c8c" },
+        },
+        left: 50,
+        top: 35,
+      },
+      {
+        input: {
+          create: { width: 12, height: 8, channels: 3, background: "#979797" },
+        },
+        left: 26,
+        top: 26,
+      },
+    ])
+    .png()
+    .toBuffer();
+  const hanger: Mask = {
+    raster: new Uint8Array(80 * 40).fill(1),
+    width: 80,
+    height: 40,
+    bounds: { left: 20, top: 20, right: 100, bottom: 60 },
+    confidence: 0.9,
+  };
+  const grey = { r: 140, g: 140, b: 140 };
+  const alphaAt = async (png: Buffer, x: number, y: number) => {
+    const { data, info } = await sharp(png)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return data[(y * info.width + x) * 4 + 3]!;
+  };
+
+  const punched = await cutOutWithMask(image, hanger, {
+    backdrop: grey,
+    holes: true,
+  });
+  // The cut-out starts 4 px before the hanger: the slot's middle is at (44, 19).
+  assert.equal(await alphaAt(punched, 44, 19), 0);
+  assert.equal(await alphaAt(punched, 14, 19), 255);
+  // The plate is 11 from the backdrop's grey on every pixel: printed, kept.
+  assert.equal(await alphaAt(punched, 16, 14), 255);
+
+  const filled = await cutOutWithMask(image, hanger, { backdrop: grey });
+  assert.equal(await alphaAt(filled, 44, 19), 255);
+});
+
+// A 300×60 bar on a transparent canvas, turned the way an owner holds a
+// medal hanger at a slant.
+const bar = async (degrees: number) =>
+  sharp(
+    await sharp({
+      create: {
+        width: 400,
+        height: 400,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    })
+      .composite([
+        {
+          input: {
+            create: {
+              width: 300,
+              height: 60,
+              channels: 4,
+              background: "#c8a165",
+            },
+          },
+          left: 50,
+          top: 170,
+        },
+      ])
+      .png()
+      .toBuffer(),
+  )
+    .rotate(degrees, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+test("finds how far a box-like product is turned, and levels it to the nearer axis", async () => {
+  const slanted = await bar(30);
+  const tilt = await tiltOf(slanted);
+  assert.ok(tilt !== null && Math.abs(tilt - 30) <= 1.5, `tilt ${tilt}`);
+  const level = await sharp(await rotateCutout(slanted, -tilt!)).metadata();
+  assert.ok(level.width! > 3 * level.height!, `${level.width}×${level.height}`);
+
+  // Turned 60°, it is nearer upright: levelled to vertical, a quarter turn
+  // from horizontal that needs no redrawing.
+  const steep = await bar(60);
+  const steepTilt = await tiltOf(steep);
+  assert.ok(
+    steepTilt !== null && Math.abs(steepTilt + 30) <= 1.5,
+    `tilt ${steepTilt}`,
+  );
+  const upright = await sharp(
+    await rotateCutout(steep, -steepTilt!),
+  ).metadata();
+  assert.ok(
+    upright.height! > 3 * upright.width!,
+    `${upright.width}×${upright.height}`,
+  );
+});
+
+test("leaves level products and shapes with no level alone", async () => {
+  assert.equal(await tiltOf(await bar(0)), null);
+  // A triangle fits a rectangle along any of its sides; a disc at any angle.
+  const shape = (svg: string) =>
+    sharp(Buffer.from(svg))
+      .rotate(20, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer();
+  assert.equal(
+    await tiltOf(
+      await shape(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><polygon points="100,10 190,190 10,190" fill="#2a6"/></svg>',
+      ),
+    ),
+    null,
+  );
+  assert.equal(
+    await tiltOf(
+      await shape(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="90" fill="#2a6"/></svg>',
+      ),
+    ),
+    null,
+  );
+});
+
+test("takes a presenter in front of a product out of its mask", () => {
+  // The product, 40×20 at (10, 10), sent at half size as SAM sends masks.
+  const product: Mask = {
+    raster: new Uint8Array(20 * 10).fill(1),
+    width: 20,
+    height: 10,
+    bounds: { left: 10, top: 10, right: 50, bottom: 30 },
+    confidence: 0.8,
+  };
+  // The presenter covers the product's right quarter and more.
+  const presenter: Mask = {
+    raster: new Uint8Array(30 * 40).fill(1),
+    width: 30,
+    height: 40,
+    bounds: { left: 40, top: 0, right: 70, bottom: 40 },
+    confidence: 0.9,
+  };
+
+  const left = subtractMasks(product, [presenter], 80, 50);
+  assert.ok(left);
+  assert.equal(left.kept, 0.75);
+  assert.deepEqual(left.mask.bounds, {
+    left: 10,
+    top: 10,
+    right: 40,
+    bottom: 30,
+  });
+  assert.equal(left.mask.confidence, 0.8);
+  assert.equal(left.mask.raster.length, 30 * 20);
+
+  // Nothing left when the presenter covers all of it.
+  assert.equal(
+    subtractMasks(
+      product,
+      [{ ...presenter, bounds: { left: 0, top: 0, right: 80, bottom: 50 } }],
+      80,
+      50,
+    ),
+    null,
+  );
 });

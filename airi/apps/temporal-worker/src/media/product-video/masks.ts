@@ -149,3 +149,72 @@ export function chooseFrame(
   }
   return best;
 }
+
+/** A mask drawn onto a full-size image: 1 where it covers, 0 elsewhere. */
+function onImage(mask: Mask, width: number, height: number): Uint8Array {
+  const out = new Uint8Array(width * height);
+  const boundsWidth = mask.bounds.right - mask.bounds.left;
+  const boundsHeight = mask.bounds.bottom - mask.bounds.top;
+  for (let y = 0; y < boundsHeight; y++) {
+    const row = mask.bounds.top + y;
+    if (row < 0 || row >= height) continue;
+    const sourceRow = Math.floor((y * mask.height) / boundsHeight);
+    for (let x = 0; x < boundsWidth; x++) {
+      const column = mask.bounds.left + x;
+      if (column < 0 || column >= width) continue;
+      const sourceColumn = Math.floor((x * mask.width) / boundsWidth);
+      if (mask.raster[sourceRow * mask.width + sourceColumn])
+        out[row * width + column] = 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * The product's mask without what the other masks cover, at full size, and
+ * the share of the product left; null when nothing is. Takes a presenter
+ * standing in front of a product out of its filmed cut-out.
+ */
+export function subtractMasks(
+  product: Mask,
+  others: Mask[],
+  width: number,
+  height: number,
+): { mask: Mask; kept: number } | null {
+  const covered = onImage(product, width, height);
+  const before = covered.reduce((sum, value) => sum + value, 0);
+  for (const other of others) {
+    const drawn = onImage(other, width, height);
+    for (let i = 0; i < covered.length; i++) if (drawn[i]) covered[i] = 0;
+  }
+  const bounds = { left: width, top: height, right: 0, bottom: 0 };
+  let after = 0;
+  for (let i = 0; i < covered.length; i++) {
+    if (!covered[i]) continue;
+    after++;
+    const x = i % width;
+    const y = (i - x) / width;
+    bounds.left = Math.min(bounds.left, x);
+    bounds.top = Math.min(bounds.top, y);
+    bounds.right = Math.max(bounds.right, x + 1);
+    bounds.bottom = Math.max(bounds.bottom, y + 1);
+  }
+  if (after === 0) return null;
+  const maskWidth = bounds.right - bounds.left;
+  const maskHeight = bounds.bottom - bounds.top;
+  const raster = new Uint8Array(maskWidth * maskHeight);
+  for (let y = 0; y < maskHeight; y++)
+    for (let x = 0; x < maskWidth; x++)
+      raster[y * maskWidth + x] =
+        covered[(bounds.top + y) * width + bounds.left + x]!;
+  return {
+    mask: {
+      raster,
+      width: maskWidth,
+      height: maskHeight,
+      bounds,
+      confidence: product.confidence,
+    },
+    kept: after / before,
+  };
+}

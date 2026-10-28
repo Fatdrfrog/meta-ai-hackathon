@@ -2,6 +2,7 @@ import {
   editMetaImage,
   type MetaRequestOptions,
 } from "@icecore/airi-runtime/meta-model-api";
+import sharp from "sharp";
 import { askMuseAboutImages, type AskMuseDeps } from "./ask-muse";
 import { whilePulsing } from "./pulse";
 
@@ -19,12 +20,32 @@ export type RestoreDeps = AskMuseDeps & {
 // position, size, angle" reads as if it fights "upright", but together they
 // kept every part in two runs of 7 out of 7; a version that only asked to
 // keep the filmed side towards the camera dropped a phone stand's base.
-// A light product is restored on grey: on white, a white medal hanger lost
-// its edges and parts of its face to the backdrop when cut out.
+// Products are restored on grey (see chooseBackdrop), and openings are kept
+// open, so the backdrop showing through them can be cut away.
 // The overlay sentence came from an edited promo: Muse kept a burned-in
 // "from 35 000" caption on a table's legs as if it were printed there, and
 // redrew a half-hidden second panel below a family-tree panel.
 export type RestoreBackdrop = "white" | "grey";
+
+/**
+ * What a product is restored on, and whether the backdrop showing through
+ * its holes can then be cut away: neutral mid-grey, which few products are
+ * made of, unless the product has noticeable grey and less white than grey.
+ * White was the riskier default: Muse painted a white backing board behind a
+ * carved panel's openwork, and a white product's edges went with the
+ * backdrop. On grey, holes are always cut: the product has more white than
+ * grey or almost no grey, so its greys are shading, while a hole shows Muse's
+ * flat grey exactly (a white medal hanger's shading had kept its slots
+ * filled). On white, only when the product has almost no white.
+ */
+export function chooseBackdrop(shares: { white: number; grey: number }): {
+  backdrop: RestoreBackdrop;
+  holes: boolean;
+} {
+  const backdrop =
+    shares.grey > 0.02 && shares.white < shares.grey ? "white" : "grey";
+  return { backdrop, holes: backdrop === "grey" || shares.white <= 0.02 };
+}
 
 /** What Muse Image is asked to put behind a restored photo. */
 export function backdropWords(backdrop: RestoreBackdrop): string {
@@ -35,7 +56,7 @@ export function backdropWords(backdrop: RestoreBackdrop): string {
 
 export function restorePrompt(
   product: string,
-  backdrop: RestoreBackdrop = "white",
+  backdrop: RestoreBackdrop = "grey",
 ): string {
   return (
     `Product photo cleanup of a ${product}. Remove the person's hand and fingers completely. ` +
@@ -43,6 +64,7 @@ export function restorePrompt(
     `continuing its exact shape, color, material and any print or logo. Do not change anything else ` +
     `about the product: same position, size, angle, colors, text and details. ` +
     `Replace everything around the product with ${backdropWords(backdrop)}. No shadow, no new objects. ` +
+    `Where the product has openings, like slots or carved openwork, that background shows through them: don't fill them. ` +
     `Also remove whatever is not part of this one product: people, other products or parts of them, and ` +
     `captions, subtitles, prices, stickers or logos laid over the video, restoring the product underneath. ` +
     `Text that is printed, engraved or written on the product itself stays. ` +
@@ -130,4 +152,48 @@ export async function checkSameProduct(
         ? answer.difference.trim().slice(0, 300)
         : null,
   };
+}
+
+/** A transparent cut-out as the JPEG on white that Muse Spark looks at. */
+export async function cutoutForMuse(cutout: Buffer): Promise<Buffer> {
+  return sharp(cutout)
+    .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality: 88 })
+    .toBuffer();
+}
+
+/**
+ * Whether the levelled cut-out is the better catalog photo. The angle comes
+ * from the outline; Muse Spark only confirms that straight is right, so a
+ * product meant to lean isn't turned.
+ */
+export async function prefersLevel(
+  request: { turned: Buffer; level: Buffer; product: string },
+  deps: AskMuseDeps = {},
+  options?: MetaRequestOptions,
+): Promise<boolean> {
+  const answer = await askMuseAboutImages<{ better: number }>(
+    {
+      images: [
+        await cutoutForMuse(request.turned),
+        await cutoutForMuse(request.level),
+      ],
+      question:
+        `Images 1 and 2 show the same ${request.product}; image 2 is image 1 turned to stand level. ` +
+        `Which is the better catalog photo: the one showing the product straight, the way it normally hangs, ` +
+        `stands or lies? Answer 2 only if the product looks straighter and natural in image 2; answer 1 if it is ` +
+        `meant to look as in image 1.`,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["better"],
+        properties: { better: { type: "integer", enum: [1, 2] } },
+      },
+      purpose: "level check",
+    },
+    deps,
+    options,
+  );
+  return answer.better === 2;
 }

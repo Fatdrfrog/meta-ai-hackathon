@@ -17,15 +17,17 @@ import {
 import sharp from "sharp";
 import {
   backdropColor,
+  backdropShares,
   cropAroundProduct,
   cutOutWithMask,
   frameDifferences,
-  isMostlyLight,
   jpegDataUrl,
   numberedGrid,
   productBox,
   regionSharpness,
+  rotateCutout,
   shotAround,
+  tiltOf,
   type Rgb,
 } from "./images";
 import { boxProduct, pickProductFrame, showsProduct } from "./locate";
@@ -34,6 +36,7 @@ import {
   largestComponent,
   maskArea,
   maskFromRecord,
+  subtractMasks,
   touchesEdge,
   type Box,
   type FrameCandidate,
@@ -48,6 +51,9 @@ import {
 import { whilePulsing } from "./pulse";
 import {
   checkSameProduct,
+  chooseBackdrop,
+  cutoutForMuse,
+  prefersLevel,
   restoreProductPhoto,
   type RestoreBackdrop,
   type RestoreDeps,
@@ -75,6 +81,8 @@ export type ProductCutout = {
   /** Transparent PNG of the product, or null with method "none". */
   cutoutPath: string | null;
   samConfidence: number | null;
+  /** Degrees the photo was turned to stand level, clockwise; 0 when it wasn't. */
+  straightenedDegrees: number;
   /** What the owner should know about this photo, in English. */
   notes: string[];
 };
@@ -238,6 +246,7 @@ export async function cutOutProduct(
       originalPath,
       cutoutPath: null,
       samConfidence: null,
+      straightenedDegrees: 0,
       notes: [
         "No clear view of this product was found in the video, so the whole frame is shown.",
       ],
@@ -261,17 +270,76 @@ export async function cutOutProduct(
       crop,
       name: request.name,
       samPhrase: request.samPhrase,
-      backdrop: (await isMostlyLight(filmed)) ? "grey" : "white",
+      ...chooseBackdrop(await backdropShares(filmed)),
     },
     deps,
     options,
   );
-  if (restored.cutout) {
-    await writeFile(cutoutPath, restored.cutout);
-    return { ...base, method: "restored", notes: [] };
-  }
-  await writeFile(cutoutPath, filmed);
-  return { ...base, method: found.method, notes: [restored.note] };
+  const result = restored.cutout
+    ? { cutout: restored.cutout, method: "restored" as const, notes: [] }
+    : {
+        cutout: await filmedWithoutPeople(
+          { framePath, mask: found.mask, filmed },
+          deps,
+          options,
+        ),
+        method: found.method,
+        notes: [restored.note],
+      };
+  const level = await levelIfTurned(result.cutout, request.name, deps, options);
+  await writeFile(cutoutPath, level.image);
+  return {
+    ...base,
+    method: result.method,
+    notes: result.notes,
+    straightenedDegrees: level.degrees,
+  };
+}
+
+/**
+ * The filmed cut-out without any person in the frame. In an edited promo the
+ * presenter stands in front of the products, and SAM's mask of a product can
+ * take in part of them. Kept as it was when that would leave less than half
+ * of the product.
+ */
+async function filmedWithoutPeople(
+  request: { framePath: string; mask: Mask; filmed: Buffer },
+  deps: CutOutProductDeps,
+  options?: MetaRequestOptions,
+): Promise<Buffer> {
+  const { width = 0, height = 0 } = await sharp(request.framePath).metadata();
+  const { result, costUsd } = await whilePulsing(deps.pulse, async () =>
+    (deps.segmentMetaImage ?? samImage)(
+      { imageUrl: await jpegDataUrl(request.framePath), prompt: "person" },
+      options,
+    ),
+  );
+  deps.onCost?.(costUsd, "find people");
+  const people = recordsOfKind(result.records, "mask").map(maskFromRecord);
+  if (people.length === 0) return request.filmed;
+  const left = subtractMasks(request.mask, people, width, height);
+  if (!left || left.kept < 0.5) return request.filmed;
+  return cutOutWithMask(request.framePath, left.mask);
+}
+
+/**
+ * The cut-out turned to stand level when it is a box-like product filmed at
+ * a slant, like a medal hanger held diagonally, and Muse Spark agrees it
+ * looks right that way. Level means horizontal or vertical, whichever is
+ * nearer: a quarter turn between them later needs no redrawing.
+ */
+async function levelIfTurned(
+  cutout: Buffer,
+  product: string,
+  deps: CutOutProductDeps,
+  options?: MetaRequestOptions,
+): Promise<{ image: Buffer; degrees: number }> {
+  const tilt = await tiltOf(cutout);
+  if (tilt === null) return { image: cutout, degrees: 0 };
+  const level = await rotateCutout(cutout, -tilt);
+  return (await prefersLevel({ turned: cutout, level, product }, deps, options))
+    ? { image: level, degrees: -tilt }
+    : { image: cutout, degrees: 0 };
 }
 
 async function trackAndChoose(
@@ -357,6 +425,7 @@ async function restoreAndCheck(
     name: string;
     samPhrase: string;
     backdrop: RestoreBackdrop;
+    holes: boolean;
   },
   deps: CutOutProductDeps,
   options?: MetaRequestOptions,
@@ -410,6 +479,7 @@ async function restoreAndCheck(
     }
     const cutout = await cutOutWithMask(restored, masks, {
       backdrop,
+      holes: request.holes,
     });
 
     // The check sees the cut-out a buyer will see, so a part lost by the cut
@@ -417,11 +487,7 @@ async function restoreAndCheck(
     const check = await checkSameProduct(
       {
         original: crop.image,
-        restored: await sharp(cutout)
-          .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
-          .flatten({ background: "#ffffff" })
-          .jpeg({ quality: 88 })
-          .toBuffer(),
+        restored: await cutoutForMuse(cutout),
         product: request.name,
       },
       deps,
