@@ -18,6 +18,7 @@ import { ProductVideoImport } from "@/models/product-video-import";
 import {
   ProductWhatsAppLink,
   type IProductWhatsAppLink,
+  type ProductWhatsAppQuestion,
 } from "@/models/product-whatsapp-link";
 import { normalizeWhatsAppPhone } from "@icecore/shared/lib/whatsapp/contact-identities";
 
@@ -27,13 +28,16 @@ import { normalizeWhatsAppPhone } from "@icecore/shared/lib/whatsapp/contact-ide
 // number the workspace already has connected. A video from a linked phone
 // within 30 minutes of linking or of its last video is imported straight
 // away; a later one is asked about first, in case it wasn't meant for the
-// shelf. Anything else is left to the number's usual handling. Airi writes
+// shelf. Videos sent together share one question: WhatsApp delivers an album
+// as one message per video, so a video within two minutes of the last one
+// joins it. Anything else is left to the number's usual handling. Airi writes
 // back only what the owner needs: that the phone is linked, that question,
-// and, once, how the import went.
+// and, once per video, how the import went.
 
 const COPY = PRODUCTS_COPY.whatsapp;
 const CODE_TTL_MS = 30 * 60_000;
 const LINK_WINDOW_MS = 30 * 60_000;
+const BURST_MS = 2 * 60_000;
 const CODE_MARKER = "AIRI-SHOP:";
 const CODE_PATTERN = /AIRI-SHOP:([a-f0-9]{32})\b/i;
 const BUTTON_PATTERN = /^products-intake:(add|skip):([a-f0-9]{24})$/;
@@ -256,15 +260,139 @@ async function startImport(params: {
   );
 }
 
-/** The owner tapped "Add them" or "No" under a video Airi asked about. */
+type QuestionVideo = ProductWhatsAppQuestion["videos"][number];
+
+/**
+ * Adds a video to the burst Airi is asking about, when it comes within two
+ * minutes of the burst's last video. Returns the owner's answer so far (null
+ * before they answer), or undefined when there's no burst to join.
+ */
+async function joinBurst(
+  link: IProductWhatsAppLink,
+  video: QuestionVideo,
+  now: Date
+): Promise<ProductWhatsAppQuestion["answer"] | undefined> {
+  const joined = await ProductWhatsAppLink.findOneAndUpdate(
+    {
+      _id: link._id,
+      "question.lastVideoAt": { $gte: new Date(now.getTime() - BURST_MS) },
+    },
+    {
+      $push: { "question.videos": video },
+      $set: { "question.lastVideoAt": now },
+    }
+  )
+    .select("question.answer")
+    .lean<Pick<IProductWhatsAppLink, "question"> | null>();
+  return joined?.question ? joined.question.answer : undefined;
+}
+
+/** Starts a question with this video, unless another video of its burst just did. */
+async function openQuestion(
+  link: IProductWhatsAppLink,
+  video: QuestionVideo,
+  now: Date
+): Promise<boolean> {
+  const opened = await ProductWhatsAppLink.updateOne(
+    {
+      _id: link._id,
+      $or: [
+        { question: null },
+        { "question.lastVideoAt": { $lt: new Date(now.getTime() - BURST_MS) } },
+      ],
+    },
+    {
+      $set: {
+        question: {
+          messageId: video.messageId,
+          videos: [video],
+          lastVideoAt: now,
+          answer: null,
+        },
+      },
+    }
+  );
+  return opened.modifiedCount > 0;
+}
+
+/**
+ * A video from a linked phone that hasn't sent one lately: Airi asks once
+ * whether to add the products in it and in the videos sent with it.
+ */
+async function askAboutVideo(
+  message: ProductsWhatsAppMessage & { sourceId: string },
+  phone: string,
+  link: IProductWhatsAppLink,
+  video: QuestionVideo,
+  now: Date
+): Promise<ProductsWhatsAppOutcome> {
+  let answer = await joinBurst(link, video, now);
+  // Another video of the same burst started the question just now: join it.
+  if (answer === undefined && !(await openQuestion(link, video, now)))
+    answer = await joinBurst(link, video, now);
+  if (answer === null) return done("joined_question");
+  if (answer === "skip") return done("skipped");
+  if (answer === "add") {
+    await startImport({
+      message,
+      phone,
+      link,
+      videoMessageId: video.messageId,
+      video,
+      now,
+    });
+    return done("import_started");
+  }
+  await reply(message.sourceId, phone, {
+    text: COPY.askToAdd(await workspaceName(link.workspaceId)),
+    buttons: [
+      { id: `products-intake:add:${video.messageId}`, title: COPY.addButton },
+      { id: `products-intake:skip:${video.messageId}`, title: COPY.skipButton },
+    ],
+  });
+  return done("asked");
+}
+
+/** The owner tapped "Add them" or "No" under Airi's question. */
 async function answerQuestion(
   message: ProductsWhatsAppMessage & { sourceId: string },
   phone: string,
   answer: { add: boolean; videoMessageId: string },
   now: Date
 ): Promise<ProductsWhatsAppOutcome> {
-  if (!answer.add) return done("skipped");
-  // Only a video this phone sent, in this same chat.
+  if (!answer.add) {
+    // "No" lets the burst go, unless its videos are already being added.
+    await ProductWhatsAppLink.updateOne(
+      {
+        phone,
+        "question.messageId": answer.videoMessageId,
+        "question.answer": null,
+      },
+      { $set: { "question.answer": "skip" } }
+    );
+    return done("skipped");
+  }
+  // "Add them" adds every video of the burst, also after a "No". Tapped
+  // again, it adds nothing twice: a video's import is made once.
+  const asked = await ProductWhatsAppLink.findOneAndUpdate(
+    { phone, "question.messageId": answer.videoMessageId },
+    { $set: { "question.answer": "add" } },
+    { new: true }
+  ).lean<IProductWhatsAppLink | null>();
+  if (asked?.question) {
+    for (const video of asked.question.videos)
+      await startImport({
+        message,
+        phone,
+        link: asked,
+        videoMessageId: video.messageId,
+        video,
+        now,
+      });
+    return done("import_started");
+  }
+  // A question a later one replaced: only the video it was asked about,
+  // and only one this phone sent, in this same chat.
   const video = await Message.findOne({
     _id: answer.videoMessageId,
     conversation: message.conversationId,
@@ -335,17 +463,17 @@ export async function handleProductsWhatsAppMessage(
     });
     return done("import_started");
   }
-  await reply(sourceId, phone, {
-    text: COPY.askToAdd(await workspaceName(link.workspaceId)),
-    buttons: [
-      { id: `products-intake:add:${message.messageId}`, title: COPY.addButton },
-      {
-        id: `products-intake:skip:${message.messageId}`,
-        title: COPY.skipButton,
-      },
-    ],
-  });
-  return done("asked");
+  return askAboutVideo(
+    own,
+    phone,
+    link,
+    {
+      messageId: message.messageId,
+      mediaId: message.video.mediaId,
+      mimeType: message.video.mimeType,
+    },
+    now
+  );
 }
 
 /**

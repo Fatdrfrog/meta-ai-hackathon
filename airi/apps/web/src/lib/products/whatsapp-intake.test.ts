@@ -123,6 +123,113 @@ const link = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const later = (seconds: number) => new Date(NOW.getTime() + seconds * 1000);
+/** Video messages of a burst, with ids a reply button can carry. */
+const videoId = (n: number) =>
+  `651f1f77bcf86cd7994391${String(n).padStart(2, "0")}`;
+const videoMessage = (n: number) =>
+  message({
+    messageId: videoId(n),
+    video: { mediaId: `media-${n}`, mimeType: "video/mp4" },
+  });
+const tapped = (answer: "add" | "skip", n: number) =>
+  message({
+    messageId: "651f1f77bcf86cd799439199",
+    video: null,
+    buttonReplyId: `products-intake:${answer}:${videoId(n)}`,
+  });
+
+type StoredQuestion = {
+  messageId: string;
+  videos: Array<{
+    messageId: string;
+    mediaId: string;
+    mimeType: string | null;
+  }>;
+  lastVideoAt: Date;
+  answer: "add" | "skip" | null;
+};
+type StoredLink = ReturnType<typeof link> & {
+  question: StoredQuestion | null;
+};
+type LinkFilter = {
+  $or?: [unknown, { "question.lastVideoAt": { $lt: Date } }];
+  "question.lastVideoAt"?: { $gte: Date };
+  "question.messageId"?: string;
+  "question.answer"?: unknown;
+};
+type LinkUpdate = {
+  $set: {
+    question?: StoredQuestion;
+    "question.lastVideoAt"?: Date;
+    "question.answer"?: StoredQuestion["answer"];
+    lastVideoAt?: Date;
+  };
+  $push?: { "question.videos": StoredQuestion["videos"][number] };
+};
+
+/**
+ * One phone's link as Mongo keeps it: the intake reads it, and its updates
+ * apply the way Mongo would for the filters the intake uses.
+ */
+function storeLink(overrides: Record<string, unknown>): {
+  current: StoredLink;
+} {
+  const store = {
+    current: { ...link(overrides), question: null } as StoredLink,
+  };
+  mockLinkFindOne.mockImplementation(() =>
+    query(structuredClone(store.current))
+  );
+  mockLinkFindOneAndUpdate.mockImplementation(
+    (filter: LinkFilter, update: LinkUpdate) => {
+      const question = store.current.question;
+      const since = filter["question.lastVideoAt"]?.$gte;
+      if (since) {
+        // A video joining the burst Airi asked about.
+        if (!question || question.lastVideoAt < since) return query(null);
+        const before = structuredClone(store.current);
+        question.videos.push(update.$push!["question.videos"]);
+        question.lastVideoAt = update.$set["question.lastVideoAt"]!;
+        return query(before);
+      }
+      // "Add them" under a question.
+      if (!question || question.messageId !== filter["question.messageId"])
+        return query(null);
+      question.answer = update.$set["question.answer"]!;
+      return query(structuredClone(store.current));
+    }
+  );
+  mockLinkUpdateOne.mockImplementation(
+    async (filter: LinkFilter, update: LinkUpdate) => {
+      const question = store.current.question;
+      if (filter.$or) {
+        // A video starting a question, unless a burst's question is open.
+        const before = filter.$or[1]["question.lastVideoAt"].$lt;
+        if (question && question.lastVideoAt >= before)
+          return { modifiedCount: 0 };
+        store.current.question = structuredClone(update.$set.question!);
+        return { modifiedCount: 1 };
+      }
+      if ("question.answer" in filter) {
+        // "No" under a question nobody answered yet.
+        if (
+          !question ||
+          question.messageId !== filter["question.messageId"] ||
+          question.answer !== null
+        )
+          return { modifiedCount: 0 };
+        question.answer = update.$set["question.answer"]!;
+        return { modifiedCount: 1 };
+      }
+      // An import started: the phone's last video.
+      store.current.lastVideoAt = update.$set.lastVideoAt;
+      return { modifiedCount: 1 };
+    }
+  );
+  return store;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.PRODUCTS_WHATSAPP_NUMBER = "+7 708 260 9346";
@@ -132,6 +239,7 @@ beforeEach(() => {
   mockLinkUpdateOne.mockResolvedValue({ modifiedCount: 1 });
   mockLinkDeleteMany.mockResolvedValue({ deletedCount: 0 });
   mockLinkFindOne.mockReturnValue(query(null));
+  mockLinkFindOneAndUpdate.mockReturnValue(query(null));
 });
 
 afterAll(() => {
@@ -263,66 +371,137 @@ describe("handleProductsWhatsAppMessage", () => {
     expect(mockSendButtons).not.toHaveBeenCalled();
   });
 
-  it("asks about a later video first, and imports it when the owner says so", async () => {
-    mockLinkFindOne.mockReturnValue(
-      query(link({ linkedAt: minutesAgo(180), lastVideoAt: minutesAgo(45) }))
-    );
+  it("asks once about videos sent together, and adds them all when the owner says so", async () => {
+    storeLink({ linkedAt: minutesAgo(180), lastVideoAt: minutesAgo(45) });
 
-    expect(await handleProductsWhatsAppMessage(message(), NOW)).toEqual({
+    // An album: WhatsApp delivers one message per video, seconds apart.
+    expect(await handleProductsWhatsAppMessage(videoMessage(1), NOW)).toEqual({
       handled: true,
       outcome: "asked",
     });
+    expect(
+      await handleProductsWhatsAppMessage(videoMessage(2), later(8))
+    ).toEqual({ handled: true, outcome: "joined_question" });
     expect(mockCreateImport).not.toHaveBeenCalled();
+    expect(mockSendButtons).toHaveBeenCalledTimes(1);
     expect(mockSendButtons).toHaveBeenCalledWith(
       "airi-phone",
       "token",
       OWNER,
-      "Should I add the products in this video to QazOner Group?",
+      "Should I add the products you just sent to QazOner Group?",
       [
-        { id: `products-intake:add:${VIDEO_MESSAGE}`, title: "Add them" },
-        { id: `products-intake:skip:${VIDEO_MESSAGE}`, title: "No" },
+        { id: `products-intake:add:${videoId(1)}`, title: "Add them" },
+        { id: `products-intake:skip:${videoId(1)}`, title: "No" },
       ]
     );
+
+    expect(
+      await handleProductsWhatsAppMessage(tapped("add", 1), later(60))
+    ).toEqual({ handled: true, outcome: "import_started" });
+    expect(mockCreateImport.mock.calls.map(([input]) => input)).toEqual([
+      {
+        workspaceId: "shop-workspace",
+        source: "whatsapp",
+        whatsapp: {
+          sourceId: "airi-source",
+          workspaceId: "airi-workspace",
+          conversationId: "651f1f77bcf86cd799439060",
+          messageId: videoId(1),
+          mediaId: "media-1",
+          mimeType: "video/mp4",
+          phone: OWNER,
+        },
+      },
+      expect.objectContaining({
+        whatsapp: expect.objectContaining({
+          messageId: videoId(2),
+          mediaId: "media-2",
+        }),
+      }),
+    ]);
+
+    // A second tap adds the same videos again, which their imports ignore.
+    mockCreateImport.mockClear();
+    await handleProductsWhatsAppMessage(tapped("add", 1), later(70));
+    expect(
+      mockCreateImport.mock.calls.map(([input]) => input.whatsapp.messageId)
+    ).toEqual([videoId(1), videoId(2)]);
+
+    // Having just added videos, the next one needs no question.
+    expect(
+      await handleProductsWhatsAppMessage(videoMessage(3), later(300))
+    ).toEqual({ handled: true, outcome: "import_started" });
+    expect(mockSendButtons).toHaveBeenCalledTimes(1);
+  });
+
+  it("lets the rest of a burst go after No, and adds it all if the owner changes their mind", async () => {
+    storeLink({ linkedAt: minutesAgo(180) });
+
+    await handleProductsWhatsAppMessage(videoMessage(1), NOW);
+    expect(
+      await handleProductsWhatsAppMessage(tapped("skip", 1), later(20))
+    ).toEqual({ handled: true, outcome: "skipped" });
+    // The album's last video came after the answer: no second question.
+    expect(
+      await handleProductsWhatsAppMessage(videoMessage(2), later(30))
+    ).toEqual({ handled: true, outcome: "skipped" });
+    expect(mockSendButtons).toHaveBeenCalledTimes(1);
+    expect(mockCreateImport).not.toHaveBeenCalled();
+
+    expect(
+      await handleProductsWhatsAppMessage(tapped("add", 1), later(90))
+    ).toEqual({ handled: true, outcome: "import_started" });
+    expect(
+      mockCreateImport.mock.calls.map(([input]) => input.whatsapp.messageId)
+    ).toEqual([videoId(1), videoId(2)]);
+    // "No" after "Add them" takes nothing back.
+    expect(
+      await handleProductsWhatsAppMessage(tapped("skip", 1), later(95))
+    ).toEqual({ handled: true, outcome: "skipped" });
+  });
+
+  it("asks again about a video more than two minutes after the last, and an older question adds only its own video", async () => {
+    storeLink({ linkedAt: minutesAgo(180) });
+
+    await handleProductsWhatsAppMessage(videoMessage(1), NOW);
+    expect(
+      await handleProductsWhatsAppMessage(videoMessage(2), later(150))
+    ).toEqual({ handled: true, outcome: "asked" });
+    expect(mockSendButtons.mock.calls.map(call => call[4][0].id)).toEqual([
+      `products-intake:add:${videoId(1)}`,
+      `products-intake:add:${videoId(2)}`,
+    ]);
 
     mockMessageFindOne.mockReturnValue(
       query({ whatsappMediaId: "media-1", mimeType: "video/mp4" })
     );
-    const answer = message({
-      messageId: "651f1f77bcf86cd799439072",
-      video: null,
-      buttonReplyId: `products-intake:add:${VIDEO_MESSAGE}`,
-    });
-    expect(await handleProductsWhatsAppMessage(answer, NOW)).toEqual({
-      handled: true,
-      outcome: "import_started",
-    });
-    // Only that video, in the same chat.
+    expect(
+      await handleProductsWhatsAppMessage(tapped("add", 1), later(200))
+    ).toEqual({ handled: true, outcome: "import_started" });
+    // Only that video, and only one sent in the same chat.
     expect(mockMessageFindOne).toHaveBeenCalledWith({
-      _id: VIDEO_MESSAGE,
+      _id: videoId(1),
       conversation: "651f1f77bcf86cd799439060",
       whatsappMediaId: { $type: "string" },
     });
-    expect(mockCreateImport).toHaveBeenCalledWith(
-      expect.objectContaining({
-        workspaceId: "shop-workspace",
-        whatsapp: expect.objectContaining({
-          messageId: VIDEO_MESSAGE,
-          mediaId: "media-1",
-        }),
-      })
-    );
-
-    mockCreateImport.mockClear();
     expect(
-      await handleProductsWhatsAppMessage(
-        message({
-          video: null,
-          buttonReplyId: `products-intake:skip:${VIDEO_MESSAGE}`,
-        }),
-        NOW
-      )
-    ).toEqual({ handled: true, outcome: "skipped" });
-    expect(mockCreateImport).not.toHaveBeenCalled();
+      mockCreateImport.mock.calls.map(([input]) => input.whatsapp.messageId)
+    ).toEqual([videoId(1)]);
+  });
+
+  it("asks once when two videos arrive at the same moment", async () => {
+    storeLink({ linkedAt: minutesAgo(180) });
+
+    const results = await Promise.all([
+      handleProductsWhatsAppMessage(videoMessage(1), NOW),
+      handleProductsWhatsAppMessage(videoMessage(2), NOW),
+    ]);
+
+    expect(results.map(result => result.outcome).sort()).toEqual([
+      "asked",
+      "joined_question",
+    ]);
+    expect(mockSendButtons).toHaveBeenCalledTimes(1);
   });
 
   it("treats the workspace's own connected number as linked, asking about its first video", async () => {

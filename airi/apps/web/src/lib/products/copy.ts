@@ -103,7 +103,7 @@ export const PRODUCTS_COPY = {
     linkExpired:
       "That code has expired. Open Products in airi and scan the new one.",
     askToAdd: (workspace: string) =>
-      `Should I add the products in this video to ${workspace}?`,
+      `Should I add the products you just sent to ${workspace}?`,
     addButton: "Add them",
     skipButton: "No",
     ready: (count: number, link: string) =>

@@ -23,7 +23,7 @@ On October 27 the project moved inside airi.chat, where shop owners already run 
 - **Upload on the Products page:** choose or drop a video; it goes straight to storage with its progress shown, after the page checks it's a video of 5 minutes at most. Then the page follows the import live: each stage, and the products it finds landing on a dashed shelf as their photos are made. It also shows imports started elsewhere, and why one failed.
 - **Swipe-through review:** one card per product, with a round clip of the owner saying its price. What Airi isn't sure of is in red with why. Swipe right (or →) to add it to the shelf, left (or ←) to skip, undo, or accept all; tap the name or price to fix it, or choose which item the shelf shows.
 - **WhatsApp drafts:** after the review, one tap makes a carousel template (the products on white cards, opened in airi's template editor to send to Meta) or an order form (saved on WhatsApp as a draft Flow to publish), both written for buyers in the language the owner spoke.
-- **Videos sent on WhatsApp:** link your phone once by scanning a code on the Products page (a number already connected to the workspace counts as linked), then send shelf videos to Airi's number. Their products appear in airi, and Airi writes back once with the link to check them.
+- **Videos sent on WhatsApp:** link your phone once by scanning a code on the Products page (a number already connected to the workspace counts as linked), then send shelf videos to Airi's number. Their products appear in airi, and Airi writes back once per video with the link to check them.
 
 **Prototype** (root):
 

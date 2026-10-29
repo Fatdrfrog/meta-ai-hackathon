@@ -1,6 +1,25 @@
 import mongoose from "mongoose";
 
 /**
+ * The question Airi asked about videos a phone sent together (an album, or
+ * one right after another), so it asks once for all of them.
+ */
+export type ProductWhatsAppQuestion = {
+  /** The first video's stored message; the question's buttons carry it. */
+  messageId: string;
+  /** Every video in the burst, in the order they came. */
+  videos: Array<{
+    messageId: string;
+    mediaId: string;
+    mimeType: string | null;
+  }>;
+  /** When the burst's last video came; one within two minutes joins it. */
+  lastVideoAt: Date;
+  /** The owner's answer; null until they tap a button. */
+  answer: "add" | "skip" | null;
+};
+
+/**
  * A shop owner's WhatsApp number linked to their workspace, so the shelf
  * videos they send to airi's own number become product imports (Products).
  * A link starts as a one-time code the owner opens WhatsApp with from the
@@ -25,6 +44,8 @@ export interface IProductWhatsAppLink {
   linkedAt?: Date;
   /** When this phone last sent a video that became an import. */
   lastVideoAt?: Date;
+  /** The latest question Airi asked this phone; null before the first. */
+  question?: ProductWhatsAppQuestion | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +64,30 @@ const ProductWhatsAppLinkSchema = new mongoose.Schema<IProductWhatsAppLink>(
     phone: { type: String, trim: true, maxlength: 20 },
     linkedAt: { type: Date },
     lastVideoAt: { type: Date },
+    question: {
+      type: new mongoose.Schema<ProductWhatsAppQuestion>(
+        {
+          messageId: { type: String, required: true },
+          videos: {
+            type: [
+              new mongoose.Schema<ProductWhatsAppQuestion["videos"][number]>(
+                {
+                  messageId: { type: String, required: true },
+                  mediaId: { type: String, required: true },
+                  mimeType: { type: String, default: null },
+                },
+                { _id: false }
+              ),
+            ],
+            default: [],
+          },
+          lastVideoAt: { type: Date, required: true },
+          answer: { type: String, enum: ["add", "skip", null], default: null },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
   },
   { timestamps: true, collection: "product_whatsapp_links" }
 );
