@@ -23,6 +23,10 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   storage_full: "The company's media storage is full",
   draft_failed: "The draft couldn't be made",
   whatsapp_intake_unavailable: "Sending videos on WhatsApp isn't set up",
+  whatsapp_link_not_found: "That phone or request wasn't found",
+  whatsapp_link_linked_elsewhere: "That phone is linked to another workspace",
+  whatsapp_link_shop_name_taken:
+    "Another workspace with Products has the same name",
 };
 
 export const productsJson = (data: unknown, status = 200) =>

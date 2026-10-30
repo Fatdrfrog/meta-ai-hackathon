@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import test, { type TestContext } from "node:test";
 import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
+import { WorkspaceAiSpendError } from "@icecore/airi-runtime/workspace-ai-spend";
 import sharp from "sharp";
 
 import type { ProductCutout } from "./cutout";
@@ -16,6 +17,7 @@ import {
   type NewDraftOption,
   type NewDraftProduct,
   type ProductPhoto,
+  type SpendUnit,
   type StoredFileRef,
 } from "./import-job";
 import type {
@@ -83,6 +85,18 @@ const INVENTORY: ProductInventory = {
   ],
 };
 
+/** A video showing `count` products, one design each, a few seconds apart. */
+const shelfOf = (count: number): ProductInventory => ({
+  ...INVENTORY,
+  items: Array.from({ length: count }, (_, i) =>
+    item({
+      name: `Toy ${i}`,
+      localName: `Ойыншық ${i}`,
+      options: [option(`toy ${i}`, i * 5, i * 5 + 1)],
+    }),
+  ),
+});
+
 type FakeOption = NewDraftOption & {
   photo: ProductPhoto | { method: "pending" };
   notes: string[];
@@ -124,14 +138,151 @@ const savedProduct = (
   clip: { fromSeconds: 0.7, toSeconds: 4 },
 });
 
+async function photoFile(dir: string, name: string, kind: "jpeg" | "png") {
+  await mkdir(dir, { recursive: true });
+  const path = join(dir, name);
+  const image = sharp({
+    create: {
+      width: 40,
+      height: 80,
+      channels: 4,
+      background: { r: 200, g: 30, b: 60, alpha: 1 },
+    },
+  });
+  await (kind === "jpeg" ? image.jpeg() : image.png()).toFile(path);
+  return path;
+}
+
+async function restoredCutout(dir: string): Promise<ProductCutout> {
+  return {
+    method: "restored",
+    frameTimeSeconds: 1.5,
+    originalPath: await photoFile(dir, "original.jpg", "jpeg"),
+    cutoutPath: await photoFile(dir, "cutout.png", "png"),
+    samConfidence: 0.95,
+    straightenedDegrees: 0,
+    notes: [],
+  };
+}
+
+const ACTION_LIMIT_MICROS = 500_000;
+
+type LedgerOptions = {
+  /** The company's AI spending limit, and what it had committed before the import. */
+  companyLimitMicros?: number;
+  committedMicros?: number;
+  /** The plan's included AI actions, and how many were used before the import. */
+  includedActions?: number;
+  usedActions?: number;
+  /** A free company whose trial is over. */
+  trialEnded?: boolean;
+};
+
+/**
+ * The workspace's AI ledger as reserve_workspace_ai_spend and
+ * settle_workspace_ai_spend keep it. A reservation first admits its action,
+ * counting one included action, unless none are left, the free trial has
+ * ended or the company's limit is reached: then it's own_ai_source_required,
+ * and nothing is kept. The allowance's projection knows nothing of the trial,
+ * as get_workspace_text_ai_allowance doesn't; the import reads it alongside.
+ * An admitted action stays admitted. A reservation past the company's limit
+ * or the action's $0.50 cap is refused. A settlement replaces the reservation
+ * with the actual cost, overruns included; an unknown cost keeps it. Units
+ * map to actions as the activity maps them within one workflow run.
+ */
+function fakeLedger(attempt: () => number, options: LedgerOptions = {}) {
+  const limit = options.companyLimitMicros ?? 25_000_000;
+  const included = options.includedActions ?? 500;
+  const ledger = {
+    committed: options.committedMicros ?? 0,
+    used: options.usedActions ?? 0,
+    trialEnded: options.trialEnded ?? false,
+    actions: new Map<
+      string,
+      { committed: number; operations: Map<string, number> }
+    >(),
+    log: [] as string[],
+  };
+  const actionOf = (unit: SpendUnit) =>
+    unit.kind === "read"
+      ? `read:${attempt()}`
+      : `photo:${unit.productId}:${unit.optionIndex}`;
+  const spend: ImportJobPorts["spend"] = {
+    async allowance() {
+      return {
+        includedActions: included,
+        remainingActions: Math.max(0, included - ledger.used),
+        spendLimitReached: ledger.committed >= limit,
+        trialEnded: ledger.trialEnded,
+      };
+    },
+    async reserve(unit, operationId, provider, max) {
+      const actionId = actionOf(unit);
+      let action = ledger.actions.get(actionId);
+      if (!action) {
+        if (
+          ledger.used >= included ||
+          ledger.trialEnded ||
+          ledger.committed >= limit
+        ) {
+          ledger.log.push(
+            `refuse ${actionId} ${operationId} own_ai_source_required`,
+          );
+          throw new WorkspaceAiSpendError("own_ai_source_required");
+        }
+        ledger.used++;
+        action = { committed: 0, operations: new Map() };
+        ledger.actions.set(actionId, action);
+      }
+      if (action.operations.has(operationId))
+        throw new WorkspaceAiSpendError("workspace_ai_operation_replayed");
+      if (
+        ledger.committed + max > limit ||
+        action.committed + max > ACTION_LIMIT_MICROS
+      ) {
+        ledger.log.push(
+          `refuse ${actionId} ${operationId} workspace_ai_spend_limit`,
+        );
+        throw new WorkspaceAiSpendError("workspace_ai_spend_limit");
+      }
+      action.operations.set(operationId, max);
+      action.committed += max;
+      ledger.committed += max;
+      ledger.log.push(`reserve ${actionId} ${operationId} ${provider} ${max}`);
+      return { actionId, operationId };
+    },
+    async settle(reservation, actual) {
+      const { actionId, operationId } = reservation as {
+        actionId: string;
+        operationId: string;
+      };
+      ledger.log.push(`settle ${actionId} ${operationId} ${actual}`);
+      if (actual === null) return;
+      const action = ledger.actions.get(actionId)!;
+      const change = actual - action.operations.get(operationId)!;
+      action.committed += change;
+      ledger.committed += change;
+    },
+  };
+  return { ledger, spend };
+}
+
 async function setUp(
   t: TestContext,
   options: {
     transcript?: string | null;
     products?: FakeProduct[];
     inventory?: ProductInventory;
-    cutOut?: (name: string, workDir: string) => Promise<ProductCutout>;
-    tracked?: boolean;
+    /** What reading the video costs, in dollars. */
+    inventoryUsd?: number;
+    /** How reading the video fails, one attempt after another, and what each failure had reported spending. */
+    inventoryFailures?: Array<{ error: Error; reportedUsd?: number }>;
+    /** A photo's cut-out; the default reports $0.05 and restores it. */
+    cutOut?: (
+      name: string,
+      workDir: string,
+      onCost: (usd: number) => void,
+    ) => Promise<ProductCutout>;
     /** When the inventory says someone presents the products. */
     presenterMoment?: number;
     /** The import's presenter as a previous run left it. */
@@ -141,10 +292,13 @@ async function setUp(
     clipFails?: Record<string, Error>;
     /** Whether the video has sound. */
     audio?: boolean;
+    /** How long the video is, in seconds. */
+    durationSeconds?: number;
     /** A video sent on WhatsApp, not yet copied to storage. */
     whatsapp?: boolean;
     /** How fetching it from WhatsApp fails. */
     whatsappFails?: Error;
+    ledger?: LedgerOptions;
   } = {},
 ) {
   const workDir = await mkdtemp(join(tmpdir(), "import-job-"));
@@ -175,7 +329,6 @@ async function setUp(
     languages: [] as Array<string | null>,
     presenter: 0,
     emits: [] as string[],
-    spend: [] as string[],
     saved: [] as string[],
     clips: [] as Array<{
       productId: string;
@@ -184,33 +337,8 @@ async function setUp(
     }>,
     downloads: [] as string[],
   };
-
-  const photoFile = async (dir: string, name: string, kind: "jpeg" | "png") => {
-    await mkdir(dir, { recursive: true });
-    const path = join(dir, name);
-    const image = sharp({
-      create: {
-        width: 40,
-        height: 80,
-        channels: 4,
-        background: { r: 200, g: 30, b: 60, alpha: 1 },
-      },
-    });
-    await (kind === "jpeg" ? image.jpeg() : image.png()).toFile(path);
-    return path;
-  };
-  const defaultCutOut = async (
-    _name: string,
-    dir: string,
-  ): Promise<ProductCutout> => ({
-    method: "restored",
-    frameTimeSeconds: 1.5,
-    originalPath: await photoFile(dir, "original.jpg", "jpeg"),
-    cutoutPath: await photoFile(dir, "cutout.png", "png"),
-    samConfidence: 0.95,
-    straightenedDegrees: 0,
-    notes: [],
-  });
+  const inventoryFailures = [...(options.inventoryFailures ?? [])];
+  const { ledger, spend } = fakeLedger(() => ports.attempt, options.ledger);
 
   const ports: ImportJobPorts = {
     store: {
@@ -318,20 +446,7 @@ async function setUp(
         return { bucket: "media", path: `clips/${productId}/${file.fileName}` };
       },
     },
-    spend:
-      options.tracked === false
-        ? null
-        : {
-            async reserve(operationId, provider, max) {
-              calls.spend.push(`reserve ${operationId} ${provider} ${max}`);
-              return { operationId };
-            },
-            async settle(reservation, actual) {
-              calls.spend.push(
-                `settle ${(reservation as { operationId: string }).operationId} ${actual}`,
-              );
-            },
-          },
+    spend,
     async transcribe() {
       calls.transcribe++;
       return TRANSCRIPT;
@@ -346,7 +461,7 @@ async function setUp(
       videoPath: join(workDir, "video.mp4"),
       audioPath:
         options.audio === false ? null : join(workDir, "narration.mp3"),
-      durationSeconds: 30,
+      durationSeconds: options.durationSeconds ?? 30,
       width: 720,
       height: 1280,
     }),
@@ -360,7 +475,13 @@ async function setUp(
     },
     readInventory: async (_request, deps) => {
       calls.inventory++;
-      deps?.onCost?.(0.04, "inventory");
+      const failure = inventoryFailures.shift();
+      if (failure) {
+        if (failure.reportedUsd)
+          deps?.onCost?.(failure.reportedUsd, "inventory");
+        throw failure.error;
+      }
+      deps?.onCost?.(options.inventoryUsd ?? 0.04, "inventory");
       return {
         ...structuredClone(options.inventory ?? INVENTORY),
         presenter:
@@ -372,8 +493,11 @@ async function setUp(
     cutOut: async (request, deps) => {
       calls.cutOut.push(request.name);
       calls.languages.push(request.language ?? null);
-      deps?.onCost?.(0.05, "restore photo");
-      return (options.cutOut ?? defaultCutOut)(request.name, request.workDir);
+      const onCost = (usd: number) => deps?.onCost?.(usd, "restore photo");
+      if (options.cutOut)
+        return options.cutOut(request.name, request.workDir, onCost);
+      onCost(0.05);
+      return restoredCutout(request.workDir);
     },
     cutOutPresenter: async (request, deps) => {
       calls.presenter++;
@@ -393,11 +517,17 @@ async function setUp(
       };
     },
   };
-  return { ports, state, calls };
+  return { ports, state, calls, ledger };
 }
 
+/** The options whose photos weren't made. */
+const pendingPhotos = (products: FakeProduct[]) =>
+  products.flatMap((p) =>
+    p.options.filter((o) => o.photo.method === "pending").map(() => p.id),
+  );
+
 test("runs an import from video to products with photos, saving each step", async (t) => {
-  const { ports, state, calls } = await setUp(t);
+  const { ports, state, calls, ledger } = await setUp(t);
 
   const result = await runProductVideoImport(ports);
 
@@ -410,6 +540,7 @@ test("runs an import from video to products with photos, saving each step", asyn
     null,
   ]);
   assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, null);
   assert.equal(state.import.transcript, TRANSCRIPT);
   assert.equal(state.import.language, "kk");
   assert.equal(state.import.productTotal, 3);
@@ -464,17 +595,415 @@ test("runs an import from video to products with photos, saving each step", asyn
   ]);
   assert.equal(calls.emits.at(-1), "import");
 
-  // Each paid step reserves first and settles what it really cost.
-  assert.deepEqual(calls.spend.slice(0, 4), [
-    "reserve transcription:attempt-1 elevenlabs 100000",
-    "settle transcription:attempt-1 100000",
-    "reserve inventory:attempt-1 meta 300000",
-    "settle inventory:attempt-1 40000",
+  // Each paid step reserves first and settles what it really cost: the steps
+  // that read the video in one AI action, each photo in its own.
+  assert.deepEqual(ledger.log.slice(0, 4), [
+    "reserve read:1 transcription:attempt-1 elevenlabs 3667",
+    "settle read:1 transcription:attempt-1 1834",
+    "reserve read:1 inventory:attempt-1 meta 139000",
+    "settle read:1 inventory:attempt-1 40000",
   ]);
-  assert.ok(calls.spend.includes("reserve photo:p1:0:attempt-1 meta 150000"));
-  assert.ok(calls.spend.includes("settle photo:p1:0:attempt-1 50000"));
+  assert.ok(
+    ledger.log.includes("reserve photo:p1:0 photo:attempt-1 meta 150000"),
+  );
+  assert.ok(ledger.log.includes("settle photo:p1:0 photo:attempt-1 50000"));
+  assert.equal(ledger.used, 4);
   // Lettering Muse can't read gets an example in the narration's language.
   assert.deepEqual(calls.languages, ["kk", "kk", "kk"]);
+});
+
+test("five photos made four at a time each fit their own AI action", async (t) => {
+  // In production, one action for the whole import refused the third photo:
+  // two $0.15 reservations after the read steps had filled its $0.50 cap.
+  const { ports, state, ledger } = await setUp(t, { inventory: shelfOf(5) });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, null);
+  assert.equal(state.import.photoDone, 5);
+  assert.deepEqual(pendingPhotos(state.products), []);
+  assert.ok(!ledger.log.some((line) => line.startsWith("refuse")));
+  // Reading the video, and one action per photo.
+  assert.deepEqual([...ledger.actions.keys()].sort(), [
+    "photo:p0:0",
+    "photo:p1:0",
+    "photo:p2:0",
+    "photo:p3:0",
+    "photo:p4:0",
+    "read:1",
+  ]);
+  assert.equal(ledger.used, 6);
+});
+
+test("an import of 60 photos finishes when the company's limit allows it", async (t) => {
+  const designs = Array.from({ length: 8 }, (_, i) =>
+    option(`design ${i}`, 0, 1),
+  );
+  const { ports, state, ledger } = await setUp(t, {
+    inventory: {
+      ...INVENTORY,
+      items: Array.from({ length: 8 }, (_, i) =>
+        item({ name: `Panel ${i}`, options: designs }),
+      ),
+    },
+    ledger: { companyLimitMicros: 4_000_000 },
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, null);
+  assert.equal(state.import.photoDone, 60);
+  assert.equal(ledger.used, 61);
+  // $0.04 to read it and $0.05 a photo, under the company's $4.
+  assert.equal(ledger.committed, 1_834 + 40_000 + 60 * 50_000);
+});
+
+test("when the company's limit stops the photos, the products, the photos made and the clips are kept", async (t) => {
+  // Room for the read steps and two photos' $0.15 reservations, not three.
+  const { ports, state, calls, ledger } = await setUp(t, {
+    inventory: shelfOf(5),
+    presenterMoment: 4,
+    ledger: { companyLimitMicros: 400_000 },
+  });
+  // What the page is told while each review clip is cut.
+  const stopsAtClips: unknown[] = [];
+  const extractClip = ports.extractClip!;
+  ports.extractClip = async (...args) => {
+    stopsAtClips.push(state.import.photosStopped);
+    return extractClip(...args);
+  };
+
+  const result = await runProductVideoImport(ports);
+
+  assert.deepEqual(result, { productCount: 5 });
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.stage, null);
+  assert.equal(state.import.productCount, 5);
+  assert.ok(state.import.finishedAt instanceof Date);
+  assert.equal(state.import.photosStopped, "spend_limit");
+  // The two photos being made when the limit was met finished; the rest
+  // wait for a later run.
+  assert.equal(state.import.photoDone, 2);
+  assert.deepEqual(pendingPhotos(state.products), ["p2", "p3", "p4"]);
+  assert.ok(
+    ledger.log.includes(
+      "refuse photo:p2:0 photo:attempt-1 workspace_ai_spend_limit",
+    ),
+  );
+  // The photos reserve in turn: after the refusal, the one waiting isn't
+  // admitted, so it uses up no included action.
+  assert.ok(!ledger.log.some((line) => line.includes("photo:p3:0")));
+  assert.ok(!ledger.log.some((line) => line.includes("photo:p4:0")));
+  assert.equal(ledger.used, 4);
+  // Review clips cost no AI: every product gets one, and the page already
+  // knows the photos stopped while they're cut.
+  assert.equal(calls.clips.length, 5);
+  assert.deepEqual(stopsAtClips, Array(5).fill("spend_limit"));
+  // The presenter costs AI, so waits too.
+  assert.equal(calls.presenter, 0);
+  assert.deepEqual(state.import.presenter, { momentSeconds: 4, photo: null });
+  assert.equal(calls.emits.at(-1), "import");
+});
+
+test("a photo refused admission at the limit, by reservations since settled lower, names the limit", async (t) => {
+  // Three photos' $0.15 reservations fill the limit exactly, so the fourth
+  // photo's action isn't admitted. Once they settle at $0.05 each, the
+  // company is far under its limit and has hundreds of actions left.
+  const { ports, state, ledger } = await setUp(t, {
+    inventory: shelfOf(5),
+    ledger: { companyLimitMicros: 1_834 + 40_000 + 3 * 150_000 },
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.ok(
+    ledger.log.includes(
+      "refuse photo:p3:0 photo:attempt-1 own_ai_source_required",
+    ),
+  );
+  assert.equal(ledger.committed, 1_834 + 40_000 + 3 * 50_000);
+  assert.equal((await ports.spend.allowance()).remainingActions, 496);
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, "spend_limit");
+  assert.deepEqual(pendingPhotos(state.products), ["p3", "p4"]);
+});
+
+test("when the free trial ends while photos are made, the photos stop and say so", async (t) => {
+  const { ports, state, ledger } = await setUp(t, {
+    inventory: shelfOf(5),
+  });
+  const cutOut = ports.cutOut!;
+  ports.cutOut = async (...args) => {
+    // The trial ends as the first photos are being made.
+    ledger.trialEnded = true;
+    return cutOut(...args);
+  };
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, "trial_ended");
+  assert.ok(
+    ledger.log.some((line) =>
+      line.endsWith("photo:attempt-1 own_ai_source_required"),
+    ),
+  );
+  assert.ok(pendingPhotos(state.products).length > 0);
+});
+
+test("when the included AI actions run out, the photos stop and say so", async (t) => {
+  // Three actions left: reading the video and two photos.
+  const { ports, state, ledger } = await setUp(t, {
+    inventory: shelfOf(5),
+    ledger: { includedActions: 100, usedActions: 97 },
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, "ai_actions_used");
+  assert.equal(state.import.photoDone, 2);
+  assert.deepEqual(pendingPhotos(state.products), ["p2", "p3", "p4"]);
+  assert.ok(
+    ledger.log.includes(
+      "refuse photo:p2:0 photo:attempt-1 own_ai_source_required",
+    ),
+  );
+  assert.equal(ledger.used, 100);
+});
+
+test("a workspace that can't pay for AI now fails for good before its video is downloaded", async (t) => {
+  for (const [ledger, code] of [
+    [{ includedActions: 100, usedActions: 100 }, "ai_actions_used"],
+    [
+      { companyLimitMicros: 1_000_000, committedMicros: 1_000_000 },
+      "spend_limit",
+    ],
+    // A free company past its trial, with most of its actions left: the
+    // allowance's projection alone would let it start.
+    [{ includedActions: 100, usedActions: 3, trialEnded: true }, "trial_ended"],
+    [
+      { includedActions: 100, usedActions: 100, trialEnded: true },
+      "trial_ended",
+    ],
+    // The limit is named when it stops it with anything else.
+    [
+      {
+        includedActions: 100,
+        usedActions: 100,
+        companyLimitMicros: 1_000_000,
+        committedMicros: 1_200_000,
+        trialEnded: true,
+      },
+      "spend_limit",
+    ],
+  ] as const) {
+    const { ports, state, calls } = await setUp(t, { ledger });
+
+    await assert.rejects(
+      runProductVideoImport(ports),
+      (error: unknown) =>
+        error instanceof ProductVideoImportFailure &&
+        error.code === code &&
+        !error.retryable,
+    );
+    assert.deepEqual(calls.downloads, []);
+    assert.deepEqual(state.stages, []);
+  }
+});
+
+test("a read step the ledger refuses fails the import for good, naming what stopped it", async (t) => {
+  // $0.002 short of the limit: allowed to start, then refused the
+  // transcription's reservation.
+  const nearLimit = await setUp(t, {
+    ledger: { companyLimitMicros: 1_000_000, committedMicros: 998_000 },
+  });
+  await assert.rejects(
+    runProductVideoImport(nearLimit.ports),
+    (error: unknown) =>
+      error instanceof ProductVideoImportFailure &&
+      error.code === "spend_limit" &&
+      !error.retryable,
+  );
+  assert.equal(nearLimit.calls.transcribe, 0);
+
+  // Another import used the last included action, or the free trial ended,
+  // after this one was allowed to start.
+  for (const [ledger, code] of [
+    [{ includedActions: 100, usedActions: 100 }, "ai_actions_used"],
+    [{ includedActions: 100, usedActions: 3, trialEnded: true }, "trial_ended"],
+  ] as const) {
+    const raced = await setUp(t, { ledger });
+    const projected = raced.ports.spend.allowance;
+    let first = true;
+    raced.ports.spend.allowance = async () => {
+      if (!first) return projected();
+      first = false;
+      return {
+        includedActions: 100,
+        remainingActions: 1,
+        spendLimitReached: false,
+        trialEnded: false,
+      };
+    };
+    await assert.rejects(
+      runProductVideoImport(raced.ports),
+      (error: unknown) =>
+        error instanceof ProductVideoImportFailure &&
+        error.code === code &&
+        !error.retryable,
+    );
+    assert.deepEqual(raced.ledger.log, [
+      "refuse read:1 transcription:attempt-1 own_ai_source_required",
+    ]);
+  }
+});
+
+test("transcription reserves Scribe's price by the minute started and settles it for the narration's length", async (t) => {
+  const { ports, ledger } = await setUp(t, { durationSeconds: 95 });
+
+  await runProductVideoImport(ports);
+
+  // $0.22 an hour: two minutes reserved, 95 s settled.
+  assert.deepEqual(ledger.log.slice(0, 2), [
+    "reserve read:1 transcription:attempt-1 elevenlabs 7334",
+    "settle read:1 transcription:attempt-1 5806",
+  ]);
+});
+
+test("a retry reads the video in a new AI action, which the first attempt's unknown cost can't fill", async (t) => {
+  // The longest video: its inventory reservation twice wouldn't fit one action.
+  const { ports, state, ledger } = await setUp(t, {
+    durationSeconds: 300,
+    inventoryFailures: [
+      {
+        error: new MetaModelApiError({
+          kind: "server",
+          transient: true,
+          message: "Meta Model API answered 504",
+        }),
+      },
+    ],
+  });
+
+  await assert.rejects(runProductVideoImport(ports), /504/);
+  assert.deepEqual(ledger.log, [
+    "reserve read:1 transcription:attempt-1 elevenlabs 18334",
+    "settle read:1 transcription:attempt-1 18334",
+    "reserve read:1 inventory:attempt-1 meta 382000",
+    // It may have been billed: the whole reservation is kept.
+    "settle read:1 inventory:attempt-1 null",
+  ]);
+  assert.equal(ledger.actions.get("read:1")!.committed, 400_334);
+
+  ports.attempt = 2;
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.ok(
+    ledger.log.includes("reserve read:2 inventory:attempt-2 meta 382000"),
+  );
+  assert.ok(ledger.log.includes("settle read:2 inventory:attempt-2 40000"));
+  assert.ok(!ledger.log.some((line) => line.startsWith("refuse")));
+});
+
+test("the read steps of the longest video fit in one AI action with the presenter", async (t) => {
+  const { ports, calls, ledger } = await setUp(t, {
+    durationSeconds: 300,
+    presenterMoment: 4,
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(calls.presenter, 1);
+  const reserved = ledger.log
+    .filter((line) => line.startsWith("reserve read:1"))
+    .reduce((total, line) => total + Number(line.split(" ").at(-1)), 0);
+  assert.ok(reserved <= ACTION_LIMIT_MICROS, String(reserved));
+  assert.ok(
+    ledger.log.includes("reserve read:1 presenter:attempt-1 meta 50000"),
+  );
+});
+
+test("a failed step settles the cost it reported, unless a call may have been billed unreported", async (t) => {
+  // Muse's answer came, and was priced, but wasn't valid JSON.
+  const unreadable = await setUp(t, {
+    inventoryFailures: [
+      {
+        error: new MetaModelApiError({
+          kind: "server",
+          transient: true,
+          code: "invalid_json",
+          message: "Muse Spark's product list wasn't valid JSON",
+        }),
+        reportedUsd: 0.03,
+      },
+    ],
+  });
+  await assert.rejects(runProductVideoImport(unreadable.ports), /valid JSON/);
+  assert.ok(
+    unreadable.ledger.log.includes("settle read:1 inventory:attempt-1 30000"),
+  );
+
+  // A frame went wrong after the photo's model calls had answered.
+  const broken = await setUp(t, {
+    cutOut: async (name, dir, onCost) => {
+      onCost(0.05);
+      if (name === "frosted cup")
+        throw new Error("Input buffer contains unsupported image format");
+      return restoredCutout(dir);
+    },
+  });
+  await assert.rejects(
+    runProductVideoImport(broken.ports),
+    /unsupported image format/,
+  );
+  assert.ok(
+    broken.ledger.log.includes("settle photo:p1:0 photo:attempt-1 50000"),
+  );
+});
+
+test("a request the provider turned away with a 4xx settles the cost reported before it", async (t) => {
+  // Muse refused the request itself: nothing ran, so nothing more was billed.
+  const rejected = await setUp(t, {
+    inventoryFailures: [
+      {
+        error: new MetaModelApiError({
+          kind: "invalid_request",
+          transient: false,
+          status: 400,
+          message: "Meta Model API answered 400",
+        }),
+        reportedUsd: 0.03,
+      },
+    ],
+  });
+  await assert.rejects(runProductVideoImport(rejected.ports), /400/);
+  assert.ok(
+    rejected.ledger.log.includes("settle read:1 inventory:attempt-1 30000"),
+  );
+
+  // Still rate limited after the client's own retries: a retry of the import
+  // may get through, and this attempt's reservation isn't held for it.
+  const limited = await setUp(t, {
+    cutOut: async (name, dir, onCost) => {
+      onCost(0.02);
+      if (name === "frosted cup")
+        throw new MetaModelApiError({
+          kind: "rate_limit",
+          transient: true,
+          status: 429,
+          message: "Meta Model API answered 429",
+        });
+      return restoredCutout(dir);
+    },
+  });
+  await assert.rejects(runProductVideoImport(limited.ports), /429/);
+  assert.ok(
+    limited.ledger.log.includes("settle photo:p1:0 photo:attempt-1 20000"),
+  );
 });
 
 test("photographs every option of a product shown in several designs", async (t) => {
@@ -547,29 +1076,41 @@ test("leaves options past the photo cap out, keeping an import's cost bounded", 
 });
 
 test("a retry resumes: no second transcription, inventory or photo for a finished option", async (t) => {
-  const { ports, state, calls } = await setUp(t, {
+  const { ports, state, calls, ledger } = await setUp(t, {
     transcript: TRANSCRIPT,
     products: [
       savedProduct(0, "LOL doll", { method: "restored" }),
       savedProduct(1, "Frosted cup", { method: "pending" }),
     ],
   });
+  // The first attempt's photos stopped, and it failed cutting the clips.
+  state.import.photosStopped = "spend_limit";
   ports.attempt = 2;
+  const stopsAtPhotos: unknown[] = [];
+  const cutOut = ports.cutOut!;
+  ports.cutOut = async (...args) => {
+    stopsAtPhotos.push(state.import.photosStopped);
+    return cutOut(...args);
+  };
 
   await runProductVideoImport(ports);
 
   assert.equal(calls.transcribe, 0);
   assert.equal(calls.inventory, 0);
   assert.deepEqual(calls.cutOut, ["Frosted cup"]);
-  assert.deepEqual(calls.spend, [
-    "reserve photo:p1:0:attempt-2 meta 150000",
-    "settle photo:p1:0:attempt-2 50000",
+  // The photo's action is the same in every attempt of the run.
+  assert.deepEqual(ledger.log, [
+    "reserve photo:p1:0 photo:attempt-2 meta 150000",
+    "settle photo:p1:0 photo:attempt-2 50000",
   ]);
   assert.equal(state.import.status, "ready");
+  // Its stop no longer held once this attempt began making photos.
+  assert.deepEqual(stopsAtPhotos, [null]);
+  assert.equal(state.import.photosStopped, null);
 });
 
 test("an option its video can't give a photo is noted, and the others carry on", async (t) => {
-  const { ports, state } = await setUp(t, {
+  const { ports, state, ledger } = await setUp(t, {
     cutOut: async (name, dir) => {
       if (name === "frosted cup")
         throw new ProductVideoError(
@@ -604,6 +1145,8 @@ test("an option its video can't give a photo is noted, and the others carry on",
   assert.deepEqual(cup!.options[0]!.notes, [
     "The photo couldn't be made from the video.",
   ]);
+  // It failed before any paid call: nothing was spent.
+  assert.ok(ledger.log.includes("settle photo:p1:0 photo:attempt-1 0"));
   // A filmed photo without a cut-out still gets its shelf copy, from the original.
   const dollPhoto = doll!.options[0]!.photo;
   assert.equal(dollPhoto.method, "tracked");
@@ -619,7 +1162,7 @@ test("an option its video can't give a photo is noted, and the others carry on",
 });
 
 test("a failure a retry may fix stops the run, keeping finished photos and the unknown cost reserved", async (t) => {
-  const { ports, state, calls } = await setUp(t, {
+  const { ports, state, ledger } = await setUp(t, {
     cutOut: async (name, dir) => {
       if (name === "white rooster")
         throw new MetaModelApiError({
@@ -654,14 +1197,10 @@ test("a failure a retry may fix stops the run, keeping finished photos and the u
       .length,
     2,
   );
-  assert.ok(calls.spend.includes("settle photo:p2:0:attempt-1 null"));
+  assert.ok(ledger.log.includes("settle photo:p2:0 photo:attempt-1 null"));
 });
 
-test("without tracked spend nothing is reserved; a missing upload is reported, not retried", async (t) => {
-  const untracked = await setUp(t, { tracked: false });
-  await runProductVideoImport(untracked.ports);
-  assert.deepEqual(untracked.calls.spend, []);
-
+test("a missing upload is reported, not retried", async (t) => {
   const missing = await setUp(t);
   missing.ports.storage.downloadVideo = async () => {
     throw new Error("No such object");
@@ -676,7 +1215,7 @@ test("without tracked spend nothing is reserved; a missing upload is reported, n
 });
 
 test("a finished import does nothing again", async (t) => {
-  const { ports, state, calls } = await setUp(t);
+  const { ports, state, calls, ledger } = await setUp(t);
   state.import.status = "ready";
   ports.store.loadImport = async () => ({
     status: "ready",
@@ -694,6 +1233,7 @@ test("a finished import does nothing again", async (t) => {
     0,
   );
   assert.deepEqual(calls.emits, []);
+  assert.deepEqual(ledger.log, []);
 });
 
 test("errors map to what the owner sees and whether to retry", () => {
@@ -708,6 +1248,30 @@ test("errors map to what the owner sees and whether to retry", () => {
       Object.assign(new Error("limit"), { code: "workspace_ai_spend_limit" }),
       "spend_limit",
       false,
+    ],
+    [
+      new WorkspaceAiSpendError("own_ai_source_required"),
+      "ai_actions_used",
+      false,
+    ],
+    // The ledger or the allowance couldn't be checked: a retry may.
+    [
+      new WorkspaceAiSpendError("workspace_ai_policy_unavailable"),
+      "failed",
+      true,
+    ],
+    [
+      Object.assign(new Error("AI allowance could not be verified."), {
+        code: "workspace_ai_policy_unavailable",
+      }),
+      "failed",
+      true,
+    ],
+    // A retry reserves under new operation ids.
+    [
+      new WorkspaceAiSpendError("workspace_ai_operation_replayed"),
+      "failed",
+      true,
     ],
     [
       new MetaModelApiError({
@@ -738,7 +1302,9 @@ test("errors map to what the owner sees and whether to retry", () => {
 });
 
 test("cuts out the person presenting the products after the photos, and saves them on the import", async (t) => {
-  const { ports, state, calls } = await setUp(t, { presenterMoment: 4 });
+  const { ports, state, calls, ledger } = await setUp(t, {
+    presenterMoment: 4,
+  });
 
   await runProductVideoImport(ports);
 
@@ -754,8 +1320,33 @@ test("cuts out the person presenting the products after the photos, and saves th
     },
   });
   assert.ok(calls.saved.includes("presenter/thumb.webp:image/webp"));
-  assert.ok(calls.spend.includes("reserve presenter:attempt-1 meta 50000"));
-  assert.ok(calls.spend.includes("settle presenter:attempt-1 10000"));
+  // In the same action as the other steps that read the video.
+  assert.ok(
+    ledger.log.includes("reserve read:1 presenter:attempt-1 meta 50000"),
+  );
+  assert.ok(ledger.log.includes("settle read:1 presenter:attempt-1 10000"));
+});
+
+test("a presenter the ledger refuses waits, and the import is ready without them", async (t) => {
+  // Reading the video cost more than it reserved; the ledger keeps the
+  // overrun, which leaves its action no room for the presenter.
+  const { ports, state, calls, ledger } = await setUp(t, {
+    presenterMoment: 4,
+    inventoryUsd: 0.46,
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.ok(ledger.log.includes("settle read:1 inventory:attempt-1 460000"));
+  assert.ok(
+    ledger.log.includes(
+      "refuse read:1 presenter:attempt-1 workspace_ai_spend_limit",
+    ),
+  );
+  assert.equal(calls.presenter, 0);
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, null);
+  assert.deepEqual(state.import.presenter, { momentSeconds: 4, photo: null });
 });
 
 test("a presenter who can't be cut out is dropped, and the import still finishes", async (t) => {

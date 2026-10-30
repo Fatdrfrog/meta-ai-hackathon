@@ -34,6 +34,8 @@ export {
   PRODUCT_TEXT_SOURCES,
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
+  PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
+  PRODUCT_VIDEO_IMPORT_PHOTO_STOPS,
   PRODUCT_VIDEO_IMPORT_STAGES,
   PRODUCT_VIDEO_MAX_BYTES,
   PRODUCT_VIDEO_MAX_SECONDS,
@@ -42,6 +44,7 @@ export {
   type ProductPhotoMethod,
   type ProductTextSource,
   type ProductVideoImportErrorCode,
+  type ProductVideoImportPhotoStop,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
 import type {
@@ -49,6 +52,7 @@ import type {
   ProductPhotoMethod,
   ProductTextSource,
   ProductVideoImportErrorCode,
+  ProductVideoImportPhotoStop,
   ProductVideoImportStage,
 } from "@icecore/temporal";
 
@@ -124,6 +128,17 @@ export type ProductVideoImportRecord = {
   photoDone: number;
   errorCode: ProductVideoImportErrorCode | null;
   /**
+   * Why photos stopped being made before every one was; the import still
+   * finished with the products it found. Null when none stopped.
+   */
+  photosStopped: ProductVideoImportPhotoStop | null;
+  /**
+   * Whether products it found are still drafts, waiting for the owner's
+   * check. The list of imports looks once one has finished, so it's false
+   * there while one runs.
+   */
+  draftsLeft: boolean;
+  /**
    * The person who presents the products in the video, cut out to reuse
    * beside them later; null when nobody presents them or it isn't made yet.
    */
@@ -198,14 +213,59 @@ export type ProductCarouselDraft = {
 export type ProductCarouselDraftResponse = { draft: ProductCarouselDraft };
 
 /**
- * A one-time link that opens WhatsApp to airi's own number with a code
- * written in; sending it links the owner's phone to the workspace, so the
- * shelf videos they send from it turn into imports.
+ * How a phone came to be linked: an admin confirmed it in airi, it's the
+ * workspace's own connected number, or it sent a one-time code (how phones
+ * were linked before admins confirmed them).
+ */
+export const PRODUCTS_WHATSAPP_LINK_VIAS = [
+  "approved",
+  "connected_number",
+  "code",
+] as const;
+export type ProductsWhatsAppLinkVia =
+  (typeof PRODUCTS_WHATSAPP_LINK_VIAS)[number];
+
+/** A phone that asked to be linked, waiting for an admin to say it's theirs. */
+export type ProductsWhatsAppLinkRequestRecord = {
+  id: string;
+  /** Masked, such as "+7 ••• ••• 12 34". */
+  phone: string;
+  /** The name on its WhatsApp profile, when it has one. */
+  profileName: string | null;
+  /** When the phone last asked. */
+  createdAt: string;
+};
+
+/** A phone linked to the workspace: the shelf videos it sends to Airi land here. */
+export type ProductsWhatsAppLinkedPhoneRecord = {
+  id: string;
+  /** Masked, such as "+7 ••• ••• 12 34". */
+  phone: string;
+  via: ProductsWhatsAppLinkVia;
+  /** Null for a connected number, which is linked by its first video. */
+  linkedAt: string | null;
+  lastVideoAt: string | null;
+};
+
+/**
+ * How long opening the "Send from WhatsApp" panel keeps the shop open to
+ * phones asking to be linked. The open panel opens it again before then.
+ */
+export const PRODUCTS_WHATSAPP_PAIRING_TTL_MS = 15 * 60_000;
+
+/**
+ * The "Send from WhatsApp" panel. While it's open the shop is open to phones
+ * asking to be linked: `pairing` is the link that opens WhatsApp to airi's
+ * number with a message naming the shop. A phone that sends it waits in
+ * `requests` until an admin confirms it, and then joins `linkedPhones`.
+ * `businessNumbers` are the workspace's own numbers on the WhatsApp Business
+ * app, whose videos need no linking.
  */
 export type ProductsWhatsAppLinkResponse = {
-  url: string;
-  /** When the code stops working, if unused. */
-  expiresAt: string;
+  pairing: { url: string; expiresAt: string } | null;
+  requests: ProductsWhatsAppLinkRequestRecord[];
+  linkedPhones: ProductsWhatsAppLinkedPhoneRecord[];
+  businessNumbers: string[];
 };
 
 /** The order form, saved on Meta as a draft Flow for the owner to publish. */
@@ -244,6 +304,9 @@ export const PRODUCTS_ERROR_CODES = [
   "storage_full",
   "draft_failed",
   "whatsapp_intake_unavailable",
+  "whatsapp_link_not_found",
+  "whatsapp_link_linked_elsewhere",
+  "whatsapp_link_shop_name_taken",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 

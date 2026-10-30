@@ -50,14 +50,19 @@ export function useProductImports(workspaceId: string) {
     [workspaceId]
   );
   const { channel, isConnected } = useRealtime(scope);
+  const imports = data?.imports ?? NO_IMPORTS;
 
-  // Steps reported while the connection was down are asked for on its return.
+  // Steps reported while the connection was down are asked for on its
+  // return: the list, and the products of every import it shows.
   const wasConnected = useRef(isConnected);
   useEffect(() => {
     const before = wasConnected.current;
     wasConnected.current = isConnected;
-    if (isConnected && !before) void mutate();
-  }, [isConnected, mutate]);
+    if (!isConnected || before) return;
+    void mutate();
+    for (const record of imports)
+      void mutateKey(productImportUrl(workspaceId, record.id));
+  }, [isConnected, imports, mutate, mutateKey, workspaceId]);
 
   useEffect(() => {
     if (!channel) return;
@@ -88,7 +93,7 @@ export function useProductImports(workspaceId: string) {
   }, [channel, workspaceId, mutate, mutateKey]);
 
   return {
-    imports: data?.imports ?? NO_IMPORTS,
+    imports,
     /** Whether the list was asked for at least once; a failed list shows nothing. */
     settled: data !== undefined || error !== undefined,
     refresh: mutate,

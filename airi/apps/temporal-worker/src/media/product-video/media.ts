@@ -60,7 +60,7 @@ function ffmpeg(args: string[], deps: ProductVideoMediaDeps) {
 export type PreparedProductVideo = {
   /** Upright, silent H.264 MP4, short side at most 720 px, index first. */
   videoPath: string;
-  /** Mono 16 kHz MP3 of the narration, or null when the video has no sound. */
+  /** Mono 16 kHz MP3 of the narration, no longer than the video, or null when the video has no sound. */
   audioPath: string | null;
   durationSeconds: number;
   width: number;
@@ -128,6 +128,9 @@ export async function prepareProductVideo(
       [
         "-i",
         sourcePath,
+        // As long as the video, which the transcription is priced by.
+        "-t",
+        String(probe.durationSeconds),
         "-map",
         "0:a:0",
         "-vn",

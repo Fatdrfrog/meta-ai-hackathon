@@ -345,6 +345,28 @@ describe("ProductReview", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("an Enter that picks an IME candidate keeps the field open", async () => {
+    renderReview();
+    const card = await screen.findByRole("article", { name: "Шежіре" });
+
+    fireEvent.click(
+      within(card).getByRole("button", { name: /Change the name/ })
+    );
+    const input = within(card).getByRole("textbox", {
+      name: "Change the name",
+    });
+    fireEvent.change(input, { target: { value: "Шежіре ағашы" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+
+    expect(input).toBeInTheDocument();
+    expect(patched("p1")).toEqual([]);
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() =>
+      expect(patched("p1")).toEqual([{ name: "Шежіре ағашы" }])
+    );
+  });
+
   it("shows the photo as filmed, and lets the owner choose the option the shelf shows", async () => {
     renderReview();
     const card = await screen.findByRole("article", { name: "Шежіре" });

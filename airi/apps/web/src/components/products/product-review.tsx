@@ -31,6 +31,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { prefersReducedMotion } from "./product-motion";
 import { NameInitial } from "./product-shelf";
 import { WhatsAppDrafts } from "./product-whatsapp-drafts";
 import { useProductReview, type ReviewMove } from "./use-product-review";
@@ -57,10 +58,6 @@ type Flight = {
 
 const directionOf = (to: ReviewMove["to"]): Direction =>
   to === "published" ? "right" : "left";
-
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
 
 /** A card dragged `x` px to the side, tilting as it goes. */
 const dragTransform = (x: number) =>
@@ -181,7 +178,7 @@ export function ProductReview({
     content = (
       <div role="status" aria-label={PRODUCTS_COPY.loading}>
         <div className={STACK}>
-          <div className="absolute inset-0 animate-pulse rounded-[28px] bg-foreground/[0.06]" />
+          <div className="absolute inset-0 rounded-[28px] bg-foreground/[0.06] motion-safe:animate-pulse" />
         </div>
       </div>
     );
@@ -960,6 +957,8 @@ function InlineEdit({
         onChange={event => setText(event.target.value)}
         onBlur={() => finish(true, false)}
         onKeyDown={event => {
+          // An Enter that picks an IME candidate is still typing.
+          if (event.nativeEvent.isComposing) return;
           if (event.key === "Enter") {
             event.preventDefault();
             finish(true, true);

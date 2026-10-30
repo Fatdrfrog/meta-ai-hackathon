@@ -7,6 +7,7 @@ import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 
 import {
   inventoryChecks,
+  inventoryMaxCostMicros,
   modelDoubtSubject,
   parseInventory,
   presentationWindows,
@@ -333,6 +334,7 @@ test("uploads the video, asks Muse Spark with the transcript, prices the call an
 test("deletes the upload even when the answer can't be read", async (t) => {
   const videoPath = await videoFile(t);
   const deleted: string[] = [];
+  const costs: number[] = [];
 
   await assert.rejects(
     readProductInventory(
@@ -343,6 +345,7 @@ test("deletes the upload even when the answer can't be read", async (t) => {
           deleted.push(id);
         },
         createMetaResponse: muse('{"language": "kk", "items": [{"na'),
+        onCost: (usd) => costs.push(usd),
       },
     ),
     (error: unknown) =>
@@ -351,6 +354,17 @@ test("deletes the upload even when the answer can't be read", async (t) => {
       error.info.transient,
   );
   assert.deepEqual(deleted, ["file_8"]);
+  // Priced before it was read, so the import settles what it cost.
+  assert.equal(costs.length, 1);
+});
+
+test("reserves for the video it reads and a full-length answer", () => {
+  // 24,000 tokens of answer at $4.25/M, and the video's input at $1.25/M.
+  assert.equal(inventoryMaxCostMicros(30), 139_000);
+  // The first production import's 31 s video cost $0.0276 to read.
+  assert.ok(inventoryMaxCostMicros(31) > 27_600);
+  // The longest video an import reads.
+  assert.equal(inventoryMaxCostMicros(300), 382_000);
 });
 
 test("the same short phrase said of two products, in two sentences, isn't flagged", () => {

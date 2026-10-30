@@ -158,6 +158,7 @@ describe("loadProductVideoImport", () => {
         photoTotal: 12,
         photoDone: 2,
         errorCode: "something-new",
+        photosStopped: "something-else",
         createdAt: new Date("2026-10-28T09:00:00.000Z"),
       })
     );
@@ -174,6 +175,8 @@ describe("loadProductVideoImport", () => {
         photoTotal: 12,
         photoDone: 2,
         errorCode: null,
+        photosStopped: null,
+        draftsLeft: false,
         presenter: null,
         createdAt: "2026-10-28T09:00:00.000Z",
         finishedAt: null,
@@ -184,6 +187,31 @@ describe("loadProductVideoImport", () => {
       _id: "651f1f77bcf86cd799439071",
       workspaceId: "workspace-1",
     });
+  });
+
+  it("says whether any of its products are still waiting to be checked", async () => {
+    mockImportFindOne.mockReturnValue(
+      query({ _id: "651f1f77bcf86cd799439071", status: "failed" })
+    );
+    mockListImportProducts.mockResolvedValue([
+      { id: "p1", status: "published" },
+      { id: "p2", status: "rejected" },
+    ]);
+    const checked = await loadProductVideoImport(
+      "workspace-1",
+      "651f1f77bcf86cd799439071"
+    );
+    expect(checked?.import.draftsLeft).toBe(false);
+
+    mockListImportProducts.mockResolvedValue([
+      { id: "p1", status: "published" },
+      { id: "p2", status: "draft" },
+    ]);
+    const waiting = await loadProductVideoImport(
+      "workspace-1",
+      "651f1f77bcf86cd799439071"
+    );
+    expect(waiting?.import.draftsLeft).toBe(true);
   });
 
   it("links the presenter's photos once their cut-out is made", async () => {
@@ -301,6 +329,14 @@ describe("listShownProductVideoImports", () => {
       status: "failed",
       errorCode: "video_too_long",
     });
+    // The page puts only an import with products left to check on its stage.
+    expect(shown.map(entry => entry.draftsLeft)).toEqual([
+      false,
+      false,
+      true,
+      false,
+      false,
+    ]);
     // The last week of this workspace, newest first.
     expect(mockImportFind).toHaveBeenCalledWith({
       workspaceId: "workspace-1",
@@ -311,9 +347,86 @@ describe("listShownProductVideoImports", () => {
     expect(mockProductDistinct).toHaveBeenCalledWith("importId", {
       workspaceId: "workspace-1",
       importId: {
-        $in: ["to-check", "checked", "nothing-found", "nothing-found-long-ago"],
+        $in: [
+          "to-check",
+          "checked",
+          "nothing-found",
+          "nothing-found-long-ago",
+          "failed",
+          "failed-long-ago",
+        ],
       },
       status: "draft",
+    });
+  });
+
+  it("keeps a failed import with products left to check for the week, like a finished one", async () => {
+    mockImportFind.mockReturnValue(
+      listQuery([
+        {
+          _id: "failed-with-drafts",
+          status: "failed",
+          errorCode: "failed",
+          productTotal: 5,
+          photosStopped: null,
+          finishedAt: hoursAgo(72),
+        },
+        {
+          _id: "failed-without-drafts",
+          status: "failed",
+          errorCode: "spend_limit",
+          finishedAt: hoursAgo(25),
+        },
+        {
+          _id: "stopped-photos",
+          status: "ready",
+          productTotal: 5,
+          photosStopped: "spend_limit",
+          finishedAt: hoursAgo(72),
+        },
+      ])
+    );
+    mockProductDistinct.mockResolvedValue([
+      "failed-with-drafts",
+      "stopped-photos",
+    ]);
+
+    const shown = await listShownProductVideoImports("workspace-1", now);
+
+    // Otherwise its drafts couldn't be reached once the day was over.
+    expect(shown.map(entry => entry.id)).toEqual([
+      "failed-with-drafts",
+      "stopped-photos",
+    ]);
+    expect(shown[1]).toMatchObject({
+      status: "ready",
+      photosStopped: "spend_limit",
+      draftsLeft: true,
+    });
+    expect(shown[0]!.draftsLeft).toBe(true);
+  });
+
+  it("keeps a failed import whose products were all checked for a day, with none left", async () => {
+    mockImportFind.mockReturnValue(
+      listQuery([
+        {
+          _id: "all-checked",
+          status: "failed",
+          errorCode: "spend_limit",
+          productTotal: 5,
+          finishedAt: hoursAgo(3),
+        },
+      ])
+    );
+    mockProductDistinct.mockResolvedValue([]);
+
+    const shown = await listShownProductVideoImports("workspace-1", now);
+
+    expect(shown).toHaveLength(1);
+    expect(shown[0]).toMatchObject({
+      id: "all-checked",
+      productTotal: 5,
+      draftsLeft: false,
     });
   });
 

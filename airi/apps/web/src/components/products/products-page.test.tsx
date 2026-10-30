@@ -1,6 +1,12 @@
 /** @jest-environment jsdom */
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { SWRConfig, useSWRConfig } from "swr";
 import { ProductShelf } from "./product-shelf";
 import { ProductsPage } from "./products-page";
@@ -88,8 +94,14 @@ test("lists products with their price, or a note when there is none", async () =
   );
   renderPage();
 
-  const list = await screen.findByRole("list", { name: "Products" });
-  expect(list.querySelectorAll("li")).toHaveLength(3);
+  // The shelf is named by the heading over it, which tells it apart from a
+  // video's draft shelf above.
+  const list = await screen.findByRole("list", { name: "Your shelf" });
+  expect(
+    screen.getByRole("heading", { name: "Your shelf" })
+  ).toBeInTheDocument();
+  // Only products count: the spots that finish the row are hidden from it.
+  expect(within(list).getAllByRole("listitem")).toHaveLength(3);
   expect(screen.getByText("Кукла Лол")).toBeInTheDocument();
   // The default normalizer turns the no-break spaces in the page into plain ones.
   expect(
@@ -101,6 +113,42 @@ test("lists products with their price, or a note when there is none", async () =
     screen.getByText("from 15 500 ₸", { normalizer: text => text })
   ).toBeInTheDocument();
   expect(screen.queryByText("2 products")).not.toBeInTheDocument();
+});
+
+test("finishes the last shelf row with spots that aren't products", () => {
+  const products = (count: number) =>
+    Array.from({ length: count }, (_, n) => ({
+      id: `p${n}`,
+      name: `Product ${n}`,
+      price: 100,
+      priceIsFrom: false,
+      imageUrl: null,
+      updatedAt: null,
+    }));
+  const { container, rerender } = render(
+    <ProductShelf products={products(1)} />
+  );
+  const fillers = () =>
+    Array.from(container.querySelectorAll('[data-spot="filler"]'));
+
+  // One product: one more spot at 2 columns, two at 3, three at 4.
+  expect(fillers()).toHaveLength(3);
+  for (const filler of fillers())
+    expect(filler).toHaveAttribute("aria-hidden", "true");
+  expect(fillers()[0]).toHaveClass("block", "sm:block", "lg:block");
+  expect(fillers()[1]).toHaveClass("hidden", "sm:block", "lg:block");
+  expect(fillers()[2]).toHaveClass("hidden", "sm:hidden", "lg:block");
+  expect(
+    within(screen.getByRole("list", { name: "Products" })).getAllByRole(
+      "listitem"
+    )
+  ).toHaveLength(1);
+
+  // Four fill rows of 2 and 4; at 3 columns the second row needs two more.
+  rerender(<ProductShelf products={products(4)} />);
+  expect(fillers()).toHaveLength(2);
+  for (const filler of fillers())
+    expect(filler).toHaveClass("hidden", "sm:block", "lg:hidden");
 });
 
 test("sets a product's photo on the shelf only once it has loaded", async () => {
@@ -160,10 +208,17 @@ test("shows the name's first letter when there is no photo or it fails", async (
   const { container } = renderPage();
   await screen.findByText("шежіре");
 
-  expect(screen.getByText("Ш")).toBeInTheDocument();
+  // A card standing on the shelf says what's missing, not a bare letter.
+  const items = within(
+    screen.getByRole("list", { name: "Your shelf" })
+  ).getAllByRole("listitem");
+  expect(within(items[0]!).getByText("Ш")).toBeInTheDocument();
+  expect(within(items[0]!).getByText("No photo")).toBeInTheDocument();
+  expect(within(items[1]!).queryByText("No photo")).not.toBeInTheDocument();
   fireEvent.error(container.querySelector("img")!);
   expect(container.querySelector("img")).not.toBeInTheDocument();
-  expect(screen.getByText("B")).toBeInTheDocument();
+  expect(within(items[1]!).getByText("B")).toBeInTheDocument();
+  expect(within(items[1]!).getByText("No photo")).toBeInTheDocument();
 });
 
 test("shows an error with a retry that loads again", async () => {

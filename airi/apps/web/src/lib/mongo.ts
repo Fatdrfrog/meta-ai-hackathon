@@ -126,6 +126,11 @@ import { BusinessLocation } from "@/models/business-location";
 import { WorkspaceProduct } from "@/models/workspace-product";
 import { ProductVideoImport } from "@/models/product-video-import";
 import { ProductWhatsAppLink } from "@/models/product-whatsapp-link";
+import {
+  ProductWhatsAppLinkMiss,
+  ProductWhatsAppLinkRequest,
+  ProductWhatsAppPairing,
+} from "@/models/product-whatsapp-pairing";
 import CrossStoreOutbox, {
   CROSS_STORE_OUTBOX_INDEX_SPECS,
 } from "@/models/cross-store-outbox";
@@ -744,6 +749,9 @@ async function createIndexes() {
   await WorkspaceProduct.createIndexes();
   await ProductVideoImport.createIndexes();
   await ProductWhatsAppLink.createIndexes();
+  await ProductWhatsAppPairing.createIndexes();
+  await ProductWhatsAppLinkRequest.createIndexes();
+  await ProductWhatsAppLinkMiss.createIndexes();
   await CustomerEvent.createIndexes();
   await ensureScenarioFlowSubmissionIndexes();
   await ScenarioFlowEvent.collection.createIndex({

@@ -6,65 +6,57 @@ import { PRODUCTS_COPY } from "@/lib/products/copy";
 import type {
   ProductVideoImportRecord,
   ProductVideoImportResponse,
-  ProductVideoImportStage,
 } from "@/lib/products/types";
-import { Film } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import useSWR from "swr";
-import { ProductShelf } from "./product-shelf";
+import { ProductShelf, ShelfHeading } from "./product-shelf";
+import { CreationStage, MiniStage } from "./product-stage";
+import {
+  draftShelfInfo,
+  importPercent,
+  importPhase,
+  latestMade,
+  railState,
+  stagePhotos,
+  stageText,
+} from "./product-stage-model";
+import { StageRail } from "./product-stage-rail";
 import { fetchProductImport, productImportUrl } from "./products-client";
 import { isImportRunning, PRODUCT_IMPORT_POLL_MS } from "./use-product-imports";
 import type { ProductVideoUploadState } from "./use-product-video-upload";
 
 // A video's way to the shelf: uploaded from this device, then read by the
-// import job, whose products land on a dashed shelf as their photos are made.
+// import job. The page plays one of them on its stage, beside the steps it
+// goes through, with the products it found on a dashed shelf below; any
+// others are rows.
 
-/** The video's first frame from the local file, or a film mark without one. */
-function VideoFrame({ preview }: { preview: string | null }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <div
-      aria-hidden="true"
-      className="relative h-24 w-14 shrink-0 overflow-hidden rounded-lg bg-foreground/[0.06]"
-    >
-      {preview && !failed ? (
-        <video
-          // The first frame, without playing: some phones paint none otherwise.
-          src={`${preview}#t=0.1`}
-          muted
-          playsInline
-          preload="metadata"
-          onError={() => setFailed(true)}
-          className="size-full object-cover"
-        />
-      ) : (
-        <Film className="absolute inset-0 m-auto size-5 text-foreground/30" />
-      )}
-    </div>
-  );
-}
+const HERO = "grid gap-4 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-6";
 
 /** One line of what is happening to a video, with its progress and what can be done. */
 function VideoStatus({
-  preview,
+  thumb,
   label,
+  labelId,
   detail = null,
   percent = null,
   alert = false,
   actions = null,
 }: {
-  preview: string | null;
+  thumb: ReactNode;
   label: string;
+  labelId?: string;
   detail?: string | null;
   percent?: number | null;
   alert?: boolean;
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-      <VideoFrame preview={preview} />
-      <div className="min-w-0 flex-1 basis-52">
+    // When its actions wrap below, they line up under the words, not the still.
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+      {thumb}
+      <div className="min-w-0">
         <p
+          id={labelId}
           role={alert ? "alert" : undefined}
           aria-live={alert ? undefined : "polite"}
           className="text-[15px] font-medium text-balance"
@@ -72,7 +64,7 @@ function VideoStatus({
           {label}
         </p>
         {detail ? (
-          <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
+          <p className="mt-0.5 text-sm text-pretty text-muted-foreground tabular-nums">
             {detail}
           </p>
         ) : null}
@@ -84,12 +76,18 @@ function VideoStatus({
           />
         ) : null}
       </div>
-      {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
+      {actions ? (
+        // A push button's face rides 4 px above its box: beside the
+        // sentence, it's lowered to sit level with it.
+        <div className="col-start-2 flex gap-2 justify-self-start sm:col-start-3 sm:translate-y-1 sm:justify-self-end">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
 
-/** The video on its way up from this device. */
+/** The video on its way up from this device, playing on the stage. */
 export function UploadProgress({
   state,
   onCancel,
@@ -109,28 +107,35 @@ export function UploadProgress({
       state.code !== "too_big" &&
       state.code !== "too_long";
     return (
-      <VideoStatus
-        preview={state.preview}
-        label={PRODUCTS_COPY.uploadErrors[state.code]}
-        alert
-        actions={
-          <>
-            {retry ? (
-              <Button size="sm" variant="outline" onClick={onRetry} autoFocus>
-                {PRODUCTS_COPY.tryAgain}
+      <div className={HERO}>
+        <CreationStage
+          mode="upload"
+          phase="failed"
+          label={PRODUCTS_COPY.uploadErrors[state.code]}
+          alert
+          percent={null}
+          preview={state.preview}
+          photos={null}
+          actions={
+            <>
+              {retry ? (
+                <Button size="sm" variant="outline" onClick={onRetry} autoFocus>
+                  {PRODUCTS_COPY.tryAgain}
+                </Button>
+              ) : null}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onCancel}
+                autoFocus={!retry}
+              >
+                {PRODUCTS_COPY.dismiss}
               </Button>
-            ) : null}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onCancel}
-              autoFocus={!retry}
-            >
-              {PRODUCTS_COPY.dismiss}
-            </Button>
-          </>
-        }
-      />
+            </>
+          }
+        />
+        <StageRail current="prepare" stopped="prepare" />
+      </div>
     );
   }
   const percent =
@@ -141,151 +146,179 @@ export function UploadProgress({
           Math.round((state.sentBytes / Math.max(1, state.file.size)) * 100)
         );
   return (
-    <VideoStatus
-      preview={state.preview}
-      label={PRODUCTS_COPY.uploading}
-      detail={`${percent}%`}
-      percent={percent}
-      actions={
-        state.phase === "starting" ? null : (
-          <Button size="sm" variant="ghost" onClick={onCancel} autoFocus>
-            {PRODUCTS_COPY.cancel}
-          </Button>
-        )
-      }
-    />
+    <div className={HERO}>
+      <CreationStage
+        mode="upload"
+        phase="uploading"
+        label={PRODUCTS_COPY.uploading}
+        helper={PRODUCTS_COPY.stage.keepOpen}
+        percent={percent}
+        fill={percent}
+        preview={state.preview}
+        photos={null}
+        actions={
+          state.phase === "starting" ? null : (
+            <Button size="sm" variant="ghost" onClick={onCancel} autoFocus>
+              {PRODUCTS_COPY.cancel}
+            </Button>
+          )
+        }
+      />
+      <StageRail current="prepare" busy counts={{ prepare: `${percent}%` }} />
+    </div>
   );
 }
 
-// Where each stage sits on an import's progress bar: on the test videos,
-// making the photos took about four fifths of the time.
-const STAGE_SPAN: Record<ProductVideoImportStage, [number, number]> = {
-  preparing: [2, 6],
-  listening: [6, 12],
-  watching: [12, 22],
-  cutting: [22, 100],
-};
-
-/** How far an import has got, 0-100. */
-export function importPercent(
-  record: Pick<
-    ProductVideoImportRecord,
-    "status" | "stage" | "photoDone" | "photoTotal"
-  >
-): number {
-  if (record.status === "queued") return 1;
-  if (record.status !== "processing") return 100;
-  const [from, to] = STAGE_SPAN[record.stage ?? "preparing"];
-  if (record.stage !== "cutting" || record.photoTotal <= 0) return from;
-  const done = Math.min(record.photoDone, record.photoTotal);
-  return Math.round(from + ((to - from) * done) / record.photoTotal);
-}
-
 /**
- * One import: where it is, and the products it found, which stand on a
- * dashed shelf until the owner checks them.
+ * One import. On the stage: where it is, each photo as it's made, and the
+ * products it found, which stand on a dashed shelf until the owner checks
+ * them. As a row: one line, with a still of its latest photo.
  */
 export function ImportProgress({
   workspaceId,
   record,
   preview,
+  variant,
   onReview,
 }: {
   workspaceId: string;
   record: ProductVideoImportRecord;
   /** The local file's link, when it was uploaded from this page. */
   preview: string | null;
+  variant: "stage" | "row";
   /** Opens the review of the products it found. */
   onReview: (importId: string) => void;
 }) {
   const running = isImportRunning(record);
-  const { data } = useSWR<ProductVideoImportResponse>(
+  const { data, mutate } = useSWR<ProductVideoImportResponse>(
     productImportUrl(workspaceId, record.id),
     fetchProductImport,
     {
+      // Photos come as signed links; refetching on focus would download
+      // every photo again.
       revalidateOnFocus: false,
       shouldRetryOnError: false,
       refreshInterval: running ? PRODUCT_IMPORT_POLL_MS : 0,
     }
   );
-  const drafts = useMemo(
-    () => (data?.products ?? []).filter(product => product.status === "draft"),
-    [data]
-  );
-  const pendingIds = useMemo(
-    () =>
-      new Set(
-        drafts
-          .filter(
-            product =>
-              product.options[product.featuredOption]?.photoMethod === "pending"
-          )
-          .map(product => product.id)
-      ),
-    [drafts]
-  );
+  // The list can learn that an import finished or failed before a realtime
+  // event, or with none: its poll stops then, so ask for the products again.
+  const detailStatus = data?.import.status;
+  useEffect(() => {
+    if (detailStatus && detailStatus !== record.status) void mutate();
+  }, [detailStatus, record.status, mutate]);
 
-  let status: ReactNode;
-  if (record.status === "queued") {
-    status = (
-      <VideoStatus
-        preview={preview}
-        label={PRODUCTS_COPY.queued}
-        percent={importPercent(record)}
-      />
-    );
-  } else if (record.status === "processing") {
-    const stage = record.stage ?? "preparing";
-    status = (
-      <VideoStatus
-        preview={preview}
-        label={PRODUCTS_COPY.stages[stage]}
-        detail={
-          stage === "cutting" && record.photoTotal > 0
-            ? PRODUCTS_COPY.photosMade(record.photoDone, record.photoTotal)
-            : null
-        }
-        percent={importPercent(record)}
-      />
-    );
-  } else if (record.status === "failed") {
-    status = (
-      <VideoStatus
-        preview={preview}
-        label={PRODUCTS_COPY.importErrors[record.errorCode ?? "failed"]}
-        alert
-      />
-    );
-  } else if (record.productTotal === 0) {
-    status = (
-      <VideoStatus preview={preview} label={PRODUCTS_COPY.nothingFound} />
-    );
-  } else {
-    status = (
-      <VideoStatus
-        preview={preview}
-        label={PRODUCTS_COPY.readyToCheck(
-          data ? drafts.length : record.productTotal
-        )}
-        actions={
-          <Button size="sm" onClick={() => onReview(record.id)}>
-            {PRODUCTS_COPY.checkProducts}
-          </Button>
-        }
-      />
+  // A failure clears the stage; the step it failed at is the last one seen.
+  const [lastStage, setLastStage] = useState(record.stage);
+  if (record.stage && record.stage !== lastStage) setLastStage(record.stage);
+
+  const products = data?.products;
+  const drafts = useMemo(
+    () => (products ?? []).filter(product => product.status === "draft"),
+    [products]
+  );
+  const photos = useMemo(
+    () => (products ? stagePhotos(products, record) : null),
+    [products, record]
+  );
+  const shelf = useMemo(
+    () => draftShelfInfo(products ?? [], record),
+    [products, record]
+  );
+  const labelId = useId();
+  const shelfId = useId();
+
+  const text = stageText(record, products ? drafts.length : null);
+  const check = text.check ? (
+    <Button
+      size={variant === "stage" ? "default" : "sm"}
+      aria-describedby={labelId}
+      onClick={() => onReview(record.id)}
+    >
+      {text.check === "found"
+        ? PRODUCTS_COPY.stage.checkFound
+        : PRODUCTS_COPY.checkProducts}
+    </Button>
+  ) : null;
+  const photosMade =
+    record.photoTotal > 0
+      ? PRODUCTS_COPY.photosMade(record.photoDone, record.photoTotal)
+      : null;
+
+  if (variant === "row") {
+    const phase = importPhase(record);
+    return (
+      <div data-import={record.id} data-variant="row">
+        <VideoStatus
+          thumb={
+            <MiniStage
+              imageUrl={
+                (photos && latestMade(photos)?.imageUrl) ??
+                record.presenter?.imageUrl ??
+                null
+              }
+              alert={phase === "failed"}
+            />
+          }
+          label={text.label}
+          labelId={labelId}
+          detail={
+            phase === "cutting" || phase === "resuming"
+              ? photosMade
+              : running
+                ? null
+                : text.helper
+          }
+          percent={running ? importPercent(record) : null}
+          alert={text.alert}
+          actions={check}
+        />
+      </div>
     );
   }
 
+  const rail = railState(
+    record,
+    lastStage,
+    products ? drafts.length > 0 : record.draftsLeft
+  );
   return (
-    <div className="flex flex-col gap-8">
-      {status}
-      {drafts.length > 0 ? (
-        <ProductShelf
-          products={drafts}
-          label={PRODUCTS_COPY.found}
-          draft
-          pendingIds={pendingIds}
+    <div
+      data-import={record.id}
+      data-variant="stage"
+      className="flex min-w-0 flex-col gap-10"
+    >
+      <div className={HERO}>
+        <CreationStage
+          mode="import"
+          phase={importPhase(record)}
+          label={text.label}
+          labelId={labelId}
+          helper={text.helper}
+          alert={text.alert}
+          percent={running ? importPercent(record) : null}
+          preview={preview}
+          photos={photos}
+          presenter={record.presenter?.imageUrl ?? null}
+          startedAt={record.createdAt}
+          actions={check}
         />
+        <StageRail
+          current={rail.current}
+          stopped={rail.stopped}
+          busy={running}
+          counts={photosMade ? { photos: photosMade } : undefined}
+        />
+      </div>
+      {drafts.length > 0 ? (
+        <div className="min-w-0">
+          <ShelfHeading
+            id={shelfId}
+            title={PRODUCTS_COPY.found}
+            note={PRODUCTS_COPY.foundNote}
+          />
+          <ProductShelf products={drafts} labelledBy={shelfId} drafts={shelf} />
+        </div>
       ) : null}
     </div>
   );

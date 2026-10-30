@@ -1,5 +1,8 @@
 import { readFile } from "node:fs/promises";
-import { estimateLlmCostUsd } from "@icecore/airi-runtime/llm-pricing";
+import {
+  estimateLlmCostUsd,
+  resolveLlmModelPricing,
+} from "@icecore/airi-runtime/llm-pricing";
 import {
   createMetaResponse,
   deleteMetaFile,
@@ -81,6 +84,23 @@ export type InventoryDeps = {
 // Reasoning shares this budget with the answer; 60 options need about 7,000
 // tokens of JSON.
 const MAX_OUTPUT_TOKENS = 24_000;
+// What reading a video takes in, for the spend reserved before it: the first
+// production import's 31 s video cost $0.0276 in all, about 22,000 tokens at
+// the input price even counting its answer as input, so 720 a second covers
+// the video. The prompt and a long narration fit in 8,000 more.
+const INPUT_TOKENS_PER_SECOND = 720;
+const PROMPT_TOKENS = 8_000;
+
+/** The most reading a video this long can cost, in micro-dollars: its input and a full-length answer. */
+export function inventoryMaxCostMicros(durationSeconds: number): number {
+  const { pricing } = resolveLlmModelPricing(getMetaModels().museSpark);
+  // Tokens times dollars per million tokens is micro-dollars.
+  return Math.ceil(
+    (PROMPT_TOKENS + INPUT_TOKENS_PER_SECOND * durationSeconds) *
+      pricing.inputUsdPerMillion +
+      MAX_OUTPUT_TOKENS * pricing.outputUsdPerMillion,
+  );
+}
 
 const nullable = (type: string) => ({ type: [type, "null"] });
 

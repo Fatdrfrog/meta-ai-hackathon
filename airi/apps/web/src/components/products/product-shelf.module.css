@@ -1,0 +1,287 @@
+/* A real shelf: each product's bay is a lit wall, a plank with its front lip
+   and the shadow the plank casts. Columns and rows touch, so a row reads as
+   one board and the wall runs on from row to row. Layout lives in the
+   component's Tailwind classes; this file only paints, and animates only
+   when the visitor allows motion. */
+
+.unit {
+  /* The wall, darkening just above each board. */
+  --wall: oklch(0.955 0 0);
+  --wall-low: oklch(0.93 0 0);
+  --pool: color-mix(in oklab, white 45%, transparent);
+  /* The plank's top face, lit from above, with its back edge against the wall. */
+  --face-1: oklch(0.985 0 0);
+  --face-2: oklch(0.985 0 0);
+  --face-back: rgb(0 0 0 / 0.1);
+  /* Its front edge, in shade, with a bright top and a crisp underside. */
+  --lip-1: oklch(0.87 0 0);
+  --lip-2: oklch(0.8 0 0);
+  --lip-hi: #fff;
+  --lip-under: rgb(0 0 0 / 0.14);
+  --under: rgb(0 0 0 / 0.16);
+  --pool-tint-share: 12%;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:global(.dark) .unit {
+  --wall: color-mix(in oklab, var(--foreground) 3%, var(--background));
+  --wall-low: color-mix(in oklab, var(--foreground) 6%, var(--background));
+  --pool: color-mix(in oklab, white 10%, transparent);
+  --face-1: color-mix(in oklab, var(--foreground) 20%, var(--background));
+  --face-2: color-mix(in oklab, var(--foreground) 14%, var(--background));
+  --face-back: transparent;
+  --lip-1: color-mix(in oklab, var(--foreground) 26%, var(--background));
+  --lip-2: color-mix(in oklab, var(--foreground) 18%, var(--background));
+  --lip-hi: color-mix(in oklab, white 30%, transparent);
+  --lip-under: transparent;
+  --under: color-mix(in oklab, black 55%, transparent);
+  --pool-tint-share: 22%;
+}
+
+/* Each bay ends on the colour the next row's wall starts with. */
+.bay {
+  --light: 1;
+  background: var(--wall);
+}
+.bay[data-light="dim"] {
+  --light: 0.3;
+}
+.bay[data-light="half"] {
+  --light: 0.5;
+}
+/* Spots that only finish a row, and a shelf that couldn't load: lights off. */
+.bay[data-light="off"],
+.bay[data-spot] {
+  --light: 0.15;
+}
+.bay[data-photo="unmade"] {
+  --light: 0.2;
+}
+/* A photo being made tints its bay's light with its own colours. */
+.bay[data-photo="making"],
+.bay[data-photo="waiting"] {
+  --pool-tint: color-mix(
+    in oklab,
+    var(--aura-1) var(--pool-tint-share),
+    transparent
+  );
+}
+
+/* The wall, and the pool of light the shelf throws on it. */
+.wall {
+  isolation: isolate;
+  background: linear-gradient(var(--wall), var(--wall-low));
+}
+.wall::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--light);
+  background: radial-gradient(
+    62% 78% at 50% 100%,
+    var(--pool-tint, var(--pool)),
+    transparent 72%
+  );
+}
+/* On a light wall a coloured glow is a shade, not a smudge. */
+.bay[data-photo="making"] .wall::before,
+.bay[data-photo="waiting"] .wall::before {
+  mix-blend-mode: multiply;
+}
+:global(.dark) .bay[data-photo="making"] .wall::before,
+:global(.dark) .bay[data-photo="waiting"] .wall::before {
+  mix-blend-mode: normal;
+}
+
+.plank {
+  background: linear-gradient(
+    var(--face-back) 0 1px,
+    var(--face-1) 1px,
+    var(--face-2)
+  );
+}
+.lip {
+  background: linear-gradient(var(--lip-1), var(--lip-2));
+  box-shadow:
+    inset 0 1px 0 var(--lip-hi),
+    inset 0 -1px 0 var(--lip-under);
+}
+/* Products not on the shelf yet: a dashed edge, as on today's draft rail. */
+.draft .lip {
+  background:
+    repeating-linear-gradient(90deg, var(--lip-hi) 0 6px, transparent 6px 10px)
+      0 0 / 100% 1px no-repeat,
+    linear-gradient(var(--lip-1), var(--lip-2));
+  box-shadow: inset 0 -1px 0 var(--lip-under);
+}
+.under {
+  background: linear-gradient(var(--under), transparent);
+}
+
+/* Price tags are white paper in both themes, like the QR code. */
+.tag {
+  background: white;
+  color: oklch(0.205 0 0);
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.16),
+    0 3px 8px rgb(0 0 0 / 0.12);
+}
+.tagEmpty {
+  background: transparent;
+  color: color-mix(in oklab, var(--foreground) 65%, transparent);
+  box-shadow: none;
+  outline: 1px dashed color-mix(in oklab, var(--foreground) 35%, transparent);
+  outline-offset: -1px;
+}
+.tagDoubt {
+  box-shadow:
+    0 0 0 2px var(--destructive),
+    0 1px 1px rgb(0 0 0 / 0.16),
+    0 3px 8px rgb(0 0 0 / 0.12);
+}
+.tagDoubt svg {
+  color: oklch(0.577 0.245 27.325);
+}
+
+/* A cut-out's shadow follows its own outline; in the dark a faint rim keeps
+   black goods apart from the wall. */
+.cutout {
+  filter: drop-shadow(0 8px 6px rgb(0 0 0 / 0.16));
+}
+:global(.dark) .cutout {
+  filter: drop-shadow(0 0 1px rgb(255 255 255 / 0.35))
+    drop-shadow(0 10px 8px rgb(0 0 0 / 0.5));
+}
+/* A whole frame, when there was no clear view: it stands as a print. */
+.print {
+  border: 4px solid white;
+  border-radius: 3px;
+  transform: rotate(-2deg);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.25);
+}
+
+/* A product without a photo: a paper tent card on the shelf. Found in a
+   video and not checked yet, its edge is dashed like the board's. */
+.tent {
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent),
+    0 10px 16px -10px rgb(0 0 0 / 0.35);
+}
+.draft .tent {
+  box-shadow: 0 10px 16px -10px rgb(0 0 0 / 0.35);
+  outline: 1px dashed color-mix(in oklab, var(--foreground) 30%, transparent);
+  outline-offset: -1px;
+}
+
+/* A photo being made: a glow in the item's own colours, with its prompt. */
+.aura {
+  isolation: isolate;
+  border-radius: 42% 42% 30% 30% / 40% 40% 18% 18%;
+}
+.aura::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  z-index: -1;
+  opacity: 0.85;
+  filter: blur(16px);
+  background: conic-gradient(
+    var(--aura-1, var(--primary)),
+    var(--aura-2, var(--airi-sky)),
+    var(--primary) 75%,
+    var(--aura-1, var(--primary))
+  );
+}
+.aura::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 160px;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+}
+/* Next in line: a faint glow inside a dashed outline, not a faded print. */
+.aura[data-state="waiting"] {
+  outline: 1px dashed color-mix(in oklab, var(--foreground) 30%, transparent);
+  outline-offset: -1px;
+}
+.aura[data-state="waiting"]::before {
+  opacity: 0.09;
+}
+/* The words sit on their own shade, so they read on any colour. */
+.scrim {
+  background: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.62),
+    rgb(0 0 0 / 0.5) 42%,
+    transparent 78%
+  );
+}
+.prompt {
+  color: rgb(255 255 255 / 0.95);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+.aura[data-state="waiting"] .prompt {
+  color: color-mix(in oklab, var(--foreground) 78%, transparent);
+  text-shadow: none;
+}
+.auraShadow {
+  background: color-mix(in oklab, var(--aura-1, var(--primary)) 40%, black);
+}
+/* A line rising up the print as it develops, with a faint trail. At rest
+   it waits below, out of sight. */
+.develop {
+  transform: translateY(100%);
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.7) 0 1.5px,
+    rgb(255 255 255 / 0.12) 1.5px,
+    transparent 40px
+  );
+}
+.twinkle {
+  color: rgb(255 255 255 / 0.85);
+}
+
+/* A long shelf paints only the bays in view; a bay is about 17rem tall. */
+.bay[data-published] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 17rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aura[data-state="making"]::before {
+    animation: shelf-aura-spin 5s linear infinite;
+  }
+  .aura[data-state="making"] .develop {
+    animation: shelf-print 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation-delay: calc(var(--i, 0) * -0.4s);
+  }
+  .aura[data-state="making"] .twinkle {
+    animation: shelf-twinkle 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes shelf-aura-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes shelf-print {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(-40px);
+  }
+}
+@keyframes shelf-twinkle {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8) rotate(12deg);
+  }
+}

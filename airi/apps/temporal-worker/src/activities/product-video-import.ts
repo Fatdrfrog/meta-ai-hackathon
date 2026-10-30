@@ -28,6 +28,7 @@ import {
   type ImportJobPorts,
   type ImportProduct,
   type ImportRecord,
+  type SpendUnit,
 } from "../media/product-video/import-job.js";
 import { scribeTranscriptLines } from "../media/product-video/transcript.js";
 
@@ -39,8 +40,42 @@ async function loadWebHost() {
 
 type WebHost = Awaited<ReturnType<typeof loadWebHost>>;
 
-function importActionId(importId: string): string {
-  return `product-video-import:${importId}`;
+/**
+ * The import's AI spend, one AI action per unit of paid work, as knowledge
+ * sync books one per document. An attempt's read steps share one, so a retry
+ * never meets the cap its predecessor's held reservations filled. Each
+ * option's photo has one for the whole workflow run, its retries included. A
+ * later run gets new ones, since an action keeps how it was first admitted.
+ */
+export function importSpendPort(
+  spend: WebHost["productImportSpend"],
+  ids: {
+    workspaceId: string;
+    importId: string;
+    runId: string;
+    attempt: number;
+  },
+): ImportJobPorts["spend"] {
+  const actionId = (unit: SpendUnit) =>
+    unit.kind === "read"
+      ? `product-video-import:${ids.importId}:read:${ids.runId}:${ids.attempt}`
+      : `product-video-import:${ids.importId}:photo:${unit.productId}:${unit.optionIndex}:${ids.runId}`;
+  return {
+    allowance: () => spend.allowance(ids.workspaceId),
+    reserve: (unit, operationId, provider, maxCostMicros) =>
+      spend.reserve({
+        workspaceId: ids.workspaceId,
+        actionId: actionId(unit),
+        operationId,
+        provider,
+        maxCostMicros,
+      }),
+    settle: (reservation, actualCostMicros) =>
+      spend.settle(
+        reservation as Parameters<WebHost["productImportSpend"]["settle"]>[0],
+        actualCostMicros,
+      ),
+  };
 }
 
 function mongoStore(
@@ -218,19 +253,21 @@ export async function productVideoImportActivity(
     { max: PRODUCT_VIDEO_IMPORT_ACTIVITY_CONTRACT_VERSION },
     "product video import activity",
   );
+  const { attempt, workflowExecution } = activityInfo();
+  if (!workflowExecution) {
+    throw ApplicationFailure.nonRetryable(
+      "A product video import runs inside its workflow",
+      "ProductVideoImportRejected",
+    );
+  }
   const host = await loadWebHost();
   await host.connectDB();
   const store = mongoStore(host, input);
-  const actionId = importActionId(input.importId);
   const context = Context.current();
   let currentStage = "starting";
   const pulse = () =>
     heartbeat({ importId: input.importId, stage: currentStage });
 
-  const tracked = await host.productImportSpend.tracked(
-    input.workspaceId,
-    actionId,
-  );
   const workDir = await mkdtemp(join(tmpdir(), "product-import-"));
   try {
     await store.updateImport({
@@ -319,25 +356,12 @@ export async function productVideoImportActivity(
           return { bucket: stored.bucket, path: stored.path };
         },
       },
-      spend: tracked
-        ? {
-            reserve: (operationId, provider, maxCostMicros) =>
-              host.productImportSpend.reserve({
-                workspaceId: input.workspaceId,
-                actionId,
-                operationId,
-                provider,
-                maxCostMicros,
-              }),
-            settle: (reservation, actualCostMicros) =>
-              host.productImportSpend.settle(
-                reservation as Parameters<
-                  WebHost["productImportSpend"]["settle"]
-                >[0],
-                actualCostMicros,
-              ),
-          }
-        : null,
+      spend: importSpendPort(host.productImportSpend, {
+        workspaceId: input.workspaceId,
+        importId: input.importId,
+        runId: workflowExecution.runId,
+        attempt,
+      }),
       async transcribe(audioPath) {
         const submission = await submitElevenLabsAudioTranscriptionFromUrl(
           "https://storage.invalid/narration.mp3",
@@ -354,6 +378,8 @@ export async function productVideoImportActivity(
             filename: "narration.mp3",
             timestampsGranularity: "word",
             delivery: "inline",
+            // The model the import reserves spend for.
+            modelId: "scribe_v2",
           },
         );
         return scribeTranscriptLines(submission.responsePayload);
@@ -377,7 +403,7 @@ export async function productVideoImportActivity(
       },
       pulse,
       signal: context.cancellationSignal,
-      attempt: activityInfo().attempt,
+      attempt,
       workDir,
     });
     await notifyWhatsAppOwner(host, input.importId);
@@ -391,6 +417,11 @@ export async function productVideoImportActivity(
       );
     }
     // Nothing will retry this: record why, for the owner.
+    airiWorkerLogger.warn("products.import_rejected", {
+      importId: input.importId,
+      code: failure.code,
+      error: failure.message,
+    });
     await store.updateImport({
       status: "failed",
       stage: null,

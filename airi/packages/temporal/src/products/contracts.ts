@@ -29,6 +29,9 @@ export const PRODUCT_VIDEO_IMPORT_MAX_OPTIONS = 8;
 /** Photos one video may make, one per option; caps an import's cost at a few dollars. */
 export const PRODUCT_VIDEO_IMPORT_MAX_PHOTOS = 60;
 
+/** Option photos one import makes at once; the panel shows that many as being made. */
+export const PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY = 4;
+
 /**
  * The longest video an import reads, and the biggest file it downloads. The
  * panel checks a video against both before uploading it. Longer videos cost
@@ -54,10 +57,26 @@ export const PRODUCT_VIDEO_IMPORT_ERROR_CODES = [
   "video_unreadable",
   "video_missing",
   "spend_limit",
+  "ai_actions_used",
+  "trial_ended",
   "failed",
 ] as const;
 export type ProductVideoImportErrorCode =
   (typeof PRODUCT_VIDEO_IMPORT_ERROR_CODES)[number];
+
+/**
+ * Why an import stopped making photos before every one was made: the
+ * company's AI spending limit was reached, the plan's included AI actions
+ * ran out, or the free plan's trial ended. The import still finishes with
+ * the products it found.
+ */
+export const PRODUCT_VIDEO_IMPORT_PHOTO_STOPS = [
+  "spend_limit",
+  "ai_actions_used",
+  "trial_ended",
+] as const;
+export type ProductVideoImportPhotoStop =
+  (typeof PRODUCT_VIDEO_IMPORT_PHOTO_STOPS)[number];
 
 /**
  * How a product's photo was made. restored: Muse Image's whole, upright

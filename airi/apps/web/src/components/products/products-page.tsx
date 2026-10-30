@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
   type DragEvent,
@@ -23,7 +24,9 @@ import {
   EmptyShelf,
   ProductShelf,
   ProductShelfSkeleton,
+  ShelfHeading,
 } from "./product-shelf";
+import { pickHero } from "./product-stage-model";
 import { ImportProgress, UploadProgress } from "./product-video-intake";
 import { WhatsAppLinkButton } from "./product-whatsapp-link";
 import { fetchProducts, productsApiUrl } from "./products-client";
@@ -67,6 +70,7 @@ export function ProductsPage({
     { shouldRetryOnError: false, revalidateOnFocus: false }
   );
   const products = data?.products ?? EMPTY_PRODUCTS;
+  const shelfId = useId();
 
   const { imports, refresh: refreshImports } = useProductImports(workspaceId);
   // First frames of the videos uploaded from this page, by import.
@@ -137,6 +141,8 @@ export function ProductsPage({
               photoTotal: 0,
               photoDone: 0,
               errorCode: null,
+              photosStopped: null,
+              draftsLeft: false,
               presenter: null,
               createdAt: new Date().toISOString(),
               finishedAt: null,
@@ -181,16 +187,35 @@ export function ProductsPage({
     products.length === 0 &&
     !uploading &&
     imports.length === 0;
-  const pageButton =
-    !sending &&
-    !emptyShelf &&
-    (data !== undefined || uploading || imports.length > 0);
+  const pageButtons =
+    !emptyShelf && (data !== undefined || uploading || imports.length > 0);
+  // One video plays on the stage: an upload from this page, else the first
+  // import running, else the first with products to check. Others are rows.
+  const hero = uploading ? null : pickHero(imports);
+  const rows = imports.filter(record => record !== hero);
+
+  // An import moving between the stage and the rows is drawn anew in its new
+  // place, and the keyboard's focus in its old one would fall to the page:
+  // it follows the import instead.
+  const focusedImport = useRef<{ id: string; element: Element } | null>(null);
+  const heroId = hero?.id ?? null;
+  useEffect(() => {
+    const focused = focusedImport.current;
+    if (!focused || focused.element.isConnected) return;
+    focusedImport.current = null;
+    if (document.activeElement && document.activeElement !== document.body)
+      return;
+    Array.from(document.querySelectorAll<HTMLElement>("[data-import]"))
+      .find(element => element.dataset.import === focused.id)
+      ?.querySelector<HTMLElement>("button")
+      ?.focus();
+  }, [heroId]);
 
   let shelf: ReactNode;
   if (!data) {
     shelf =
       error && !isValidating ? (
-        <EmptyShelf>
+        <EmptyShelf lit={false}>
           <p role="alert" className="text-[15px] font-medium">
             {PRODUCTS_COPY.loadError}
           </p>
@@ -209,12 +234,17 @@ export function ProductsPage({
         </div>
       );
   } else if (products.length > 0) {
-    shelf = <ProductShelf products={products} />;
+    shelf = (
+      <div className="min-w-0">
+        <ShelfHeading id={shelfId} title={PRODUCTS_COPY.yourShelf} />
+        <ProductShelf products={products} labelledBy={shelfId} />
+      </div>
+    );
   } else if (emptyShelf) {
     shelf = (
       <EmptyShelf>
         <p className="text-[15px] font-medium">{PRODUCTS_COPY.emptyTitle}</p>
-        <p className="max-w-sm text-sm text-balance text-muted-foreground">
+        <p className="max-w-sm text-sm text-balance text-foreground/65">
           {PRODUCTS_COPY.emptyDescription}
         </p>
         <div className="mt-3 flex flex-col items-center gap-1.5">
@@ -227,7 +257,7 @@ export function ProductsPage({
               />
             ) : null}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-foreground/60">
             {PRODUCTS_COPY.uploadHint}
           </p>
         </div>
@@ -263,6 +293,21 @@ export function ProductsPage({
         const file = event.dataTransfer.files[0];
         if (file && !sending && !reviewing) upload.start(file);
       }}
+      onFocusCapture={event => {
+        const target = event.target as Element;
+        const id = target.closest("[data-import]")?.getAttribute("data-import");
+        focusedImport.current = id ? { id, element: target } : null;
+      }}
+      onBlurCapture={event => {
+        if (event.relatedTarget) return;
+        // Focus left for nothing: a click away from any control, which
+        // forgets it, or its element going with the import's old place.
+        const left = event.target as Element;
+        queueMicrotask(() => {
+          if (left.isConnected && focusedImport.current?.element === left)
+            focusedImport.current = null;
+        });
+      }}
     >
       <h1 className="sr-only">{PRODUCTS_COPY.title}</h1>
       {reviewing ? (
@@ -291,8 +336,18 @@ export function ProductsPage({
       />
       {reviewing ? null : (
         <>
-          {pageButton ? (
-            <div className="-mb-6 flex flex-wrap justify-end gap-2">
+          {pageButtons ? (
+            // Kept in place, out of reach, while a video is sent: the stage
+            // below doesn't jump when the upload ends. On a phone the pair
+            // fills the column.
+            <div
+              inert={sending}
+              aria-hidden={sending || undefined}
+              className={cn(
+                "-mb-6 flex flex-wrap justify-end gap-2 max-sm:*:flex-auto",
+                sending && "invisible"
+              )}
+            >
               {whatsappNumber ? (
                 <WhatsAppLinkButton
                   workspaceId={workspaceId}
@@ -309,15 +364,34 @@ export function ProductsPage({
               onRetry={upload.retry}
             />
           ) : null}
-          {imports.map(record => (
+          {hero ? (
             <ImportProgress
-              key={record.id}
+              key={hero.id}
               workspaceId={workspaceId}
-              record={record}
-              preview={previews[record.id] ?? null}
+              record={hero}
+              preview={previews[hero.id] ?? null}
+              variant="stage"
               onReview={openReview}
             />
-          ))}
+          ) : null}
+          {rows.length > 0 ? (
+            <ul
+              aria-label={PRODUCTS_COPY.stage.otherVideos}
+              className="flex flex-col gap-6"
+            >
+              {rows.map(record => (
+                <li key={record.id}>
+                  <ImportProgress
+                    workspaceId={workspaceId}
+                    record={record}
+                    preview={previews[record.id] ?? null}
+                    variant="row"
+                    onReview={openReview}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {shelf}
         </>
       )}
@@ -325,8 +399,9 @@ export function ProductsPage({
         aria-hidden="true"
         className={cn(
           // Inside the page's narrowest side margin (16 px), so it never
-          // makes the page scroll sideways.
-          "pointer-events-none absolute -inset-2 flex items-center justify-center rounded-2xl border-2 border-dashed border-foreground/25 bg-background/85 text-[15px] font-medium transition-opacity",
+          // makes the page scroll sideways; above the stage, which has its
+          // own layers.
+          "pointer-events-none absolute -inset-2 z-50 flex items-center justify-center rounded-2xl border-2 border-dashed border-foreground/25 bg-background/85 text-[15px] font-medium transition-opacity",
           dragging ? "opacity-100" : "opacity-0"
         )}
       >

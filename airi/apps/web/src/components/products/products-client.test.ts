@@ -1,7 +1,14 @@
 /** @jest-environment node */
 import {
+  approveProductsWhatsAppRequest,
   checkProductVideo,
+  denyProductsWhatsAppRequest,
+  fetchProductsWhatsAppLink,
+  openProductsWhatsAppLink,
+  ProductDraftError,
+  productsWhatsAppLinkUrl,
   ProductVideoUploadError,
+  unlinkProductsWhatsAppPhone,
   uploadProductVideo,
 } from "./products-client";
 
@@ -74,5 +81,69 @@ describe("uploadProductVideo", () => {
           })
     ) as unknown as typeof fetch;
     await failsWith("upload_failed");
+  });
+});
+
+describe("the Send from WhatsApp panel", () => {
+  const panel = {
+    pairing: null,
+    requests: [],
+    linkedPhones: [],
+    businessNumbers: [],
+  };
+  const json = (status: number, body: unknown) =>
+    new Response(JSON.stringify(body), { status });
+
+  it("asks each of the panel's routes, and answers with the panel", async () => {
+    global.fetch = jest.fn(async () => json(200, panel)) as typeof fetch;
+    const url = productsWhatsAppLinkUrl("workspace 1");
+
+    await expect(fetchProductsWhatsAppLink(url)).resolves.toEqual(panel);
+    await expect(openProductsWhatsAppLink("workspace 1")).resolves.toEqual(
+      panel
+    );
+    await approveProductsWhatsAppRequest("workspace 1", "request/1");
+    await denyProductsWhatsAppRequest("workspace 1", "request/1");
+    await unlinkProductsWhatsAppPhone("workspace 1", "link-1");
+
+    const base = "/api/workspaces/workspace%201/products/whatsapp-link";
+    expect(
+      (global.fetch as jest.Mock).mock.calls.map(
+        ([called, init]) => `${init.method} ${called}`
+      )
+    ).toEqual([
+      `GET ${base}`,
+      `POST ${base}`,
+      `POST ${base}/requests/request%2F1`,
+      `DELETE ${base}/requests/request%2F1`,
+      `DELETE ${base}/phones/link-1`,
+    ]);
+  });
+
+  it("fails with the API's code, or with failed for anything that isn't the panel", async () => {
+    const failsWith = async (request: Promise<unknown>, code: string) => {
+      const error = await request.catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ProductDraftError);
+      expect((error as ProductDraftError).code).toBe(code);
+    };
+
+    global.fetch = jest.fn(async () =>
+      json(404, { code: "whatsapp_link_not_found" })
+    ) as typeof fetch;
+    await failsWith(
+      approveProductsWhatsAppRequest("workspace-1", "request-1"),
+      "whatsapp_link_not_found"
+    );
+
+    // The one-time code's answer, from before phones were confirmed in airi.
+    global.fetch = jest.fn(async () =>
+      json(201, { url: "https://wa.me/1", expiresAt: "2026-10-28T12:30:00Z" })
+    ) as typeof fetch;
+    await failsWith(openProductsWhatsAppLink("workspace-1"), "failed");
+
+    global.fetch = jest.fn(async () => {
+      throw new TypeError("Failed to fetch");
+    }) as typeof fetch;
+    await failsWith(fetchProductsWhatsAppLink("/panel"), "failed");
   });
 });

@@ -7,17 +7,20 @@ import {
 import {
   PRODUCT_VIDEO_IMPORT_MAX_PHOTOS,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
+  PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
   PRODUCT_VIDEO_MAX_BYTES,
   type ProductDoubt,
   type ProductPhotoMethod,
   type ProductTextSource,
   type ProductVideoImportErrorCode,
+  type ProductVideoImportPhotoStop,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
 import sharp from "sharp";
 import { cutOutProduct, type ProductCutout } from "./cutout";
 import {
   inventoryChecks,
+  inventoryMaxCostMicros,
   modelDoubtSubject,
   presentationWindows,
   readProductInventory,
@@ -36,22 +39,27 @@ import { cutOutPresenter } from "./presenter";
 // draft products, each option's photo, each product's review clip), so a
 // retried run skips what is done and pays only for what isn't.
 
-/** Photos made at once: each mostly waits on Meta's models. */
-const CUT_CONCURRENCY = 4;
 /** Videos larger than this aren't downloaded; phones film a few minutes in well under it. */
 export const MAX_SOURCE_VIDEO_BYTES = PRODUCT_VIDEO_MAX_BYTES;
 const THUMB_HEIGHT = 352;
 
 // Spend reserved before each paid step, in micro-dollars, and settled with
-// what it really cost. Inventory: one Muse Spark call over the whole video
-// (about $0.04 for a minute). A photo: about $0.06 of Muse, SAM and Muse
-// Image calls, more when a restore is tried twice. Transcription: the same
-// flat amount conversation transcription reserves.
-const INVENTORY_MAX_COST_MICROS = 300_000;
+// what it really cost. Each AI action's spend is capped at $0.50 on every
+// plan, so an attempt's read steps (transcription, inventory, presenter) are
+// sized to fit in their action together. A photo has an action of its own:
+// about $0.06 of Muse, SAM and Muse Image calls, more when a restore is
+// tried twice, so its three attempts fit too.
+const ACTION_SPEND_LIMIT_MICROS = 500_000;
 const PHOTO_MAX_COST_MICROS = 150_000;
-const TRANSCRIPTION_MAX_COST_MICROS = 100_000;
 // The presenter: one Muse Spark frame pick and one SAM image, about $0.01.
 const PRESENTER_MAX_COST_MICROS = 50_000;
+// ElevenLabs lists Scribe v2 at $0.22 an hour of audio (see
+// docs/operations/tenant-cost-controls-rollout.md).
+const SCRIBE_MICROS_PER_SECOND = 220_000 / 3600;
+
+/** Scribe's list price for this much narration, in micro-dollars. */
+const transcriptionMicros = (seconds: number) =>
+  Math.ceil(seconds * SCRIBE_MICROS_PER_SECOND);
 
 export type StoredFileRef = { bucket: string; path: string };
 
@@ -154,6 +162,24 @@ export type ProductPhoto = {
   straightenedDegrees?: number;
 };
 
+/**
+ * A unit of paid work, which the activity books to an AI action of its own:
+ * the steps that read the video, or one option's photo.
+ */
+export type SpendUnit =
+  | { kind: "read" }
+  | { kind: "photo"; productId: string; optionIndex: number };
+
+/** The workspace's AI allowance as the import checks it. */
+export type SpendAllowance = {
+  /** Null when the plan sets no number of included actions. */
+  includedActions: number | null;
+  remainingActions: number | null;
+  spendLimitReached: boolean;
+  /** A free company whose trial is over (or never started): it can't start AI actions. */
+  trialEnded: boolean;
+};
+
 export type ImportJobPorts = {
   store: {
     loadImport(): Promise<ImportRecord | null>;
@@ -193,18 +219,26 @@ export type ImportJobPorts = {
       file: { buffer: Buffer; mimeType: string; fileName: string },
     ): Promise<StoredFileRef>;
   };
-  /** Null where the workspace's AI isn't billed to airi, so nothing is reserved. */
+  /**
+   * The workspace's AI spend ledger. airi always pays: Meta's models and its
+   * ElevenLabs key have no customer equivalent.
+   */
   spend: {
+    /** The allowance as projected now, without admitting an action. */
+    allowance(): Promise<SpendAllowance>;
+    /** Throws the ledger's refusal when the unit can't spend `maxCostMicros`. */
     reserve(
+      unit: SpendUnit,
       operationId: string,
       provider: "meta" | "elevenlabs",
       maxCostMicros: number,
     ): Promise<unknown>;
+    /** null when the cost is unknown: the reservation is then kept. */
     settle(
       reservation: unknown,
       actualCostMicros: number | null,
     ): Promise<void>;
-  } | null;
+  };
   /** The narration as timed lines, from the MP3 the run prepared. */
   transcribe(audioPath: string): Promise<string>;
   emit(
@@ -237,11 +271,19 @@ export async function runProductVideoImport(
   if (job.status === "ready") {
     return { productCount: (await store.listProducts()).length };
   }
+  let products = await store.listProducts();
+  // A video the workspace can't pay to read isn't even downloaded. Once its
+  // products are found, running out only leaves photos unmade.
+  if (products.length === 0) {
+    const blocked = blockedBy(await ports.spend.allowance());
+    if (blocked) throw spendFailure(blocked);
+  }
   const stage = async (next: ProductVideoImportStage | null, extra = {}) => {
     await store.updateImport({ stage: next, ...extra });
     await ports.emit("import");
   };
-  await stage("preparing", { status: "processing" });
+  // An earlier attempt's photo stop no longer holds: this one tries again.
+  await stage("preparing", { status: "processing", photosStopped: null });
 
   const sourcePath = join(ports.workDir, "source");
   if (job.video) {
@@ -281,19 +323,49 @@ export async function runProductVideoImport(
     { signal: ports.signal, pulse: ports.pulse },
   );
 
+  // What this attempt's read steps have committed in their action.
+  let readCommitted = 0;
+  const read = async <T>(
+    operation: string,
+    provider: "meta" | "elevenlabs",
+    maxCostMicros: number,
+    step: PaidStep<T>,
+  ): Promise<T> => {
+    try {
+      const done = await withSpend(
+        ports,
+        { kind: "read" },
+        operation,
+        provider,
+        maxCostMicros,
+        step,
+      );
+      readCommitted += done.costMicros;
+      return done.value;
+    } catch (error) {
+      if (!(error instanceof SpendRefusal)) throw error;
+      // Without the transcript and the products there is nothing to show.
+      throw await readRefusalFailure(
+        ports,
+        error,
+        readCommitted + maxCostMicros > ACTION_SPEND_LIMIT_MICROS,
+      );
+    }
+  };
+
   let transcript = job.transcript;
   if (transcript === null) {
     await stage("listening");
-    transcript = prepared.audioPath
-      ? await withSpend(
-          ports,
+    const audioPath = prepared.audioPath;
+    transcript = audioPath
+      ? await read(
           "transcription",
           "elevenlabs",
-          TRANSCRIPTION_MAX_COST_MICROS,
-          // A flat reservation, settled whole, like conversation transcription.
+          // By the minute started, a little more than the narration's length.
+          transcriptionMicros(Math.ceil(prepared.durationSeconds / 60) * 60),
           async () => ({
-            value: await ports.transcribe(prepared.audioPath!),
-            costMicros: TRANSCRIPTION_MAX_COST_MICROS,
+            value: await ports.transcribe(audioPath),
+            costMicros: transcriptionMicros(prepared.durationSeconds),
           }),
         )
       : "";
@@ -302,14 +374,16 @@ export async function runProductVideoImport(
 
   let presenter = job.presenter;
   let language = job.language;
-  let products = await store.listProducts();
   if (products.length === 0) {
     await stage("watching");
-    const inventory = await withSpend(
-      ports,
+    const inventory = await read(
       "inventory",
       "meta",
-      INVENTORY_MAX_COST_MICROS,
+      // Leaving room in the action for the presenter.
+      Math.min(
+        inventoryMaxCostMicros(prepared.durationSeconds),
+        ACTION_SPEND_LIMIT_MICROS - readCommitted - PRESENTER_MAX_COST_MICROS,
+      ),
       async (onCost) => ({
         value: await (ports.readInventory ?? readProductInventory)(
           { videoPath: prepared.videoPath, transcript: transcript ?? "" },
@@ -404,12 +478,15 @@ export async function runProductVideoImport(
       .filter((option) => option.photoMethod === "pending")
       .map((option) => ({ product, option })),
   );
-  await forEachWithConcurrency(
-    pending,
-    CUT_CONCURRENCY,
-    ({ product, option }) =>
-      cutAndSave(ports, prepared.videoPath, product, option, language),
-  );
+  const refused = await cutPhotos(ports, prepared.videoPath, pending, language);
+  // The products are kept either way; the photos not made stay pending.
+  const photosStopped = refused && (await refusalStop(ports, refused));
+  if (photosStopped) {
+    // Said now, so the page stops showing photos being made while the
+    // clips are cut.
+    await store.updateImport({ photosStopped });
+    await ports.emit("import");
+  }
   for (const { id, clip } of products) {
     if (clip && !clip.saved)
       await cutAndSaveClip(ports, prepared, sourcePath, id, {
@@ -417,7 +494,8 @@ export async function runProductVideoImport(
         toSeconds: clip.toSeconds,
       });
   }
-  if (presenter && !presenter.done) {
+  // The presenter costs AI too: once photos stopped, it waits for a later run.
+  if (presenter && !presenter.done && !photosStopped) {
     await cutAndSavePresenter(ports, prepared, presenter.momentSeconds);
   }
 
@@ -426,9 +504,63 @@ export async function runProductVideoImport(
     stage: null,
     productCount: products.length,
     finishedAt: new Date(),
+    photosStopped,
   });
   await ports.emit("import");
   return { productCount: products.length };
+}
+
+/**
+ * Makes the options' photos a few at a time, each booked to its own AI
+ * action. Once the ledger refuses one, no new photo starts and those being
+ * made finish; the refusal is returned.
+ */
+async function cutPhotos(
+  ports: ImportJobPorts,
+  videoPath: string,
+  pending: Array<{ product: ImportProduct; option: ImportOption }>,
+  language: string | null,
+): Promise<SpendRefusal | null> {
+  let refused: SpendRefusal | null = null;
+  // The photos reserve one at a time. At the company's limit the ledger
+  // admits a photo's action, counting an included action, before refusing
+  // its spend: after the first refusal, the photos waiting their turn are
+  // refused here instead.
+  let turn: Promise<unknown> = Promise.resolve();
+  let ledgerRefusal: unknown = null;
+  const photoPorts: ImportJobPorts = {
+    ...ports,
+    spend: {
+      ...ports.spend,
+      reserve(...args) {
+        const reservation = turn.then(async () => {
+          if (ledgerRefusal) throw ledgerRefusal;
+          try {
+            return await ports.spend.reserve(...args);
+          } catch (error) {
+            if (isRefusalCode(spendCodeOf(error))) ledgerRefusal = error;
+            throw error;
+          }
+        });
+        turn = reservation.catch(() => undefined);
+        return reservation;
+      },
+    },
+  };
+  await forEachWithConcurrency(
+    pending,
+    PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
+    async ({ product, option }) => {
+      if (refused) return;
+      try {
+        await cutAndSave(photoPorts, videoPath, product, option, language);
+      } catch (error) {
+        if (!(error instanceof SpendRefusal)) throw error;
+        refused ??= error;
+      }
+    },
+  );
+  return refused;
 }
 
 async function cutAndSave(
@@ -440,9 +572,10 @@ async function cutAndSave(
 ): Promise<void> {
   let cutout: ProductCutout;
   try {
-    cutout = await withSpend(
+    ({ value: cutout } = await withSpend(
       ports,
-      `photo:${product.id}:${option.index}`,
+      { kind: "photo", productId: product.id, optionIndex: option.index },
+      "photo",
       "meta",
       PHOTO_MAX_COST_MICROS,
       async (onCost) => ({
@@ -464,7 +597,7 @@ async function cutAndSave(
           { signal: ports.signal },
         ),
       }),
-    );
+    ));
   } catch (error) {
     // A problem with this one option (no frames in its stretch, a model
     // answer that will fail the same way again): the others carry on, and the
@@ -556,7 +689,8 @@ function smallCopy(image: Buffer): Promise<Buffer> {
 /**
  * Cuts out the person presenting the products and saves them on the import.
  * They're an extra: when they can't be cut out, the import goes on without
- * them rather than failing.
+ * them rather than failing, and when the ledger refuses their spend, they're
+ * left for a later run.
  */
 async function cutAndSavePresenter(
   ports: ImportJobPorts,
@@ -565,8 +699,9 @@ async function cutAndSavePresenter(
 ): Promise<void> {
   let cutout: Awaited<ReturnType<typeof cutOutPresenter>>;
   try {
-    cutout = await withSpend(
+    ({ value: cutout } = await withSpend(
       ports,
+      { kind: "read" },
       "presenter",
       "meta",
       PRESENTER_MAX_COST_MICROS,
@@ -582,8 +717,9 @@ async function cutAndSavePresenter(
           { signal: ports.signal },
         ),
       }),
-    );
+    ));
   } catch (error) {
+    if (error instanceof SpendRefusal) return;
     if (!isPermanentProductError(error)) throw error;
     cutout = null;
   }
@@ -617,46 +753,197 @@ function isPermanentProductError(error: unknown): boolean {
   );
 }
 
+const SPEND_ERROR_CODES = [
+  "workspace_ai_spend_limit",
+  "own_ai_source_required",
+  "workspace_ai_policy_unavailable",
+  "workspace_ai_operation_replayed",
+] as const;
+
+/** The AI spend ledger's code for an error, from the ledger itself or the web's allowance check. */
+function spendCodeOf(
+  error: unknown,
+): (typeof SPEND_ERROR_CODES)[number] | null {
+  const code = error instanceof Error && "code" in error ? error.code : null;
+  return (SPEND_ERROR_CODES as readonly unknown[]).includes(code)
+    ? (code as (typeof SPEND_ERROR_CODES)[number])
+    : null;
+}
+
+/** The ledger's codes for a reservation it refused, rather than couldn't check. */
+const isRefusalCode = (
+  code: (typeof SPEND_ERROR_CODES)[number] | null,
+): code is "workspace_ai_spend_limit" | "own_ai_source_required" =>
+  code === "workspace_ai_spend_limit" || code === "own_ai_source_required";
+
 /**
- * Reserves spend for one paid step, runs it, and settles what it cost: the
- * costs the step reported, or `costMicros` when it names a flat amount. A
- * failed step settles as unknown, keeping the reservation, since it may have
- * been billed before it failed.
+ * The ledger refused a reservation: it would pass the company's spending
+ * limit or the action's cap, or the action wasn't admitted
+ * (own_ai_source_required), since the workspace can't pay for AI now.
+ */
+class SpendRefusal extends Error {
+  constructor(
+    readonly code: "workspace_ai_spend_limit" | "own_ai_source_required",
+  ) {
+    super(`The AI spend ledger refused a reservation (${code})`);
+    this.name = "SpendRefusal";
+  }
+}
+
+/**
+ * What stops the workspace paying for AI now, by its projected allowance;
+ * null when nothing does. The limit is named first, as it stops every plan.
+ */
+function blockedBy(
+  allowance: SpendAllowance,
+): ProductVideoImportPhotoStop | null {
+  if (allowance.spendLimitReached) return "spend_limit";
+  if (allowance.trialEnded) return "trial_ended";
+  if (allowance.includedActions !== null && allowance.remainingActions === 0)
+    return "ai_actions_used";
+  return null;
+}
+
+const SPEND_FAILURES: Record<ProductVideoImportPhotoStop, string> = {
+  spend_limit: "The company's AI spending limit was reached",
+  ai_actions_used: "The plan's included AI actions are used up",
+  trial_ended: "The company's free trial has ended",
+};
+
+function spendFailure(
+  stop: ProductVideoImportPhotoStop,
+): ProductVideoImportFailure {
+  return new ProductVideoImportFailure(stop, SPEND_FAILURES[stop], false);
+}
+
+/**
+ * What a refusal stopped on. Each action's reservations are sized to fit
+ * under its cap, so a refused reservation is the company's limit. A refused
+ * admission is the included actions running out or the free trial ending,
+ * when the allowance says so now; otherwise it was the company's limit,
+ * reached with reservations held then that may have settled lower since.
+ */
+async function refusalStop(
+  ports: ImportJobPorts,
+  refusal: SpendRefusal,
+): Promise<ProductVideoImportPhotoStop> {
+  if (refusal.code === "workspace_ai_spend_limit") return "spend_limit";
+  return blockedBy(await ports.spend.allowance()) ?? "spend_limit";
+}
+
+/**
+ * The failure for a read step the ledger refused. Its action is new for each
+ * attempt and sized to fit the read steps, so its own cap refusing it is a
+ * bug in that sizing, not the owner's limit.
+ */
+async function readRefusalFailure(
+  ports: ImportJobPorts,
+  refusal: SpendRefusal,
+  overActionCap: boolean,
+): Promise<ProductVideoImportFailure> {
+  if (refusal.code === "workspace_ai_spend_limit" && overActionCap)
+    return new ProductVideoImportFailure(
+      "failed",
+      "A read step's reservation passed its AI action's spend cap",
+      false,
+    );
+  return spendFailure(await refusalStop(ports, refusal));
+}
+
+/**
+ * Whether a failed step may have been billed for a request whose cost it
+ * never reported: a model call that failed, was cut off or never answered.
+ * A Muse answer that wasn't valid JSON was priced before it was read, a
+ * missing key sends nothing, a request the provider answered with a 4xx was
+ * turned away rather than run, and local steps (ffmpeg, frames, images) run
+ * only between paid calls, never alongside one.
+ */
+function mayHaveUnreportedCost(error: unknown): boolean {
+  const info = providerErrorInfo(error);
+  if (info === null || info.code === "invalid_json" || info.kind === "config")
+    return false;
+  return !(
+    typeof info.status === "number" &&
+    info.status >= 400 &&
+    info.status < 500
+  );
+}
+
+type ProviderErrorInfo = {
+  kind?: string;
+  code?: string;
+  status?: number;
+  transient: boolean;
+};
+
+/** What a Meta or ElevenLabs error says about itself; null for any other error. */
+function providerErrorInfo(error: unknown): ProviderErrorInfo | null {
+  if (error instanceof MetaModelApiError) return error.info;
+  // ElevenLabs errors carry the same `transient` flag.
+  const info = error instanceof Error && "info" in error ? error.info : null;
+  return info !== null &&
+    typeof info === "object" &&
+    typeof (info as { transient?: unknown }).transient === "boolean"
+    ? (info as ProviderErrorInfo)
+    : null;
+}
+
+const microsOf = (usd: number) => Math.round(usd * 1_000_000);
+
+/** A paid step: it reports what its calls cost, or names its own cost. */
+type PaidStep<T> = (
+  onCost: (usd: number, what: string) => void,
+) => Promise<{ value: T; costMicros?: number }>;
+
+/**
+ * Reserves spend for one paid step of `unit`, runs it, and settles what it
+ * cost: the costs the step reported, or `costMicros` when it names its own,
+ * overruns included, which the ledger keeps against the limits. A failed step
+ * settles what it reported, unless it may have been billed for more: then the
+ * cost is unknown and the whole reservation is kept. A refused reservation
+ * throws a SpendRefusal.
  */
 async function withSpend<T>(
   ports: ImportJobPorts,
+  unit: SpendUnit,
   operation: string,
   provider: "meta" | "elevenlabs",
   maxCostMicros: number,
-  step: (
-    onCost: (usd: number, what: string) => void,
-  ) => Promise<{ value: T; costMicros?: number }>,
-): Promise<T> {
+  step: PaidStep<T>,
+): Promise<{ value: T; costMicros: number }> {
   let spentUsd = 0;
-  const reservation = ports.spend
-    ? await ports.spend.reserve(
-        `${operation}:attempt-${ports.attempt}`,
-        provider,
-        maxCostMicros,
-      )
-    : null;
+  let reservation: unknown;
+  try {
+    reservation = await ports.spend.reserve(
+      unit,
+      `${operation}:attempt-${ports.attempt}`,
+      provider,
+      maxCostMicros,
+    );
+  } catch (error) {
+    const code = spendCodeOf(error);
+    if (isRefusalCode(code)) throw new SpendRefusal(code);
+    throw error;
+  }
   let result: { value: T; costMicros?: number };
   try {
     result = await step((usd) => {
       spentUsd += usd;
     });
   } catch (error) {
-    if (reservation) await ports.spend!.settle(reservation, null);
+    await ports.spend.settle(
+      reservation,
+      mayHaveUnreportedCost(error) ? null : microsOf(spentUsd),
+    );
     if (provider === "meta" && spentUsd > 0)
       await ports.store.updateImport({}, { costUsd: spentUsd });
     throw error;
   }
-  const costMicros = result.costMicros ?? Math.round(spentUsd * 1_000_000);
-  if (reservation)
-    await ports.spend!.settle(reservation, Math.min(costMicros, maxCostMicros));
+  const costMicros = result.costMicros ?? microsOf(spentUsd);
+  await ports.spend.settle(reservation, costMicros);
   if (provider === "meta" && spentUsd > 0)
     await ports.store.updateImport({}, { costUsd: spentUsd });
-  return result.value;
+  return { value: result.value, costMicros };
 }
 
 async function forEachWithConcurrency<T>(
@@ -698,16 +985,17 @@ export function classifyImportError(error: unknown): ProductVideoImportFailure {
       false,
     );
   }
-  if (
-    error instanceof Error &&
-    "code" in error &&
-    error.code === "workspace_ai_spend_limit"
-  ) {
-    return new ProductVideoImportFailure(
-      "spend_limit",
-      "The workspace's AI spend limit was reached",
-      false,
-    );
+  // The run turns the ledger's refusals into stops and failures itself;
+  // these are what else the ledger can answer, or a refusal it didn't expect.
+  const spendCode = spendCodeOf(error);
+  if (spendCode === "workspace_ai_spend_limit")
+    return spendFailure("spend_limit");
+  if (spendCode === "own_ai_source_required")
+    return spendFailure("ai_actions_used");
+  if (spendCode) {
+    // The ledger couldn't be checked, or an operation was reserved twice,
+    // which a retry's new operation ids don't repeat.
+    return new ProductVideoImportFailure("failed", messageOf(error), true);
   }
   if (error instanceof MetaModelApiError) {
     return new ProductVideoImportFailure(
@@ -716,17 +1004,12 @@ export function classifyImportError(error: unknown): ProductVideoImportFailure {
       isMetaModelApiTransientError(error),
     );
   }
-  if (
-    error instanceof Error &&
-    "info" in error &&
-    typeof (error as { info?: { transient?: unknown } }).info?.transient ===
-      "boolean"
-  ) {
-    // ElevenLabs errors carry the same `transient` flag.
+  const info = providerErrorInfo(error);
+  if (info) {
     return new ProductVideoImportFailure(
       "failed",
-      error.message,
-      (error as { info: { transient: boolean } }).info.transient,
+      messageOf(error),
+      info.transient,
     );
   }
   return new ProductVideoImportFailure("failed", messageOf(error), true);

@@ -7,8 +7,10 @@ import {
 import { listImportProducts } from "@/lib/products/store";
 import {
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
+  PRODUCT_VIDEO_IMPORT_PHOTO_STOPS,
   PRODUCT_VIDEO_IMPORT_STAGES,
   type ProductVideoImportErrorCode,
+  type ProductVideoImportPhotoStop,
   type ProductVideoImportRecord,
   type ProductVideoImportResponse,
   type ProductVideoImportSource,
@@ -157,11 +159,12 @@ async function presenterRecord(
 }
 
 const IMPORT_FIELDS =
-  "status stage productTotal photoTotal photoDone errorCode presenter createdAt finishedAt";
+  "status stage productTotal photoTotal photoDone errorCode photosStopped presenter createdAt finishedAt";
 
 async function toImportRecord(
   workspaceId: string,
-  doc: Record<string, unknown>
+  doc: Record<string, unknown>,
+  draftsLeft: boolean
 ): Promise<ProductVideoImportRecord> {
   return {
     id: String(doc._id),
@@ -179,6 +182,12 @@ async function toImportRecord(
     ).includes(doc.errorCode)
       ? (doc.errorCode as ProductVideoImportErrorCode)
       : null,
+    photosStopped: (
+      PRODUCT_VIDEO_IMPORT_PHOTO_STOPS as readonly unknown[]
+    ).includes(doc.photosStopped)
+      ? (doc.photosStopped as ProductVideoImportPhotoStop)
+      : null,
+    draftsLeft,
     presenter: await presenterRecord(workspaceId, doc.presenter),
     createdAt: toIso(doc.createdAt),
     finishedAt: toIso(doc.finishedAt),
@@ -193,15 +202,21 @@ export async function loadProductVideoImport(
     .select(IMPORT_FIELDS)
     .lean<Record<string, unknown>>();
   if (!doc) return null;
+  const products = await listImportProducts(workspaceId, importId);
   return {
-    import: await toImportRecord(workspaceId, doc),
-    products: await listImportProducts(workspaceId, importId),
+    import: await toImportRecord(
+      workspaceId,
+      doc,
+      products.some(product => product.status === "draft")
+    ),
+    products,
   };
 }
 
 // The Products page shows imports from the last week: running ones, finished
-// ones with products left to check, and, for a day, those that failed or
-// found nothing, so the owner learns why. A few at most.
+// ones with products left to check (also when they failed after finding
+// them), and, for a day, those that failed or found nothing, so the owner
+// learns why. A few at most.
 const SHOWN_IMPORTS_DAYS = 7;
 const MAX_SHOWN_IMPORTS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -219,13 +234,15 @@ export async function listShownProductVideoImports(
     .limit(20)
     .select(IMPORT_FIELDS)
     .lean<Record<string, unknown>[]>();
-  const ready = docs.filter(doc => doc.status === "ready").map(doc => doc._id);
+  const finished = docs
+    .filter(doc => doc.status === "ready" || doc.status === "failed")
+    .map(doc => doc._id);
   const withDrafts = new Set(
-    ready.length
+    finished.length
       ? (
           await WorkspaceProduct.distinct("importId", {
             workspaceId,
-            importId: { $in: ready },
+            importId: { $in: finished },
             status: "draft",
           })
         ).map(String)
@@ -238,15 +255,18 @@ export async function listShownProductVideoImports(
   const shown = docs
     .filter(doc => {
       if (doc.status === "queued" || doc.status === "processing") return true;
-      if (doc.status === "ready")
-        return (
-          withDrafts.has(String(doc._id)) ||
-          (doc.productTotal === 0 && recent(doc))
-        );
+      // Drafts are reached only through their import, so it stays while any
+      // are left, also when it failed after finding them.
+      if (withDrafts.has(String(doc._id))) return true;
+      if (doc.status === "ready") return doc.productTotal === 0 && recent(doc);
       return doc.status === "failed" && recent(doc);
     })
     .slice(0, MAX_SHOWN_IMPORTS);
   return withProductPhotoUrls(() =>
-    Promise.all(shown.map(doc => toImportRecord(workspaceId, doc)))
+    Promise.all(
+      shown.map(doc =>
+        toImportRecord(workspaceId, doc, withDrafts.has(String(doc._id)))
+      )
+    )
   );
 }

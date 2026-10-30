@@ -56,7 +56,10 @@ async function sendJson<T>(url: string, method: string, body: unknown) {
   return (await response.json()) as T;
 }
 
-/** Why a WhatsApp draft couldn't be made, as the API's code; "failed" for anything else. */
+/**
+ * Why a WhatsApp draft couldn't be made, or the "Send from WhatsApp" panel
+ * couldn't do something, as the API's code; "failed" for anything else.
+ */
 export class ProductDraftError extends Error {
   constructor(readonly code: ProductsErrorCode | "failed") {
     super(`Product draft failed: ${code}`);
@@ -64,10 +67,14 @@ export class ProductDraftError extends Error {
   }
 }
 
-async function postDraft<T>(url: string): Promise<T> {
+/** A request whose failure the page explains by the API's code. */
+async function sendForAnswer<T>(
+  url: string,
+  method: "GET" | "POST" | "DELETE" = "POST"
+): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(url, { method: "POST" });
+    response = await fetch(url, { method, cache: "no-store" });
   } catch {
     throw new ProductDraftError("failed");
   }
@@ -84,7 +91,7 @@ export async function prepareProductCarousel(
   workspaceId: string,
   importId: string
 ): Promise<ProductCarouselDraft> {
-  const data = await postDraft<ProductCarouselDraftResponse>(
+  const data = await sendForAnswer<ProductCarouselDraftResponse>(
     `${productImportUrl(workspaceId, importId)}/carousel`
   );
   if (!Array.isArray(data.draft?.cards)) throw new ProductDraftError("failed");
@@ -96,22 +103,80 @@ export async function createProductOrderForm(
   workspaceId: string,
   importId: string
 ): Promise<ProductOrderFormResponse> {
-  const data = await postDraft<ProductOrderFormResponse>(
+  const data = await sendForAnswer<ProductOrderFormResponse>(
     `${productImportUrl(workspaceId, importId)}/order-form`
   );
   if (typeof data.flow?.id !== "string") throw new ProductDraftError("failed");
   return data;
 }
 
-/** A one-time link that opens WhatsApp to airi's number, to link the owner's phone. */
-export async function createProductsWhatsAppLink(
+/** The "Send from WhatsApp" panel of one workspace. */
+export function productsWhatsAppLinkUrl(workspaceId: string): string {
+  return `${productsApiUrl(workspaceId)}/whatsapp-link`;
+}
+
+/** Every request of the panel answers with the panel as it now is. */
+async function sendWhatsAppLink(
+  url: string,
+  method: "GET" | "POST" | "DELETE"
+): Promise<ProductsWhatsAppLinkResponse> {
+  const data = await sendForAnswer<ProductsWhatsAppLinkResponse>(url, method);
+  if (
+    typeof data !== "object" ||
+    !("pairing" in data) ||
+    !Array.isArray(data.requests) ||
+    !Array.isArray(data.linkedPhones) ||
+    !Array.isArray(data.businessNumbers)
+  )
+    throw new ProductDraftError("failed");
+  return data;
+}
+
+/** The panel's state: what the open panel asks for every few seconds. */
+export async function fetchProductsWhatsAppLink(
+  url: string
+): Promise<ProductsWhatsAppLinkResponse> {
+  return sendWhatsAppLink(url, "GET");
+}
+
+/** Opens the shop to phones asking to be linked, for 15 minutes; the panel does this as it opens. */
+export async function openProductsWhatsAppLink(
   workspaceId: string
 ): Promise<ProductsWhatsAppLinkResponse> {
-  const data = await postDraft<ProductsWhatsAppLinkResponse>(
-    `${productsApiUrl(workspaceId)}/whatsapp-link`
+  return sendWhatsAppLink(productsWhatsAppLinkUrl(workspaceId), "POST");
+}
+
+/** Links the phone that asked: the admin says it's theirs. */
+export async function approveProductsWhatsAppRequest(
+  workspaceId: string,
+  requestId: string
+): Promise<ProductsWhatsAppLinkResponse> {
+  return sendWhatsAppLink(
+    `${productsWhatsAppLinkUrl(workspaceId)}/requests/${encodeURIComponent(requestId)}`,
+    "POST"
   );
-  if (typeof data.url !== "string") throw new ProductDraftError("failed");
-  return data;
+}
+
+/** Forgets the ask of a phone that isn't the admin's. */
+export async function denyProductsWhatsAppRequest(
+  workspaceId: string,
+  requestId: string
+): Promise<ProductsWhatsAppLinkResponse> {
+  return sendWhatsAppLink(
+    `${productsWhatsAppLinkUrl(workspaceId)}/requests/${encodeURIComponent(requestId)}`,
+    "DELETE"
+  );
+}
+
+/** Unlinks one of the workspace's phones. */
+export async function unlinkProductsWhatsAppPhone(
+  workspaceId: string,
+  phoneId: string
+): Promise<ProductsWhatsAppLinkResponse> {
+  return sendWhatsAppLink(
+    `${productsWhatsAppLinkUrl(workspaceId)}/phones/${encodeURIComponent(phoneId)}`,
+    "DELETE"
+  );
 }
 
 /** Changes a product as the owner checks it; answers with it as the review shows it. */

@@ -2257,6 +2257,9 @@ test("hands a shop owner's video on airi's own number to the Products intake, wi
     type: "video",
     video: { id: "media_1", mime_type: "video/mp4" },
   });
+  body.entry[0]!.changes[0]!.value.contacts = [
+    { wa_id: "15551111111", profile: { name: "  Samat  " } },
+  ];
   const intakeMessages: Record<string, unknown>[] = [];
   let ingressCalls = 0;
   const saved = (text: string) => async () => ({
@@ -2307,20 +2310,25 @@ test("hands a shop owner's video on airi's own number to the Products intake, wi
       conversationId: "conversation_1",
       messageId: "message_1",
       from: "15551111111",
+      profileName: "Samat",
       text: null,
       buttonReplyId: null,
       video: { mediaId: "media_1", mimeType: "video/mp4" },
     },
   ]);
 
-  // A message the intake leaves alone gets the usual handling.
+  // A message the intake leaves alone gets the usual handling. A sender
+  // without a profile name has none, not the "Customer" airi shows.
   const textBody = buildInboundWebhookBody({ text: { body: "hello" } });
+  textBody.entry[0]!.changes[0]!.value.contacts = [{ wa_id: "15551111111" }];
+  // Its own list: deepEqual above narrowed intakeMessages to that one record.
+  const passedOn: Record<string, unknown>[] = [];
   const passOn = createRuntimeDeps({
     processWhatsAppMessage: saved("hello"),
-    handleProductsWhatsAppIntake: async () => ({
-      handled: false,
-      outcome: "not_a_video",
-    }),
+    handleProductsWhatsAppIntake: async (message) => {
+      passedOn.push(message);
+      return { handled: false, outcome: "not_a_video" };
+    },
     directIngressAiriConversation: async () => {
       ingressCalls += 1;
       return { workflowId: "airi-workflow" };
@@ -2331,4 +2339,7 @@ test("hands a shop owner's video on airi's own number to the Products intake, wi
     rawBody: JSON.stringify(textBody),
   });
   assert.equal(ingressCalls, 1);
+  assert.equal(passedOn.length, 1);
+  assert.equal(passedOn[0]?.profileName, null);
+  assert.equal(passedOn[0]?.text, "hello");
 });

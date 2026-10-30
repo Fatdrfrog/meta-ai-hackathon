@@ -77,6 +77,9 @@ const mockBusinessLocationCreateIndexes = jest.fn();
 const mockWorkspaceProductCreateIndexes = jest.fn();
 const mockProductVideoImportCreateIndexes = jest.fn();
 const mockProductWhatsAppLinkCreateIndexes = jest.fn();
+const mockProductWhatsAppPairingCreateIndexes = jest.fn();
+const mockProductWhatsAppLinkRequestCreateIndexes = jest.fn();
+const mockProductWhatsAppLinkMissCreateIndexes = jest.fn();
 const mockCreativeVideoPlanCreateIndexes = jest.fn();
 const mockBehaviorIndexes = jest.fn();
 const mockAnalyticsIndexes = jest.fn();
@@ -616,6 +619,17 @@ jest.mock("@/models/workspace-product", () => ({
 jest.mock("@/models/product-whatsapp-link", () => ({
   ProductWhatsAppLink: { createIndexes: mockProductWhatsAppLinkCreateIndexes },
 }));
+jest.mock("@/models/product-whatsapp-pairing", () => ({
+  ProductWhatsAppPairing: {
+    createIndexes: mockProductWhatsAppPairingCreateIndexes,
+  },
+  ProductWhatsAppLinkRequest: {
+    createIndexes: mockProductWhatsAppLinkRequestCreateIndexes,
+  },
+  ProductWhatsAppLinkMiss: {
+    createIndexes: mockProductWhatsAppLinkMissCreateIndexes,
+  },
+}));
 jest.mock("@/models/product-video-import", () => ({
   ProductVideoImport: { createIndexes: mockProductVideoImportCreateIndexes },
 }));
@@ -812,6 +826,9 @@ describe("ensureIndexes", () => {
       mockWorkspaceProductCreateIndexes,
       mockProductVideoImportCreateIndexes,
       mockProductWhatsAppLinkCreateIndexes,
+      mockProductWhatsAppPairingCreateIndexes,
+      mockProductWhatsAppLinkRequestCreateIndexes,
+      mockProductWhatsAppLinkMissCreateIndexes,
       mockCreativeVideoPlanCreateIndexes,
     ]) {
       createIndexes.mockClear();
@@ -1882,6 +1899,9 @@ describe("ensureIndexes", () => {
         mockWorkspaceProductCreateIndexes,
         mockProductVideoImportCreateIndexes,
         mockProductWhatsAppLinkCreateIndexes,
+        mockProductWhatsAppPairingCreateIndexes,
+        mockProductWhatsAppLinkRequestCreateIndexes,
+        mockProductWhatsAppLinkMissCreateIndexes,
       ]) {
         expect(createIndexes).toHaveBeenCalledTimes(1);
       }

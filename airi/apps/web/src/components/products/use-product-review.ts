@@ -21,6 +21,8 @@ import {
 export type ReviewMove = { ids: string[]; to: "published" | "rejected" };
 
 const NO_PRODUCTS: DraftProductRecord[] = [];
+// Where the chain of saves starts: nothing to wait for.
+const NOTHING_SAVING: Promise<unknown> = Promise.resolve();
 
 /** A product with the owner's changes that may not be saved yet. */
 function withLocalChanges(
@@ -75,7 +77,7 @@ export function useProductReview(workspaceId: string, importId: string) {
   }, [edits]);
   const [moves, setMoves] = useState<ReviewMove[]>([]);
   const [failed, setFailed] = useState(false);
-  const saving = useRef<Promise<unknown>>(Promise.resolve());
+  const saving = useRef<Promise<unknown>>(NOTHING_SAVING);
 
   const products = useMemo(
     () =>

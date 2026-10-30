@@ -123,9 +123,9 @@ export type WhatsAppWebhookRuntimeDependencies = {
     sourceMessageId: string | null;
   }) => Promise<unknown>;
   /**
-   * Products' intake on airi's own number: a shop owner's link code, their
-   * answer to Airi's question, or a shelf video. A message it handles gets no
-   * Airi reply. Absent where the host doesn't wire it.
+   * Products' intake on airi's own number: a shop owner asking to link their
+   * phone, their answer to Airi's question, or a shelf video. A message it
+   * handles gets no Airi reply. Absent where the host doesn't wire it.
    */
   handleProductsWhatsAppIntake?: (message: {
     receivingPhone: string | null;
@@ -134,6 +134,8 @@ export type WhatsAppWebhookRuntimeDependencies = {
     conversationId: string;
     messageId: string;
     from: string | null;
+    /** The name on the sender's WhatsApp profile, when they have one. */
+    profileName: string | null;
     text: string | null;
     buttonReplyId: string | null;
     video: { mediaId: string; mimeType: string | null } | null;
@@ -1617,6 +1619,8 @@ export async function processWhatsAppWebhookPayload(
             conversationId: String(result.conversationId),
             messageId: String(newMessage._id),
             from: contactData?.waId ?? null,
+            // As WhatsApp gave it: contactData names a nameless sender "Customer".
+            profileName: value.contacts?.[0]?.profile?.name?.trim() || null,
             text:
               messageData.type === "text"
                 ? (messageData.text?.body ?? null)

@@ -75,6 +75,8 @@ test("makes an upright silent MP4 for Meta and an MP3 of the narration", async (
   assert.equal(video!.args.at(-1), join(dir, "video.mp4"));
   assert.equal(probe!.command, "ffprobe");
   assert.ok(audio!.args.includes("libmp3lame"));
+  // The narration stops where the video does: transcription is priced by it.
+  assert.equal(audio!.args[audio!.args.indexOf("-t") + 1], "64.2");
 });
 
 test("a silent video has no narration, and a long one is refused", async (t) => {

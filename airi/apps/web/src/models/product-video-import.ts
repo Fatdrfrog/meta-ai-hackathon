@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 import {
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
+  PRODUCT_VIDEO_IMPORT_PHOTO_STOPS,
   PRODUCT_VIDEO_IMPORT_SOURCES,
   PRODUCT_VIDEO_IMPORT_STAGES,
   PRODUCT_VIDEO_IMPORT_STATUSES,
   type ProductVideoImportErrorCode,
+  type ProductVideoImportPhotoStop,
   type ProductVideoImportSource,
   type ProductVideoImportStage,
   type ProductVideoImportStatus,
@@ -78,6 +80,8 @@ export interface IProductVideoImport {
   } | null;
   /** Why it failed, as a code the panel explains. */
   errorCode?: ProductVideoImportErrorCode | null;
+  /** Why photos stopped being made before every one was; null when none stopped. */
+  photosStopped?: ProductVideoImportPhotoStop | null;
   /** The failure in words, for support; not shown to the owner. */
   errorMessage?: string | null;
   workflowId?: string;
@@ -167,6 +171,11 @@ const ProductVideoImportSchema = new mongoose.Schema<IProductVideoImport>(
     errorCode: {
       type: String,
       enum: [...PRODUCT_VIDEO_IMPORT_ERROR_CODES, null],
+      default: null,
+    },
+    photosStopped: {
+      type: String,
+      enum: [...PRODUCT_VIDEO_IMPORT_PHOTO_STOPS, null],
       default: null,
     },
     errorMessage: { type: String, maxlength: 500, default: null },
