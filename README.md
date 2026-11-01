@@ -1,6 +1,6 @@
 # meta-ai-hackathon
 
-Film it, sell it: a shop films its shelf once, saying the prices, and gets a catalog to sell from on WhatsApp: a clean photo and a name for every product, and every spoken price checked against what was said. Meta's models find the products and make their photos; ElevenLabs Scribe writes down the narration.
+Film it, sell it: a shop films its shelf once, saying the prices, and gets a catalog to sell from on WhatsApp: a clean photo and a name for every product, and every spoken price shown with the words it came from, which code finds word for word in the narration. Meta's models find the products and make their photos; ElevenLabs Scribe writes down the narration.
 
 Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Oct 26 – Nov 4, 2026), Startup track, from the team behind [airi.chat](https://airi.chat).
 
@@ -12,7 +12,7 @@ Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/
 
 ## Status
 
-**Live:** the Products section has run in production on [airi.chat](https://airi.chat) since October 29, 2026, behind the `products` flag, which is turned on per workspace. Its first real import there, on October 30, stopped after 2 of its 5 photos; the fix, which makes each photo its own AI action, went live on November 1. Access for judges is in our submission form, and [HACKATHON.md](HACKATHON.md#try-it) says what to try. HACKATHON.md also lists every hackathon commit and says what existed before.
+**Live:** the Products section has run in production on [airi.chat](https://airi.chat) since October 29, 2026, behind the `products` flag, which is turned on per workspace. Its first import there, our own test on October 30, stopped after 2 of its 5 photos; the fix, which makes each photo its own AI action, went live on November 1. Access for judges is in our submission form, and [HACKATHON.md](HACKATHON.md#try-it) says what to try. HACKATHON.md also lists every hackathon commit that built a feature, links the full history, and says what existed before.
 
 On October 27 the project moved inside airi.chat, where shop owners already run their WhatsApp number. The standalone prototype at the root stays as the experiments and the first working version.
 
@@ -28,7 +28,7 @@ On October 27 the project moved inside airi.chat, where shop owners already run 
 - **Swipe-through review:** one card per product, with a round clip of the owner saying its price. What Airi isn't sure of is in red with why. Swipe right (or →) to add it to the shelf, left (or ←) to skip, undo, or accept all; tap the name or price to fix it, or choose which item the shelf shows.
 - **WhatsApp drafts:** after the review, one tap makes a carousel template (the products on white cards, opened in airi's template editor to send to Meta) or an order form (saved on WhatsApp as a draft Flow to publish), both written for buyers in the language the owner spoke.
 - **Videos sent on WhatsApp:** link your phone once from "Send from WhatsApp" on the Products page: scan the QR, send the message it writes (it names the shop and holds nothing secret), and confirm the phone on the page. A number already connected to the workspace counts as linked. Then send shelf videos to Airi's number. Their products appear in airi, and Airi writes back once per video with the link to check them.
-- **Each photo its own AI action:** the first real import in production stopped after 2 of 5 photos, because the whole video was one AI action under the $0.50 cap on an action. Now reading the video is one action and each photo another, at honest prices. If the company's AI allowance runs out partway, the import still ends with every product it found and says how many photos weren't made.
+- **Each photo its own AI action:** our first test import in production stopped after 2 of 5 photos, because the whole video was one AI action under the $0.50 cap on an action. Now reading the video is one action and each photo another, at honest prices. If the company's AI allowance runs out partway, the import still ends with every product it found and says how many photos weren't made.
 - **A stage that shows the models at work:** while a video is imported, a rail names who does each step (ElevenLabs Scribe v2 listens, Muse Spark 1.3 watches, Muse Spark, SAM 3.1 and Muse Image 1.0 make the photos, the owner checks), and each photo lifts off the frame it was filmed in, with the owner's words for its price. The products then stand on a shelf drawn like a real one.
 
 **Prototype** (root), not part of airi.chat; it runs locally:

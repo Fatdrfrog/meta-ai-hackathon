@@ -4,7 +4,7 @@ A shop films its products once, saying the prices. Meta's models, with ElevenLab
 
 ## Where the work lives
 
-The project started as a standalone prototype and, on October 27, moved inside [airi.chat](https://airi.chat), our existing WhatsApp product. Shop owners already run their business number in airi.chat, so the video import is a new section there instead of a second app they would have to adopt. [HACKATHON.md](../HACKATHON.md) lists every commit and says what existed before.
+The project started as a standalone prototype and, on October 27, moved inside [airi.chat](https://airi.chat), our existing WhatsApp product. Shop owners already run their business number in airi.chat, so the video import is a new section there instead of a second app they would have to adopt. [HACKATHON.md](../HACKATHON.md) lists every commit that built a feature, links the full history, and says what existed before.
 
 | | Where | What it is |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ The project started as a standalone prototype and, on October 27, moved inside [
 | Buyer | **WhatsApp**, on the shop's own number, connected to airi.chat | See products in carousels, ask, order |
 | Judges | **Products** on airi.chat, with the access in our submission form ([Try it](../HACKATHON.md#try-it)), and the prototype run locally | Upload a shelf video, follow its import, check the products and see the shelf; ask the prototype's AI seller in its shop page's chat |
 
-Built in airi.chat during the hackathon: the Products section, the Meta Model API client, the pipeline, the import job that runs it, uploading from the Products page with the import followed live on a stage that names the model doing each step, the review, the WhatsApp drafts, and sending a video to Airi on WhatsApp. After the first real import in production, on October 30: each photo its own AI action, and phones linked once an admin approves them.
+Built in airi.chat during the hackathon: the Products section, the Meta Model API client, the pipeline, the import job that runs it, uploading from the Products page with the import followed live on a stage that names the model doing each step, the review, the WhatsApp drafts, and sending a video to Airi on WhatsApp. After our first test import in production, on October 30: each photo its own AI action, and phones linked once an admin approves them.
 
 On the Products page the owner chooses a video or drops it on the page. The page checks it first (a video, at most 5 minutes and 1 GB, the import's own limits), then uploads it the way the Assets page does, straight to storage through a signed link, showing the bytes sent. Once the import starts, the page follows it: the job announces each step on the workspace's realtime channel, and the page also asks again every 10 seconds while it runs, in case an event is lost. The products the job finds stand on a dashed shelf, each photo landing as it's made, until the owner checks them. The page shows imports started anywhere (another device, or WhatsApp later): running ones, ones with products left to check, and for a day those that failed or found nothing, with why.
 
@@ -32,7 +32,7 @@ The review's last screen offers two drafts made from the products it added, writ
 
 Owners can also send the video to Airi on WhatsApp, at airi's own number (set in `PRODUCTS_WHATSAPP_NUMBER`), from the phone they filmed it on. First the phone is linked to the workspace: "Send from WhatsApp" on the Products page shows a QR to scan and a link to tap, which opens WhatsApp to Airi with a message naming the shop written in, the way airi's website carts hand off to WhatsApp. The message holds nothing secret, so sending it only asks: the phone waits, masked, until an admin taps "Yes, link it" on the Products page. A phone linked to one shop is never moved to another, and a shop opens to phones only under a name no other shop with Products has. A number the workspace already has connected to airi counts as linked without asking. A video from a linked phone within 30 minutes of linking, or of its last video, becomes an import at once; a later one gets one question with two buttons, in case it wasn't meant for the shelf. Videos sent together share that question: WhatsApp delivers an album as one message per video, after a marker the Cloud API reports as an unsupported message, so a video within two minutes of the one before joins the question, and "Add them" adds them all. Everything else sent to that number gets the number's usual handling. The handler sits in airi's webhook runtime right after the message is saved, so the conversation still shows it, but Airi's assistant doesn't answer it. The import job fetches the video from WhatsApp as its first step, keeps a copy in the owner's media for retries, and runs as for an upload. WhatsApp's standard quality is enough: sent that way (576×1024, about 1.3 Mbps), the shelf test video still gave all 7 products with the right prices and 7 restored photos, and QazOner's promo (shown with QazOner's permission) its 4 products with their starting prices. When it ends, Airi writes once: how many products it found and the link to check them, or why the video couldn't be read. There is no "got it" message, since every message after the free 1,000 a month is paid; the page shows the import's progress.
 
-The owner never makes decisions inside WhatsApp. Since October 1, 2026, Meta bills every service message after the first 1,000 per number each month ([Meta's WhatsApp pricing](https://developers.facebook.com/docs/whatsapp/pricing)), so a review dialogue in chat would cost money on every tap. The Products section does the same job for free.
+Apart from that one question about a late video, the owner makes no decisions inside WhatsApp. Since October 1, 2026, Meta bills every service message after the first 1,000 per number each month ([Meta's WhatsApp pricing](https://developers.facebook.com/docs/whatsapp/pricing)), so a review dialogue in chat would cost money on every tap. The Products section does the same job for free.
 
 ## Message costs
 
@@ -48,8 +48,8 @@ Today's AI seller is the prototype's web chat on its shop page, which sends no W
 ```
 shop video ──► normalize (ffmpeg) ──┬─► audio ──► Scribe: timestamped transcript ──┐
                                     └─► silent video ──────────────────────────────┴─► Muse Spark: products, prices
-                                                                                       (checked word for word against
-                                                                                       the transcript), doubts, moments
+                                                                                       (each with its quoted words, found word
+                                                                                       for word in the transcript), doubts, moments
                                                                                                 │
    per product: Muse picks a frame + box ──► SAM 3.1 tracks it ──► best measured frame ──► crop ◄┘
                                                                                              │

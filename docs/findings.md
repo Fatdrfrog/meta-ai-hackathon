@@ -16,7 +16,7 @@ The same file, with the same prompt or nearly the same, gave very different spee
 
 | Run | Result |
 | --- | --- |
-| Inventory prompt, fresh upload | A Kazakh transcript with a price for every product; scored later against the owner's real prices, it missed the doll's |
+| Inventory prompt, fresh upload | A Kazakh transcript with a price for every product; checked later against the owner's real prices, 4 of 7 were right (the doll at 1 000, not 5 000; the dinosaur at 1 000, not 300; the toy money as one dollar, not 300 tenge) |
 | Inventory prompt, same file | Invented a Russian narration with no prices |
 | Transcription-only prompt, same file (×2) | "NO SPEECH" |
 | Transcription-only prompt, new upload (×2) | Once a Kazakh transcript with two prices different from the first run; once "NO SPEECH" |
@@ -24,6 +24,14 @@ The same file, with the same prompt or nearly the same, gave very different spee
 | Speech harness, audio alone, low reasoning effort | "NO SPEECH" |
 
 Five of nine attempts heard nothing, and none got the doll's price (5,000 tenge, "бес мың") right. Input token counts were identical whether or not the speech came through, so a response can't be trusted to have used the audio.
+
+### First SAM try: one sharp frame beats tracking the whole video
+
+- Whole video, concept "toy": 16 tracks for 4 real toys (background toys, fragments, the same cup twice, motion blur), $0.39.
+- Per product, one frame: Muse Spark names each item with a specific phrase ("pink toy phone") and a clearest moment; the sharpest of 20 local frames around it goes to SAM as a single image. 6 of 7 items found at confidence 0.88–0.98, about $0.0025 each.
+- Muse Voice Transcribe is not an option for this: its 25 languages include neither Russian nor Kazakh.
+
+Cut-outs keep the product's real pixels; SAM's mask only decides what becomes transparent.
 
 ### A dedicated speech model hears every price
 
@@ -61,7 +69,7 @@ The scoring that works: keep frames whose mask is in one piece and clear of the 
 
 Cost and time: about $0.03 and 35-50 seconds per product, products in parallel. The whole 65-second test video takes 2-2.5 minutes and about $0.25.
 
-Decision: ElevenLabs Scribe v2 does the listening.
+Decision: ElevenLabs Scribe v2 does the listening. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
 
 ## Oct 27: the AI seller on Muse Spark Open
 
@@ -75,7 +83,7 @@ A failed check gets one corrective retry with the problems spelled out; if that 
 
 `pnpm seller:eval` runs scripted conversations against the test catalog and checks each reply in code: language, product cards, prices, questions passed to the owner, orders only after a name and phone, and length. Its first run caught replies copying catalog details in brackets and an order confirmation that still asked a question; after tightening the instructions, 8 of 8 pass, twice in a row, at 0.7-5.5 seconds per reply.
 
-Testing the shop page chat in a browser found one more: answering a buyer's photo, the seller said "это товар 5 на фото", leaking the internal label from the product sheet. Label mentions are now one of the checks (and part of the evaluation), and the instructions forbid them. Meta's models take the transcript from there as text, which they read reliably, and the owner confirms prices in the studio.
+Testing the shop page chat in a browser found one more: answering a buyer's photo, the seller said "это товар 5 на фото", leaking the internal label from the product sheet. Label mentions are now one of the checks (and part of the evaluation), and the instructions forbid them.
 
 ## Oct 27: the seller becomes an agent
 
@@ -90,11 +98,3 @@ The first live evaluation, 5 of 9, found things the unit tests couldn't:
 - Asked what they had ordered, it once answered from its own earlier message instead of calling `order_status`. That was right this time, but it only sees the last 12 messages, so it is now told to always check.
 
 After the fixes, 9 of 9 pass, twice in a row. That includes a new order-status case where the buyer orders in one message and asks what they ordered in the next. Replies take 1.4-6 seconds, or about 11 seconds with a buyer photo because of the separate vision call. A full evaluation run costs about $0.03. With an ambiguous request ("телефон-игрушка" matches a toy phone and a phone stand), it now shows both and asks which one.
-
-### SAM 3.1 on one sharp frame beats tracking the whole video
-
-- Whole video, concept "toy": 16 tracks for 4 real toys (background toys, fragments, the same cup twice, motion blur), $0.39.
-- Per product, one frame: Muse Spark names each item with a specific phrase ("pink toy phone") and a clearest moment; the sharpest of 20 local frames around it goes to SAM as a single image. 6 of 7 items found at confidence 0.88–0.98, about $0.0025 each.
-- Muse Voice Transcribe is not an option for this: its 25 languages include neither Russian nor Kazakh.
-
-Cut-outs keep the product's real pixels; SAM's mask only decides what becomes transparent.
