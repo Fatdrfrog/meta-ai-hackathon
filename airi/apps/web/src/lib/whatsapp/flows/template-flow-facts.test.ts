@@ -31,7 +31,7 @@ import { DEMOSHOP_FLOW_JSON } from "@/components/scenarios/builders/whatsapp/flo
 import { invalidateTemplateFlowFacts } from "./template-flow-facts-cache";
 import { readTemplateFlowFacts } from "./template-flow-facts";
 
-const WABA_ID = "102116369487468";
+const WABA_ID = "100000000000002";
 const FLOW_ID = "2244981489363579";
 const NOW = new Date("2026-09-28T12:00:00.000Z");
 

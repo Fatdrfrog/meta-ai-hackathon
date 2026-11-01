@@ -395,12 +395,12 @@ describe("turn understanding", () => {
         dependsOnPriorContext: true,
         safeReplyKey: null,
         confidence: "high",
-        asks: ["БесТірек"],
-        coverageHints: ["клиент подтвердил БесТірек"],
+        asks: ["КөкТірек"],
+        coverageHints: ["клиент подтвердил КөкТірек"],
         followUpMode: "expand_last_grounding",
-        followUpAnchor: "БесТірек",
-        queryVariants: ["БесТірек грант"],
-        cleanedQuery: "БесТірек грант",
+        followUpAnchor: "КөкТірек",
+        queryVariants: ["КөкТірек грант"],
+        cleanedQuery: "КөкТірек грант",
         subQueries: [],
         trackThreadNeed: true,
         conversationalFollowup: false,
@@ -409,7 +409,7 @@ describe("turn understanding", () => {
         preferStandaloneAskOverFollowUpAnchor: false,
         genericResumeContinuation: false,
         selectionTransitionAction: "select_offer",
-        selectionLabel: "БесТірек",
+        selectionLabel: "КөкТірек",
       }),
       provider: "vertex",
       model: "gemini-3.5-flash",
@@ -418,7 +418,7 @@ describe("turn understanding", () => {
 
     const longWindow = [
       `Old context ${"x".repeat(2600)}`,
-      "Airi: Подскажите, вас интересует именно грант «БесТірек» для обучения в AlmaU?",
+      "Airi: Подскажите, вас интересует именно грант «КөкТірек» для обучения в NovaU?",
       "Customer: Да",
     ].join("\n");
 
@@ -432,7 +432,7 @@ describe("turn understanding", () => {
       expect.objectContaining({ type: "OBJECT" })
     );
     expect(call.messages[1].content).toContain("Recent context excerpt");
-    expect(call.messages[1].content).toContain("БесТірек");
+    expect(call.messages[1].content).toContain("КөкТірек");
   });
 
   it("reads a turn verdict wrapped in a markdown fence", async () => {
@@ -614,7 +614,7 @@ describe("turn understanding", () => {
   });
 
   it("keeps detailed how-questions standalone when stale small talk remains in memory", async () => {
-    const latestAsk = "How can I win the Bestirek grant?";
+    const latestAsk = "How can I win the Koktirek grant?";
     const currentGoal = "Find out whether I qualify";
 
     chatCompletionWithFallback.mockResolvedValue({

@@ -48,12 +48,12 @@ import {
   type WorkspacePreconditionInput,
 } from "./purge-workspace-chat-data.js";
 
-const TARGET = "a22b2b2b-ac89-49bd-9cea-f3c9bfc429ce";
-const TARGET_B = "79949d7b-d52b-48f4-928f-9903c7a948f1";
+const TARGET = "a1000000-0000-4000-8000-000000000001";
+const TARGET_B = "70000000-0000-4000-8000-000000000002";
 const OTHER = "11111111-2222-4333-8444-555555555555";
 const TARGET_COMPANY = "c0000000-0000-4000-8000-000000000001";
 const OTHER_COMPANY = "c0000000-0000-4000-8000-000000000002";
-const TARGET_PHONE = "365392723331509";
+const TARGET_PHONE = "100000000000003";
 const OTHER_PHONE = "880011223344";
 const MANAGER_UUID = "0f8fad5b-d9cb-469f-a165-70867728950e";
 const NOW = new Date("2026-10-17T12:00:00.000Z");
@@ -590,7 +590,7 @@ test("storage: target chat media is selected; business prefixes and other tenant
     ["conversation-images", `kb/article/figure.png`],
     ["scenario-assets", `whatsapp/${TARGET}/conv/msg.jpg`],
     ["avatars", `telegram/${TARGET}.jpg`],
-    ["conversation-images", "-4937344260/legacy.jpg"],
+    ["conversation-images", "-1000000000/legacy.jpg"],
     ["conversation-images", `whatsapp/${TARGET}/../x.jpg`],
   ] as const) {
     assert.equal(

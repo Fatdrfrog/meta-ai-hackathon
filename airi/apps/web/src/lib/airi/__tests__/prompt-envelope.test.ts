@@ -32,7 +32,7 @@ describe("reply prompt envelope", () => {
       alreadyGreeted: true,
       hasGroundedContext: true,
       latestCustomerMessage:
-        "Мне нужны документы и требования для второго этапа программы БесТірек.",
+        "Мне нужны документы и требования для второго этапа программы КөкТірек.",
       scenarioInstruction:
         "Дайте точный grounded ответ и не выдумывайте факты.",
       groundedContext: "ДОКУМЕНТЫ ".repeat(500),
@@ -109,7 +109,7 @@ describe("reply prompt envelope", () => {
       groundedContext: "Grounded facts ".repeat(320),
       threadMemorySummary: "Old memory about another program ".repeat(220),
       recentConversationTail:
-        "Recent turn: customer explicitly asked about Получи ремесло. ".repeat(
+        "Recent turn: customer explicitly asked about Выбери ремесло. ".repeat(
           120
         ),
       conversationSummariesBlock: "Conversation summary ".repeat(180),

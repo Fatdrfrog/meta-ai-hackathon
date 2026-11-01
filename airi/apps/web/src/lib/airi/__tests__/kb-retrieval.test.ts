@@ -233,7 +233,7 @@ describe("retrieveRelevantKBArticles", () => {
       if (text === "Хочу узнать о грантах для инвалидов") {
         return [0.1, 0.2, 0.3];
       }
-      if (text.includes("Получи ремесло")) {
+      if (text.includes("Выбери ремесло")) {
         return [0.9, 0.8, 0.7];
       }
       return null;
@@ -243,9 +243,9 @@ describe("retrieveRelevantKBArticles", () => {
       applied: true,
       originalQuery: "Хочу узнать о грантах для инвалидов",
       hypotheticalAnswer:
-        "Для людей с инвалидностью доступны специальные программы и поддержка, включая Получи ремесло.",
+        "Для людей с инвалидностью доступны специальные программы и поддержка, включая Выбери ремесло.",
       textForEmbedding:
-        "Хочу узнать о грантах для инвалидов\n\nДля людей с инвалидностью доступны специальные программы и поддержка, включая Получи ремесло.",
+        "Хочу узнать о грантах для инвалидов\n\nДля людей с инвалидностью доступны специальные программы и поддержка, включая Выбери ремесло.",
     });
 
     configureSupabaseFrom({
@@ -270,7 +270,7 @@ describe("retrieveRelevantKBArticles", () => {
                   locale: "ru",
                   source_kind: "kb_article",
                   source_record_id: "kb-1",
-                  title: "Получи ремесло",
+                  title: "Выбери ремесло",
                   canonical_url: null,
                   authority_score: 0.82,
                   freshness_at: null,
@@ -309,7 +309,7 @@ describe("retrieveRelevantKBArticles", () => {
       expect.objectContaining({
         id: "chunk-kb-1",
         sourceRecordId: "kb-1",
-        title: "Получи ремесло",
+        title: "Выбери ремесло",
         similarity: 0.92,
         retrievalMethod: "knowledge_chunk",
       }),
@@ -356,7 +356,7 @@ describe("retrieveRelevantKBArticles", () => {
               locale: "ru",
               source_kind: "kb_article",
               source_record_id: "kb-1",
-              title: "Получи ремесло",
+              title: "Выбери ремесло",
               canonical_url: null,
               authority_score: 0.82,
               freshness_at: null,
@@ -590,10 +590,10 @@ describe("retrieveRelevantKBArticles", () => {
     configureSupabaseFrom({
       knowledgeDocumentsData: [
         {
-          id: "doc-bestirek",
+          id: "doc-koktirek",
           source_kind: "kb_article",
-          source_record_id: "kb-bestirek",
-          title: "БесТірек",
+          source_record_id: "kb-koktirek",
+          title: "КөкТірек",
           canonical_url: null,
           locale: "ru",
           authority_score: 0.9,
@@ -602,23 +602,23 @@ describe("retrieveRelevantKBArticles", () => {
       ],
       knowledgeChunksData: [
         {
-          id: "chunk-bestirek-overview",
-          document_id: "doc-bestirek",
+          id: "chunk-koktirek-overview",
+          document_id: "doc-koktirek",
           chunk_index: 0,
-          content: "БесТірек поддерживает бизнес-проекты.",
+          content: "КөкТірек поддерживает бизнес-проекты.",
           locale: "ru",
           authority_score: 0.9,
-          document_title: "БесТірек",
+          document_title: "КөкТірек",
         },
         {
-          id: "chunk-bestirek-requirements",
-          document_id: "doc-bestirek",
+          id: "chunk-koktirek-requirements",
+          document_id: "doc-koktirek",
           chunk_index: 2,
           content:
-            "Для участия в БесТірек нужно подготовить заявку, бизнес-план и документы участника.",
+            "Для участия в КөкТірек нужно подготовить заявку, бизнес-план и документы участника.",
           locale: "ru",
           authority_score: 0.9,
-          document_title: "БесТірек",
+          document_title: "КөкТірек",
         },
       ],
     });
@@ -628,14 +628,14 @@ describe("retrieveRelevantKBArticles", () => {
         return {
           data: [
             {
-              chunk_id: "chunk-bestirek-overview",
-              document_id: "doc-bestirek",
+              chunk_id: "chunk-koktirek-overview",
+              document_id: "doc-koktirek",
               chunk_index: 0,
-              content: "БесТірек поддерживает бизнес-проекты.",
+              content: "КөкТірек поддерживает бизнес-проекты.",
               locale: "ru",
               source_kind: "kb_article",
-              source_record_id: "kb-bestirek",
-              title: "БесТірек",
+              source_record_id: "kb-koktirek",
+              title: "КөкТірек",
               canonical_url: null,
               authority_score: 0.9,
               freshness_at: null,
@@ -669,14 +669,14 @@ describe("retrieveRelevantKBArticles", () => {
 
     const results = await retrieveRelevantKBArticles(
       "workspace-1",
-      "Что нужно для участия в БесТірек?",
+      "Что нужно для участия в КөкТірек?",
       "ru",
       { queryEmbedding: [0.1, 0.2, 0.3], limit: 2 }
     );
 
     expect(results.map(result => result.id).slice(0, 2)).toEqual([
-      "chunk-bestirek-overview",
-      "chunk-bestirek-requirements",
+      "chunk-koktirek-overview",
+      "chunk-koktirek-requirements",
     ]);
   });
 

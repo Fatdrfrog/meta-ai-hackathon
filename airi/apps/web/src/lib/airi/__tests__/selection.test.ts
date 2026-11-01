@@ -85,7 +85,7 @@ describe("pinned selection (memory + reply consistency)", () => {
 
   it("persists a selected option emitted by turn understanding", () => {
     const selection = applyAiriSelectionTransition({
-      transition: { action: "select_offer", selectionLabel: "БесТірек" },
+      transition: { action: "select_offer", selectionLabel: "КөкТірек" },
       lastGrounding: {
         sourceKind: "kb",
         sourceIds: ["kb-options", "doc-options"],
@@ -98,7 +98,7 @@ describe("pinned selection (memory + reply consistency)", () => {
           text: [
             "Есть варианты:",
             "1. **QazInnovation Grant** — грант для инноваций.",
-            "2. **БесТірек** — программа поддержки бизнеса.",
+            "2. **КөкТірек** — программа поддержки бизнеса.",
           ].join("\n"),
         },
         {
@@ -111,7 +111,7 @@ describe("pinned selection (memory + reply consistency)", () => {
 
     expect(selection).toEqual(
       expect.objectContaining({
-        label: "БесТірек",
+        label: "КөкТірек",
         sourceIds: ["kb-options", "doc-options"],
       })
     );
@@ -119,17 +119,17 @@ describe("pinned selection (memory + reply consistency)", () => {
 
   it("persists a yes confirmation after a single grounded offer question", () => {
     const selection = applyAiriSelectionTransition({
-      transition: { action: "select_offer", selectionLabel: "БесТірек" },
+      transition: { action: "select_offer", selectionLabel: "КөкТірек" },
       lastGrounding: {
         sourceKind: "kb",
-        sourceIds: ["kb-bestirek", "doc-bestirek"],
-        intentAnchor: "БесТірек",
+        sourceIds: ["kb-koktirek", "doc-koktirek"],
+        intentAnchor: "КөкТірек",
       },
       messages: [
         {
           id: "1",
           direction: "outbound",
-          text: "Подскажите, вас интересует именно грант «БесТірек» для обучения в AlmaU?",
+          text: "Подскажите, вас интересует именно грант «КөкТірек» для обучения в NovaU?",
         },
         {
           id: "2",
@@ -141,8 +141,8 @@ describe("pinned selection (memory + reply consistency)", () => {
 
     expect(selection).toEqual(
       expect.objectContaining({
-        label: "БесТірек",
-        sourceIds: ["kb-bestirek", "doc-bestirek"],
+        label: "КөкТірек",
+        sourceIds: ["kb-koktirek", "doc-koktirek"],
       })
     );
   });

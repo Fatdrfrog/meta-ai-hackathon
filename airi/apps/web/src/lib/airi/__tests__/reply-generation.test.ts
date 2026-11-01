@@ -1097,7 +1097,7 @@ describe("reply generation", () => {
     chatCompletionWithFallback.mockResolvedValue({
       content: `У Фонда есть программа для молодых людей с ограниченными возможностями:
 
-• Программа «Получи ремесло!»
+• Программа «Выбери ремесло!»
 • Цель: поддержка молодых людей с ограниченными возможностями из малообеспеченных семей.
 • Назначение: обучение в лицеях, училищах и колледжах Казахстана.`,
       provider: "vertex",
@@ -1120,9 +1120,9 @@ describe("reply generation", () => {
         kbContext: [
           {
             id: "kb-1",
-            title: "Получи ремесло",
+            title: "Выбери ремесло",
             fullContent:
-              "Программа «Получи ремесло!» поддерживает молодых людей с ограниченными возможностями из малообеспеченных семей.",
+              "Программа «Выбери ремесло!» поддерживает молодых людей с ограниченными возможностями из малообеспеченных семей.",
             similarity: 0.94,
             locale: "ru",
           },
@@ -1132,7 +1132,7 @@ describe("reply generation", () => {
     );
 
     expect(result.fallbackAction).toBe("use_generated_reply");
-    expect(result.reply).toContain("Получи ремесло");
+    expect(result.reply).toContain("Выбери ремесло");
     expect(result.reply).not.toContain("Отдельно отмечу");
     expect(result.reply).not.toContain("нет подтвержденных деталей");
   });

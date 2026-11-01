@@ -23,7 +23,7 @@ The first two commits, made a few hours before kickoff, only set up the reposito
   - database migrations, internal docs and AI-tool folders were removed;
   - customer names, a team member's email and two real-looking phone numbers in tests and comments were replaced with neutral values;
   - one demo data file moved next to the code that reads it.
-- That import missed some real values: customer names and phone numbers in a few imported tests and in one example config file. They were replaced with neutral values on Nov 1, in a commit labelled as not hackathon work: `meta-ai-hackathon: replace real customer data left in imported airi tests (not hackathon work)`.
+- Names, phone numbers and ids that the import missed, in imported tests, one code comment and one example config file, were later replaced with neutral values in two commits labelled "(not hackathon work)".
 - Hackathon work inside `airi/` arrives only in later commits, and each one is listed under "Features built" below. `git log -- airi` shows every change after the import.
 
 ## How to check

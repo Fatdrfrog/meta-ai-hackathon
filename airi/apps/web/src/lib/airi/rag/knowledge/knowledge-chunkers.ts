@@ -602,7 +602,7 @@ export function buildChunkedSections(
       const question = child.headingPath[child.headingPath.length - 1] || "";
       // Keep the parent's heading path as the breadcrumb and append the
       // question as the leaf, so citations look like
-      //   "FAQ > 1. Что вообще такое грант БесТірек?"
+      //   "FAQ > 1. Что вообще такое грант КөкТірек?"
       const qaPath = [
         ...parent.headingPath,
         question.slice(0, 200) || "Question",

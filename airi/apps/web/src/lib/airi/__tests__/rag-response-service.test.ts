@@ -617,11 +617,11 @@ describe("RagResponseService", () => {
           locale: "en",
         },
         {
-          id: "kb-bestirek",
-          sourceRecordId: "kb-bestirek",
+          id: "kb-koktirek",
+          sourceRecordId: "kb-koktirek",
           documentId: "doc-grants",
           title: "Grant programs",
-          citationLabel: "BesTirek program",
+          citationLabel: "KokTirek program",
           documentTitle: "Grant programs",
           fullContent:
             "Educational grant program with mentoring and selection stages.",
@@ -677,9 +677,9 @@ describe("RagResponseService", () => {
         ]),
       }),
       expect.objectContaining({
-        id: "kb-bestirek",
+        id: "kb-koktirek",
         callbackKey: "o1",
-        label: "BesTirek program",
+        label: "KokTirek program",
         sourceKind: "kb",
       }),
       expect.objectContaining({

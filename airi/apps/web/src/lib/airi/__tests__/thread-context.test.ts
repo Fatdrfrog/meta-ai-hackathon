@@ -123,18 +123,18 @@ describe("thread reply context", () => {
       {
         id: "2",
         direction: "inbound",
-        text: "«БесТірек»",
+        text: "«КөкТірек»",
         date: "2026-03-27T10:31:00.000Z",
       },
     ];
 
     const context = buildThreadReplyContext({
       messages,
-      latestInboundText: "«БесТірек»",
+      latestInboundText: "«КөкТірек»",
       turnUnderstanding: buildTurnUnderstanding({
-        asks: ["как подать заявку в БесТірек"],
-        coverageHints: ["подать заявку", "БесТірек"],
-        queryVariants: ["как подать заявку в БесТірек", "БесТірек"],
+        asks: ["как подать заявку в КөкТірек"],
+        coverageHints: ["подать заявку", "КөкТірек"],
+        queryVariants: ["как подать заявку в КөкТірек", "КөкТірек"],
       }),
       mode: "adaptive",
       includeHistoryInContext: true,
@@ -144,7 +144,7 @@ describe("thread reply context", () => {
 
     expect(context.dominantLanguage).toBe("ru");
     expect(context.retrievalQuery).toContain("подать заявку");
-    expect(context.retrievalQuery).toContain("БесТірек");
+    expect(context.retrievalQuery).toContain("КөкТірек");
   });
 
   it("merges a prior short program mention into a later standalone application question", () => {
@@ -152,7 +152,7 @@ describe("thread reply context", () => {
       {
         id: "1",
         direction: "inbound",
-        text: "Получи ремесло",
+        text: "Выбери ремесло",
         date: "2026-03-27T14:15:00.000Z",
       },
       {
@@ -173,9 +173,9 @@ describe("thread reply context", () => {
       messages,
       latestInboundText: "Как подать заявку?",
       turnUnderstanding: buildTurnUnderstanding({
-        asks: ["Как подать заявку в Получи ремесло"],
-        coverageHints: ["подать заявку", "Получи ремесло"],
-        queryVariants: ["Как подать заявку в Получи ремесло", "Получи ремесло"],
+        asks: ["Как подать заявку в Выбери ремесло"],
+        coverageHints: ["подать заявку", "Выбери ремесло"],
+        queryVariants: ["Как подать заявку в Выбери ремесло", "Выбери ремесло"],
       }),
       mode: "adaptive",
       includeHistoryInContext: true,
@@ -184,7 +184,7 @@ describe("thread reply context", () => {
     });
 
     expect(context.retrievalQuery).toContain("Как подать заявку");
-    expect(context.retrievalQuery).toContain("Получи ремесло");
+    expect(context.retrievalQuery).toContain("Выбери ремесло");
     expect(context.intentAnchor).toContain("Как подать заявку");
   });
 
@@ -239,7 +239,7 @@ describe("thread reply context", () => {
   it("suppresses stale stored memory when newer turns switch the program context", () => {
     const memory: AiriContextMemory = {
       version: 1,
-      summary: "Customer was previously interested in BesTirek.",
+      summary: "Customer was previously interested in KokTirek.",
       currentGoal: "How to apply?",
       unresolvedNeeds: ["How to apply?"],
       resolvedNeeds: [],
@@ -252,7 +252,7 @@ describe("thread reply context", () => {
       {
         id: "11",
         direction: "inbound",
-        text: "Получи ремесло",
+        text: "Выбери ремесло",
         date: "2026-03-27T14:15:00.000Z",
       },
       {
@@ -268,9 +268,9 @@ describe("thread reply context", () => {
       memory,
       latestInboundText: "Как подать заявку?",
       turnUnderstanding: buildTurnUnderstanding({
-        asks: ["Как подать заявку в Получи ремесло"],
-        coverageHints: ["подать заявку", "Получи ремесло"],
-        queryVariants: ["Как подать заявку в Получи ремесло"],
+        asks: ["Как подать заявку в Выбери ремесло"],
+        coverageHints: ["подать заявку", "Выбери ремесло"],
+        queryVariants: ["Как подать заявку в Выбери ремесло"],
       }),
       mode: "adaptive",
       includeHistoryInContext: true,
@@ -278,9 +278,9 @@ describe("thread reply context", () => {
       workspaceLanguage: "ru",
     });
 
-    expect(context.threadMemorySummary).not.toContain("BesTirek");
+    expect(context.threadMemorySummary).not.toContain("KokTirek");
     expect(context.threadMemorySummary).toContain("Как подать заявку");
-    expect(context.retrievalQuery).toContain("Получи ремесло");
+    expect(context.retrievalQuery).toContain("Выбери ремесло");
   });
 
   it("detects compound asks from turn-understanding and keeps them in the retrieval plan", () => {

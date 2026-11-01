@@ -208,7 +208,7 @@ test("physical inventory includes legacy buckets, unreferenced files and retaine
   for (const path of [
     "telegram/deleted-workspace/media.jpg",
     "kb/deleted-article/figure.jpg",
-    "-4937344260/legacy.jpg",
+    "-1000000000/legacy.jpg",
   ]) {
     unassignedPath = path;
     let activated = false;

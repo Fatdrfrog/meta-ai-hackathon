@@ -2066,7 +2066,7 @@ describe("WhatsApp media upload helper", () => {
       "@/lib/whatsapp/media-upload"
     );
     const result = await uploadWhatsAppMediaFile({
-      phoneNumberId: "112166395136463",
+      phoneNumberId: "100000000000001",
       accessToken: "access-token",
       file: new File([new Uint8Array([1, 2, 3])], "sticker.webp", {
         type: "",
@@ -2091,7 +2091,7 @@ describe("WhatsApp media upload helper", () => {
       "@/lib/whatsapp/media-upload"
     );
     const result = await uploadWhatsAppMediaFile({
-      phoneNumberId: "112166395136463",
+      phoneNumberId: "100000000000001",
       accessToken: "access-token",
       file: new File([new Uint8Array([1, 2, 3])], "contract.pdf", {
         type: "application/pdf",
@@ -2115,7 +2115,7 @@ describe("WhatsApp media upload helper", () => {
       "@/lib/whatsapp/media-upload"
     );
     const result = await uploadWhatsAppVoicemailAnnouncementFile({
-      phoneNumberId: "112166395136463",
+      phoneNumberId: "100000000000001",
       accessToken: "access-token",
       description: "Default announcement",
       file: new File([new Uint8Array([1, 2, 3])], "announcement.ogg", {
@@ -2142,7 +2142,7 @@ describe("WhatsApp media upload helper", () => {
 
     await expect(
       uploadWhatsAppMediaFile({
-        phoneNumberId: "112166395136463",
+        phoneNumberId: "100000000000001",
         accessToken: "access-token",
         file: new File([new Uint8Array([1, 2])], "animated.gif", {
           type: "image/gif",
@@ -2160,7 +2160,7 @@ describe("WhatsApp media upload helper", () => {
 
     await expect(
       uploadWhatsAppMediaFile({
-        phoneNumberId: "112166395136463",
+        phoneNumberId: "100000000000001",
         accessToken: "access-token",
         file: new File([new Uint8Array(100 * 1024 + 1)], "sticker.webp", {
           type: "image/webp",
@@ -2189,7 +2189,7 @@ describe("WhatsApp media upload helper", () => {
       "@/lib/whatsapp/media-upload"
     );
     const result = await uploadWhatsAppMediaFromUrl({
-      phoneNumberId: "112166395136463",
+      phoneNumberId: "100000000000001",
       accessToken: "access-token",
       mediaUrl: "https://scontent.whatsapp.net/example.mp4",
       kind: "video",
@@ -2202,7 +2202,7 @@ describe("WhatsApp media upload helper", () => {
       sizeBytes: 3,
     });
     expect(mockPostJson).toHaveBeenCalledWith(
-      "112166395136463/media",
+      "100000000000001/media",
       expect.objectContaining({
         token: "access-token",
         body: expect.any(FormData),
@@ -2229,7 +2229,7 @@ describe("WhatsApp media upload helper", () => {
       "@/lib/whatsapp/media-upload"
     );
     const result = await uploadWhatsAppMediaFromUrl({
-      phoneNumberId: "112166395136463",
+      phoneNumberId: "100000000000001",
       accessToken: "access-token",
       mediaUrl: "https://scontent.whatsapp.net/example.mp4",
       kind: "video",
@@ -2242,7 +2242,7 @@ describe("WhatsApp media upload helper", () => {
       sizeBytes: templateVideoLimitBytes,
     });
     expect(mockPostJson).toHaveBeenCalledWith(
-      "112166395136463/media",
+      "100000000000001/media",
       expect.objectContaining({
         token: "access-token",
         body: expect.any(FormData),
@@ -2271,10 +2271,10 @@ describe("WhatsApp media upload helper", () => {
     const { sendWhatsappTemplate } = await importWhatsapp();
     const beforeSend = jest.fn(async () => {
       expect(mockPostJson).toHaveBeenCalledTimes(1);
-      expect(getLatestMockPostPath()).toBe("112166395136463/media");
+      expect(getLatestMockPostPath()).toBe("100000000000001/media");
     });
     await sendWhatsappTemplate(
-      "112166395136463",
+      "100000000000001",
       "access-token",
       "77001234567",
       "video_template",
@@ -2298,7 +2298,7 @@ describe("WhatsApp media upload helper", () => {
     expect(beforeSend).toHaveBeenCalledTimes(1);
     expect(mockPostJson).toHaveBeenNthCalledWith(
       1,
-      "112166395136463/media",
+      "100000000000001/media",
       expect.objectContaining({
         token: "access-token",
         body: expect.any(FormData),

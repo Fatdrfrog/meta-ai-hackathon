@@ -128,8 +128,8 @@ describe("chunkKbArticleByHeadings", () => {
     // body-level Q/A regex alone, so we must rely on the section tree.
     const body = `
 <h1 style="text-align: left;"><strong>Часто задаваемые вопросы</strong></h1>
-<h3 style="text-align: left;">1. Что вообще такое грант БесТірек?</h3>
-<p style="text-align: left;">Это образовательная программа Фонда имени Сергея Смирнова для обучения на бакалавриате в AlmaU, покрывающая от 70% до 90% стоимости обучения.</p>
+<h3 style="text-align: left;">1. Что вообще такое грант КөкТірек?</h3>
+<p style="text-align: left;">Это образовательная программа Фонда имени Сергея Смирнова для обучения на бакалавриате в NovaU, покрывающая от 70% до 90% стоимости обучения.</p>
 <h3 style="text-align: left;">2. Для кого эта программа?</h3>
 <p style="text-align: left;">Программа рассчитана только на тех, кто в текущем году завершает школу или колледж и поступает на бакалавриат.</p>
 <h3 style="text-align: left;">3. Можно ли участвовать, если я сейчас учусь в 10 классе?</h3>
