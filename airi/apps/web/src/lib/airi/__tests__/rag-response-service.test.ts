@@ -992,16 +992,16 @@ describe("RagResponseService", () => {
 
   it("uses grounded recovery for generic turns when KB candidates still exist", async () => {
     generateFallbackRecoveryReply.mockResolvedValue(
-      "Есть гранты для людей с инвалидностью. Например, доступна информация по фонду Ержана Татишева."
+      "Есть гранты для людей с инвалидностью. Например, доступна информация по фонду Сергея Смирнова."
     );
     retrieveHybridContext.mockResolvedValue({
       snippet: undefined,
       kbArticles: [
         {
           id: "kb-1",
-          title: "Фонд Ержана Татишева",
+          title: "Фонд Сергея Смирнова",
           fullContent:
-            "Фонд Ержана Татишева предоставляет гранты и программы поддержки, в том числе для людей с инвалидностью.",
+            "Фонд Сергея Смирнова предоставляет гранты и программы поддержки, в том числе для людей с инвалидностью.",
           similarity: 0.74,
           locale: "ru",
           retrievalMethod: "search_vector",
@@ -1045,7 +1045,7 @@ describe("RagResponseService", () => {
       expect.objectContaining({
         type: "grounded_recovery",
         recoveryContext: expect.objectContaining({
-          kbExcerpt: expect.stringContaining("Фонд Ержана Татишева"),
+          kbExcerpt: expect.stringContaining("Фонд Сергея Смирнова"),
         }),
       })
     );

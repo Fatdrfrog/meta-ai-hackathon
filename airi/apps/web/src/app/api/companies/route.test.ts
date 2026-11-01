@@ -194,11 +194,11 @@ describe("POST /api/companies", () => {
 
     mockSignupRpc({
       source_id: "source-1",
-      workspace_name: "Общественный Фонд Ержана Татишева",
+      workspace_name: "Общественный Фонд Сергея Смирнова",
     });
 
     const response = await postCompany({
-      name: "  Общественный   Фонд Ержана Татишева  ",
+      name: "  Общественный   Фонд Сергея Смирнова  ",
       business_context: "  Помогаем семьям  ",
       dynamic_context_tags: [" дети ", "", "образование"],
       accepted_privacy: true,
@@ -216,7 +216,7 @@ describe("POST /api/companies", () => {
     expect(mockSupabaseRpc).toHaveBeenCalledWith("create_signup_workspace", {
       input_user_id: "user-1",
       input_user_email: "founder@example.com",
-      input_workspace_name: "Общественный Фонд Ержана Татишева",
+      input_workspace_name: "Общественный Фонд Сергея Смирнова",
       input_business_context: "Помогаем семьям",
       input_dynamic_context_tags: ["дети", "образование"],
       input_source_type: "telegram",
@@ -255,12 +255,12 @@ describe("POST /api/companies", () => {
     expect(mockTrackWorkspaceCreated).toHaveBeenCalledWith(
       "company-1",
       "workspace-1",
-      "Общественный Фонд Ержана Татишева",
+      "Общественный Фонд Сергея Смирнова",
       "user-1",
       { consent: "granted" }
     );
     expect(mockSetCompanyProperties).toHaveBeenCalledWith("company-1", {
-      company_name: "Общественный Фонд Ержана Татишева",
+      company_name: "Общественный Фонд Сергея Смирнова",
       business_context: "Помогаем семьям",
       dynamic_context_tags: ["дети", "образование"],
     });
@@ -465,12 +465,12 @@ describe("POST /api/companies", () => {
 
     mockSignupRpc({
       source_id: "source-1",
-      workspace_name: "Общественный Фонд Ержана Татишева",
+      workspace_name: "Общественный Фонд Сергея Смирнова",
       created: false,
     });
 
     const response = await postCompany({
-      name: "Общественный Фонд Ержана Татишева",
+      name: "Общественный Фонд Сергея Смирнова",
       business_context: "Помогаем семьям",
       signup_referral_source: "Attempted referral overwrite",
       accepted_privacy: true,

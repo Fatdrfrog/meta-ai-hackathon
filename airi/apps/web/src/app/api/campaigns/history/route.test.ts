@@ -148,8 +148,8 @@ function createSupabaseMock(options?: {
           campaign_id: CAMPAIGN_ID,
           message_id: "wamid-1",
           channel: "whatsapp",
-          recipient: "77077778624",
-          phone: "77077778624",
+          recipient: "77070000505",
+          phone: "77070000505",
           provider: "meta",
           status: "failed",
           error_code: "131042",
@@ -298,7 +298,7 @@ describe("GET /api/campaigns/history", () => {
     );
     expect(payload.campaigns[0].messages).toEqual([
       expect.objectContaining({
-        recipient: "77077778624",
+        recipient: "77070000505",
         status: "failed",
         error_code: 131042,
       }),

@@ -418,8 +418,8 @@ describe("temporal outbound capture", () => {
           payload: {
             workspaceId: "workspace-1",
             conversationId: "conversation-1",
-            recipient: { kind: "phone", value: "77473035733" },
-            recipientDigits: "77473035733",
+            recipient: { kind: "phone", value: "77470000606" },
+            recipientDigits: "77470000606",
           },
         },
       ],
@@ -436,7 +436,7 @@ describe("temporal outbound capture", () => {
       workspaceId: "workspace-1",
       conversationId: "conversation-1",
       sourceId: null,
-      recipient: { kind: "phone", value: "77473035733" },
+      recipient: { kind: "phone", value: "77470000606" },
       sourceMessageId: "wamid.feedback-source",
     });
     expect(mockSendWhatsAppLlmHelpfulnessPrompt).not.toHaveBeenCalled();
@@ -468,7 +468,7 @@ describe("temporal outbound capture", () => {
           payload: {
             workspaceId: "workspace-1",
             conversationId: "conversation-1",
-            recipient: { kind: "phone" as const, value: "77473035733" },
+            recipient: { kind: "phone" as const, value: "77470000606" },
           },
         },
       ],
@@ -506,7 +506,7 @@ describe("temporal outbound capture", () => {
             workspaceId: "workspace-1",
             conversationId: "conversation-1",
             sourceId: "source-1",
-            recipient: { kind: "phone", value: "77473035733" },
+            recipient: { kind: "phone", value: "77470000606" },
           },
         },
       ],
@@ -519,7 +519,7 @@ describe("temporal outbound capture", () => {
       workspaceId: "workspace-1",
       conversationId: "conversation-1",
       sourceId: "source-1",
-      recipient: { kind: "phone", value: "77473035733" },
+      recipient: { kind: "phone", value: "77470000606" },
       sourceMessageId: "wamid.feedback-source",
     });
     expect(mockSendWhatsAppLlmHelpfulnessPrompt).not.toHaveBeenCalled();

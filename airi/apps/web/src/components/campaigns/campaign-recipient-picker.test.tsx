@@ -1273,7 +1273,7 @@ describe("CampaignRecipientPicker", () => {
   it("hides punctuation-only contact names so the phone sits on one line", async () => {
     mockFetchWithContacts([
       {
-        identifier: "992905111111",
+        identifier: "992900000909",
         name: ".",
         channel: "whatsapp",
       },
@@ -1283,9 +1283,9 @@ describe("CampaignRecipientPicker", () => {
     await waitForInitialLoads();
 
     const contactButton = await screen.findByRole("button", {
-      name: "992905111111",
+      name: "992900000909",
     });
-    expect(contactButton.textContent).toBe("992905111111");
+    expect(contactButton.textContent).toBe("992900000909");
     expect(contactButton.className).toContain("items-center");
   });
 

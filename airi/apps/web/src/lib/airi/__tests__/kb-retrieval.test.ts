@@ -409,7 +409,7 @@ describe("retrieveRelevantKBArticles", () => {
                 locale: "ru",
                 source_kind: "kb_article",
                 source_record_id: "kb-2",
-                title: "Фонд Ержана Татишева",
+                title: "Фонд Сергея Смирнова",
                 canonical_url: null,
                 authority_score: 0.82,
                 freshness_at: null,
@@ -439,7 +439,7 @@ describe("retrieveRelevantKBArticles", () => {
       expect.objectContaining({
         id: "chunk-kb-2",
         sourceRecordId: "kb-2",
-        title: "Фонд Ержана Татишева",
+        title: "Фонд Сергея Смирнова",
         similarity: 0.81,
         retrievalMethod: "knowledge_chunk",
       }),

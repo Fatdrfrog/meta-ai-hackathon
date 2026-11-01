@@ -250,7 +250,7 @@ describe("CampaignHistory", () => {
                 messages: [
                   {
                     id: "message-1",
-                    recipient: "77077778624",
+                    recipient: "77070000505",
                     provider: "meta",
                     status: "failed",
                     error_code: 131042,
@@ -287,7 +287,7 @@ describe("CampaignHistory", () => {
     expect(screen.queryByText("openRate")).toBeNull();
     expect(screen.queryByText("clickRate")).toBeNull();
     expect(screen.queryByText("unsubscribeRate")).toBeNull();
-    expect(screen.queryByText("77077778624")).toBeNull();
+    expect(screen.queryByText("77070000505")).toBeNull();
     expect(screen.queryByText("meta")).toBeNull();
     expect(screen.queryByText("details.recipientEvents")).toBeNull();
 
@@ -307,7 +307,7 @@ describe("CampaignHistory", () => {
     expect(screen.getByText("details.metrics.failed")).toBeTruthy();
     expect(screen.getByText("details.metrics.replyRate")).toBeTruthy();
     expect(screen.getByText("25.5%")).toBeTruthy();
-    expect(screen.getByText("77077778624")).toBeTruthy();
+    expect(screen.getByText("77070000505")).toBeTruthy();
     expect(screen.getByText("meta")).toBeTruthy();
     expect(screen.getAllByRole("table")).toHaveLength(1);
   });

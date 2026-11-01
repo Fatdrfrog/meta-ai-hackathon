@@ -113,24 +113,24 @@ describe("whatsapp contact identity helpers", () => {
   });
 
   it("canonicalizes Kazakhstan/Russia national 8-prefix phones to international 7", () => {
-    expect(normalizeWhatsAppPhone("87082102445")).toBe("77082102445");
-    expect(normalizeWhatsAppPhone("+7 708 210 2445")).toBe("77082102445");
-    expect(normalizeWhatsAppPhone("77082102445")).toBe("77082102445");
+    expect(normalizeWhatsAppPhone("87080000101")).toBe("77080000101");
+    expect(normalizeWhatsAppPhone("+7 708 000 0101")).toBe("77080000101");
+    expect(normalizeWhatsAppPhone("77080000101")).toBe("77080000101");
   });
 
   it("treats 8-prefix and 7-prefix as the same WhatsApp phone identity", () => {
-    expect(sameWhatsAppPhone("87082102445", "77082102445")).toBe(true);
-    expect(sameWhatsAppPhone("wa_87089098017", "77089098017")).toBe(true);
+    expect(sameWhatsAppPhone("87080000101", "77080000101")).toBe(true);
+    expect(sameWhatsAppPhone("wa_87080000202", "77080000202")).toBe(true);
   });
 
   it("lists both international and national trunk variants for lookup", () => {
-    expect(listWhatsAppPhoneIdentityVariants("87082102445")).toEqual([
-      "77082102445",
-      "87082102445",
+    expect(listWhatsAppPhoneIdentityVariants("87080000101")).toEqual([
+      "77080000101",
+      "87080000101",
     ]);
-    expect(listWhatsAppPhoneIdentityVariants("77082102445")).toEqual([
-      "77082102445",
-      "87082102445",
+    expect(listWhatsAppPhoneIdentityVariants("77080000101")).toEqual([
+      "77080000101",
+      "87080000101",
     ]);
   });
 

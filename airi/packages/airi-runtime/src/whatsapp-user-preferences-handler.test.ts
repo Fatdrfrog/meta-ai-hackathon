@@ -16,7 +16,7 @@ test("marks matching WhatsApp conversations as opted out of marketing", async ()
       upsertWhatsAppMarketingConsent: async (params) => {
         upserts.push(params);
         return {
-          eventKey: "workspace-1:phone-1:77018607783:1780487066:stop",
+          eventKey: "workspace-1:phone-1:77010000808:1780487066:stop",
           matchedConversations: 1,
           modifiedConversations: 1,
         };
@@ -34,10 +34,10 @@ test("marks matching WhatsApp conversations as opted out of marketing", async ()
         metadata: {
           phone_number_id: "phone-1",
         },
-        contacts: [{ wa_id: "77018607783" }],
+        contacts: [{ wa_id: "77010000808" }],
         user_preferences: [
           {
-            wa_id: "77018607783",
+            wa_id: "77010000808",
             user_id: "bsuid-1",
             category: "marketing_messages",
             detail: "User requested to stop marketing messages",
@@ -55,7 +55,7 @@ test("marks matching WhatsApp conversations as opted out of marketing", async ()
   assert.ok(response);
   assert.equal(
     (upserts[0] as Record<string, unknown>).eventKey,
-    "workspace-1:phone-1:77018607783:1780487066:stop",
+    "workspace-1:phone-1:77010000808:1780487066:stop",
   );
   assert.equal(
     (upserts[0] as Record<string, unknown>).workspaceId,
@@ -67,7 +67,7 @@ test("marks matching WhatsApp conversations as opted out of marketing", async ()
     (upserts[0] as Record<string, unknown>).phoneNumberId,
     "phone-1",
   );
-  assert.equal((upserts[0] as Record<string, unknown>).waId, "77018607783");
+  assert.equal((upserts[0] as Record<string, unknown>).waId, "77010000808");
   assert.equal((upserts[0] as Record<string, unknown>).userId, "bsuid-1");
   assert.equal((upserts[0] as Record<string, unknown>).status, false);
   assert.equal(
@@ -164,10 +164,10 @@ test("keeps the webhook successful when the audit write fails", async () => {
       field: "user_preferences",
       value: {
         metadata: { phone_number_id: "phone-1" },
-        contacts: [{ wa_id: "77018607783" }],
+        contacts: [{ wa_id: "77010000808" }],
         user_preferences: [
           {
-            wa_id: "77018607783",
+            wa_id: "77010000808",
             category: "marketing_messages",
             value: "stop",
             timestamp: 1780487068,
@@ -191,7 +191,7 @@ test("keeps the webhook successful when the audit write fails", async () => {
     sourceId: "source-1",
     wabaId: "waba-1",
     phoneNumberId: "phone-1",
-    waId: "77018607783",
+    waId: "77010000808",
     userId: null,
     parentUserId: null,
     error: "Supabase unavailable",

@@ -1055,16 +1055,16 @@ describe("WhatsApp send preparation and reservation boundary", () => {
 
   describe.each(["template", "text"] as const)("%s sends", kind => {
     it.each([
-      "+7 706 704 0359",
-      "77067040359",
-      "87067040359",
-      { kind: "phone" as const, value: "77067040359" },
+      "+7 706 000 0303",
+      "77060000303",
+      "87060000303",
+      { kind: "phone" as const, value: "77060000303" },
     ])(
       "preserves canonical Kazakhstan recipient digits for %j",
       async recipient => {
         await send(kind, recipient);
 
-        expect(getLatestMockPostBody().to).toBe("77067040359");
+        expect(getLatestMockPostBody().to).toBe("77060000303");
         expect(getLatestMockPostBody()).not.toHaveProperty("recipient");
       }
     );

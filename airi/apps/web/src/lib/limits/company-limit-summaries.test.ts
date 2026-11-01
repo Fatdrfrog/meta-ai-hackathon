@@ -43,9 +43,9 @@ describe("getCompanyLimitSummaries", () => {
         created_at: "2026-02-07T10:38:00.235351+00:00",
       },
       {
-        id: "company-bahaai",
-        name: "Bahaai",
-        slug: "bahaai-c71e3e5e",
+        id: "company-sample",
+        name: "Sample",
+        slug: "sample-a1b2c3d4",
         subscription_type: "free",
         trial_starts_at: "2026-06-24T13:08:25.583381+00:00",
         trial_ends_at: "2099-07-08T13:08:25.583381+00:00",
@@ -61,15 +61,15 @@ describe("getCompanyLimitSummaries", () => {
         created_at: "2026-02-07T10:38:00.562051+00:00",
       },
       {
-        id: "workspace-bahaai",
-        name: "Bahaai",
-        company_id: "company-bahaai",
+        id: "workspace-sample",
+        name: "Sample",
+        company_id: "company-sample",
         created_at: "2026-06-24T13:08:25.583381+00:00",
       },
     ];
     const snapshots = [
       {
-        company_id: "company-bahaai",
+        company_id: "company-sample",
         conversation_count: 11,
         workspace_count: 1,
         seat_count: 1,
@@ -106,7 +106,7 @@ describe("getCompanyLimitSummaries", () => {
         async (_name: string, args: { p_company_ids: string[] }) => ({
           data: args.p_company_ids.map(company_id => ({
             company_id,
-            used_recipients: company_id === "company-bahaai" ? 120 : 9000,
+            used_recipients: company_id === "company-sample" ? 120 : 9000,
           })),
           error: null,
         })
@@ -118,7 +118,7 @@ describe("getCompanyLimitSummaries", () => {
     expect(supabase.rpc).toHaveBeenCalledTimes(1);
     expect(supabase.rpc).toHaveBeenCalledWith(
       "get_company_bulk_recipient_usage",
-      { p_company_ids: ["company-airi", "company-bahaai"] }
+      { p_company_ids: ["company-airi", "company-sample"] }
     );
     expect(result.truncated).toBe(false);
     expect(result.companies).toHaveLength(2);
@@ -136,7 +136,7 @@ describe("getCompanyLimitSummaries", () => {
     expect(result.companies[1]).toEqual(
       expect.objectContaining({
         isInternalCompany: false,
-        company: expect.objectContaining({ name: "Bahaai" }),
+        company: expect.objectContaining({ name: "Sample" }),
         snapshot: expect.objectContaining({ missing: false }),
         limit: expect.objectContaining({
           subscriptionType: "free",

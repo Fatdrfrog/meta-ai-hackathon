@@ -16,7 +16,7 @@ let mockIdentityRows: Array<Record<string, unknown>> = [];
 const mockIdentityModel = {
   find: () => mockQuery(mockIdentityRows),
   findOneAndUpdate: () => ({
-    exec: async () => ({ _id: "wa_77754272513", isBot: false }),
+    exec: async () => ({ _id: "wa_77750000707", isBot: false }),
   }),
 };
 jest.mock("@icecore/airi-runtime/mongoose", () => ({
@@ -31,7 +31,7 @@ jest.mock("@/models/chat", () => ({
   __esModule: true,
   default: {
     ...mockIdentityModel,
-    findOneAndUpdate: async () => ({ _id: "wa_77754272513" }),
+    findOneAndUpdate: async () => ({ _id: "wa_77750000707" }),
   },
 }));
 jest.mock("@/models/message", () => ({
@@ -145,7 +145,7 @@ describeMongo(
         const parentUserId = "US.Parent";
         if (conflict)
           mockIdentityRows = [
-            { _id: "wa_77754272513", whatsapp: { waId: "77754272513" } },
+            { _id: "wa_77750000707", whatsapp: { waId: "77750000707" } },
             { _id: "wa_77799999999", whatsapp: { parentUserId } },
           ];
         await processWhatsAppMessage({
@@ -155,7 +155,7 @@ describeMongo(
             text: { body: "Hello" },
           },
           contactData: {
-            waId: "77754272513",
+            waId: "77750000707",
             parentUserId,
             profile: { name: "Customer" },
             primaryIdType: "wa_id",
@@ -190,7 +190,7 @@ describeMongo(
         processWhatsAppMessage({
           messageData: { id, type: "text", text: { body: "Hello" } },
           contactData: {
-            waId: "77754272513",
+            waId: "77750000707",
             profile: { name: "Customer" },
             primaryIdType: "wa_id",
           },

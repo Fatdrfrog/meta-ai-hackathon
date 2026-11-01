@@ -21,8 +21,9 @@ The first two commits, made a few hours before kickoff, only set up the reposito
 - It came in one commit, `meta-ai-hackathon: import airi.chat as pre-existing code (not hackathon work)`, taken from airi.chat's private main branch at commit `c81f9d812` (Oct 27, 2026). The commits that branch gained between kickoff and that snapshot are airi.chat's own routine fixes, none of them for this project.
 - In that commit, only these changes were made to airi.chat's code:
   - database migrations, internal docs and AI-tool folders were removed;
-  - customer names, a team member's email and real-looking phone numbers in tests were replaced with neutral values;
+  - customer names, a team member's email and two real-looking phone numbers in tests and comments were replaced with neutral values;
   - one demo data file moved next to the code that reads it.
+- That import missed some real values: customer names and phone numbers in a few imported tests and in one example config file. They were replaced with neutral values on Nov 1, in a commit labelled as not hackathon work: `meta-ai-hackathon: replace real customer data left in imported airi tests (not hackathon work)`.
 - Hackathon work inside `airi/` arrives only in later commits, and each one is listed under "Features built" below. `git log -- airi` shows every change after the import.
 
 ## How to check

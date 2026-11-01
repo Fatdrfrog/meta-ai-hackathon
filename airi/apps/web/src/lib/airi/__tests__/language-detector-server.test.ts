@@ -23,7 +23,7 @@ describe("language-detector-server", () => {
     });
 
     await expect(
-      detectLanguageModelOnly("Программа стипендий имени Ержана Татишева")
+      detectLanguageModelOnly("Программа стипендий имени Сергея Смирнова")
     ).resolves.toBe("ru");
   });
 
