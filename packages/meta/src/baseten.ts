@@ -14,7 +14,8 @@ export function loadBasetenConfig(env: NodeJS.ProcessEnv = process.env): Baseten
   return {
     apiKey,
     baseUrl: env.BASETEN_BASE_URL ?? "https://inference.baseten.co/v1",
-    // The hackathon ID; Baseten's own docs show meta-models/muse-spark-open, which is wrong here.
+    // The hackathon ID, served only to accounts Baseten approved for the hackathon. Without that
+    // approval, set BASETEN_MODEL=meta-models/muse-spark-open, the public ID every run so far used.
     model: env.BASETEN_MODEL ?? "meta-models/muse-spark-open-1026",
   };
 }

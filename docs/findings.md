@@ -16,12 +16,11 @@ The same file, with the same prompt or nearly the same, gave very different spee
 
 | Run | Result |
 | --- | --- |
-| Inventory prompt, fresh upload | Exact Kazakh transcript, every price right |
+| Inventory prompt, fresh upload | A Kazakh transcript with a price for every product; scored later against the owner's real prices, it missed the doll's |
 | Inventory prompt, same file | Invented a Russian narration with no prices |
 | Transcription-only prompt, same file (×2) | "NO SPEECH" |
 | Transcription-only prompt, new upload (×2) | Once a Kazakh transcript with two prices different from the first run; once "NO SPEECH" |
 | Audio track alone as `input_audio` (×2) | Once garbled romanized Kazakh with wrong prices; once "I can't hear any audio" |
-
 | Speech harness, audio alone, low reasoning effort | "NO SPEECH" |
 
 Five of nine attempts heard nothing, and none got the doll's price (5,000 tenge, "бес мың") right. Input token counts were identical whether or not the speech came through, so a response can't be trusted to have used the audio.
