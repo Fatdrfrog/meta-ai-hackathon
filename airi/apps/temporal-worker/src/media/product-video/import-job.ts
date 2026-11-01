@@ -53,8 +53,7 @@ const ACTION_SPEND_LIMIT_MICROS = 500_000;
 const PHOTO_MAX_COST_MICROS = 150_000;
 // The presenter: one Muse Spark frame pick and one SAM image, about $0.01.
 const PRESENTER_MAX_COST_MICROS = 50_000;
-// ElevenLabs lists Scribe v2 at $0.22 an hour of audio (see
-// docs/operations/tenant-cost-controls-rollout.md).
+// ElevenLabs lists Scribe v2 at $0.22 an hour of audio.
 const SCRIBE_MICROS_PER_SECOND = 220_000 / 3600;
 
 /** Scribe's list price for this much narration, in micro-dollars. */
