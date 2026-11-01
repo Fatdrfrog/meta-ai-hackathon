@@ -61,12 +61,12 @@ test("renders Products for an admin with the flag on", async () => {
 });
 
 test("offers sending videos on WhatsApp once airi's number is set up", async () => {
-  process.env.PRODUCTS_WHATSAPP_NUMBER = "77082609346";
+  process.env.PRODUCTS_WHATSAPP_NUMBER = "77080000011";
   try {
     render(await ProductsRoute(params()));
     expect(screen.getByTestId("products")).toHaveAttribute(
       "data-whatsapp",
-      "+77082609346"
+      "+77080000011"
     );
   } finally {
     delete process.env.PRODUCTS_WHATSAPP_NUMBER;

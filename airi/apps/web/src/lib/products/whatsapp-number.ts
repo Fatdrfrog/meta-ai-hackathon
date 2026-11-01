@@ -10,7 +10,7 @@ export function productsWhatsAppNumber(): string | null {
   return normalizeWhatsAppPhone(process.env.PRODUCTS_WHATSAPP_NUMBER) ?? null;
 }
 
-/** The number as the owner reads it, such as "+7 708 260 9346". */
+/** The number as the owner reads it, such as "+7 708 000 0011". */
 export function productsWhatsAppNumberLabel(): string | null {
   const number = productsWhatsAppNumber();
   if (!number) return null;

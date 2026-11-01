@@ -43,7 +43,7 @@ const request = (method: string) =>
   );
 const panel: ProductsWhatsAppLinkResponse = {
   pairing: {
-    url: "https://wa.me/77082609346?text=Hi%20Airi!",
+    url: "https://wa.me/77080000011?text=Hi%20Airi!",
     expiresAt: "2026-10-28T12:15:00.000Z",
   },
   requests: [

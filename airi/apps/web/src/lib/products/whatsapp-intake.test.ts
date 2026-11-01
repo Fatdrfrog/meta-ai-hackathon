@@ -206,7 +206,7 @@ function rowsQuery(rows: Row[]) {
 const message = (
   overrides: Partial<ProductsWhatsAppMessage> = {}
 ): ProductsWhatsAppMessage => ({
-  receivingPhone: "+7 708 260 9346",
+  receivingPhone: "+7 708 000 0011",
   sourceId: "airi-source",
   workspaceId: "airi-workspace",
   conversationId: "651f1f77bcf86cd799439060",
@@ -367,7 +367,7 @@ async function openShop(workspaceId: string, name: string, at = NOW) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  process.env.PRODUCTS_WHATSAPP_NUMBER = "+7 708 260 9346";
+  process.env.PRODUCTS_WHATSAPP_NUMBER = "+7 708 000 0011";
   mockWorkspaceName = "QazOner Group";
   mockSources = [];
   mockProductsShops = [{ id: "shop-workspace", name: "QazOner Group" }];
@@ -485,7 +485,7 @@ describe("openProductsWhatsAppPairing", () => {
       { upsert: true }
     );
     const url = new URL(panel!.pairing!.url);
-    expect(url.origin + url.pathname).toBe("https://wa.me/77082609346");
+    expect(url.origin + url.pathname).toBe("https://wa.me/77080000011");
     expect(url.searchParams.get("text")).toBe(LINK_TEXT);
     expect(panel!.pairing!.expiresAt).toBe("2026-10-28T12:15:00.000Z");
     expect(panel!.pairing!.url).not.toMatch(/AIRI-SHOP|[a-f0-9]{24}/i);
@@ -599,7 +599,7 @@ describe("loadProductsWhatsAppLink", () => {
       // airi's own number never sends to itself.
       {
         workspace_id: "shop-workspace",
-        display_phone: "+7 708 260 9346",
+        display_phone: "+7 708 000 0011",
         on_biz_app: "true",
       },
       {
@@ -611,7 +611,7 @@ describe("loadProductsWhatsAppLink", () => {
 
     expect(await loadProductsWhatsAppLink("shop-workspace", NOW)).toEqual({
       pairing: {
-        url: `https://wa.me/77082609346?text=${encodeURIComponent(LINK_TEXT)}`,
+        url: `https://wa.me/77080000011?text=${encodeURIComponent(LINK_TEXT)}`,
         expiresAt: "2026-10-28T12:15:00.000Z",
       },
       requests: [

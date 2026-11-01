@@ -24,7 +24,7 @@ jest.mock("qrcode", () => ({
 }));
 
 const API = "/api/workspaces/workspace-1/products/whatsapp-link";
-const LINK_URL = `https://wa.me/77082609346?text=${encodeURIComponent(
+const LINK_URL = `https://wa.me/77080000011?text=${encodeURIComponent(
   "Hi Airi! Please link this phone to my shop QazOner Group."
 )}`;
 const TITLE = "Send videos from your phone";
@@ -88,7 +88,7 @@ const requestsTo = (method: string, url = API) =>
 function openPanel() {
   render(
     <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
-      <WhatsAppLinkButton workspaceId="workspace-1" number="+7 708 260 9346" />
+      <WhatsAppLinkButton workspaceId="workspace-1" number="+7 708 000 0011" />
     </SWRConfig>
   );
   fireEvent.click(screen.getByRole("button", { name: "Send from WhatsApp" }));
@@ -173,7 +173,7 @@ describe("WhatsAppLinkButton", () => {
     expect(screen.queryByText(/your phone\?/)).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        "Shelf videos you send to Airi at +7 708 260 9346 turn up here."
+        "Shelf videos you send to Airi at +7 708 000 0011 turn up here."
       )
     ).toBeInTheDocument();
   });

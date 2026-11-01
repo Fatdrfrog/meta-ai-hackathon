@@ -462,7 +462,7 @@ type ConnectedNumber = {
   workspaceId: string;
   /** Digits only. */
   phone: string;
-  /** As stored, such as "+7 708 260 9346". */
+  /** As stored, such as "+7 708 000 0011". */
   written: string;
   /** Whether it's also used in the WhatsApp Business app on a phone. */
   onBizApp: boolean;
@@ -470,7 +470,7 @@ type ConnectedNumber = {
 
 /**
  * The WhatsApp numbers connected in airi: every workspace's, or one's.
- * Numbers are stored as written ("+7 708 260 9346"), so they're compared as
+ * Numbers are stored as written ("+7 708 000 0011"), so they're compared as
  * digits.
  */
 async function connectedNumbers(
