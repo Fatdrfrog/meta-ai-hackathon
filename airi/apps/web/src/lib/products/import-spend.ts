@@ -48,11 +48,7 @@ async function trialEnded(workspaceId: string): Promise<boolean> {
  * workspace that can't pay for platform AI can't import.
  */
 export const productImportSpend = {
-  /**
-   * The workspace's allowance as projected now; unlike a reservation, it
-   * admits no action. The spend left tells the import whether a photo's
-   * reservation still fits once its own photos have settled.
-   */
+  /** The workspace's allowance as projected now; unlike a reservation, it admits no action. */
   async allowance(workspaceId: string) {
     const { getWorkspaceTextAiAllowance } = await import(
       "@/lib/ai/workspace-ai-policy"
