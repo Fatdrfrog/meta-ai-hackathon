@@ -17,6 +17,7 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   import_not_found: "That import wasn't found",
   import_unavailable: "The import couldn't be started",
   product_not_found: "That product wasn't found",
+  currency_required: "This product's price can only be set with its currency",
   save_failed: "The change couldn't be saved",
   whatsapp_not_connected: "No WhatsApp number is connected to this workspace",
   not_enough_products: "Not enough products with photos for this draft",

@@ -254,13 +254,14 @@ function useOutgoing(subject: Subject, reduced: boolean): Subject | null {
   return shown.out?.id === subject.id ? null : shown.out;
 }
 
-const titleOf = (photo: StagePhoto) =>
+/** A photo's price as its caption writes it; null without one. */
+const priceOf = (photo: StagePhoto) =>
   photo.price === null
-    ? photo.name
-    : COPY.withPrice(
-        photo.name,
-        formatProductPrice(photo.price, { from: photo.priceIsFrom })
-      );
+    ? null
+    : formatProductPrice(photo.price, {
+        from: photo.priceIsFrom,
+        currency: photo.currency,
+      });
 
 /**
  * A video's way to products, played on a dark stage: the owner's own video
@@ -495,7 +496,10 @@ export function CreationStage({
             aria-hidden="true"
             className="col-start-1 row-start-2 hidden self-center @min-[34rem]:block"
           >
-            <p className="line-clamp-3 text-lg leading-[1.35] text-balance text-white/85">
+            <p
+              dir="auto"
+              className="line-clamp-3 text-lg leading-[1.35] text-balance text-white/85"
+            >
               {COPY.quote(featured.priceQuote)}
             </p>
           </div>
@@ -541,7 +545,8 @@ export function CreationStage({
         <div className="col-start-1 row-start-3 flex min-w-0 flex-col gap-3 self-end">
           {featured && !poster ? (
             <Caption
-              title={titleOf(featured)}
+              name={featured.name}
+              price={priceOf(featured)}
               line={
                 spot
                   ? photoTrail(spot)
@@ -947,30 +952,36 @@ function PosterItem({
 }
 
 function Caption({
-  title,
+  name,
+  price,
   line,
   quote,
 }: {
-  title: string;
+  name: string;
+  price: string | null;
   line: string | null;
   /** The line is the owner's quote, which the split stage shows apart. */
   quote: boolean;
 }) {
+  // Set apart, so a name written right to left keeps its place.
+  const title = <bdi key="name">{name}</bdi>;
   return (
     <div aria-hidden="true" className="flex min-w-0 flex-col gap-0.5">
       {/* Keyed by their words: a new photo dips them, never blanks them. */}
       <p
-        key={title}
+        key={`${name}\n${price ?? ""}`}
         className={cn(
           styles.dip,
           "truncate text-[15px] font-semibold @min-[34rem]:text-base"
         )}
       >
-        {title}
+        {price === null ? title : COPY.withPrice(title, price)}
       </p>
       {line ? (
         <p
           key={line}
+          // The owner's own words read in their own direction.
+          dir={quote ? "auto" : undefined}
           className={cn(
             styles.dip,
             "line-clamp-3 text-[12.5px] leading-snug text-muted-foreground",

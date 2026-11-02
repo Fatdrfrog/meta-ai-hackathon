@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { importSpendPort } from "./product-video-import";
+import { ProductVideoImportFailure } from "../media/product-video/import-job";
+import { importSpendPort, insertDraftProducts } from "./product-video-import";
 
 const IMPORT = "6ae43246b2009b6f5799236e";
 
@@ -101,4 +102,103 @@ test("checks the workspace's allowance and settles each reservation where it was
     `settle product-video-import:${IMPORT}:read:run-a:1 1834`,
   ]);
   assert.equal(calls[0], "allowance w1");
+});
+
+/**
+ * The product model as saving drafts uses it: refusing the drafts `refuses`
+ * picks, and failing the insert with `failure`.
+ */
+function productModel(
+  options: {
+    refuses?: (doc: Record<string, unknown>) => boolean;
+    failure?: unknown;
+  } = {},
+) {
+  const inserts: Array<{ docs: unknown[]; options: unknown }> = [];
+  class Model {
+    readonly #doc: Record<string, unknown>;
+    constructor(doc: Record<string, unknown>) {
+      this.#doc = doc;
+    }
+    validateSync() {
+      return options.refuses?.(this.#doc)
+        ? { errors: { price: { kind: "user defined" } } }
+        : undefined;
+    }
+    static async insertMany(
+      docs: Array<Record<string, unknown>>,
+      insertOptions: unknown,
+    ) {
+      inserts.push({ docs, options: insertOptions });
+      if (options.failure) throw options.failure;
+      return docs;
+    }
+  }
+  return { model: Model, inserts };
+}
+
+test("saves an import's drafts in one unordered insert, which throws for any draft it refuses", async () => {
+  const { model, inserts } = productModel();
+
+  await insertDraftProducts(model, [{ importIndex: 0 }, { importIndex: 1 }]);
+
+  assert.deepEqual(inserts, [
+    {
+      docs: [{ importIndex: 0 }, { importIndex: 1 }],
+      options: { ordered: false, throwOnValidationError: true },
+    },
+  ]);
+});
+
+test("drafts a previous attempt already saved are kept, one row each", async () => {
+  for (const failure of [
+    { code: 11000 },
+    { writeErrors: [{ code: 11000 }] },
+    { writeErrors: [{ err: { code: 11000 } }, { code: 11000 }] },
+  ]) {
+    const { model, inserts } = productModel({ failure });
+    await insertDraftProducts(model, [{ importIndex: 0 }]);
+    assert.equal(inserts.length, 1, JSON.stringify(failure));
+  }
+});
+
+test("any other failure to save the drafts is thrown", async () => {
+  for (const failure of [
+    // Drafts the insert's own validation refused, after it saved the rest.
+    Object.assign(new Error("validation"), {
+      validationErrors: [new Error("price")],
+    }),
+    // No write refused at all is no duplicate.
+    Object.assign(new Error("bulk write"), { writeErrors: [] }),
+    Object.assign(new Error("mixed"), {
+      writeErrors: [{ code: 11000 }, { code: 121 }],
+    }),
+  ]) {
+    const { model } = productModel({ failure });
+    await assert.rejects(
+      insertDraftProducts(model, [{ importIndex: 0 }]),
+      (error: unknown) => error === failure,
+    );
+  }
+});
+
+test("a draft the product model refuses fails the import for good, with nothing saved", async () => {
+  const { model, inserts } = productModel({
+    refuses: (doc) => doc.importIndex === 1,
+  });
+
+  await assert.rejects(
+    insertDraftProducts(model, [
+      { importIndex: 0 },
+      { importIndex: 1 },
+      { importIndex: 2 },
+    ]),
+    (error: unknown) =>
+      error instanceof ProductVideoImportFailure &&
+      error.code === "failed" &&
+      !error.retryable &&
+      error.message ===
+        "A product found in the video failed the product model's checks: price (user defined)",
+  );
+  assert.deepEqual(inserts, []);
 });

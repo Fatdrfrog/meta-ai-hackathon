@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import {
+  hasAtMostDecimals,
   PRODUCT_DOUBT_SUBJECTS,
   PRODUCT_PHOTO_METHODS,
+  PRODUCT_PRICE_MAX_DECIMALS,
   PRODUCT_TEXT_SOURCES,
   WORKSPACE_PRODUCT_STATUSES,
   type ProductDoubt,
@@ -50,7 +52,7 @@ export interface IWorkspaceProduct {
   status: WorkspaceProductStatus;
   /** As the owner named it, in their own language: what buyers see. */
   name: string;
-  /** Whole tenge; null until the owner sets a price. */
+  /** An amount in `currency`, to its decimals; null until the owner sets a price. */
   price: number | null;
   /**
    * Place on the workspace's shelf, across all imports. A new video's products
@@ -66,7 +68,11 @@ export interface IWorkspaceProduct {
   /** Whether `name` was said in the video or only written on screen. */
   nameSource?: ProductTextSource | null;
   category?: string;
-  /** The currency the owner said, when it wasn't tenge. */
+  /**
+   * The ISO 4217 code of the price's currency, said or shown in the video
+   * (one said once covers its other products) or typed by the owner; null
+   * when none was.
+   */
   currency?: string | null;
   /** The narration's words, or the video's text, the price came from. */
   priceQuote?: string | null;
@@ -148,8 +154,9 @@ const WorkspaceProductSchema = new mongoose.Schema<IWorkspaceProduct>(
       min: 0,
       validate: {
         validator: (value: number | null) =>
-          value === null || Number.isInteger(value),
-        message: "Prices are whole tenge",
+          value === null ||
+          hasAtMostDecimals(value, PRODUCT_PRICE_MAX_DECIMALS),
+        message: "A price has at most 3 decimals",
       },
     },
     position: { type: Number, default: 0 },

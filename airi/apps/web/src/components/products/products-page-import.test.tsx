@@ -231,7 +231,9 @@ test("offers to upload a video on the empty shelf", async () => {
   expect(
     screen.getByRole("button", { name: "Upload a video" })
   ).toBeInTheDocument();
-  expect(screen.getByText("MP4 or MOV, up to 5 minutes")).toBeInTheDocument();
+  expect(
+    screen.getByText("MP4 or MOV. About a minute is plenty; up to 5 minutes.")
+  ).toBeInTheDocument();
 });
 
 test("uploads a chosen video to storage, then shows its import waiting", async () => {
@@ -451,6 +453,66 @@ test("shows a running import's stage, and its products as their photos are made"
   expect(
     screen.getByText("Not on your shelf until you check them.")
   ).toBeInTheDocument();
+});
+
+test("the stage and the found shelf write a price said in dollars in dollars", async () => {
+  const running = record({ productTotal: 1, photoTotal: 1, photoDone: 0 });
+  routes[`GET ${BASE}/products/imports`] = () =>
+    respond(200, { imports: [running] });
+  routes[`GET ${BASE}/products/imports/import-1`] = () =>
+    respond(200, {
+      import: running,
+      products: [
+        {
+          ...draft("p1", "Phone stand", pending, { price: 10 }),
+          currency: "USD",
+        },
+      ],
+    });
+  renderPage();
+
+  // The caption of the photo being made, on the stage.
+  const name = await screen.findByText("Phone stand", { selector: "bdi" });
+  expect(name.parentElement!.textContent).toBe("Phone stand · from 10 USD");
+  const found = await screen.findByRole("list", {
+    name: "Found in your video",
+  });
+  expect(
+    within(found).getByText("from 10 USD", {
+      normalizer: text => text,
+    })
+  ).toBeInTheDocument();
+});
+
+test("names and the owner's words written right to left read in their own direction", async () => {
+  const running = record({ productTotal: 1, photoTotal: 1, photoDone: 0 });
+  routes[`GET ${BASE}/products/imports`] = () =>
+    respond(200, { imports: [running] });
+  routes[`GET ${BASE}/products/imports/import-1`] = () =>
+    respond(200, {
+      import: running,
+      products: [
+        {
+          ...draft("p1", "كوب القهوة", pending, { price: 50 }),
+          currency: "SAR",
+          priceQuote: "هذا الكوب بخمسين ريالا",
+        },
+      ],
+    });
+  renderPage();
+
+  // The caption's name is set apart from its price: a <bdi> reads in its
+  // own direction, so the price stays after the name.
+  const name = await screen.findByText("كوب القهوة", { selector: "bdi" });
+  expect(name.parentElement!.textContent).toBe("كوب القهوة · from 50 SAR");
+  // The owner's words, beside the stage and under its caption.
+  const quotes = screen.getAllByText("“هذا الكوب بخمسين ريالا”");
+  expect(quotes).toHaveLength(2);
+  for (const quote of quotes) expect(quote).toHaveAttribute("dir", "auto");
+  const found = await screen.findByRole("list", {
+    name: "Found in your video",
+  });
+  expect(within(found).getByText("كوب القهوة")).toHaveAttribute("dir", "auto");
 });
 
 test("the stage fans out every photo being made, and its filmstrip rings the one in front", async () => {
@@ -1207,6 +1269,31 @@ test("opens the review straight from its address, and closing leaves the page", 
     screen.queryByRole("heading", { name: "Check your products" })
   ).not.toBeInTheDocument();
   expect(window.location.search).toBe("");
+});
+
+test("the line under the title gives way to the review, and comes back after", async () => {
+  const importId = "651f1f77bcf86cd799439061";
+  const note = "New · built at the Meta AI Hackathon 2026";
+  mockSearch = new URLSearchParams(`review=${importId}`);
+  window.history.replaceState(
+    null,
+    "",
+    `/panel/workspace-1/products?review=${importId}`
+  );
+  routes[`GET ${BASE}/products/imports/${importId}`] = () =>
+    respond(200, {
+      import: record({ id: importId, status: "ready", stage: null }),
+      products: [draft("p1", "Шежіре", { method: "restored", imageUrl: null })],
+    });
+  renderPage();
+
+  expect(
+    await screen.findByRole("article", { name: "Шежіре" })
+  ).toBeInTheDocument();
+  expect(screen.queryByText(note)).not.toBeInTheDocument();
+
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(screen.getByText(note)).toBeInTheDocument();
 });
 
 test("an address with no import id in it opens no review", async () => {

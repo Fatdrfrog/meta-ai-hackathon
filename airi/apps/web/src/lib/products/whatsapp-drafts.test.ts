@@ -59,6 +59,7 @@ const product = (
   id: `651f1f77bcf86cd7994390${String(10 + index)}`,
   name: `Шежіре ${index}`,
   price: 15500,
+  currency: "KZT",
   priceIsFrom: false,
   photo: { cutout: { bucket: "media", path: `p${index}/cutout.png` } },
   ...overrides,
@@ -122,6 +123,7 @@ describe("loadAddedProducts", () => {
           _id: "p1",
           name: "Шежіре",
           price: 15500,
+          currency: "KZT",
           priceIsFrom: true,
           featuredOption: 1,
           options: [
@@ -146,6 +148,7 @@ describe("loadAddedProducts", () => {
           id: "p1",
           name: "Шежіре",
           price: 15500,
+          currency: "KZT",
           priceIsFrom: true,
           photo: {
             cutout: { bucket: "media", path: "b.png" },
@@ -156,11 +159,15 @@ describe("loadAddedProducts", () => {
           id: "p2",
           name: "Медаль",
           price: null,
+          currency: null,
           priceIsFrom: false,
           photo: null,
         },
       ],
     });
+    expect(query.select).toHaveBeenCalledWith(
+      "name price currency priceIsFrom featuredOption options.photo"
+    );
     expect(mockImportFindOne).toHaveBeenCalledWith({
       _id: importId,
       workspaceId,
@@ -265,6 +272,23 @@ describe("prepareCarouselDraft", () => {
     );
   });
 
+  it("writes each price in its currency, with its cents, and tenge with ₸", async () => {
+    const draft = await prepareCarouselDraft(workspaceId, {
+      language: "English",
+      products: [
+        product(1, { name: "Phone stand", price: 10, currency: "USD" }),
+        product(2, { priceIsFrom: true }),
+        product(3, { name: "Mug", price: 12.5, currency: "EUR" }),
+      ],
+    });
+
+    expect(draft!.cards.map(card => card.bodyText)).toEqual([
+      "Phone stand\n10 USD",
+      "Шежіре 2\nfrom 15 500 ₸",
+      "Mug\n12.50 EUR",
+    ]);
+  });
+
   it("stops when the company's storage is full", async () => {
     mockStore.mockRejectedValue(
       new StorageQuotaError("company_storage_limit_exceeded", "Full")
@@ -344,6 +368,21 @@ describe("buildOrderFormFlowConfig", () => {
         },
       },
     });
+  });
+
+  it("lists each price in its currency, with its cents, and one whose currency wasn't said bare", () => {
+    const config = buildOrderFormFlowConfig(
+      [
+        product(1, { name: "Phone stand", price: 10, currency: "USD" }),
+        product(2, { priceIsFrom: true, currency: null }),
+        product(3, { name: "Mug", price: 12.5, currency: "EUR" }),
+      ],
+      "Russian"
+    );
+
+    expect(
+      config.screens[0]!.fields[0]!.options!.map(option => option.description)
+    ).toEqual(["10 USD", "от 15 500", "12.50 EUR"]);
   });
 });
 

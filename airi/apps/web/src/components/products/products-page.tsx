@@ -336,6 +336,11 @@ export function ProductsPage({
       />
       {reviewing ? null : (
         <>
+          {/* Under the page's title, which only screen readers see, in the
+              shelf headings' quiet note style; pulled up to what follows. */}
+          <p className="-mb-10 text-[13px] leading-snug text-muted-foreground">
+            {PRODUCTS_COPY.hackathonNote}
+          </p>
           {pageButtons ? (
             // Kept in place, out of reach, while a video is sent: the stage
             // below doesn't jump when the upload ends. On a phone the pair

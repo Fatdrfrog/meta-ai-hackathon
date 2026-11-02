@@ -49,6 +49,23 @@ test("asks the workspace's Products API", async () => {
   );
 });
 
+test("says under its title that Products is new, built at the hackathon", async () => {
+  fetchMock.mockResolvedValue(respond(200, { products: [] }));
+  renderPage();
+
+  const title = screen.getByRole("heading", { level: 1, name: "Products" });
+  const note = screen.getByText("New · built at the Meta AI Hackathon 2026");
+  expect(note).toHaveClass("text-muted-foreground");
+  // After the title and above everything else the page shows.
+  const empty = await screen.findByText("Your products will appear here");
+  expect(
+    title.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+  expect(
+    note.compareDocumentPosition(empty) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+});
+
 test("shows the loading state, then the empty state", async () => {
   fetchMock.mockResolvedValue(respond(200, { products: [] }));
   renderPage();
@@ -69,6 +86,7 @@ test("lists products with their price, or a note when there is none", async () =
           id: "p1",
           name: "Кукла Лол",
           price: 5000,
+          currency: "KZT",
           priceIsFrom: false,
           imageUrl: null,
           updatedAt: null,
@@ -85,6 +103,7 @@ test("lists products with their price, or a note when there is none", async () =
           id: "p3",
           name: "Шежіре",
           price: 15500,
+          currency: "KZT",
           priceIsFrom: true,
           imageUrl: null,
           updatedAt: null,
@@ -115,12 +134,102 @@ test("lists products with their price, or a note when there is none", async () =
   expect(screen.queryByText("2 products")).not.toBeInTheDocument();
 });
 
+test("writes a price in another currency with its code, tenge with ₸, and one whose currency wasn't said bare", async () => {
+  fetchMock.mockResolvedValue(
+    respond(200, {
+      products: [
+        {
+          id: "p1",
+          name: "Phone stand",
+          price: 10,
+          currency: "USD",
+          priceIsFrom: false,
+          imageUrl: null,
+          updatedAt: null,
+        },
+        {
+          id: "p2",
+          name: "Кукла Лол",
+          price: 5000,
+          currency: "KZT",
+          priceIsFrom: false,
+          imageUrl: null,
+          updatedAt: null,
+        },
+        {
+          id: "p3",
+          name: "Mug",
+          price: 4.99,
+          currency: null,
+          priceIsFrom: true,
+          imageUrl: null,
+          updatedAt: null,
+        },
+      ],
+    })
+  );
+  renderPage();
+
+  await screen.findByText("Phone stand");
+  // Never tenge by default.
+  expect(
+    screen.getByText("from 4.99", { normalizer: text => text })
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("10 USD", { normalizer: text => text })
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("5 000 ₸", { normalizer: text => text })
+  ).toBeInTheDocument();
+});
+
+test("letters a long price smaller, so its tag fits a phone's bay, and breaks it only after 'from'", () => {
+  const unbroken = (text: string) => text.replace(/ /g, " ");
+  const product = (id: string, price: number, currency: string) => ({
+    id,
+    name: `Product ${id}`,
+    price,
+    currency,
+    priceIsFrom: true,
+    imageUrl: null,
+    updatedAt: null,
+  });
+  render(
+    <ProductShelf
+      products={[
+        product("p1", 15500, "KZT"),
+        product("p2", 1_250_000_000, "IRR"),
+        product("p3", 1e12, "IRR"),
+      ]}
+    />
+  );
+  const price = (text: string) =>
+    screen.getByText(unbroken(text), { normalizer: words => words });
+
+  const tags = [
+    "from 15 500 ₸",
+    "from 1 250 000 000 IRR",
+    "from 1 000 000 000 000 IRR",
+  ].map(text => price(text).parentElement);
+  expect(tags[0]).toHaveClass("text-[13px]");
+  expect(tags[1]).toHaveClass("text-[11px]");
+  expect(tags[2]).toHaveClass("text-[10px]");
+  // As wide as its price, never wider than its bay.
+  for (const tag of tags)
+    expect(tag).toHaveClass("w-max", "max-w-[calc(100%-8px)]");
+  // Where it must break, it breaks after "from" and nowhere else.
+  const breaks = price("from 1 000 000 000 000 IRR").querySelectorAll("wbr");
+  expect(breaks).toHaveLength(1);
+  expect(breaks[0]!.previousSibling?.textContent).toBe(unbroken("from "));
+});
+
 test("finishes the last shelf row with spots that aren't products", () => {
   const products = (count: number) =>
     Array.from({ length: count }, (_, n) => ({
       id: `p${n}`,
       name: `Product ${n}`,
       price: 100,
+      currency: null,
       priceIsFrom: false,
       imageUrl: null,
       updatedAt: null,
@@ -242,6 +351,7 @@ test("tries a refreshed photo link again after the old one failed", () => {
     id: "p1",
     name: "Кукла Лол",
     price: 5000,
+    currency: null,
     priceIsFrom: false,
     imageUrl,
     updatedAt: null,

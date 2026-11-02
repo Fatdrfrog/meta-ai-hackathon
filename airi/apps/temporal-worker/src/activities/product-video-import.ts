@@ -24,6 +24,7 @@ import {
 import {
   classifyImportError,
   MAX_SOURCE_VIDEO_BYTES,
+  ProductVideoImportFailure,
   runProductVideoImport,
   type ImportJobPorts,
   type ImportProduct,
@@ -168,27 +169,21 @@ function mongoStore(
         .select("position")
         .lean();
       const base = (last?.position ?? -1) + 1;
-      try {
-        await WorkspaceProduct.insertMany(
-          drafts.map((draft) => ({
-            ...draft,
-            workspaceId: input.workspaceId,
-            status: "draft",
-            importId: input.importId,
-            position: base + draft.importIndex,
-            options: draft.options.map((option) => ({
-              ...option,
-              photo: { method: "pending" },
-              notes: [],
-            })),
+      await insertDraftProducts(
+        WorkspaceProduct,
+        drafts.map((draft) => ({
+          ...draft,
+          workspaceId: input.workspaceId,
+          status: "draft",
+          importId: input.importId,
+          position: base + draft.importIndex,
+          options: draft.options.map((option) => ({
+            ...option,
+            photo: { method: "pending" },
+            notes: [],
           })),
-          { ordered: false },
-        );
-      } catch (error) {
-        // A previous attempt already created some: the unique (importId,
-        // importIndex) index keeps one row each.
-        if (!isDuplicateKeyError(error)) throw error;
-      }
+        })),
+      );
     },
     async savePhoto(productId, optionIndex, photo, notes) {
       await WorkspaceProduct.updateOne(
@@ -232,12 +227,64 @@ async function notifyWhatsAppOwner(host: WebHost, importId: string) {
   }
 }
 
+/** Why the product model refused a draft: the paths it failed on. */
+type DraftRefusal = { errors: Record<string, { kind?: unknown }> };
+
+/** What saving an import's drafts needs of the product model. */
+export type DraftProductModel = {
+  new (doc: Record<string, unknown>): {
+    validateSync(): DraftRefusal | null | undefined;
+  };
+  insertMany(
+    docs: Array<Record<string, unknown>>,
+    options: { ordered: false; throwOnValidationError: true },
+  ): Promise<unknown>;
+};
+
+/**
+ * Saves an import's draft products. Unordered, insertMany would write the
+ * drafts the model takes before throwing for the others, and a retry would
+ * then find products and skip the step that makes the rest. So every draft is
+ * checked first: one the model refuses fails the import for good, with none
+ * of them written.
+ */
+export async function insertDraftProducts(
+  model: DraftProductModel,
+  docs: Array<Record<string, unknown>>,
+): Promise<void> {
+  for (const doc of docs) {
+    const refusal = new model(doc).validateSync();
+    if (refusal) {
+      const failed = Object.entries(refusal.errors).map(
+        ([path, error]) => `${path} (${String(error.kind)})`,
+      );
+      throw new ProductVideoImportFailure(
+        "failed",
+        `A product found in the video failed the product model's checks: ${failed.join(", ")}`,
+        false,
+      );
+    }
+  }
+  try {
+    await model.insertMany(docs, {
+      ordered: false,
+      throwOnValidationError: true,
+    });
+  } catch (error) {
+    // A previous attempt already created some: the unique (importId,
+    // importIndex) index keeps one row each.
+    if (!isDuplicateKeyError(error)) throw error;
+  }
+}
+
 function isDuplicateKeyError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const record = error as { code?: unknown; writeErrors?: unknown };
   if (record.code === 11000) return true;
+  // At least one write refused, each as a duplicate: `[].every` is true.
   return (
     Array.isArray(record.writeErrors) &&
+    record.writeErrors.length > 0 &&
     record.writeErrors.every(
       (writeError: { code?: unknown; err?: { code?: unknown } }) =>
         writeError?.code === 11000 || writeError?.err?.code === 11000,

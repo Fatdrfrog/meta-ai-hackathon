@@ -5,8 +5,12 @@ import { Kbd } from "@/components/ui/kbd";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import {
   formatProductPrice,
+  hasAtMostDecimals,
   MAX_PRODUCT_NAME_LENGTH,
-  MAX_PRODUCT_PRICE,
+  parseTypedPrice,
+  productCurrency,
+  productPriceDecimals,
+  productPriceLength,
   type DraftProductRecord,
   type ProductChanges,
 } from "@/lib/products/types";
@@ -26,13 +30,18 @@ import {
 import {
   useEffect,
   useEffectEvent,
+  useId,
   useRef,
   useState,
+  type ChangeEvent,
+  type FocusEvent as ReactFocusEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import { prefersReducedMotion } from "./product-motion";
-import { NameInitial } from "./product-shelf";
+import { NameInitial, PriceText } from "./product-shelf";
 import { WhatsAppDrafts } from "./product-whatsapp-drafts";
 import { useProductReview, type ReviewMove } from "./use-product-review";
 
@@ -66,6 +75,23 @@ const dragTransform = (x: number) =>
 /** Off the side of the stack, as a card leaves or comes back. */
 const awayTransform = (direction: Direction, width: number) =>
   `translateX(${direction === "right" ? "" : "-"}${Math.round(width * 1.4)}px) rotate(${direction === "right" ? 24 : -24}deg)`;
+
+/** Whether a key is typed into a field, which the review's keys leave be. */
+function typedInField(event: KeyboardEvent): boolean {
+  const target = event.target instanceof Element ? event.target : null;
+  return Boolean(
+    target?.closest("input, textarea, select, [contenteditable='true']")
+  );
+}
+
+/** Whether a key is the review's undo: Backspace, or Ctrl or ⌘ and Z. */
+function isUndoKey(event: KeyboardEvent): boolean {
+  const command = event.ctrlKey || event.metaKey;
+  return (
+    (event.key === "Backspace" && !command) ||
+    (command && !event.shiftKey && event.key.toLowerCase() === "z")
+  );
+}
 
 /**
  * Checking what a video found, one card per product, the way dating apps
@@ -143,20 +169,15 @@ export function ProductReview({
   };
 
   const onKey = useEffectEvent((event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.isComposing) return;
-    const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest("input, textarea, select, [contenteditable='true']"))
+    if (event.defaultPrevented || event.isComposing || typedInField(event))
       return;
-    const command = event.ctrlKey || event.metaKey;
-    if (
-      (event.key === "Backspace" && !command) ||
-      (command && !event.shiftKey && event.key.toLowerCase() === "z")
-    ) {
+    if (isUndoKey(event)) {
       event.preventDefault();
       undo();
       return;
     }
-    if (command || event.altKey || event.shiftKey) return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
+      return;
     if (event.key === "ArrowRight" && top) {
       event.preventDefault();
       decideTop("published");
@@ -247,6 +268,7 @@ export function ProductReview({
               product={top}
               soundOn={soundOn}
               dragX={dragX}
+              defaultCurrency={review.lastCurrency}
               onEdit={changes => review.edit(top.id, changes)}
             />
           </SwipeCard>
@@ -606,12 +628,15 @@ function ReviewCard({
   still = false,
   soundOn = false,
   dragX = 0,
+  defaultCurrency = null,
   onEdit,
 }: {
   product: DraftProductRecord;
   still?: boolean;
   soundOn?: boolean;
   dragX?: number;
+  /** The currency a price without one is typed in at first. */
+  defaultCurrency?: string | null;
   onEdit?: (changes: ProductChanges) => void;
 }) {
   const [view, setView] = useState<"polished" | "original">("polished");
@@ -651,9 +676,11 @@ function ReviewCard({
         />
         <EditablePrice
           price={product.price}
+          currency={product.currency}
+          defaultCurrency={defaultCurrency}
           from={product.priceIsFrom}
           unsure={priceDoubts.length > 0 || product.price === null}
-          onSave={edit && (price => edit({ price }))}
+          onSave={edit}
         />
         {product.doubts.length > 0 ? (
           <ul className="mt-1.5 flex flex-col gap-1">
@@ -915,64 +942,223 @@ function Stamp({ dragX }: { dragX: number }) {
   );
 }
 
+/** What's wrong with an edit, and which of the editor's fields to fix. */
+type EditProblem = { message: string; field: "value" | "unit" };
+
+// The field with the focus has a stronger ring; one at fault rings in red,
+// as the design system's inputs do.
+const FIELD_CLASS =
+  "min-w-0 rounded-md bg-foreground/[0.05] px-1.5 ring-2 ring-ring/40 transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 aria-invalid:ring-destructive";
+
+/** Whether a keyboard is still composing what was typed, as an IME does. */
+const composing = (event: ChangeEvent<HTMLInputElement>) =>
+  (event.nativeEvent as InputEvent).isComposing === true;
+
+/** Selects all of a field's text, so that typing replaces it. */
+const selectAll = (field: HTMLInputElement) =>
+  field.setSelectionRange(0, field.value.length);
+
+/**
+ * Selects a field's text whenever it takes the focus. Safari, and so every
+ * iPhone browser, then drops that selection as the click or tap that focused
+ * the field ends: the default of its mouseup puts the caret where the field
+ * was pressed. So that one mouseup's default is prevented.
+ */
+function useSelectOnFocus() {
+  const focusingPress = useRef(false);
+  return {
+    onPointerDown: (event: ReactPointerEvent<HTMLInputElement>) => {
+      focusingPress.current = document.activeElement !== event.currentTarget;
+    },
+    onFocus: (event: ReactFocusEvent<HTMLInputElement>) =>
+      selectAll(event.currentTarget),
+    onMouseUp: (event: ReactMouseEvent<HTMLInputElement>) => {
+      if (focusingPress.current) event.preventDefault();
+      focusingPress.current = false;
+    },
+  };
+}
+
 /**
  * A field the owner fixes in place: Enter or leaving it saves, Escape
  * cancels. Saved or cancelled from the keyboard, the focus goes back to
- * what opened it.
+ * what opened it. A `unit`, such as a price's currency code, is a second,
+ * short field after it; moving between the two keeps them open, and a
+ * letter typed into a full unit starts it anew. An edit `check` refuses
+ * isn't saved: Enter or leaving says why and stays open, with the field to
+ * fix marked, until it's fixed or Escape drops it. Enter also puts the
+ * focus on that field; leaving lets the focus go where it went, and the
+ * keys pressed there still mind the open edit: Escape drops it rather than
+ * closing the review, and the review's undo waits until it's done.
  */
 function InlineEdit({
   value,
   label,
   inputMode,
   maxLength,
+  dir,
   className,
-  suffix = null,
+  unit,
+  check,
   onDone,
 }: {
   value: string;
-  label: string;
-  inputMode?: "numeric" | "text";
+  /** The field's name, or one that follows what's typed in the unit. */
+  label: string | ((unit: string) => string);
+  inputMode?: "numeric" | "decimal" | "text";
   maxLength?: number;
+  /** "auto" for words, which then read in their own direction. */
+  dir?: "auto";
   className: string;
-  suffix?: ReactNode;
-  onDone: (value: string | null, fromKeyboard: boolean) => void;
+  unit?: { value: string; label: string; maxLength: number };
+  check?: (value: string, unit: string) => EditProblem | null;
+  onDone: (value: string | null, fromKeyboard: boolean, unit: string) => void;
 }) {
   const [text, setText] = useState(value);
+  const [unitText, setUnitText] = useState(unit?.value ?? "");
+  const [problem, setProblem] = useState<EditProblem | null>(null);
+  const valueField = useRef<HTMLInputElement>(null);
+  const unitField = useRef<HTMLInputElement>(null);
+  const selectValue = useSelectOnFocus();
+  const selectUnit = useSelectOnFocus();
+  const problemId = useId();
   const done = useRef(false);
   const finish = (save: boolean, fromKeyboard: boolean) => {
     if (done.current) return;
     done.current = true;
-    onDone(save ? text : null, fromKeyboard);
+    onDone(save ? text : null, fromKeyboard, unitText);
   };
+  // A key pressed outside any field, before the review's own keys hear it.
+  const onPageKey = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.isComposing || typedInField(event))
+      return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      finish(false, false);
+    } else if (isUndoKey(event)) {
+      event.preventDefault();
+    }
+  });
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onPageKey(event);
+    window.addEventListener("keydown", listener, true);
+    return () => window.removeEventListener("keydown", listener, true);
+  }, []);
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    // An Enter that picks an IME candidate is still typing.
+    if (event.nativeEvent.isComposing) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const found = check?.(text, unitText) ?? null;
+      if (!found) {
+        finish(true, true);
+        return;
+      }
+      setProblem(found);
+      // The field to fix takes the focus, and on a phone its own keyboard.
+      (found.field === "unit" ? unitField : valueField).current?.focus();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      finish(false, true);
+    }
+  };
+  // The field at fault says so, and points at why.
+  const fault = (field: EditProblem["field"]) =>
+    problem?.field === field
+      ? { "aria-invalid": true, "aria-describedby": problemId }
+      : {};
   return (
-    <span className="flex min-w-0 items-baseline gap-1">
-      <input
-        autoFocus
-        aria-label={label}
-        value={text}
-        inputMode={inputMode}
-        maxLength={maxLength}
-        enterKeyHint="done"
-        onFocus={event => event.currentTarget.select()}
-        onChange={event => setText(event.target.value)}
-        onBlur={() => finish(true, false)}
-        onKeyDown={event => {
-          // An Enter that picks an IME candidate is still typing.
-          if (event.nativeEvent.isComposing) return;
-          if (event.key === "Enter") {
-            event.preventDefault();
-            finish(true, true);
-          } else if (event.key === "Escape") {
-            event.preventDefault();
-            finish(false, true);
-          }
-        }}
-        className={cn(
-          "-mx-1.5 w-full min-w-0 rounded-md bg-foreground/[0.05] px-1.5 ring-2 ring-ring/40 outline-none",
-          className
-        )}
-      />
-      {suffix}
+    <span
+      className="flex min-w-0 flex-col gap-1"
+      onBlur={event => {
+        // Moving between the editor's own fields keeps it open.
+        if (event.currentTarget.contains(event.relatedTarget)) return;
+        const found = check?.(text, unitText) ?? null;
+        if (!found) {
+          finish(true, false);
+          return;
+        }
+        // Not dropped without a word: it says why, as Enter does, and the
+        // focus stays where the owner put it.
+        setProblem(found);
+      }}
+    >
+      <span className="flex min-w-0 items-baseline gap-2">
+        <input
+          ref={valueField}
+          autoFocus
+          aria-label={typeof label === "function" ? label(unitText) : label}
+          value={text}
+          inputMode={inputMode}
+          maxLength={maxLength}
+          dir={dir}
+          enterKeyHint="done"
+          {...fault("value")}
+          {...selectValue}
+          onChange={event => {
+            setText(event.target.value);
+            if (problem?.field === "value") setProblem(null);
+          }}
+          onKeyDown={onKeyDown}
+          className={cn(
+            FIELD_CLASS,
+            "w-full",
+            unit ? "-ml-1.5" : "-mx-1.5",
+            className
+          )}
+        />
+        {unit ? (
+          <input
+            ref={unitField}
+            aria-label={unit.label}
+            value={unitText}
+            maxLength={unit.maxLength}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="done"
+            {...fault("unit")}
+            {...selectUnit}
+            onBeforeInput={event => {
+              // A full code takes no more letters, so one typed with a
+              // caret in it, as a second tap leaves, starts it anew.
+              const field = event.currentTarget;
+              if (
+                !event.data ||
+                field.value.length < unit.maxLength ||
+                field.selectionStart !== field.selectionEnd
+              )
+                return;
+              event.preventDefault();
+              setUnitText(event.data.toUpperCase().slice(0, unit.maxLength));
+              if (problem?.field === "unit") setProblem(null);
+            }}
+            onChange={event => {
+              const typed = event.target.value;
+              // In capitals as typed; a letter still being composed is left
+              // as it is, or some phone keyboards type it twice.
+              setUnitText(composing(event) ? typed : typed.toUpperCase());
+              if (problem?.field === "unit") setProblem(null);
+            }}
+            onCompositionEnd={event =>
+              setUnitText(event.currentTarget.value.toUpperCase())
+            }
+            onKeyDown={onKeyDown}
+            // Wide enough for the widest codes, such as MWK, in the price's
+            // own type.
+            className={cn(FIELD_CLASS, "w-[4.75ch] flex-none", className)}
+          />
+        ) : null}
+      </span>
+      {problem ? (
+        <span
+          id={problemId}
+          role="alert"
+          className="text-[13px] leading-snug text-destructive"
+        >
+          {problem.message}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -1009,13 +1195,20 @@ function EditableName({
   onSave?: (name: string) => void;
 }) {
   const field = useEditing();
-  if (!onSave) return <p className={cn("line-clamp-2", NAME_CLASS)}>{name}</p>;
+  // Names read in their own direction, a name written right to left too.
+  if (!onSave)
+    return (
+      <p dir="auto" className={cn("line-clamp-2", NAME_CLASS)}>
+        {name}
+      </p>
+    );
   if (field.editing) {
     return (
       <InlineEdit
         value={name}
         label={COPY.changeName}
         maxLength={MAX_PRODUCT_NAME_LENGTH}
+        dir="auto"
         className={NAME_CLASS}
         onDone={(value, fromKeyboard) => {
           field.close(fromKeyboard);
@@ -1037,53 +1230,153 @@ function EditableName({
       )}
     >
       <span className="sr-only">{COPY.changeName}: </span>
-      <span className="line-clamp-2 break-words">{name}</span>
+      <span dir="auto" className="line-clamp-2 break-words">
+        {name}
+      </span>
     </button>
   );
 }
 
-const PRICE_CLASS =
-  "text-[28px] leading-tight font-semibold tracking-tight tabular-nums";
+const PRICE_CLASS = "leading-tight font-semibold tracking-tight tabular-nums";
+// A long price is set a step smaller, so it fits a phone's card.
+const PRICE_SIZE = {
+  short: "text-[28px]",
+  long: "text-[22px]",
+  longest: "text-[18px]",
+} as const;
 
-/** A price as typed: spaces and separators are ignored; null when empty, undefined when it isn't one. */
-function parsePrice(text: string): number | null | undefined {
-  const digits = text.replace(/[\s.,'₸]/g, "");
-  if (!digits) return null;
-  if (!/^\d+$/.test(digits)) return undefined;
-  const price = Number(digits);
-  return price <= MAX_PRODUCT_PRICE ? price : undefined;
+// Priced in thousandths, the most decimals any currency has: an amount it
+// reads but the chosen currency doesn't has more decimals than that one.
+const MOST_DECIMALS_CURRENCY = "KWD";
+
+/**
+ * Whether a typed amount is a number, in the chosen currency or not: read
+ * in the one with the most decimals, with any more decimals cut off, so
+ * "4.9999" reads as 4.999. Only digits after a decimal point used once are
+ * cut: "1.234.5678" is no number. Money signs go before NFKC, as they do
+ * when the price is read.
+ */
+function isTypedNumber(text: string): boolean {
+  const typed = text
+    .replace(/[\p{Sc}円元圓]/gu, "")
+    .normalize("NFKC")
+    .trim();
+  const decimal = /^(.*)([.,٫])(\p{Nd}+)$/u.exec(typed);
+  let cut = typed;
+  if (decimal && !decimal[1]!.includes(decimal[2]!)) {
+    const most = productPriceDecimals(MOST_DECIMALS_CURRENCY);
+    cut = decimal[1]! + decimal[2]! + [...decimal[3]!].slice(0, most).join("");
+  }
+  return parseTypedPrice(cut, MOST_DECIMALS_CURRENCY) !== "invalid";
+}
+
+/** A code field's text as the 3-letter code it looks like ("RUR"), or null. */
+function threeLetters(unit: string): string | null {
+  const letters = unit.normalize("NFKC").trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(letters) ? letters : null;
+}
+
+/**
+ * The price the owner set with its currency's code, or what's wrong with
+ * it, said the way that currency writes prices. An empty amount takes the
+ * price away; any other needs a known code. `stored` is the price that an
+ * amount still as the editor opened stands for: it's only checked against
+ * the code, never read again, as "1.255" KWD read in USD would be 1255.
+ */
+function typedPrice(
+  text: string,
+  unit: string,
+  stored?: number | null
+): { changes: ProductChanges } | { problem: EditProblem } {
+  const currency = productCurrency(unit);
+  const price = stored !== undefined ? stored : parseTypedPrice(text, currency);
+  if (price === null) return { changes: { price: null } };
+  const isNumber = price !== "invalid" || isTypedNumber(text);
+  const decimals = productPriceDecimals(currency);
+  if (!isNumber)
+    return {
+      problem: { message: COPY.priceInvalid(decimals), field: "value" },
+    };
+  if (!currency) {
+    const letters = threeLetters(unit);
+    return {
+      problem: {
+        message: letters ? COPY.currencyUnknown(letters) : COPY.currencyInvalid,
+        field: "unit",
+      },
+    };
+  }
+  if (price === "invalid" || !hasAtMostDecimals(price, decimals))
+    return {
+      problem: {
+        message: COPY.tooManyDecimals(currency, decimals),
+        field: "value",
+      },
+    };
+  return { changes: { price, currency } };
 }
 
 function EditablePrice({
   price,
+  currency,
+  defaultCurrency,
   from,
   unsure,
   onSave,
 }: {
   price: number | null;
+  currency: string | null;
+  /** The currency a price without one is typed in at first. */
+  defaultCurrency: string | null;
   from: boolean;
   unsure: boolean;
-  onSave?: (price: number | null) => void;
+  onSave?: (changes: ProductChanges) => void;
 }) {
   const field = useEditing();
+  const code = productCurrency(currency);
+  const size =
+    PRICE_SIZE[
+      productPriceLength(
+        price === null
+          ? COPY.noPrice
+          : formatProductPrice(price, { from, currency })
+      )
+    ];
   const shown =
-    price === null ? COPY.noPrice : formatProductPrice(price, { from });
+    price === null ? (
+      COPY.noPrice
+    ) : (
+      <PriceText price={price} currency={currency} from={from} />
+    );
   const tone = unsure ? "text-destructive" : undefined;
-  if (!onSave) return <p className={cn(PRICE_CLASS, tone)}>{shown}</p>;
+  if (!onSave) return <p className={cn(PRICE_CLASS, size, tone)}>{shown}</p>;
   if (field.editing) {
+    // The amount as the editor opens. Left as it is, it stands for the
+    // stored price, whatever code is typed beside it.
+    const prefill = price === null ? "" : String(price);
+    const changesFrom = (text: string, unit: string) =>
+      typedPrice(text, unit, text === prefill ? price : undefined);
     return (
       <InlineEdit
-        value={price === null ? "" : String(price)}
-        label={COPY.priceInTenge}
-        inputMode="numeric"
-        className={PRICE_CLASS}
-        suffix={<span className={PRICE_CLASS}>₸</span>}
-        onDone={(value, fromKeyboard) => {
+        value={prefill}
+        label={unit => COPY.priceIn(productCurrency(unit))}
+        inputMode="decimal"
+        className={cn(PRICE_CLASS, PRICE_SIZE.short)}
+        unit={{
+          value: code ?? productCurrency(defaultCurrency) ?? "",
+          label: COPY.currencyCode,
+          maxLength: 3,
+        }}
+        check={(text, unit) => {
+          const typed = changesFrom(text, unit);
+          return "problem" in typed ? typed.problem : null;
+        }}
+        onDone={(text, fromKeyboard, unit) => {
           field.close(fromKeyboard);
-          if (value === null) return;
-          const next = parsePrice(value);
+          if (text === null) return;
+          const typed = changesFrom(text, unit);
           // Saved even when unchanged: setting the price confirms it.
-          if (next !== undefined) onSave(next);
+          if ("changes" in typed) onSave(typed.changes);
         }}
       />
     );
@@ -1095,8 +1388,9 @@ function EditablePrice({
       title={COPY.changePrice}
       onClick={field.open}
       className={cn(
-        "-mx-1.5 self-start rounded-md px-1.5 text-left transition-colors outline-none hover:bg-foreground/[0.04] focus-visible:ring-2 focus-visible:ring-ring/50",
+        "-mx-1.5 max-w-full self-start rounded-md px-1.5 text-left transition-colors outline-none hover:bg-foreground/[0.04] focus-visible:ring-2 focus-visible:ring-ring/50",
         PRICE_CLASS,
+        size,
         tone
       )}
     >

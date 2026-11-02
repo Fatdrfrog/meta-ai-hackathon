@@ -34,6 +34,11 @@ export type AddedProduct = {
   id: string;
   name: string;
   price: number | null;
+  /**
+   * The price's ISO currency code; null when none was said or shown: the
+   * price reads as a bare amount.
+   */
+  currency: string | null;
   priceIsFrom: boolean;
   /** Its featured option's photo: the transparent cut-out, or the item as filmed. */
   photo: { cutout?: StoredFileRef; original?: StoredFileRef } | null;
@@ -114,10 +119,15 @@ export function shopWords(language: string | null | undefined): ShopWords {
   return SHOP_WORDS.en;
 }
 
-/** "15 500 ₸", or the shop's way of saying "from 15 500 ₸". */
+/**
+ * "15 500 ₸", "10 USD", or a bare "15 500" when no currency was said or
+ * shown; or the shop's way of saying "from 15 500 ₸".
+ */
 function buyerPrice(product: AddedProduct, words: ShopWords): string | null {
   if (product.price === null) return null;
-  const amount = formatProductPrice(product.price);
+  const amount = formatProductPrice(product.price, {
+    currency: product.currency,
+  });
   return product.priceIsFrom ? words.from(amount) : amount;
 }
 
@@ -154,12 +164,13 @@ export async function loadAddedProducts(
     status: "published",
   })
     .sort({ importIndex: 1, _id: 1 })
-    .select("name price priceIsFrom featuredOption options.photo")
+    .select("name price currency priceIsFrom featuredOption options.photo")
     .lean<
       Array<{
         _id: unknown;
         name?: string;
         price?: number | null;
+        currency?: string | null;
         priceIsFrom?: boolean;
         featuredOption?: number;
         options?: Array<{ photo?: PhotoRow }>;
@@ -176,6 +187,7 @@ export async function loadAddedProducts(
         id: String(row._id),
         name: row.name ?? "",
         price: typeof row.price === "number" ? row.price : null,
+        currency: typeof row.currency === "string" ? row.currency : null,
         priceIsFrom: row.priceIsFrom === true,
         photo:
           cutout || original

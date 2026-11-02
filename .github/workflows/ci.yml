@@ -56,6 +56,8 @@ jobs:
         run: >-
           pnpm --filter @icecore/temporal-worker exec tsx --test
           "src/media/product-video/*.test.ts"
+          src/activities/product-video-import.test.ts
+          ../../packages/temporal/src/products/price.test.ts
           src/workflow-versioning-source.test.ts
           src/web-alias-import-shape-source.test.ts
       - name: Products section tests

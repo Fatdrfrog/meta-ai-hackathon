@@ -7,6 +7,7 @@ import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 import { WorkspaceAiSpendError } from "@icecore/airi-runtime/workspace-ai-spend";
 import sharp from "sharp";
 
+import { insertDraftProducts } from "../../activities/product-video-import";
 import type { ProductCutout } from "./cutout";
 import {
   classifyImportError,
@@ -618,6 +619,154 @@ test("runs an import from video to products with photos, saving each step", asyn
   assert.equal(ledger.used, 4);
   // Lettering Muse can't read gets an example in the narration's language.
   assert.deepEqual(calls.languages, ["kk", "kk", "kk"]);
+});
+
+/** A product priced in the narration, shown from `at` seconds. */
+const pricedItem = (
+  name: string,
+  price: number,
+  currency: string | null,
+  priceQuote: string,
+  at: number,
+) =>
+  item({
+    name,
+    localName: name,
+    price,
+    currency,
+    priceQuote,
+    priceQuoteSeconds: at,
+    options: [option(name.toLowerCase(), at, at + 1)],
+  });
+
+const doubtTexts = (products: FakeProduct[]) =>
+  products.flatMap((product) => product.doubts.map((doubt) => doubt.text));
+
+test("keeps each price's cents and currency, and a currency said once covers the video", async (t) => {
+  const { ports, state } = await setUp(t, {
+    transcript: [
+      "[0.4] This mug is $4.99.",
+      "[3.0] The plate is $12.50.",
+      "[6.0] This one is twenty.",
+      "[9.0] The teapot is 1500円.",
+    ].join("\n"),
+    inventory: {
+      ...INVENTORY,
+      language: "English",
+      items: [
+        pricedItem("Mug", 4.99, "USD", "$4.99", 0.4),
+        pricedItem("Plate", 12.5, "USD", "$12.50", 3),
+        pricedItem("Cup", 20, null, "twenty", 6),
+        pricedItem("Teapot", 1500.4, "JPY", "1500円", 9),
+      ],
+    },
+  });
+
+  await runProductVideoImport(ports);
+
+  assert.equal(state.import.status, "ready");
+  assert.deepEqual(
+    state.products.map((product) => [
+      product.price,
+      product.currency,
+      product.doubts,
+    ]),
+    [
+      [4.99, "USD", []],
+      [12.5, "USD", []],
+      // Said with no currency: the video's dollars cover it.
+      [20, "USD", []],
+      // Stored in whole yen; checked as the model gave it.
+      [
+        1500,
+        "JPY",
+        [
+          {
+            about: "price",
+            text: "The price differs from the number in the narration.",
+          },
+          {
+            about: "price",
+            text: "This price is in JPY, but other prices in the video are in USD.",
+          },
+        ],
+      ],
+    ],
+  );
+  assert.ok(!doubtTexts(state.products).some((text) => /tenge/i.test(text)));
+});
+
+test("a video that never says a currency keeps its prices bare, each flagged for the owner", async (t) => {
+  const { ports, state } = await setUp(t, {
+    transcript: "[0.4] This mug is twenty.\n[3.0] The plate is fifteen.",
+    inventory: {
+      ...INVENTORY,
+      language: "English",
+      items: [
+        pricedItem("Mug", 20, null, "twenty", 0.4),
+        pricedItem("Plate", 15, null, "fifteen", 3),
+      ],
+    },
+  });
+
+  await runProductVideoImport(ports);
+
+  const none = {
+    about: "price",
+    text: "No currency was said or shown for this price.",
+  };
+  assert.deepEqual(
+    state.products.map((product) => [
+      product.price,
+      product.currency,
+      product.doubts,
+    ]),
+    [
+      [20, null, [none]],
+      [15, null, [none]],
+    ],
+  );
+  assert.ok(!doubtTexts(state.products).some((text) => /tenge/i.test(text)));
+});
+
+test("a draft the product model refuses saves nothing and fails the import without a retry", async (t) => {
+  const { ports, state, calls } = await setUp(t);
+  const inserted: unknown[] = [];
+  // The product model, refusing the cup's draft.
+  class ProductModel {
+    readonly #doc: Record<string, unknown>;
+    constructor(doc: Record<string, unknown>) {
+      this.#doc = doc;
+    }
+    validateSync() {
+      return this.#doc.englishName === "Frosted cup"
+        ? { errors: { price: { kind: "user defined" } } }
+        : undefined;
+    }
+    static async insertMany(docs: Array<Record<string, unknown>>) {
+      inserted.push(...docs);
+      return docs;
+    }
+  }
+  ports.store.createProducts = (drafts) =>
+    insertDraftProducts(ProductModel, drafts);
+
+  await assert.rejects(
+    runProductVideoImport(ports),
+    (error: unknown) =>
+      error instanceof ProductVideoImportFailure &&
+      error.code === "failed" &&
+      !error.retryable &&
+      !classifyImportError(error).retryable &&
+      /price \(user defined\)/.test(error.message),
+  );
+  // Not even the drafts the model took were saved: nothing is left that
+  // could pass for all the products found.
+  assert.equal(calls.inventory, 1);
+  assert.deepEqual(inserted, []);
+  assert.deepEqual(state.products, []);
+  assert.equal(state.import.productTotal, undefined);
+  assert.deepEqual(calls.cutOut, []);
 });
 
 test("five photos made four at a time each fit their own AI action", async (t) => {

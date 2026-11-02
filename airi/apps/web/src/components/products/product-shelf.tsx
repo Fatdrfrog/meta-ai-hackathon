@@ -4,6 +4,8 @@ import { PRODUCTS_COPY } from "@/lib/products/copy";
 import { cn } from "@/lib/utils";
 import {
   formatProductPrice,
+  productPriceLength,
+  productPriceParts,
   type WorkspaceProductRecord,
 } from "@/lib/products/types";
 import { CircleAlert, Sparkles } from "lucide-react";
@@ -154,6 +156,7 @@ function ShelfItem({
           would show a third line. */}
       <p
         title={product.name}
+        dir="auto"
         className="order-last mb-4 line-clamp-2 px-3 pt-1 text-center text-[13px] leading-snug break-words text-foreground/60"
       >
         {product.name}
@@ -168,6 +171,7 @@ function ShelfItem({
       <div className={cn(styles.lip, "relative h-3")}>
         <PriceTag
           price={product.price}
+          currency={product.currency}
           from={product.priceIsFrom}
           doubt={info?.priceDoubt ?? false}
         />
@@ -181,23 +185,62 @@ function ShelfItem({
   );
 }
 
+/**
+ * A price as formatProductPrice writes it, which a line may break after its
+ * "from" but never inside its amount or before its code.
+ */
+export function PriceText({
+  price,
+  currency,
+  from,
+}: {
+  price: number;
+  currency: string | null;
+  from: boolean;
+}) {
+  const [lead, amount] = productPriceParts(price, { from, currency });
+  return (
+    <>
+      {lead}
+      {lead ? <wbr /> : null}
+      {amount}
+    </>
+  );
+}
+
+// A long price is lettered smaller, so its tag fits a phone's bay.
+const TAG_SIZE = {
+  short: "text-[13px]",
+  long: "text-[11px]",
+  longest: "text-[10px]",
+} as const;
+
 function PriceTag({
   price,
+  currency,
   from,
   doubt,
 }: {
   price: number | null;
+  currency: string | null;
   from: boolean;
   /** Airi isn't sure of it: a ring the owner checks. */
   doubt: boolean;
 }) {
+  const text =
+    price === null
+      ? PRODUCTS_COPY.noPrice
+      : formatProductPrice(price, { from, currency });
   return (
     <span
       className={cn(
         styles.tag,
         price === null && styles.tagEmpty,
         doubt && styles.tagDoubt,
-        "absolute top-[3px] left-1/2 z-[2] inline-flex -translate-x-1/2 items-center gap-1 rounded-[3px] px-[7px] py-[5px] text-[13px] leading-[1.25] tracking-tight whitespace-nowrap tabular-nums",
+        // As wide as its price, but never wider than its bay; one that
+        // still doesn't fit puts its "from" on a line of its own.
+        "absolute top-[3px] left-1/2 z-[2] inline-flex w-max max-w-[calc(100%-8px)] -translate-x-1/2 items-center gap-1 rounded-[3px] px-[7px] py-[5px] leading-[1.25] tracking-tight tabular-nums",
+        TAG_SIZE[productPriceLength(text)],
         price === null ? "font-medium" : "font-semibold"
       )}
     >
@@ -205,16 +248,18 @@ function PriceTag({
         <>
           <CircleAlert
             aria-hidden="true"
-            className="size-3"
+            className="size-3 shrink-0"
             strokeWidth={2.4}
           />
           <span className="sr-only">{PRODUCTS_COPY.stage.checkPrice}</span>
         </>
       ) : null}
-      <span>
-        {price === null
-          ? PRODUCTS_COPY.noPrice
-          : formatProductPrice(price, { from })}
+      <span className="text-center">
+        {price === null ? (
+          text
+        ) : (
+          <PriceText price={price} currency={currency} from={from} />
+        )}
       </span>
     </span>
   );

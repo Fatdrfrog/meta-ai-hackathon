@@ -14,21 +14,26 @@ const MAX_GB = Math.round(PRODUCT_VIDEO_MAX_BYTES / 1024 ** 3);
 const shorter = `The video is longer than ${MAX_MINUTES} minutes. Film a shorter one and upload it.`;
 // A model's name never breaks across lines.
 const unbroken = (name: string) => name.replace(/ /g, "\u00a0");
+// A price as a currency with these decimals writes one.
+const priceLike = (decimals: number) =>
+  decimals === 0 ? "1500" : decimals === 3 ? "1.250" : "4.99";
 
 export const PRODUCTS_COPY = {
   navLabel: "Products",
   title: "Products",
+  // A quiet line under the title: the section is new, made at the hackathon.
+  hackathonNote: "New · built at the Meta AI Hackathon 2026",
   loading: "Loading products…",
   loadError: "Products couldn't be loaded.",
   retry: "Retry",
   noPrice: "No price yet",
   emptyTitle: "Your products will appear here",
   emptyDescription:
-    "Film your shelf on your phone and say each product's name and price. Airi turns the video into products for you to check.",
+    "Film your shelf on your phone and say each product's name and price, in any language, with the currency at least once. Airi turns the video into products for you to check.",
 
   // Adding products from a video.
   uploadVideo: "Upload a video",
-  uploadHint: `MP4 or MOV, up to ${MAX_MINUTES} minutes`,
+  uploadHint: `MP4 or MOV. About a minute is plenty; up to ${MAX_MINUTES} minutes.`,
   dropVideo: "Drop the video to add its products",
   cancel: "Cancel",
   dismiss: "Dismiss",
@@ -50,7 +55,7 @@ export const PRODUCTS_COPY = {
       ? "1 product found. Check it before it goes on your shelf."
       : `${count} products found. Check them before they go on your shelf.`,
   nothingFound:
-    "No products were found in this video. Film your shelf again, saying each product's name and price.",
+    "No products were found in this video. Film your shelf again, saying each product's name and price, with the currency at least once.",
   // Why some photos weren't made, when the import still found its products.
   photosStopped: (
     stop: ProductVideoImportPhotoStop,
@@ -102,7 +107,10 @@ export const PRODUCTS_COPY = {
     },
     stepDone: "Done",
     stepStopped: "Stopped here",
-    withPrice: (name: string, price: string) => `${name} · ${price}`,
+    // The name is the page's to wrap (a <bdi>), so one written right to left
+    // keeps its place before the price.
+    withPrice: <Name>(name: Name, price: string) =>
+      [name, ` · ${price}`] as const,
     quote: (words: string) => `“${words}”`,
     // How a finished photo was made, by its method.
     trail: {
@@ -158,7 +166,21 @@ export const PRODUCTS_COPY = {
     photo: "Photo",
     changeName: "Change the name",
     changePrice: "Change the price",
-    priceInTenge: "Price in tenge",
+    // The price field, named by the currency the product's price is in.
+    priceIn: (code: string | null) =>
+      code === "KZT" ? "Price in tenge" : code ? `Price in ${code}` : "Price",
+    currencyCode: "Currency code",
+    // Why a typed price can't be saved, with an example written the way its
+    // currency writes prices: 1500 yen, 4.99 dollars, 1.250 dinars.
+    priceInvalid: (decimals: number) =>
+      `Type the price as a number, like ${priceLike(decimals)}.`,
+    tooManyDecimals: (code: string, decimals: number) =>
+      decimals === 0
+        ? `${code} prices have no cents. Type a whole number, like ${priceLike(0)}.`
+        : `${code} prices have at most ${decimals} decimals. Type one like ${priceLike(decimals)}.`,
+    currencyInvalid: "Type the currency as a 3-letter code, like USD.",
+    currencyUnknown: (code: string) =>
+      `${code} isn't a currency code we know. Try one like USD.`,
     noPrice: "No price yet",
     chooseShown: "Choose the one your shelf shows",
     showOption: (description: string) => `Show ${description} on your shelf`,
@@ -223,7 +245,7 @@ export const PRODUCTS_COPY = {
     linkMessage: (shop: string) =>
       `Hi Airi! Please link this phone to my shop ${shop}.`,
     linked: (workspace: string) =>
-      `You're linked to ${workspace}. Send me a video of your products: hold each one up and say its name and price. I'll put them in airi for you to check.`,
+      `You're linked to ${workspace}. Send me a video of your products: hold each one up and say its name and price, and the currency at least once. I'll put them in airi for you to check.`,
     // Airi's answers on WhatsApp to a phone asking to be linked.
     confirmInAiri: (shop: string) =>
       `Open airi and confirm this phone to link it to ${shop}.`,

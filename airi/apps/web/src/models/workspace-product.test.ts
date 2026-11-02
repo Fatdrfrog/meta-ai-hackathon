@@ -1,3 +1,5 @@
+import { roundProductPrice } from "@icecore/temporal";
+
 import { WorkspaceProduct } from "./workspace-product";
 
 describe("WorkspaceProduct", () => {
@@ -8,16 +10,31 @@ describe("WorkspaceProduct", () => {
       price,
     });
 
-  it("takes whole tenge, or no price yet", () => {
-    expect(product(5000).validateSync()).toBeUndefined();
-    expect(product(null).validateSync()).toBeUndefined();
-  });
+  it.each([5000, null, 4.99, 4999.6, 1.25, 1.255])(
+    "takes %p: a price to at most 3 decimals, or no price yet",
+    price => {
+      expect(product(price).validateSync()).toBeUndefined();
+    }
+  );
 
-  it("refuses a fraction of a tenge and a negative price", () => {
-    expect(product(4999.6).validateSync()?.errors.price?.message).toBe(
-      "Prices are whole tenge"
+  it("refuses more than 3 decimals and a negative price", () => {
+    expect(product(4.9999).validateSync()?.errors.price?.message).toBe(
+      "A price has at most 3 decimals"
     );
     expect(product(-1).validateSync()?.errors.price).toBeDefined();
+  });
+
+  it("takes every price the import rounds to its currency's decimals", () => {
+    // The worker stores these amounts with this model: they must agree.
+    for (const [amount, currency] of [
+      [4.994, "USD"],
+      [1500.4, "JPY"],
+      [1.2504, "KWD"],
+      [5000, "KZT"],
+    ] as const) {
+      const price = roundProductPrice(amount, currency);
+      expect(product(price).validateSync()).toBeUndefined();
+    }
   });
 
   it("starts as a draft", () => {

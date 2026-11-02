@@ -19,4 +19,5 @@ export * from "./whatsapp/catalog-contracts";
 export * from "./whatsapp/webhook-contracts";
 export * from "./otp/contracts";
 export * from "./products/contracts";
+export * from "./products/price";
 export * from "./whatsapp-calls";

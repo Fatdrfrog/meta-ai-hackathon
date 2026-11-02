@@ -18,8 +18,12 @@ export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ workspaceId: string; productId: string }> };
 
 /**
- * Changes a product as the owner checks it (`{ name?, price?,
- * featuredOption? }`), and answers with it as the review shows it.
+ * Changes a product as the owner checks it (`{ name?, price?, currency?,
+ * featuredOption? }`, a currency only with a price), and answers with it as
+ * the review shows it. A price without a currency, which only tabs opened
+ * before prices had currencies send, must be whole, and is refused with 409
+ * where such a tab misreads the product's price: one with decimals, or in
+ * another currency than tenge.
  */
 export async function PATCH(request: Request, { params }: Context) {
   const { workspaceId, productId } = await params;
@@ -37,6 +41,7 @@ export async function PATCH(request: Request, { params }: Context) {
       changes
     );
     if (product === "invalid") return productsFail("invalid_request", 400);
+    if (product === "conflict") return productsFail("currency_required", 409);
     if (!product) return productsFail("product_not_found", 404);
     return productsJson({ product } satisfies ProductUpdateResponse);
   } catch (error) {

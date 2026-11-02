@@ -36,10 +36,12 @@ function withLocalChanges(
     ...product,
     ...(status ? { status } : {}),
     ...(edit?.name !== undefined ? { name: edit.name } : {}),
-    // Setting the price settles the doubts about it.
+    // Setting the price settles the doubts about it. It comes with the
+    // currency the owner typed, or keeps the product's.
     ...(edit?.price !== undefined
       ? {
           price: edit.price,
+          currency: edit.currency ?? product.currency,
           doubts: product.doubts.filter(doubt => doubt.about !== "price"),
         }
       : {}),
@@ -77,6 +79,9 @@ export function useProductReview(workspaceId: string, importId: string) {
   }, [edits]);
   const [moves, setMoves] = useState<ReviewMove[]>([]);
   const [failed, setFailed] = useState(false);
+  // The currency the owner last typed with a price: a price without one is
+  // typed in it at first.
+  const [lastCurrency, setLastCurrency] = useState<string | null>(null);
   const saving = useRef<Promise<unknown>>(NOTHING_SAVING);
 
   const products = useMemo(
@@ -146,6 +151,7 @@ export function useProductReview(workspaceId: string, importId: string) {
     (productId: string, changes: ProductChanges) => {
       const before = editsRef.current[productId];
       setFailed(false);
+      if (changes.currency) setLastCurrency(changes.currency);
       setEdits(current => ({
         ...current,
         [productId]: { ...current[productId], ...changes },
@@ -174,6 +180,8 @@ export function useProductReview(workspaceId: string, importId: string) {
     undo,
     lastMove,
     edit,
+    /** The currency the owner last typed with a price, or null before they have. */
+    lastCurrency,
     failed,
   };
 }

@@ -44,7 +44,7 @@ describe("listPublishedProducts", () => {
     expect(query.sort).toHaveBeenCalledWith({ position: 1, _id: 1 });
     expect(query.limit).toHaveBeenCalledWith(MAX_LISTED_PRODUCTS);
     expect(query.select).toHaveBeenCalledWith(
-      "name price priceIsFrom updatedAt featuredOption options.photo.thumb"
+      "name price currency priceIsFrom updatedAt featuredOption options.photo.thumb"
     );
   });
 
@@ -55,6 +55,7 @@ describe("listPublishedProducts", () => {
           _id: "651f1f77bcf86cd799439031",
           name: "Кукла Лол",
           price: 5000,
+          currency: "KZT",
           priceIsFrom: true,
           featuredOption: 1,
           options: [
@@ -69,6 +70,13 @@ describe("listPublishedProducts", () => {
           price: null,
           updatedAt: "not a date",
         },
+        // A price said in dollars keeps its currency.
+        {
+          _id: "651f1f77bcf86cd799439033",
+          name: "Phone stand",
+          price: 10,
+          currency: "USD",
+        },
       ])
     );
 
@@ -77,6 +85,7 @@ describe("listPublishedProducts", () => {
         id: "651f1f77bcf86cd799439031",
         name: "Кукла Лол",
         price: 5000,
+        currency: "KZT",
         priceIsFrom: true,
         imageUrl: "https://signed.test/workspace-1/p1/thumb.webp",
         updatedAt: "2026-10-27T09:30:00.000Z",
@@ -85,6 +94,16 @@ describe("listPublishedProducts", () => {
         id: "651f1f77bcf86cd799439032",
         name: "Петух",
         price: null,
+        currency: null,
+        priceIsFrom: false,
+        imageUrl: null,
+        updatedAt: null,
+      },
+      {
+        id: "651f1f77bcf86cd799439033",
+        name: "Phone stand",
+        price: 10,
+        currency: "USD",
         priceIsFrom: false,
         imageUrl: null,
         updatedAt: null,
@@ -103,6 +122,7 @@ describe("listImportProducts", () => {
         englishName: "Frosted cup",
         nameSource: "on_screen",
         price: 500,
+        currency: "KZT",
         priceQuote: "бес жүз теңге",
         priceSource: "spoken",
         doubts: [
@@ -160,7 +180,7 @@ describe("listImportProducts", () => {
     });
     expect(query.sort).toHaveBeenCalledWith({ importIndex: 1, _id: 1 });
     expect(query.select).toHaveBeenCalledWith(
-      "status name englishName nameSource price priceIsFrom priceQuote priceSource doubts options featuredOption clip updatedAt"
+      "status name englishName nameSource price currency priceIsFrom priceQuote priceSource doubts options featuredOption clip updatedAt"
     );
     expect(products[0]).toEqual({
       id: "651f1f77bcf86cd799439041",
@@ -169,6 +189,7 @@ describe("listImportProducts", () => {
       englishName: "Frosted cup",
       nameSource: "on_screen",
       price: 500,
+      currency: "KZT",
       priceIsFrom: false,
       priceQuote: "бес жүз теңге",
       priceSource: "spoken",
@@ -210,6 +231,7 @@ describe("listImportProducts", () => {
       status: "draft",
       englishName: null,
       nameSource: null,
+      currency: null,
       priceSource: null,
       doubts: [],
       clipUrl: null,

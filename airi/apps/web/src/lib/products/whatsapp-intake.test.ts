@@ -259,6 +259,7 @@ type StoredQuestion = {
 };
 type StoredLink = ReturnType<typeof link> & {
   question: StoredQuestion | null;
+  lastVideoAt?: Date;
 };
 type LinkFilter = {
   $or?: [unknown, { "question.lastVideoAt": { $lt: Date } }];
@@ -363,6 +364,13 @@ let misses: Date[] = [];
 async function openShop(workspaceId: string, name: string, at = NOW) {
   mockWorkspaceName = name;
   return openProductsWhatsAppPairing(workspaceId, "user-1", at);
+}
+
+/** The pairing of a shop that opened to phones; fails the test otherwise. */
+function pairingOf(panel: Awaited<ReturnType<typeof openShop>>) {
+  if (!panel || panel === "shop_name_taken" || !panel.pairing)
+    throw new Error(`The shop didn't open to phones: ${String(panel)}`);
+  return panel.pairing;
 }
 
 beforeEach(() => {
@@ -484,11 +492,11 @@ describe("openProductsWhatsAppPairing", () => {
       },
       { upsert: true }
     );
-    const url = new URL(panel!.pairing!.url);
+    const url = new URL(pairingOf(panel).url);
     expect(url.origin + url.pathname).toBe("https://wa.me/77080000011");
     expect(url.searchParams.get("text")).toBe(LINK_TEXT);
-    expect(panel!.pairing!.expiresAt).toBe("2026-10-28T12:15:00.000Z");
-    expect(panel!.pairing!.url).not.toMatch(/AIRI-SHOP|[a-f0-9]{24}/i);
+    expect(pairingOf(panel).expiresAt).toBe("2026-10-28T12:15:00.000Z");
+    expect(pairingOf(panel).url).not.toMatch(/AIRI-SHOP|[a-f0-9]{24}/i);
 
     // Opening it again keeps the one window open longer.
     await openShop("shop-workspace", "QazOner Group", later(600));
@@ -502,7 +510,7 @@ describe("openProductsWhatsAppPairing", () => {
       "  Магазин   игрушек\nи подарков для всей семьи «Радуга»  "
     );
 
-    const text = new URL(panel!.pairing!.url).searchParams.get("text");
+    const text = new URL(pairingOf(panel).url).searchParams.get("text");
     expect(text).toBe(
       "Hi Airi! Please link this phone to my shop Магазин игрушек и подарков для всей семь."
     );
@@ -1068,6 +1076,11 @@ describe("an admin answering a phone", () => {
       OWNER,
       expect.stringMatching(/^You're linked to QazOner Group\. Send me a video/)
     );
+    // A shop anywhere: the owner is asked to say the currency once, since
+    // none is assumed.
+    expect(mockSendText.mock.calls[0]![3]).toContain(
+      "say its name and price, and the currency at least once."
+    );
     const order = [
       mockRequestFindOneAndDelete,
       mockLinkUpdateOne,
@@ -1521,7 +1534,7 @@ describe("notifyProductsWhatsAppOwner", () => {
       "The video is longer than 5 minutes. Film a shorter one and upload it.",
       "Your plan's included AI actions are used up, so this video couldn't be read.",
       "Your free trial has ended, so this video couldn't be read.",
-      "No products were found in this video. Film your shelf again, saying each product's name and price.",
+      "No products were found in this video. Film your shelf again, saying each product's name and price, with the currency at least once.",
     ]);
   });
 

@@ -88,6 +88,7 @@ async function toRecord(
     id: String(row._id),
     name: text(row.name) ?? "",
     price: finite(row.price),
+    currency: text(row.currency),
     priceIsFrom: row.priceIsFrom === true,
     // The featured option's small copy: the shelf shows products about
     // 176 px tall.
@@ -126,7 +127,7 @@ export async function listPublishedProducts(
     .sort({ position: 1, _id: 1 })
     .limit(MAX_LISTED_PRODUCTS)
     .select(
-      "name price priceIsFrom updatedAt featuredOption options.photo.thumb"
+      "name price currency priceIsFrom updatedAt featuredOption options.photo.thumb"
     )
     .lean<ProductRow[]>();
   return withProductPhotoUrls(() =>
@@ -136,7 +137,7 @@ export async function listPublishedProducts(
 
 /** The fields a product is checked by, as `toDraftRecord` reads them. */
 export const DRAFT_PRODUCT_FIELDS =
-  "status name englishName nameSource price priceIsFrom priceQuote priceSource doubts options featuredOption clip updatedAt";
+  "status name englishName nameSource price currency priceIsFrom priceQuote priceSource doubts options featuredOption clip updatedAt";
 
 /**
  * A product as the owner checks it, from a row with `DRAFT_PRODUCT_FIELDS`;

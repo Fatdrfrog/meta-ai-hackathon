@@ -56,6 +56,7 @@ const product = (
   id,
   name,
   price,
+  currency: price === null ? null : "KZT",
   priceIsFrom: false,
   imageUrl: options[0]?.imageUrl ?? null,
   updatedAt: null,
@@ -327,6 +328,23 @@ describe("which photos are being made", () => {
     expect(draftShelfInfo([panel], record()).get("panel")).toMatchObject({
       photo: "making",
       prompt: "light wood family tree panel",
+    });
+  });
+
+  test("each photo carries its product's price in the currency it was said in", () => {
+    const [photo] = stagePhotos(
+      [
+        product("ps", "Phone stand", 10, [made("black phone stand", 0)], {
+          currency: "USD",
+          priceIsFrom: true,
+        }),
+      ],
+      record()
+    );
+    expect(photo).toMatchObject({
+      price: 10,
+      currency: "USD",
+      priceIsFrom: true,
     });
   });
 

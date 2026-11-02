@@ -8,9 +8,13 @@ import {
   type ProductRow,
 } from "@/lib/products/store";
 import {
+  hasAtMostDecimals,
   MAX_PRODUCT_NAME_LENGTH,
   MAX_PRODUCT_PRICE,
+  PRODUCT_UNKNOWN_CURRENCY_DOUBT,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
+  productCurrency,
+  productPriceDecimals,
   WORKSPACE_PRODUCT_STATUSES,
   type DraftProductRecord,
   type ProductChanges,
@@ -38,14 +42,27 @@ export function parseProductChanges(body: unknown): ProductChanges | null {
     if (!name || name.length > MAX_PRODUCT_NAME_LENGTH) return null;
     changes.name = name;
   }
+  // A currency comes only with a price, as an ISO code. A price alone keeps
+  // the product's currency: tabs from before currencies could be typed send
+  // their prices that way. They send only whole ones, so a price alone must
+  // be whole; with cents it could have more decimals than the product's
+  // currency has (4.999 on a USD product).
+  if ("currency" in body) {
+    const currency = productCurrency(body.currency);
+    if (!currency || typeof body.price !== "number") return null;
+    changes.currency = currency;
+  }
   if ("price" in body) {
     const { price } = body;
     if (price === null) changes.price = null;
     else if (
       typeof price === "number" &&
-      Number.isInteger(price) &&
       price >= 0 &&
-      price <= MAX_PRODUCT_PRICE
+      price <= MAX_PRODUCT_PRICE &&
+      hasAtMostDecimals(
+        price,
+        changes.currency ? productPriceDecimals(changes.currency) : 0
+      )
     )
       changes.price = price;
     else return null;
@@ -109,16 +126,38 @@ async function announceReview(
 }
 
 /**
+ * The products a price sent without a currency may be set on: those priced
+ * in whole tenge, in no currency, or not at all. Only a tab opened before
+ * prices had currencies sends such a price, and its editor shows the stored
+ * price as digits, drops any decimal point ("4.99" comes back as 499) and
+ * calls every price tenge.
+ */
+const preCurrencyPriceFilter = () => ({
+  currency: { $in: [null, "KZT"] },
+  $expr: {
+    $or: [
+      { $eq: [{ $ifNull: ["$price", null] }, null] },
+      { $eq: ["$price", { $trunc: ["$price", 0] }] },
+    ],
+  },
+});
+
+/**
  * Applies the owner's changes to one of the workspace's products, and gives
- * it back as the review shows it. Setting the price settles the doubts
- * about it. Null when the product isn't this workspace's; "invalid" when the
- * option to show doesn't exist.
+ * it back as the review shows it. Setting the price settles the doubts about
+ * it, its currency's among them; taking the price away keeps the currency,
+ * for the next price. A price without a currency, from a tab opened before
+ * prices had currencies, keeps the product's currency and the doubts that say
+ * it isn't known, and is set only where that tab reads prices right. Null
+ * when the product isn't this workspace's; "invalid" when the option to show
+ * doesn't exist; "conflict" when a price without a currency would be set over
+ * one that tab misreads.
  */
 export async function updateWorkspaceProduct(
   workspaceId: string,
   productId: string,
   changes: ProductChanges
-): Promise<DraftProductRecord | "invalid" | null> {
+): Promise<DraftProductRecord | "invalid" | "conflict" | null> {
   const filter = { _id: productId, workspaceId };
   if (changes.featuredOption !== undefined) {
     const current = await WorkspaceProduct.findOne(filter)
@@ -128,19 +167,36 @@ export async function updateWorkspaceProduct(
     if (changes.featuredOption >= (current.options?.length ?? 0))
       return "invalid";
   }
+  const preCurrency =
+    typeof changes.price === "number" && changes.currency === undefined;
   const row = await WorkspaceProduct.findOneAndUpdate(
-    filter,
+    preCurrency ? { ...filter, ...preCurrencyPriceFilter() } : filter,
     {
       $set: changes,
       ...(changes.price !== undefined
-        ? { $pull: { doubts: { about: "price" } } }
+        ? {
+            $pull: {
+              doubts: preCurrency
+                ? {
+                    about: "price",
+                    // Not `text: { $not }`: update validators would take
+                    // that for a doubt's text, and refuse it.
+                    $nor: [{ text: PRODUCT_UNKNOWN_CURRENCY_DOUBT }],
+                  }
+                : { about: "price" },
+            },
+          }
         : {}),
     },
     { new: true, runValidators: true }
   )
     .select(`${DRAFT_PRODUCT_FIELDS} importId`)
     .lean<ProductRow>();
-  if (!row) return null;
+  if (!row) {
+    if (preCurrency && (await WorkspaceProduct.exists(filter)))
+      return "conflict";
+    return null;
+  }
   if (row.importId)
     await announceReview(workspaceId, String(row.importId), productId);
   return withProductPhotoUrls(() => toDraftRecord(workspaceId, row));

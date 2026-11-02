@@ -99,6 +99,8 @@ export type StagePhoto = {
   featured: boolean;
   name: string;
   price: number | null;
+  /** The price's ISO currency code, as its product has it. */
+  currency: string | null;
   priceIsFrom: boolean;
   /** The owner's words the price came from. */
   priceQuote: string | null;
@@ -143,6 +145,7 @@ export function stagePhotos(
         featured: optionIndex === product.featuredOption,
         name: product.name,
         price: product.price,
+        currency: product.currency,
         priceIsFrom: product.priceIsFrom,
         priceQuote: product.priceQuote,
         prompt: option.description || product.englishName || "",

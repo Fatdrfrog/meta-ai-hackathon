@@ -9,6 +9,7 @@ import {
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
   PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
   PRODUCT_VIDEO_MAX_BYTES,
+  roundProductPrice,
   type ProductDoubt,
   type ProductPhotoMethod,
   type ProductTextSource,
@@ -25,6 +26,7 @@ import {
   presentationWindows,
   readProductInventory,
   reviewClipWindow,
+  settleCurrencies,
 } from "./inventory";
 import {
   extractReviewClip,
@@ -395,18 +397,21 @@ export async function runProductVideoImport(
     );
     // Options past the photo cap are left out: the cap holds an import's cost.
     let photosLeft = PRODUCT_VIDEO_IMPORT_MAX_PHOTOS;
-    const items = inventory.items
-      .slice(0, PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS)
-      .map((item) => {
-        const options = item.options.slice(0, Math.max(0, photosLeft));
-        photosLeft -= options.length;
-        return {
-          ...item,
-          options,
-          featuredOption:
-            item.featuredOption < options.length ? item.featuredOption : 0,
-        };
-      });
+    // A currency said or shown once covers the video's other prices.
+    const items = settleCurrencies(
+      inventory.items
+        .slice(0, PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS)
+        .map((item) => {
+          const options = item.options.slice(0, Math.max(0, photosLeft));
+          photosLeft -= options.length;
+          return {
+            ...item,
+            options,
+            featuredOption:
+              item.featuredOption < options.length ? item.featuredOption : 0,
+          };
+        }),
+    );
     const checks = inventoryChecks(items, transcript ?? "");
     const windows = presentationWindows(
       items.flatMap((item) => item.options),
@@ -431,7 +436,11 @@ export async function runProductVideoImport(
         englishName: item.name,
         nameSource: item.nameSource,
         category: item.category,
-        price: item.price === null ? null : Math.round(item.price),
+        // To the currency's own decimals; the checks read it as given.
+        price:
+          item.price === null
+            ? null
+            : roundProductPrice(item.price, item.currency),
         currency: item.currency,
         priceQuote: item.priceQuote,
         priceSource: item.priceSource,

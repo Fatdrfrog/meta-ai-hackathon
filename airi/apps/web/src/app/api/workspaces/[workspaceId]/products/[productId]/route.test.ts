@@ -96,6 +96,19 @@ describe("PATCH a product", () => {
     expect(await missing.json()).toMatchObject({ code: "product_not_found" });
   });
 
+  it("answers 409 for a price without a currency that a tab from before currencies misread", async () => {
+    // Such a tab sends a stored 4.99 back as 499; failing, it undoes the edit.
+    mockUpdate.mockResolvedValue("conflict");
+
+    const response = await PATCH(patch({ price: 499 }), context());
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "currency_required" });
+    expect(mockUpdate).toHaveBeenCalledWith(workspaceId, productId, {
+      price: 499,
+    });
+  });
+
   it("answers 503 when the change can't be saved", async () => {
     mockUpdate.mockRejectedValue(new Error("mongo down"));
 

@@ -27,11 +27,15 @@ export const PRODUCT_VIDEO_IMPORT_STATUSES = [
 export type ProductVideoImportStatus =
   (typeof PRODUCT_VIDEO_IMPORT_STATUSES)[number];
 
-// The import job's own vocabulary, shared with the worker that runs it.
+// The import job's own vocabulary and price rules, shared with the worker
+// that runs it.
 export {
   PRODUCT_DOUBT_SUBJECTS,
+  PRODUCT_MAX_PRICE,
   PRODUCT_PHOTO_METHODS,
+  PRODUCT_PRICE_MAX_DECIMALS,
   PRODUCT_TEXT_SOURCES,
+  PRODUCT_UNKNOWN_CURRENCY_DOUBT,
   PRODUCT_VIDEO_IMPORT_ERROR_CODES,
   PRODUCT_VIDEO_IMPORT_MAX_PRODUCTS,
   PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
@@ -39,6 +43,11 @@ export {
   PRODUCT_VIDEO_IMPORT_STAGES,
   PRODUCT_VIDEO_MAX_BYTES,
   PRODUCT_VIDEO_MAX_SECONDS,
+  hasAtMostDecimals,
+  parseTypedPrice,
+  productCurrency,
+  productPriceDecimals,
+  toMinorUnits,
   type ProductDoubt,
   type ProductDoubtSubject,
   type ProductPhotoMethod,
@@ -47,13 +56,17 @@ export {
   type ProductVideoImportPhotoStop,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
-import type {
-  ProductDoubt,
-  ProductPhotoMethod,
-  ProductTextSource,
-  ProductVideoImportErrorCode,
-  ProductVideoImportPhotoStop,
-  ProductVideoImportStage,
+import {
+  PRODUCT_MAX_PRICE,
+  productCurrency,
+  productPriceDecimals,
+  toMinorUnits,
+  type ProductDoubt,
+  type ProductPhotoMethod,
+  type ProductTextSource,
+  type ProductVideoImportErrorCode,
+  type ProductVideoImportPhotoStop,
+  type ProductVideoImportStage,
 } from "@icecore/temporal";
 
 /** A file in the workspace's private media storage. */
@@ -66,8 +79,10 @@ export const MAX_LISTED_PRODUCTS = 1000;
 export type WorkspaceProductRecord = {
   id: string;
   name: string;
-  /** Whole tenge, or null while the owner hasn't set a price. */
+  /** An amount in `currency`, to its decimals, or null while the owner hasn't set a price. */
   price: number | null;
+  /** The price's ISO code ("KZT", "USD"); null when no currency was said or shown. */
+  currency: string | null;
   /** A starting price, shown as "from …": the final one depends on options. */
   priceIsFrom: boolean;
   /** Its featured option cut out of the video on a transparent background, or null. */
@@ -161,16 +176,19 @@ export type ProductVideoImportResponse = {
 
 /** The longest name a product may have. */
 export const MAX_PRODUCT_NAME_LENGTH = 160;
-/** A sanity cap on prices, in whole tenge. */
-export const MAX_PRODUCT_PRICE = 1_000_000_000;
+/** A sanity cap on prices, in the price's own currency. */
+export const MAX_PRODUCT_PRICE = PRODUCT_MAX_PRICE;
 
 /**
  * What the owner may change about a product while checking it: its name,
- * its price (null for none yet), and which option the shelf shows.
+ * its price (null for none yet) with its currency, and which option the
+ * shelf shows.
  */
 export type ProductChanges = {
   name?: string;
   price?: number | null;
+  /** The price's ISO code, sent with a price. */
+  currency?: string;
   featuredOption?: number;
 };
 
@@ -298,6 +316,7 @@ export const PRODUCTS_ERROR_CODES = [
   "import_not_found",
   "import_unavailable",
   "product_not_found",
+  "currency_required",
   "save_failed",
   "whatsapp_not_connected",
   "not_enough_products",
@@ -315,19 +334,59 @@ export type ProductsErrorBody = {
   code: ProductsErrorCode;
 };
 
+const NO_BREAK_SPACE = "\u00a0";
+
 /**
- * "5 000 ₸", the way shops in Kazakhstan write prices. Grouped by hand with
- * no-break spaces, so the server, every browser and every locale agree, and
- * a price never wraps between its digits and the sign. A starting price
- * reads "from 5 000 ₸".
+ * "5 000 ₸", "12.50 EUR", "1 500 JPY". Grouped by hand with no-break
+ * spaces, so the server, every browser and every locale agree, and a price
+ * never wraps between its digits and its currency. Decimals show only when
+ * the amount has some, to the currency's own count, and "." is only ever the
+ * decimal point. Tenge keeps its sign, any other currency ends in its ISO
+ * code, and a price whose currency isn't known stands bare ("20"). A
+ * starting price reads "from 5 000 ₸".
  */
 export function formatProductPrice(
   price: number,
-  options: { from?: boolean } = {}
+  options: { from?: boolean; currency?: string | null } = {}
 ): string {
-  const grouped = String(Math.round(price)).replace(
+  return productPriceParts(price, options).join("");
+}
+
+/**
+ * formatProductPrice's text in its two parts: the "from " a starting price
+ * opens with ("" for any other), and the amount with its currency, which
+ * never breaks. Where space is short, a line may break between the two.
+ */
+export function productPriceParts(
+  price: number,
+  options: { from?: boolean; currency?: string | null } = {}
+): [lead: string, amount: string] {
+  const code = productCurrency(options.currency ?? null);
+  const digits = productPriceDecimals(code);
+  const scale = 10 ** digits;
+  const minor = toMinorUnits(price, digits);
+  const whole = Math.floor(minor / scale);
+  const fraction = minor - whole * scale;
+  const grouped = String(whole).replace(
     /\B(?=(\d{3})+(?!\d))/g,
-    " "
+    NO_BREAK_SPACE
   );
-  return `${options.from ? "from " : ""}${grouped} ₸`;
+  const amount =
+    fraction === 0
+      ? grouped
+      : `${grouped}.${String(fraction).padStart(digits, "0")}`;
+  const unit =
+    code === null ? "" : `${NO_BREAK_SPACE}${code === "KZT" ? "₸" : code}`;
+  return [options.from ? `from${NO_BREAK_SPACE}` : "", `${amount}${unit}`];
+}
+
+/**
+ * How long a written price runs, for the type a narrow card or shelf tag
+ * shows it in: "short" up to 17 characters ("from 1 299.99 USD"), "long" up
+ * to 22 ("from 1 250 000 000 IRR"), and "longest" beyond, up to the 28 of
+ * "from 999 999 999 999.999 KWD" near the price cap.
+ */
+export function productPriceLength(text: string): "short" | "long" | "longest" {
+  if (text.length <= 17) return "short";
+  return text.length <= 22 ? "long" : "longest";
 }

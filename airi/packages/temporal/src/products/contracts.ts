@@ -111,6 +111,22 @@ export type ProductDoubtSubject = (typeof PRODUCT_DOUBT_SUBJECTS)[number];
 /** Something the owner should confirm about a found product, in English. */
 export type ProductDoubt = { about: ProductDoubtSubject; text: string };
 
+/** A priced product's doubt when no currency was said or shown for its price. */
+export const PRODUCT_NO_CURRENCY_DOUBT =
+  "No currency was said or shown for this price.";
+
+/** A priced product's doubt when its currency was given as something other than a code ("TL"). */
+export function productCurrencyTextDoubt(currencyText: string): string {
+  return `Check the currency: it was given as “${currencyText}”.`;
+}
+
+/**
+ * Matches the two doubts above: the price's currency isn't known yet. A
+ * price set without a currency leaves them.
+ */
+export const PRODUCT_UNKNOWN_CURRENCY_DOUBT =
+  /^(?:No currency was said or shown for this price\.|Check the currency: it was given as “.*”\.)$/;
+
 export type ProductVideoImportWorkflowInput = {
   contractVersion: number;
   workspaceId: string;
