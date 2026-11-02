@@ -176,6 +176,8 @@ type LedgerOptions = {
   usedActions?: number;
   /** A free company whose trial is over. */
   trialEnded?: boolean;
+  /** Whether the allowance reports the spend left, as later versions of airi do; this copy's doesn't. */
+  reportsSpendLeft?: boolean;
 };
 
 /**
@@ -185,10 +187,13 @@ type LedgerOptions = {
  * ended or the company's limit is reached: then it's own_ai_source_required,
  * and nothing is kept. The allowance's projection knows nothing of the trial,
  * as get_workspace_text_ai_allowance doesn't; the import reads it alongside.
- * An admitted action stays admitted. A reservation past the company's limit
- * or the action's $0.50 cap is refused. A settlement replaces the reservation
- * with the actual cost, overruns included; an unknown cost keeps it. Units
- * map to actions as the activity maps them within one workflow run.
+ * Unless asked to, it doesn't report the spend left either. An admitted
+ * action stays admitted. A reservation past the company's limit or the
+ * action's $0.50 cap is refused. Nothing is kept for a refused reservation,
+ * so the same operation can be reserved again later. A settlement replaces
+ * the reservation with the actual cost, overruns included; an unknown cost
+ * keeps it. Units map to actions as the activity maps them within one
+ * workflow run.
  */
 function fakeLedger(attempt: () => number, options: LedgerOptions = {}) {
   const limit = options.companyLimitMicros ?? 25_000_000;
@@ -213,6 +218,9 @@ function fakeLedger(attempt: () => number, options: LedgerOptions = {}) {
         includedActions: included,
         remainingActions: Math.max(0, included - ledger.used),
         spendLimitReached: ledger.committed >= limit,
+        spendRemainingMicros: options.reportsSpendLeft
+          ? Math.max(0, limit - ledger.committed)
+          : null,
         trialEnded: ledger.trialEnded,
       };
     },
@@ -662,10 +670,15 @@ test("an import of 60 photos finishes when the company's limit allows it", async
 
 test("when the company's limit stops the photos, the products, the photos made and the clips are kept", async (t) => {
   // Room for the read steps and two photos' $0.15 reservations, not three.
+  // Each photo costs all it reserved, so settling leaves no room for another.
   const { ports, state, calls, ledger } = await setUp(t, {
     inventory: shelfOf(5),
     presenterMoment: 4,
     ledger: { companyLimitMicros: 400_000 },
+    cutOut: async (_name, dir, onCost) => {
+      onCost(0.15);
+      return restoredCutout(dir);
+    },
   });
   // What the page is told while each review clip is cut.
   const stopsAtClips: unknown[] = [];
@@ -692,11 +705,20 @@ test("when the company's limit stops the photos, the products, the photos made a
       "refuse photo:p2:0 photo:attempt-1 workspace_ai_spend_limit",
     ),
   );
-  // The photos reserve in turn: after the refusal, the one waiting isn't
-  // admitted, so it uses up no included action.
+  // The photos reserve in turn: after a refusal, the ones waiting never
+  // reach the ledger, so they use up no included action.
   assert.ok(!ledger.log.some((line) => line.includes("photo:p3:0")));
   assert.ok(!ledger.log.some((line) => line.includes("photo:p4:0")));
   assert.equal(ledger.used, 4);
+  // This copy's allowance doesn't report the spend left, so once the two
+  // photos had settled, another pass asked the ledger again. Refused with
+  // no photo made, that pass is the stop. The refused photo's action stayed
+  // admitted, so asking again counted no included action.
+  assert.equal((await ports.spend.allowance()).spendRemainingMicros, null);
+  assert.deepEqual(
+    ledger.log.filter((line) => line.startsWith("refuse")),
+    Array(2).fill("refuse photo:p2:0 photo:attempt-1 workspace_ai_spend_limit"),
+  );
   // Review clips cost no AI: every product gets one, and the page already
   // knows the photos stopped while they're cut.
   assert.equal(calls.clips.length, 5);
@@ -707,10 +729,10 @@ test("when the company's limit stops the photos, the products, the photos made a
   assert.equal(calls.emits.at(-1), "import");
 });
 
-test("a photo refused admission at the limit, by reservations since settled lower, names the limit", async (t) => {
+test("a photo refused admission while the import's own reservations held the limit is made once they settle lower", async (t) => {
   // Three photos' $0.15 reservations fill the limit exactly, so the fourth
   // photo's action isn't admitted. Once they settle at $0.05 each, the
-  // company is far under its limit and has hundreds of actions left.
+  // company is far under its limit, and the photos left are made.
   const { ports, state, ledger } = await setUp(t, {
     inventory: shelfOf(5),
     ledger: { companyLimitMicros: 1_834 + 40_000 + 3 * 150_000 },
@@ -718,16 +740,90 @@ test("a photo refused admission at the limit, by reservations since settled lowe
 
   await runProductVideoImport(ports);
 
-  assert.ok(
-    ledger.log.includes(
-      "refuse photo:p3:0 photo:attempt-1 own_ai_source_required",
-    ),
+  const refusal = ledger.log.indexOf(
+    "refuse photo:p3:0 photo:attempt-1 own_ai_source_required",
   );
-  assert.equal(ledger.committed, 1_834 + 40_000 + 3 * 50_000);
-  assert.equal((await ports.spend.allowance()).remainingActions, 496);
+  assert.ok(refusal >= 0);
+  // Nothing was kept for the refusal, so the same operation reserves again.
+  assert.ok(
+    ledger.log.indexOf("reserve photo:p3:0 photo:attempt-1 meta 150000") >
+      refusal,
+  );
+  assert.equal(state.import.status, "ready");
+  assert.equal(state.import.photosStopped, null);
+  assert.equal(state.import.photoDone, 5);
+  assert.deepEqual(pendingPhotos(state.products), []);
+  // Reading the video and five photos: the refusal counted no action.
+  assert.equal(ledger.used, 6);
+  assert.equal(ledger.committed, 1_834 + 40_000 + 5 * 50_000);
+});
+
+test("photos the import's own reservations crowded out don't say the limit was reached while spend is left", async (t) => {
+  // $0.45 of a Pro company's limit is left when six photos start. Three
+  // $0.15 reservations fill it: the fourth photo isn't admitted. With $0.50
+  // left, it's admitted and its reservation refused instead. Either way,
+  // once the three settle at $0.05 each, $0.30 or $0.35 is left, and the
+  // allowance card says so.
+  for (const [left, code] of [
+    [450_000, "own_ai_source_required"],
+    [500_000, "workspace_ai_spend_limit"],
+  ] as const) {
+    const { ports, state, ledger } = await setUp(t, {
+      inventory: shelfOf(6),
+      ledger: { companyLimitMicros: 1_834 + 40_000 + left },
+    });
+
+    await runProductVideoImport(ports);
+
+    assert.ok(
+      ledger.log.includes(`refuse photo:p3:0 photo:attempt-1 ${code}`),
+      code,
+    );
+    assert.equal(state.import.status, "ready");
+    assert.equal(state.import.photosStopped, null, code);
+    assert.equal(state.import.photoDone, 6);
+    assert.deepEqual(pendingPhotos(state.products), []);
+    assert.equal(ledger.used, 7);
+    assert.equal(ledger.committed, 1_834 + 40_000 + 6 * 50_000);
+    assert.equal((await ports.spend.allowance()).spendLimitReached, false);
+  }
+});
+
+test("photos stop at the limit once what is left can't hold a photo's reservation", async (t) => {
+  // An allowance that reports the spend left, as later versions of airi do.
+  // $0.32 is left when five photos start. Each pass ends when the ledger
+  // refuses a photo's reservation past the ones being made, and the next
+  // starts once they settle: two photos, then one, then one. Then $0.12 is
+  // left. That isn't the limit, but a photo reserves $0.15.
+  const { ports, state, ledger } = await setUp(t, {
+    inventory: shelfOf(5),
+    ledger: {
+      companyLimitMicros: 1_834 + 40_000 + 320_000,
+      reportsSpendLeft: true,
+    },
+  });
+
+  await runProductVideoImport(ports);
+
   assert.equal(state.import.status, "ready");
   assert.equal(state.import.photosStopped, "spend_limit");
-  assert.deepEqual(pendingPhotos(state.products), ["p3", "p4"]);
+  assert.equal(state.import.photoDone, 4);
+  assert.deepEqual(pendingPhotos(state.products), ["p4"]);
+  assert.deepEqual(
+    ledger.log.filter((line) => line.startsWith("refuse")),
+    [
+      "refuse photo:p2:0 photo:attempt-1 workspace_ai_spend_limit",
+      "refuse photo:p3:0 photo:attempt-1 workspace_ai_spend_limit",
+      "refuse photo:p4:0 photo:attempt-1 workspace_ai_spend_limit",
+    ],
+  );
+  // No pass was tried that the ledger could only refuse.
+  const allowance = await ports.spend.allowance();
+  assert.equal(allowance.spendLimitReached, false);
+  assert.equal(allowance.spendRemainingMicros, 120_000);
+  // Reading the video and five photos' actions: p4's, admitted before its
+  // reservation was refused, stays admitted.
+  assert.equal(ledger.used, 6);
 });
 
 test("when the free trial ends while photos are made, the photos stop and say so", async (t) => {
@@ -845,6 +941,7 @@ test("a read step the ledger refuses fails the import for good, naming what stop
         includedActions: 100,
         remainingActions: 1,
         spendLimitReached: false,
+        spendRemainingMicros: 500_000,
         trialEnded: false,
       };
     };

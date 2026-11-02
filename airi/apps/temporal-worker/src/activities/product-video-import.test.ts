@@ -15,6 +15,7 @@ function recordingSpend() {
         includedActions: 500,
         remainingActions: 12,
         spendLimitReached: false,
+        spendRemainingMicros: 335_000,
         trialEnded: false,
       };
     },
@@ -85,6 +86,7 @@ test("checks the workspace's allowance and settles each reservation where it was
     includedActions: 500,
     remainingActions: 12,
     spendLimitReached: false,
+    spendRemainingMicros: 335_000,
     trialEnded: false,
   });
   const reservation = await port.reserve(

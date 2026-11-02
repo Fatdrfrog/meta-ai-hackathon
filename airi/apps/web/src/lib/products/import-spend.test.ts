@@ -60,6 +60,7 @@ describe("productImportSpend.allowance", () => {
         includedActions: 100,
         remainingActions: 97,
         spendLimitReached: false,
+        spendRemainingMicros: null,
         trialEnded: true,
       });
     }
@@ -96,6 +97,22 @@ describe("productImportSpend.allowance", () => {
     expect((await productImportSpend.allowance("workspace-1")).trialEnded).toBe(
       false
     );
+  });
+
+  it("says the spend left is unknown, never zero, since this copy's allowance doesn't report it", async () => {
+    mockCompany = company("pro", null);
+    mockAllowance.mockResolvedValue({
+      includedActions: 500,
+      remainingActions: 480,
+      spendLimitReached: false,
+    });
+    expect(await productImportSpend.allowance("workspace-1")).toEqual({
+      includedActions: 500,
+      remainingActions: 480,
+      spendLimitReached: false,
+      spendRemainingMicros: null,
+      trialEnded: false,
+    });
   });
 
   it("can't be checked when the company can't be read, so the import retries", async () => {

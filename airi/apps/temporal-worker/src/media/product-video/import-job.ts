@@ -175,6 +175,8 @@ export type SpendAllowance = {
   includedActions: number | null;
   remainingActions: number | null;
   spendLimitReached: boolean;
+  /** What is left of the company's AI spending limit, in micro-dollars; null when the ledger doesn't say. */
+  spendRemainingMicros: number | null;
   /** A free company whose trial is over (or never started): it can't start AI actions. */
   trialEnded: boolean;
 };
@@ -472,14 +474,13 @@ export async function runProductVideoImport(
   }
 
   await stage("cutting");
-  const pending = products.flatMap((product) =>
-    product.options
-      .filter((option) => option.photoMethod === "pending")
-      .map((option) => ({ product, option })),
-  );
-  const refused = await cutPhotos(ports, prepared.videoPath, pending, language);
   // The products are kept either way; the photos not made stay pending.
-  const photosStopped = refused && (await refusalStop(ports, refused));
+  const photosStopped = await makePhotos(
+    ports,
+    prepared.videoPath,
+    products,
+    language,
+  );
   if (photosStopped) {
     // Said now, so the page stops showing photos being made while the
     // clips are cut.
@@ -509,22 +510,70 @@ export async function runProductVideoImport(
   return { productCount: products.length };
 }
 
+type PendingPhoto = { product: ImportProduct; option: ImportOption };
+
 /**
- * Makes the options' photos a few at a time, each booked to its own AI
- * action. Once the ledger refuses one, no new photo starts and those being
- * made finish; the refusal is returned.
+ * Makes the pending options' photos and says what stopped them; null once
+ * every one is made. A pass (cutPhotos) ends at the ledger's first refusal,
+ * which the import's own photos may have caused: each holds $0.15 while it's
+ * made and settles at about $0.06. So once a pass's photos have settled,
+ * another pass makes the photos left, unless the allowance names what stops
+ * the workspace or has no room left for a photo's reservation. A pass that
+ * finished no photo was refused with none of the import's photos held, so
+ * its refusal is the stop. Every other pass finished one, so the passes end.
+ */
+async function makePhotos(
+  ports: ImportJobPorts,
+  videoPath: string,
+  products: ImportProduct[],
+  language: string | null,
+): Promise<ProductVideoImportPhotoStop | null> {
+  let pending: PendingPhoto[] = products.flatMap((product) =>
+    product.options
+      .filter((option) => option.photoMethod === "pending")
+      .map((option) => ({ product, option })),
+  );
+  for (;;) {
+    const { refused, left } = await cutPhotos(
+      ports,
+      videoPath,
+      pending,
+      language,
+    );
+    if (!refused) return null;
+    if (left.length === pending.length) return refusalStop(ports, refused);
+    const allowance = await ports.spend.allowance();
+    const blocked = blockedBy(allowance);
+    if (blocked) return blocked;
+    if (
+      allowance.spendRemainingMicros !== null &&
+      allowance.spendRemainingMicros < PHOTO_MAX_COST_MICROS
+    )
+      return "spend_limit";
+    pending = left;
+  }
+}
+
+/**
+ * One pass over the pending photos, a few at a time, each booked to its own
+ * AI action. Once the ledger refuses one, no new photo starts and those being
+ * made finish. Returns the refusal, and the photos the pass didn't finish.
  */
 async function cutPhotos(
   ports: ImportJobPorts,
   videoPath: string,
-  pending: Array<{ product: ImportProduct; option: ImportOption }>,
+  pending: PendingPhoto[],
   language: string | null,
-): Promise<SpendRefusal | null> {
+): Promise<{ refused: SpendRefusal | null; left: PendingPhoto[] }> {
   let refused: SpendRefusal | null = null;
+  const finished = new Set<PendingPhoto>();
   // The photos reserve one at a time. At the company's limit the ledger
   // admits a photo's action, counting an included action, before refusing
-  // its spend: after the first refusal, the photos waiting their turn are
-  // refused here instead.
+  // its spend; the action stays admitted, so a later pass doesn't count it
+  // again. After the first refusal, the photos waiting their turn are
+  // refused here instead of by the ledger, so a photo settling lower can't
+  // start another one in this pass: makePhotos decides on the next once they
+  // have all settled.
   let turn: Promise<unknown> = Promise.resolve();
   let ledgerRefusal: unknown = null;
   const photoPorts: ImportJobPorts = {
@@ -549,17 +598,24 @@ async function cutPhotos(
   await forEachWithConcurrency(
     pending,
     PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
-    async ({ product, option }) => {
+    async (photo) => {
       if (refused) return;
       try {
-        await cutAndSave(photoPorts, videoPath, product, option, language);
+        await cutAndSave(
+          photoPorts,
+          videoPath,
+          photo.product,
+          photo.option,
+          language,
+        );
+        finished.add(photo);
       } catch (error) {
         if (!(error instanceof SpendRefusal)) throw error;
         refused ??= error;
       }
     },
   );
-  return refused;
+  return { refused, left: pending.filter((photo) => !finished.has(photo)) };
 }
 
 async function cutAndSave(
