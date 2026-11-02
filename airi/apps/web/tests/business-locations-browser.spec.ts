@@ -1177,7 +1177,7 @@ for (const viewport of VIEWPORTS) {
     await expect(pinned("43.240112, 76.90533")).toBeVisible();
 
     const address = "г. Алматы, проспект Абая, 150, 1 этаж";
-    const phone = "+7 727 355 01 50";
+    const phone = "+7 727 000 01 50";
     await dialog
       .getByLabel(`${t("dialog.address")} (${t("dialog.optional")})`, {
         exact: true,

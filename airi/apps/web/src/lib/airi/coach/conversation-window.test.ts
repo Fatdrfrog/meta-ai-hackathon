@@ -96,8 +96,8 @@ describe("coach conversation window", () => {
       },
       whatsappContacts: [
         {
-          name: { formatted_name: "Sabyrzhan Torg" },
-          phones: [{ phone: "+77051309419" }],
+          name: { formatted_name: "Testovich Torg" },
+          phones: [{ phone: "+77050000019" }],
         },
       ],
       whatsappProductInquiry: {
@@ -132,7 +132,7 @@ describe("coach conversation window", () => {
     });
 
     expect(content).toContain("[Location: Warehouse; Main street 12");
-    expect(content).toContain("[Shared contacts: Sabyrzhan Torg; 1 phone(s)]");
+    expect(content).toContain("[Shared contacts: Testovich Torg; 1 phone(s)]");
     expect(content).toContain("[Product inquiry: SKU-2; catalog catalog-1]");
     expect(content).toContain(
       "[WhatsApp order: 2 item(s); total 15000 KZT; Deliver today; products SKU-1]"

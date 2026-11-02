@@ -25,14 +25,14 @@ The first two commits, made a few hours before kickoff, only set up the reposito
   - database migrations, internal docs and AI-tool folders were removed;
   - customer names, a team member's email, a real business's domain and two real-looking phone numbers in tests and comments were replaced with neutral values;
   - one demo data file moved next to the code that reads it.
-- Names, phone numbers and ids that the import missed, in imported tests, one code comment and one example config file, were later replaced with neutral values in two commits labelled "(not hackathon work)".
+- Names, phone numbers and ids that the import missed, in imported tests, one code comment and one example config file, were later replaced with neutral values in three commits labelled "(not hackathon work)".
 - Hackathon work inside `airi/` arrives only in later commits, and each one is listed under "Features built" below. `git log -- airi` shows every change after the import.
 
 ## How to check
 
 - Every commit subject starts with `meta-ai-hackathon: `. A local hook ([.githooks/commit-msg](.githooks/commit-msg)) and a CI check ([.github/workflows/commit-convention.yml](.github/workflows/commit-convention.yml)) enforce it.
 - Full history: <https://github.com/Fatdrfrog/meta-ai-hackathon/commits/main>
-- Every change inside `airi/` since airi.chat was imported (commit `fa786fe`), commit by commit: `git log --stat fa786fe..main -- airi`. Each one is hackathon work, listed under "Features built", except the two labelled "(not hackathon work)", which only replaced names, numbers and ids in imported files. `git show <commit>` shows one commit's changes.
+- Every change inside `airi/` since airi.chat was imported (commit `fa786fe`), commit by commit: `git log --stat fa786fe..main -- airi`. Each one is hackathon work, listed under "Features built", except the three labelled "(not hackathon work)", which only replaced names, numbers and ids in imported files. `git show <commit>` shows one commit's changes.
 
 ## Try it
 

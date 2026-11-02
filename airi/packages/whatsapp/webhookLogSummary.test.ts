@@ -15,18 +15,18 @@ test("summarizes ad/referral and unsupported webhook context without PII", () =>
             value: {
               messaging_product: "whatsapp",
               metadata: {
-                display_phone_number: "+7 708 260 9346",
+                display_phone_number: "+7 708 000 0011",
                 phone_number_id: "phone-secret",
               },
               contacts: [
                 {
-                  wa_id: "77082609346",
+                  wa_id: "77080000011",
                   profile: { name: "Private Customer" },
                 },
               ],
               messages: [
                 {
-                  from: "77082609346",
+                  from: "77080000011",
                   id: "wamid.private",
                   timestamp: "1780000000",
                   type: "unsupported",
@@ -40,7 +40,7 @@ test("summarizes ad/referral and unsupported webhook context without PII", () =>
                   ],
                 },
                 {
-                  from: "77082609346",
+                  from: "77080000011",
                   id: "wamid.private.referral",
                   timestamp: "1780000001",
                   type: "text",
@@ -57,7 +57,7 @@ test("summarizes ad/referral and unsupported webhook context without PII", () =>
               statuses: [
                 {
                   id: "wamid.status.private",
-                  recipient_id: "77082609346",
+                  recipient_id: "77080000011",
                   status: "read",
                 },
               ],
@@ -109,7 +109,7 @@ test("summarizes ad/referral and unsupported webhook context without PII", () =>
   assert.equal(serialized.includes("Secret welcome text"), false);
   assert.equal(serialized.includes("Private error title"), false);
   assert.equal(serialized.includes("Private error message"), false);
-  assert.equal(serialized.includes("77082609346"), false);
+  assert.equal(serialized.includes("77080000011"), false);
   assert.equal(serialized.includes("phone-secret"), false);
   assert.equal(serialized.includes("wamid.private"), false);
   assert.equal(serialized.includes("ad-secret"), false);
@@ -128,11 +128,11 @@ test("normalizes direct co-existence events before summarizing history traffic",
           metadata: { phase: 2, chunk_order: 1, progress: 100 },
           threads: [
             {
-              id: "77082609346",
+              id: "77080000011",
               messages: [
                 {
                   id: "wamid.history.private",
-                  from: "77082609346",
+                  from: "77080000011",
                   timestamp: "1780000000",
                   type: "text",
                   text: { body: "Private history body" },
@@ -162,7 +162,7 @@ test("normalizes direct co-existence events before summarizing history traffic",
 
   const serialized = JSON.stringify(summary);
   assert.equal(serialized.includes("Private history body"), false);
-  assert.equal(serialized.includes("77082609346"), false);
+  assert.equal(serialized.includes("77080000011"), false);
   assert.equal(serialized.includes("wamid.history.private"), false);
   assert.equal(serialized.includes("phone-secret"), false);
 });

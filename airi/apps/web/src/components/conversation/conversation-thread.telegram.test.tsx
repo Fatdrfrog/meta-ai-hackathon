@@ -1536,13 +1536,13 @@ describe("ConversationThread Telegram group rendering", () => {
           messages={[
             testMessage({
               _id: "msg_contact",
-              text: "[Contact] Sabyrzhan Torg 1 (+7 705 130 9419)",
+              text: "[Contact] Testovich Torg 1 (+7 705 000 0019)",
               date: "2026-06-21T08:57:00.000Z",
               direction: "inbound",
               whatsappContacts: [
                 {
-                  name: { formatted_name: "Sabyrzhan Torg 1" },
-                  phones: [{ phone: "+7 705 130 9419", type: "CELL" }],
+                  name: { formatted_name: "Testovich Torg 1" },
+                  phones: [{ phone: "+7 705 000 0019", type: "CELL" }],
                   org: { title: "Manager", company: "Torg" },
                 },
               ],
@@ -1552,18 +1552,18 @@ describe("ConversationThread Telegram group rendering", () => {
         />
       );
 
-      expect(screen.getByText("Sabyrzhan Torg 1")).not.toBeNull();
+      expect(screen.getByText("Testovich Torg 1")).not.toBeNull();
       expect(screen.getByText("Manager · Torg")).not.toBeNull();
       expect(screen.queryByText(/\[Contact\]/)).toBeNull();
 
-      fireEvent.click(screen.getByRole("button", { name: /\+7 705 130 9419/ }));
+      fireEvent.click(screen.getByRole("button", { name: /\+7 705 000 0019/ }));
       await waitFor(() =>
-        expect(writeText).toHaveBeenCalledWith("+7 705 130 9419")
+        expect(writeText).toHaveBeenCalledWith("+7 705 000 0019")
       );
       expect(await screen.findByText("contactPhoneCopied")).not.toBeNull();
 
       const callLink = screen.getByRole("link", { name: "contactCall" });
-      expect(callLink.getAttribute("href")).toBe("tel:+77051309419");
+      expect(callLink.getAttribute("href")).toBe("tel:+77050000019");
 
       fireEvent.click(screen.getByRole("button", { name: "contactSave" }));
       expect(createObjectURL).toHaveBeenCalledTimes(1);
@@ -1574,7 +1574,7 @@ describe("ConversationThread Telegram group rendering", () => {
         reader.onerror = () => reject(reader.error);
         reader.readAsText(savedBlob as Blob);
       });
-      expect(savedText).toContain("FN:Sabyrzhan Torg 1");
+      expect(savedText).toContain("FN:Testovich Torg 1");
     } finally {
       clickSpy.mockRestore();
       Object.defineProperty(URL, "createObjectURL", {
