@@ -1,6 +1,6 @@
 # Findings
 
-Experiments on real footage, in order. Each one changed the design.
+Experiments, in order, on real footage unless a section says otherwise. Each one changed the design.
 
 ## Oct 26–27: a 65-second home video with Kazakh narration
 
@@ -98,3 +98,45 @@ The first live evaluation, 5 of 9, found things the unit tests couldn't:
 - Asked what they had ordered, it once answered from its own earlier message instead of calling `order_status`. That was right this time, but it only sees the last 12 messages, so it is now told to always check.
 
 After the fixes, 9 of 9 pass, twice in a row. That includes a new order-status case where the buyer orders in one message and asks what they ordered in the next. Replies take 1.4-6 seconds, or about 11 seconds with a buyer photo because of the separate vision call. A full evaluation run costs about $0.03. With an ambiguous request ("телефон-игрушка" matches a toy phone and a phone stand), it now shows both and asks which one.
+
+## Nov 1–2: narrations in other languages
+
+We wanted the import in airi.chat to work for shop owners anywhere, in any language ElevenLabs Scribe transcribes; ElevenLabs lists 90+ languages for Scribe v2 in its [speech-to-text docs](https://elevenlabs.io/docs/overview/capabilities/speech-to-text). Until then, the import read a price with no currency as tenge, rounded every price to a whole number and flagged any other currency. Before changing it, we looked at what Scribe really writes.
+
+### What Scribe writes in 10 languages
+
+Test clips, synthetic: one short voice-over per language, made with ElevenLabs' eleven_v3 text-to-speech in one voice, in English, Spanish, Turkish, Japanese, Chinese, Hindi, Arabic, Thai, Vietnamese and Greek. Each says three prices, two of them equal. We also dubbed the 65-second shelf video into English and Japanese, with prices in dollars and yen, line by line at the times of the owner's Kazakh lines. Each recording went through the import's own audio step, then Scribe v2 with no language set, as the import calls it.
+
+- **It found the language every time.** Scribe named the right language for all 12 recordings, with a probability from 0.94 (Turkish) to 1.0 (Japanese), and for the 3 real Kazakh recordings below. Every word came with a start and an end time.
+- **A price takes a different shape in each language.** Digits in English ("$12.50"), Turkish ("149,90", with a decimal comma), Hindi ("₹1,49,999", in Indian grouping) and Arabic; words in Spanish, Vietnamese, Greek and Thai ("doce euros con cincuenta", "δώδεκα κόμμα πενήντα ευρώ"); kanji and Chinese numerals in Japanese and Chinese ("千五百円", "十九点九元"). The shape changed within a language too: the English dub's prices came back as words ("four ninety-nine"). Scribe never wrote a digit other than 0–9, though the Arabic voice-over's text had Arabic-Indic digits, and only in the English clip and in Hindi did a spoken currency become its sign ("$", "₹").
+- **Sentence marks differ by language.** "." in six languages, "。" in Japanese and Chinese, "।" in Hindi, "،" and "؟" in Arabic, ";" for the Greek question mark, and no marks at all in Thai. Some sentences were joined: all three Chinese ones with "，", two Hindi ones with no "।" before "और", and two Arabic ones with "،". In the Japanese dub, 2 of the 14 "。" came glued to the start of the next word ("。LOL").
+- **Japanese, Chinese and Thai come one character or syllable per word**, with no spaces, except two in Thai, exactly at its clause breaks.
+- **Two numbers changed on the way**, and we can't tell whether the voice or Scribe changed them: Turkish "1.250 lira" came back as "bir 250 lira", and Arabic "١٢٫٥٠" (12.50) as "1850". Arabic also put an invisible right-to-left control character at the start of that number.
+
+### What that changed
+
+The transcript code before, which ended sentences only at ". ! ?", made one line each of the Japanese, Chinese, Hindi and Thai clips and of the Japanese dub, and the time marks it put inside long sentences fell inside words and prices ("千五[15.1] 百円", "ห้าสิบ[1.6] บาท"). Now sentences end at the marks of every script, including one glued to the next word; the checks read Chinese, Japanese and Thai words across the time marks inside them, and compare quotes without invisible control characters; and a narration in an unspaced script with no marks at all splits at pauses, which gives the Thai clip its 3 clauses. Lines before and after: Japanese 1 → 3, Hindi 1 → 2, Arabic 2 → 3, Thai 1 → 3, Greek 3 → 4, and the Japanese dub 1 → 14. English, Spanish, Turkish, Vietnamese and the English dub keep their lines, and Chinese stays one line, since Scribe joined its sentences with commas.
+
+We ran the price checks on every recording with hand-built products, quoting either just the price words or the whole sentence, as Muse might. On the new lines, the only false doubts are 2 each in Chinese, Hindi and Arabic, where two equal prices share a sentence and the quote is just the price words ("Another product's price comes from the same words."); whole-sentence quotes give none. The old lines had drawn that doubt for the equal prices in Japanese, Thai and the Japanese dub, which the new lines no longer do. The Turkish and Arabic prices that changed on the way get a true "The price differs from the number in the narration."
+
+The real Kazakh recordings shaped one rule. Re-transcribed on Nov 2, the shelf video, QazOner's promo and the promo as WhatsApp delivered it came back with only "." and ",", every price in words ("бес мың теңге") and a space after every word, and the new code gives them byte-identical lines to the old: 16, 9 and 9. With their marks stripped (a simulation on the real timings), a first version that split any unpunctuated narration at pauses gave the shelf 21 lines and cut four amounts off from the words before them, since the owner pauses before saying the amount ("бағасы | бес мың теңге", 1.5 s). So only a narration in an unspaced script splits at pauses; a spaced one without marks stays one line, as before. Scribe's words weren't fixed either: against Oct 28's transcripts of the same audio, it heard a few words differently (Подставканың became Подставка) and added a few sentence breaks, while every price and the style of punctuation held.
+
+### Muse Spark on the new code
+
+The product list only, from Muse Spark 1.3 and the checks; no photos:
+
+| Video | Runs | Result |
+| --- | --- | --- |
+| The 65-second shelf video, with the owner's Kazakh narration | 3: two on Oct 28's transcript, one on Nov 2's | 7 of 7 exact prices, all KZT, in every run; no code doubts, and the only model doubt was about the rooster's spoken name, as before |
+| QazOner's promo, whose Kazakh narration never says теңге | 2: one on Oct 28's transcript, one on Nov 2's | 4 products with their KZT starting prices (15 500, 16 900, 15 500 and 35 000) and no currency doubt |
+| The shelf video dubbed into English (synthetic voice) | 1 | All 7 prices as said, in USD, with 12.50 and 4.99 keeping their cents; the rooster's price, said with no currency ("It's four ninety-nine."), came out USD too |
+| The shelf video dubbed into Japanese (synthetic voice) | 2 | All 7 prices as said, in JPY; the two products at 千五百円 drew no false same-words doubt |
+
+Each run cost $0.02–0.05 of Muse Spark. On the promo, the output doesn't show whether Muse took KZT from the т on the price stickers. In the runs on Nov 2's Kazakh transcripts, Muse gave a time mark inside a long sentence, not the line's start, for 4 of 11 prices. The checks now place such a price in that mark's sentence; before, two equal prices cited that way could both be flagged, or a clip could come from the wrong sentence.
+
+### Not tested, and known limits
+
+- One synthetic voice per language, with short pauses between sentences: real owners may punctuate, pause and say numbers differently. Lao, Urdu and Armenian weren't tried, only Kazakh, English and Japanese went through Muse Spark on the new code, and no import with photos ran in English or Japanese. ElevenLabs' own word error rates for Scribe v2 run from 5% or less (English, Russian, Spanish and Japanese among them) to 25–50% (Amharic, Lao and Urdu among them).
+- Two equal prices in one sentence, as Scribe wrote Chinese, Hindi and Arabic here, can still draw a false same-words doubt when Muse quotes only the price words, and the second product's clip can play the first one's words. The same holds in a narration Scribe leaves without marks in a spaced script, which stays one line.
+- A multiplier word after digits ("2,5 тысячи", "3万円") can still draw a false "differs" doubt.
+- Buyer drafts and the example names written into hidden lettering are in Kazakh, Russian or English, and in English for any other narration.
