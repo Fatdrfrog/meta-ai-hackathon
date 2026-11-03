@@ -53,6 +53,18 @@ jobs:
           src/meta-model-api.test.ts src/meta-sam.test.ts src/llm-pricing.test.ts
           src/elevenlabs-stt.test.ts src/elevenlabs-audio-isolation.test.ts
           src/whatsapp-webhook-runtime.test.ts
+      # The video ad's whole-ad, voice and smoke-render tests skip without
+      # ffmpeg, so install it when the runner lacks it, as airi.chat's worker
+      # pipeline does.
+      - name: Ensure ffmpeg for the video ad tests
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version
+          ffprobe -version
       - name: Video-to-products pipeline, import job and video ad tests
         run: >-
           pnpm --filter @icecore/temporal-worker exec tsx --test
