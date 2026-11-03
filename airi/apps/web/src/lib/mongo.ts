@@ -125,6 +125,8 @@ import { AiriChatThread } from "@/models/airi-chat-thread";
 import { BusinessLocation } from "@/models/business-location";
 import { WorkspaceProduct } from "@/models/workspace-product";
 import { ProductVideoImport } from "@/models/product-video-import";
+import { ProductKit } from "@/models/product-kit";
+import { ProductAd } from "@/models/product-ad";
 import { ProductWhatsAppLink } from "@/models/product-whatsapp-link";
 import {
   ProductWhatsAppLinkMiss,
@@ -752,6 +754,8 @@ async function createIndexes() {
   await ProductWhatsAppPairing.createIndexes();
   await ProductWhatsAppLinkRequest.createIndexes();
   await ProductWhatsAppLinkMiss.createIndexes();
+  await ProductKit.createIndexes();
+  await ProductAd.createIndexes();
   await CustomerEvent.createIndexes();
   await ensureScenarioFlowSubmissionIndexes();
   await ScenarioFlowEvent.collection.createIndex({

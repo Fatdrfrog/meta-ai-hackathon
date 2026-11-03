@@ -44,7 +44,6 @@ import {
   createOrderFormDraft,
   loadAddedProducts,
   prepareCarouselDraft,
-  shopWords,
   whiteCardImage,
   type AddedProduct,
 } from "./whatsapp-drafts";
@@ -99,16 +98,7 @@ beforeEach(() => {
   }));
 });
 
-describe("shopWords", () => {
-  it("writes for buyers in the language the owner spoke, English otherwise", () => {
-    expect(shopWords("Kazakh").code).toBe("kk");
-    expect(shopWords("kk").code).toBe("kk");
-    expect(shopWords("Russian").code).toBe("ru");
-    expect(shopWords("Kazakh and Russian").code).toBe("kk");
-    expect(shopWords("Uzbek").code).toBe("en");
-    expect(shopWords(null).code).toBe("en");
-  });
-});
+// The buyers' words and prices themselves: shop-words.test.ts.
 
 describe("loadAddedProducts", () => {
   it("lists the import's published products in filmed order, with the featured item's photo", async () => {
@@ -440,12 +430,72 @@ describe("createOrderFormDraft", () => {
 
     expect(await createOrderFormDraft(params)).toEqual({
       ok: false,
+      reason: "refused",
       error: "Flow JSON validation failed",
     });
     expect(mockDeleteFlow).toHaveBeenCalledWith({
       accessToken: "token",
       flowId: "flow-1",
     });
+  });
+
+  it("tells the new Flow's id before giving it the form, and finishes an earlier draft without making another", async () => {
+    mockCreateFlow.mockResolvedValue({
+      ok: true,
+      status: 200,
+      flow: { id: "flow-1" },
+    });
+    const order: string[] = [];
+    mockUpdateFlow.mockImplementation(async () => {
+      order.push("update_json");
+      return { ok: true, status: 200 };
+    });
+
+    await createOrderFormDraft({
+      ...params,
+      onCreated: async flowId => {
+        order.push(`created ${flowId}`);
+      },
+    });
+    // Stopped after Meta made it, the caller can finish this one next time.
+    expect(order).toEqual(["created flow-1", "update_json"]);
+
+    mockCreateFlow.mockClear();
+    const onCreated = jest.fn();
+    expect(
+      await createOrderFormDraft({ ...params, flowId: "flow-9", onCreated })
+    ).toMatchObject({ ok: true, flowId: "flow-9" });
+    expect(mockCreateFlow).not.toHaveBeenCalled();
+    expect(onCreated).not.toHaveBeenCalled();
+    expect(mockUpdateFlow).toHaveBeenLastCalledWith(
+      expect.objectContaining({ flowId: "flow-9", operation: "update_json" })
+    );
+  });
+
+  it("names the Flow as asked", async () => {
+    mockCreateFlow.mockResolvedValue({
+      ok: true,
+      status: 200,
+      flow: { id: "flow-1" },
+    });
+    mockUpdateFlow.mockResolvedValue({ ok: true, status: 200 });
+
+    expect(
+      await createOrderFormDraft({
+        ...params,
+        name: "Order form · 2 Nov 09:14",
+      })
+    ).toMatchObject({ ok: true, name: "Order form · 2 Nov 09:14" });
+    expect(mockCreateFlow).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Order form · 2 Nov 09:14" })
+    );
+  });
+
+  it("says when the form itself is invalid, before asking Meta", async () => {
+    const result = await createOrderFormDraft({ ...params, products: [] });
+
+    expect(result).toMatchObject({ ok: false, reason: "invalid" });
+    expect(mockCreateFlow).not.toHaveBeenCalled();
   });
 
   it("reports a Flow Meta wouldn't create, cleaning up one it half made", async () => {
@@ -459,6 +509,7 @@ describe("createOrderFormDraft", () => {
 
     expect(await createOrderFormDraft(params)).toEqual({
       ok: false,
+      reason: "refused",
       error: "Readback failed",
     });
     expect(mockUpdateFlow).not.toHaveBeenCalled();

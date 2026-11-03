@@ -74,6 +74,7 @@ jobs:
           src/lib/mongo-indexes.test.ts src/features/panel/shared/routing
           src/lib/realtime/server.test.ts
           src/lib/temporal/product-ad.test.ts
+          src/lib/whatsapp/templates/service.test.ts
           src/lib/airi/__tests__/llm-pricing.test.ts
           src/lib/airi/__tests__/llm-analytics-events.test.ts
           src/lib/google/gcs-resumable-upload.test.ts

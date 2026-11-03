@@ -14,6 +14,29 @@ export async function parseGraphResponse<T = unknown>(
   }
 }
 
+/**
+ * Meta's Graph API answered a template mutation (or one of its header
+ * uploads) with a refusal: the message is Meta's own words, as
+ * formatGraphApiError writes them. Anything else a create can throw (a
+ * timeout, the account not resolving, a header that couldn't be fetched)
+ * is airi's side, not Meta refusing.
+ */
+export class WhatsAppTemplateGraphRefusalError extends Error {
+  readonly status: number;
+  readonly graphError: GraphApiErrorBody | undefined;
+
+  constructor(
+    message: string,
+    status: number,
+    graphError: GraphApiErrorBody | undefined
+  ) {
+    super(message);
+    this.name = "WhatsAppTemplateGraphRefusalError";
+    this.status = status;
+    this.graphError = graphError;
+  }
+}
+
 export function formatGraphApiError(
   error: GraphApiErrorBody | undefined,
   fallback: string

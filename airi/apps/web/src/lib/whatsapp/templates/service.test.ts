@@ -2385,3 +2385,66 @@ describe("WhatsApp template service", () => {
     });
   });
 });
+
+describe("finding a template Meta has by its name", () => {
+  const fetchMock = jest.fn();
+  const find = async (name = "products_20261102_091405") => {
+    const { findWhatsAppTemplateByName } = await import("./service");
+    return findWhatsAppTemplateByName({
+      accessToken: "access-token-1",
+      wabaId: "waba-1",
+      name,
+      language: "kk",
+    });
+  };
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    global.fetch = fetchMock;
+  });
+
+  it("finds the one with exactly that name and language, or none", async () => {
+    // Meta answers every template whose name contains the one asked for.
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        data: [
+          {
+            id: "t-2",
+            name: "products_20261102_091405_2",
+            language: "kk",
+            status: "APPROVED",
+          },
+          {
+            id: "t-1",
+            name: "products_20261102_091405",
+            language: "kk",
+            status: "PENDING",
+          },
+        ],
+      })
+    );
+    await expect(find()).resolves.toEqual({ id: "t-1", status: "PENDING" });
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(decodeURIComponent(String(url))).toContain(
+      "waba-1/message_templates?name=products_20261102_091405"
+    );
+    expect(init).toMatchObject({
+      headers: { Authorization: "Bearer access-token-1" },
+    });
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ data: [] }));
+    await expect(find()).resolves.toBeNull();
+  });
+
+  it("throws Meta's refusal when the templates can't be read", async () => {
+    const { WhatsAppTemplateGraphRefusalError } = await import(
+      "./graph-response"
+    );
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ error: { message: "Invalid OAuth access token" } }, 400)
+    );
+    await expect(find()).rejects.toBeInstanceOf(
+      WhatsAppTemplateGraphRefusalError
+    );
+  });
+});

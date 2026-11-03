@@ -93,10 +93,12 @@ export async function createUnifiedTemplateRecord(
           : {}),
       });
     } catch (error) {
+      // The cause says whether Meta refused it or airi's own call failed.
       throw new Error(
         `WhatsApp API error: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
+        { cause: error }
       );
     }
   }

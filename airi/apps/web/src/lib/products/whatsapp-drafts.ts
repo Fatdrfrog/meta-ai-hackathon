@@ -3,14 +3,18 @@ import { generateFlowJsonString } from "@/components/scenarios/builders/whatsapp
 import { validateWhatsAppFlowConfig } from "@/components/scenarios/builders/whatsapp/flow-validation";
 import { logger } from "@/lib/logger";
 import {
+  carouselCardText,
+  KIT_CAROUSEL_MAX_CARDS,
+  KIT_CAROUSEL_MIN_CARDS,
+  ORDER_FORM_MAX_PRODUCTS,
+  orderFormOption,
+} from "@/lib/products/kit-text";
+import {
   productPhotoUrl,
   withProductPhotoUrls,
 } from "@/lib/products/photo-urls";
-import {
-  formatProductPrice,
-  type ProductCarouselDraft,
-  type StoredFileRef,
-} from "@/lib/products/types";
+import { shopWords } from "@/lib/products/shop-words";
+import type { ProductCarouselDraft, StoredFileRef } from "@/lib/products/types";
 import {
   createMetaWhatsAppFlow,
   deleteMetaWhatsAppFlow,
@@ -22,12 +26,13 @@ import { ProductVideoImport } from "@/models/product-video-import";
 import { WorkspaceProduct } from "@/models/workspace-product";
 import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
 import type { WhatsAppFlowConfig } from "@icecore/scenario-contracts";
-import { WHATSAPP_TEMPLATE_LIMITS } from "@icecore/shared/constants/whatsapp-templates";
 
-// What the owner can make on WhatsApp from the products a video added to the
-// shelf, both finished by the owner in airi: a carousel template, whose cards
-// go to the template editor, and an order form, saved on Meta as a draft
-// Flow. Buyers read them, so they're written in the language the owner spoke.
+// What the owner can make on WhatsApp from shelf products: a carousel
+// template's cards, on white, and an order form saved on Meta as a Flow. Kits
+// (kits.ts) send both to Meta in one press; the import's own carousel and
+// order-form routes still make them one at a time. Buyers read them, so
+// they're written in the buyers' language (the one the owner spoke, unless
+// the owner chose another); the words themselves are in kit-text.ts.
 
 /** A product a video added to the shelf, as the drafts use it. */
 export type AddedProduct = {
@@ -44,106 +49,60 @@ export type AddedProduct = {
   photo: { cutout?: StoredFileRef; original?: StoredFileRef } | null;
 };
 
-type ShopWords = {
-  /** Meta's code for the language. */
-  code: "kk" | "ru" | "en";
-  from: (amount: string) => string;
-  carouselBody: string;
-  orderButton: string;
-  form: {
-    title: string;
-    products: string;
-    name: string;
-    address: string;
-    comment: string;
-    submit: string;
-    cta: string;
-  };
-};
-
-const SHOP_WORDS: Record<ShopWords["code"], ShopWords> = {
-  kk: {
-    code: "kk",
-    from: amount => `${amount} бастап`,
-    carouselBody: "Біздің тауарлар. Ұнағанын таңдап, тапсырыс беріңіз.",
-    orderButton: "Тапсырыс беру",
-    form: {
-      title: "Тапсырыс",
-      products: "Не алғыңыз келеді?",
-      name: "Атыңыз",
-      address: "Жеткізу мекенжайы",
-      comment: "Түсініктеме",
-      submit: "Тапсырысты жіберу",
-      cta: "Тапсырыс беру",
-    },
-  },
-  ru: {
-    code: "ru",
-    from: amount => `от ${amount}`,
-    carouselBody: "Наши товары. Выберите, что понравится, и закажите.",
-    orderButton: "Заказать",
-    form: {
-      title: "Заказ",
-      products: "Что хотите заказать?",
-      name: "Имя",
-      address: "Адрес доставки",
-      comment: "Комментарий",
-      submit: "Отправить заказ",
-      cta: "Заказать",
-    },
-  },
-  en: {
-    code: "en",
-    from: amount => `from ${amount}`,
-    carouselBody: "Our products. Pick the one you like and order it here.",
-    orderButton: "Order",
-    form: {
-      title: "Order",
-      products: "What would you like?",
-      name: "Name",
-      address: "Delivery address",
-      comment: "Comment",
-      submit: "Send order",
-      cta: "Order",
-    },
-  },
-};
-
-/**
- * The words buyers see, in the language the owner spoke as Muse Spark named
- * it ("Kazakh", "Russian", "kk"…); English for any other.
- */
-export function shopWords(language: string | null | undefined): ShopWords {
-  if (/kaz|қаз|^kk\b/i.test(language ?? "")) return SHOP_WORDS.kk;
-  if (/rus|рус|^ru\b/i.test(language ?? "")) return SHOP_WORDS.ru;
-  return SHOP_WORDS.en;
-}
-
-/**
- * "15 500 ₸", "10 USD", or a bare "15 500" when no currency was said or
- * shown; or the shop's way of saying "from 15 500 ₸".
- */
-function buyerPrice(product: AddedProduct, words: ShopWords): string | null {
-  if (product.price === null) return null;
-  const amount = formatProductPrice(product.price, {
-    currency: product.currency,
-  });
-  return product.priceIsFrom ? words.from(amount) : amount;
-}
-
-/** At most `max` characters, cut at the end with "…" and no dangling comma. */
-const clip = (text: string, max: number) =>
-  text.length > max
-    ? `${text.slice(0, max - 1).replace(/[\s,.;:–-]+$/u, "")}…`
-    : text;
-
-type PhotoRow = {
+/** A stored item's photo files: the cut-out, its small copy and the item as filmed. */
+export type PhotoRow = {
   cutout?: Partial<StoredFileRef>;
+  thumb?: Partial<StoredFileRef>;
   original?: Partial<StoredFileRef>;
 };
 
-const storedRef = (ref: Partial<StoredFileRef> | undefined) =>
+export const storedRef = (ref: Partial<StoredFileRef> | undefined) =>
   ref?.bucket && ref.path ? { bucket: ref.bucket, path: ref.path } : undefined;
+
+/** A stored product as the drafts read it, with `ADDED_PRODUCT_FIELDS`. */
+export type AddedProductRow = {
+  _id: unknown;
+  name?: string;
+  price?: number | null;
+  currency?: string | null;
+  priceIsFrom?: boolean;
+  featuredOption?: number;
+  options?: Array<{ photo?: PhotoRow }>;
+};
+
+/** The product fields `toAddedProduct` reads. */
+export const ADDED_PRODUCT_FIELDS =
+  "name price currency priceIsFrom featuredOption options.photo";
+
+/** The photo of a stored product's featured item (its first item's when that one is gone). */
+export function featuredPhoto<Photo>(row: {
+  featuredOption?: number;
+  options?: Array<{ photo?: Photo }>;
+}): Photo | undefined {
+  const options = row.options ?? [];
+  return (options[row.featuredOption ?? 0] ?? options[0])?.photo;
+}
+
+/** A stored product as the drafts use it, with its featured item's photo. */
+export function toAddedProduct(row: AddedProductRow): AddedProduct {
+  const photo = featuredPhoto(row);
+  const cutout = storedRef(photo?.cutout);
+  const original = storedRef(photo?.original);
+  return {
+    id: String(row._id),
+    name: row.name ?? "",
+    price: typeof row.price === "number" ? row.price : null,
+    currency: typeof row.currency === "string" ? row.currency : null,
+    priceIsFrom: row.priceIsFrom === true,
+    photo:
+      cutout || original
+        ? {
+            ...(cutout ? { cutout } : {}),
+            ...(original ? { original } : {}),
+          }
+        : null,
+  };
+}
 
 /**
  * The products an import added to the shelf, in the order they were filmed,
@@ -164,40 +123,11 @@ export async function loadAddedProducts(
     status: "published",
   })
     .sort({ importIndex: 1, _id: 1 })
-    .select("name price currency priceIsFrom featuredOption options.photo")
-    .lean<
-      Array<{
-        _id: unknown;
-        name?: string;
-        price?: number | null;
-        currency?: string | null;
-        priceIsFrom?: boolean;
-        featuredOption?: number;
-        options?: Array<{ photo?: PhotoRow }>;
-      }>
-    >();
+    .select(ADDED_PRODUCT_FIELDS)
+    .lean<AddedProductRow[]>();
   return {
     language: found.language ?? null,
-    products: rows.map(row => {
-      const options = row.options ?? [];
-      const photo = (options[row.featuredOption ?? 0] ?? options[0])?.photo;
-      const cutout = storedRef(photo?.cutout);
-      const original = storedRef(photo?.original);
-      return {
-        id: String(row._id),
-        name: row.name ?? "",
-        price: typeof row.price === "number" ? row.price : null,
-        currency: typeof row.currency === "string" ? row.currency : null,
-        priceIsFrom: row.priceIsFrom === true,
-        photo:
-          cutout || original
-            ? {
-                ...(cutout ? { cutout } : {}),
-                ...(original ? { original } : {}),
-              }
-            : null,
-      };
-    }),
+    products: rows.map(toAddedProduct),
   };
 }
 
@@ -305,28 +235,23 @@ export async function prepareCarouselDraft(
   const words = shopWords(added.language);
   const chosen = added.products
     .filter(product => product.photo)
-    .slice(0, WHATSAPP_TEMPLATE_LIMITS.CAROUSEL_CARDS_MAX);
+    .slice(0, KIT_CAROUSEL_MAX_CARDS);
   const pictures = await withProductPhotoUrls(() =>
     Promise.all(chosen.map(product => cardPicture(workspaceId, product)))
   );
   const cards = chosen.flatMap((product, index) => {
     const imageUrl = pictures[index];
     if (!imageUrl) return [];
-    const price = buyerPrice(product, words);
-    const maxName =
-      WHATSAPP_TEMPLATE_LIMITS.CAROUSEL_CARD_BODY_MAX_LENGTH -
-      (price ? price.length + 1 : 0);
-    const name = clip(product.name, maxName);
     return [
       {
         productId: product.id,
         imageUrl,
-        bodyText: price ? `${name}\n${price}` : name,
+        bodyText: carouselCardText(product, words).text,
         buttonText: words.orderButton,
       },
     ];
   });
-  if (cards.length < WHATSAPP_TEMPLATE_LIMITS.CAROUSEL_CARDS_MIN) return null;
+  if (cards.length < KIT_CAROUSEL_MIN_CARDS) return null;
   return {
     name: templateName(now),
     language: words.code,
@@ -335,10 +260,6 @@ export async function prepareCarouselDraft(
     leftOut: added.products.length - cards.length,
   };
 }
-
-// A CheckboxGroup lists at most 20 items, each title at most 30 characters.
-export const ORDER_FORM_MAX_PRODUCTS = 20;
-const OPTION_TITLE_MAX = 30;
 
 /**
  * The order form, one screen: the products to tick (by product id), the
@@ -368,11 +289,11 @@ export function buildOrderFormFlowConfig(
             fieldType: "CheckboxGroup",
             required: true,
             options: products.slice(0, ORDER_FORM_MAX_PRODUCTS).map(product => {
-              const price = buyerPrice(product, words);
+              const { title, description } = orderFormOption(product, words);
               return {
                 id: product.id,
-                title: clip(product.name, OPTION_TITLE_MAX),
-                ...(price ? { description: price } : {}),
+                title,
+                ...(description ? { description } : {}),
               };
             }),
           },
@@ -407,46 +328,64 @@ const failureMessage = (result: WhatsAppFlowServiceResult) =>
     : `Meta answered ${result.status}`);
 
 /**
- * Saves the order form on Meta as a draft Flow the owner checks and
- * publishes in WhatsApp Flows: created empty, then given its JSON, the way
- * airi's own Flow provisioning does. A draft Meta refused the JSON for is
- * deleted rather than left broken.
+ * Saves the order form on Meta as a draft Flow: created empty, then given
+ * its JSON, the way airi's own Flow provisioning does. A draft Meta refused
+ * the JSON for is deleted rather than left broken. A failure says whether
+ * the form itself was invalid or Meta refused it, in Meta's words. Given a
+ * draft an earlier attempt created (`flowId`), it gives that one the JSON
+ * instead of creating another.
  */
 export async function createOrderFormDraft(params: {
   accessToken: string;
   wabaId: string;
   products: AddedProduct[];
   language: string | null;
+  /** The Flow's name in WhatsApp Flows; "Order form <UTC time>" by default. */
+  name?: string;
   now?: Date;
+  /** A draft Flow an earlier attempt created and never finished. */
+  flowId?: string;
+  /**
+   * Told the new Flow's id as soon as Meta made it, before its JSON: a
+   * caller stopped after this point can finish that Flow next time.
+   */
+  onCreated?: (flowId: string) => Promise<void> | void;
 }): Promise<
   | { ok: true; flowId: string; name: string; leftOut: number }
-  | { ok: false; error: string }
+  | { ok: false; reason: "invalid" | "refused"; error: string }
 > {
   const config = buildOrderFormFlowConfig(params.products, params.language);
   const { isValid, issues } = validateWhatsAppFlowConfig(config);
   if (!isValid)
     return {
       ok: false,
+      reason: "invalid",
       error: `The order form is invalid: ${issues.map(issue => issue.code).join(", ")}`,
     };
-  const name = `Order form ${(params.now ?? new Date())
-    .toISOString()
-    .slice(0, 16)
-    .replace("T", " ")}`;
-  const created = await createMetaWhatsAppFlow({
-    accessToken: params.accessToken,
-    wabaId: params.wabaId,
-    name,
-    categories: ["OTHER"],
-  });
-  const flowId = created.providerFlowId ?? created.flow?.id;
-  if (!created.ok || !flowId) {
-    if (flowId)
-      await deleteMetaWhatsAppFlow({
-        accessToken: params.accessToken,
-        flowId,
-      }).catch(() => undefined);
-    return { ok: false, error: failureMessage(created) };
+  const name =
+    params.name ??
+    `Order form ${(params.now ?? new Date())
+      .toISOString()
+      .slice(0, 16)
+      .replace("T", " ")}`;
+  let flowId = params.flowId;
+  if (!flowId) {
+    const created = await createMetaWhatsAppFlow({
+      accessToken: params.accessToken,
+      wabaId: params.wabaId,
+      name,
+      categories: ["OTHER"],
+    });
+    flowId = created.providerFlowId ?? created.flow?.id;
+    if (!created.ok || !flowId) {
+      if (flowId)
+        await deleteMetaWhatsAppFlow({
+          accessToken: params.accessToken,
+          flowId,
+        }).catch(() => undefined);
+      return { ok: false, reason: "refused", error: failureMessage(created) };
+    }
+    await params.onCreated?.(flowId);
   }
   const uploaded = await updateMetaWhatsAppFlow({
     accessToken: params.accessToken,
@@ -459,7 +398,7 @@ export async function createOrderFormDraft(params: {
       accessToken: params.accessToken,
       flowId,
     }).catch(() => undefined);
-    return { ok: false, error: failureMessage(uploaded) };
+    return { ok: false, reason: "refused", error: failureMessage(uploaded) };
   }
   return {
     ok: true,

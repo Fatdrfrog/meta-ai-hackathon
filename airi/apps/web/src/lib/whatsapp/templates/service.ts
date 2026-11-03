@@ -60,6 +60,7 @@ import {
 import {
   formatGraphApiError,
   parseGraphResponse,
+  WhatsAppTemplateGraphRefusalError,
 } from "@/lib/whatsapp/templates/graph-response";
 import { getWhatsAppTemplateHeaderMediaValidationIssue } from "@/lib/whatsapp/templates/header-media-constraints";
 import { getWhatsAppTemplateParameterFormat } from "@/lib/whatsapp/templates/parameter-format";
@@ -374,11 +375,13 @@ async function createMetaUploadSession(params: {
   const response = await parseGraphResponse<GraphUploadSessionResponse>(res);
 
   if (!res.ok || response?.error || !response.id) {
-    throw new Error(
+    throw new WhatsAppTemplateGraphRefusalError(
       formatGraphApiError(
         response?.error,
         `Failed to create Meta media upload session: ${res.status}`
-      )
+      ),
+      res.status,
+      response?.error
     );
   }
 
@@ -404,11 +407,13 @@ async function uploadMetaHeaderMediaHandle(params: {
   const response = await parseGraphResponse<GraphUploadHandleResponse>(res);
 
   if (!res.ok || response?.error || !response.h) {
-    throw new Error(
+    throw new WhatsAppTemplateGraphRefusalError(
       formatGraphApiError(
         response?.error,
         `Failed to upload WhatsApp template header media to Meta: ${res.status}`
-      )
+      ),
+      res.status,
+      response?.error
     );
   }
 
@@ -901,11 +906,13 @@ export async function createTemplate(
     }
 
     if (!res.ok || response?.error) {
-      throw new Error(
+      throw new WhatsAppTemplateGraphRefusalError(
         formatGraphApiError(
           response?.error,
           `Failed to create template: ${res.status}`
-        )
+        ),
+        res.status,
+        response?.error
       );
     }
 
@@ -1140,6 +1147,59 @@ export async function deleteTemplate(
   } finally {
     await finishWhatsAppTemplateCatalogMutation(catalogMutation, catalogPatch);
   }
+}
+
+/**
+ * The template Meta has under exactly this name and language, or null when
+ * it has none: for a create whose answer was lost (a timeout, a function
+ * stopped mid-request), before making the same template again. Throws when
+ * Meta can't be read.
+ */
+export async function findWhatsAppTemplateByName(params: {
+  accessToken: string;
+  wabaId: string;
+  name: string;
+  language: string;
+}): Promise<{ id: string; status: string } | null> {
+  const query = new URLSearchParams({
+    name: params.name,
+    fields: "id,name,status,language",
+    limit: "100",
+  });
+  const res = await fetch(
+    buildGraphApiUrl(`${params.wabaId}/message_templates?${query.toString()}`),
+    {
+      headers: { Authorization: `Bearer ${params.accessToken}` },
+      signal: AbortSignal.timeout(10_000),
+    }
+  );
+  const response = await parseGraphResponse<{
+    data?: Array<Record<string, unknown>>;
+    error?: GraphApiErrorBody;
+  }>(res);
+  if (!res.ok || response?.error)
+    throw new WhatsAppTemplateGraphRefusalError(
+      formatGraphApiError(
+        response?.error,
+        `Failed to read WhatsApp templates: ${res.status}`
+      ),
+      res.status,
+      response?.error
+    );
+  const language =
+    normalizeWhatsAppTemplateLanguageCode(params.language) ?? params.language;
+  // Meta matches names that contain the one asked for: only this one counts.
+  const found = (response.data ?? []).find(
+    template =>
+      template.name === params.name &&
+      (typeof template.language !== "string" || template.language === language)
+  );
+  return found && typeof found.id === "string"
+    ? {
+        id: found.id,
+        status: typeof found.status === "string" ? found.status : "PENDING",
+      }
+    : null;
 }
 
 /**

@@ -62,7 +62,8 @@ export type CreateWhatsAppTemplateMutationInput = {
 export type WhatsAppTemplateSubmissionOrigin =
   | "templates_page"
   | "scenario_generator"
-  | "airi";
+  | "airi"
+  | "products";
 
 export type UpdateWhatsAppTemplateMutationInput = {
   workspaceId: string;
