@@ -92,7 +92,7 @@ What every ad keeps to:
 
 **One AI action per ad.** Every paid call of every run books to the ad's one action, `product-ad:<adId>`, so a retry or a re-render never counts another included action. Each call reserves before it runs, under an operation id unique to its run and attempt, and settles what it cost after, the way the import books its photos: $0.04 reserved for a call for the words, $0.01 for a scene or a check, $0.0025 for a SAM box, and the Voice Isolator's list price of $0.12 a minute, $0.01 at least. A call that failed after it may have been billed keeps its whole reservation. The first reservation admits the action; if the ledger refuses one after that, the rest of the ad falls to code (the exact stills, the denoiser, and the code's own words if none were written yet), and the ad still finishes. Editing the words starts a render-only run, which calls no model and spends nothing, and "Try again" after a failure picks up where the ad stopped, reusing the pictures already made.
 
-On two real videos, through this pipeline on a local worker with the hackathon keys, each full make cost about $0.07–0.08 and took about 64–79 s, and a render-only run after editing the words took 13–19 s, for $0 ([findings.md](findings.md)).
+On two real videos, through this pipeline on a local worker with the hackathon keys, a full make cost about $0.07–0.08 and took about 64–79 s (or $0.09 and 105 s when a scene needed its second try), and a render-only run after editing the words took 13–19 s, for $0 ([findings.md](findings.md)).
 
 ## Models
 
