@@ -141,3 +141,76 @@ Each run cost $0.02–0.05 of Muse Spark. On the promo, the output doesn't show 
 - A multiplier word after digits ("2,5 тысячи", "3万円") can still draw a false "differs" doubt.
 - A currency word or sign several countries share is read as its default currency unless the video points to another: $ or dollar is USD, £ or pound GBP, рубль RUB, lira TRY, 元 or 块 CNY, and a bare т after a number KZT. So "dollars" is stored as USD unless the video points to another dollar (the English dub's 7 prices came out USD with no doubt); the owner sets the code on the card.
 - Buyer drafts and the example names written into hidden lettering are in Kazakh, Russian or English, and in English for any other narration.
+
+## Nov 2–3: the video ad, tested on two real videos
+
+Before the studio went live on Nov 3, we made ads from two real videos through the real ad pipeline: the worker's ad code, run on a local machine with the hackathon's Meta and ElevenLabs keys, with a harness standing in for airi's database, storage, AI spend ledger and Temporal. The test had a $1 budget with a hard stop at $0.90, and spent $0.52, every call logged. The commits named below are airi.chat's, from its pull request 508; this repository carries them in `ab0fc64`, `20df8c4` and `715adf9`.
+
+- **The toy shelf:** the doll and the mug from the 65-second home video above, with the owner's own Kazakh narration.
+- **QazOner's promo**, shown with QazOner's permission: the family-tree panel and the dancing table, with the presenter, cut out of the video by SAM 3.1, closing the ad.
+
+### The two ads
+
+| | Toy shelf | QazOner's promo |
+| --- | --- | --- |
+| Final ad | 13.9 s, 1.66 MB | 12.9 s, 2.84 MB |
+| Format | 1080×1920 H.264 High@4.0, 30 fps, AAC 48 kHz stereo, faststart | The same |
+| Loudness | −16.1 LUFS, true peak −4.5 dBTP | −16.0 LUFS, true peak −4.5 dBTP |
+| Full makes | 3: $0.0769–0.0795, 68–79 s | 3: the first, which tried one scene twice, $0.0912 and 105 s; then $0.0732, and $0.0701 in 64 s |
+| Every run of the ad | 6, for $0.2452, two of them render-only at $0 | 4, for $0.2345, one render-only at $0 |
+
+In the final makes, the money went roughly on the words ($0.012–0.015), two Muse Image scenes ($0.020), two same-product checks ($0.015), two SAM boxes ($0.005) and the Voice Isolator ($0.018–0.024). A full make's time went on the words (10–20 s), the pictures (25–33 s, or 56 s with a second try), framing (4–7 s) and the video (16–32 s). A render-only run, as after the owner edits the words, took 13–19 s and cost nothing.
+
+Muse Spark wrote the words in Kazakh, the language of both narrations, and code drew the prices from the shelf: 5 000 ₸ and 500 ₸ on the toy shelf, 15 500 ₸ and 35 000 ₸ with "бастап" ("from") on the promo. In both final files, every drawn text has every character in both bundled fonts, every word layer sits inside the Reels safe band, and the format is one WhatsApp takes, under its 16 MB.
+
+### Muse Spark's same-product check
+
+- In the final runs, all four scenes passed on the first try: the doll on a playroom shelf, the mug on a stone counter, the panel and the table. So every final scene is Muse Image's picture. The mug's printed "web umn" stayed intact, and the names engraved on the panel matched its restored cut-out.
+- In QazOner's first run, Muse Image left out the panel's outer frame, and Muse Spark said so: the scene "omits the outer square frame with top and bottom banners". The retry, with that difference added to the prompt, passed.
+- Every run of the toy shelf passed on the first try.
+
+### Where Muse Image puts a product
+
+- The first prompt asked for the product "centred at 45%, half of its width". Tall and wide products then filled the picture up into the words and past the 9:16 sides, and the doll's top stood at 12% of the picture's height. Asked instead for the whole product upright in the lower half, at about half the picture's height (`f152cf8ef`, `05b618307`), the final scenes put the top of the doll at 35%, the mug at 21%, and the panel and the table at 29%.
+- It still varies from run to run. With the same final prompt and cut-out, a lab run put the top of the dancing table's deer figure at 30% of the picture, and the final make at 11%, where the label and the price tag cover the deer's body. SAM 3.1 had boxed only the table, not the deer, so the band above looked free. `61bfb2ee5` now grows a box much flatter than the cut-out's own shape to the whole product, but a $0 what-if on the stored answers shows the label would still cover the deer in this picture. The paper label is opaque, so the words stay legible.
+
+### The voice
+
+- Each ad's voice is the owner's own words, cut from the video's original sound: the doll's and the mug's price clips, and the presenter's lines about the panel and the table.
+- The ElevenLabs Voice Isolator ran in every make, booked in the ad's AI action ($0.024 on the toy shelf, $0.018 on the promo), and its answers lined up with what was sent (no lag, correlation 0.92–0.99). It only turned the background down. In its answers the background was about 0–5 dB lower: QazOner's music bed, at about −37 to −38 dB under words at about −15 dB, came out only 2–5 dB lower, its tones still in the spectrogram, and the quiet room noise between the doll's words measured −51.7 dB before and about −51 dB after. ffmpeg's denoiser after the isolator added only 1–1.5 dB more.
+- The isolator refuses a recording under 4.6 s (HTTP 400, nothing billed), so an ad with one short price clip had fallen back to the denoiser without a word. Since `d7ffdf0ed` the clips are sent padded to 5 s, and since `710ff43ae` a skipped isolator is logged with why.
+- Most of the polish we could measure came from ffmpeg: tightened pauses (the doll's clip went from 3.70 to 2.35 s, the mug's from 5.90 to 3.64 s and its longest pause from 0.94 s to none), a lower rumble cut (two 100 Hz high-pass stages left the room rumble 5.7 dB lower than one stage at 80 Hz, and the words 0.6 dB lower, `d7ffdf0ed`), fades and loudness. After all of it, the words stood 33.0 dB over the background on the doll's clip (19.8 dB before) and 38.4 dB on the mug's (28.7 dB). QazOner's lines run on with no pauses to tighten: 20.4 dB on the panel's (21.3 before) and 20.1 dB on the table's (17.0).
+- So the ad's brief says the background noise is "turned down", not taken out (`612e91fc4`). A stronger denoiser, such as an RNNoise model, wasn't tried.
+
+### Fixes from the test
+
+| Commit | What the test found | The fix |
+| --- | --- | --- |
+| `f152cf8ef` | Products stood up into the words and past the 9:16 sides, and Muse Spark dropped every ".", "?" and hyphen from the words | The scene prompt asks for a medium-sized product in the lower two thirds; the words' rules ask for normal punctuation, the shop's name as given, and "WhatsApp-қа" |
+| `d7ffdf0ed` | The Voice Isolator refused a recording under 4.6 s, and room rumble stayed | Recordings are padded to 5 s, and the rumble cut is two 100 Hz high-pass stages |
+| `369c2b126` | The Status picture showed small products on an empty wall | Products on the price card stand up to 600 px tall, from 480 |
+| `94a414d98` | With the voice tightened, the first product's price was whole on screen for about 0.15 s | The first scene lasts at least 4.6 s, within the 20 s cap: its price now shows for about 1.7 s |
+| `05b618307` | A figure standing on a product reached up into the words, and a caption borrowed the next product's line | The prompt asks for the whole product, anything standing on it included, in the lower half at about half the picture's height (in a lab run, the deer's top moved from 17% to 30% of the picture, the panel's from 19% to 25%); the words' prompt says the lines around a product may be about other products |
+| `56a53cd08` | Muse Spark wrote «җуыршақ» with the Tatar letter җ, which the fonts draw, so the checks passed it | A Kazakh script with a Cyrillic letter Kazakh doesn't use goes to the repair call |
+| `86c063dc1` | A two-line caption split «Көк көйлек» across its lines | A two-line caption breaks where its lines come out even |
+
+The review after the test added more: `9a356ca3f` gives the words only the narration about each product, where `05b618307` had only asked the prompt to set other products' lines aside; `3927a5e27` runs the Kazakh check whatever name Muse Spark gives the language; `61bfb2ee5` grows a partial SAM box to the whole product; and `cabe854c5` drops a price tag in only as far as keeps its ink inside the safe band (its drop had started 6–7 px above it).
+
+### Rendered again with the final code
+
+After the review, both ads were rendered again from the test's saved scenes, words and voices, in render-only mode, with the code of the pull request's commit `409e0311b`; its later commits changed no worker file, and in the shared package only how the page's ledger sets a price apart. No model was called: no key was read, the network was blocked, and every paid call would have thrown. Both passed, for $0:
+
+- The 6 frames sampled from each, its Status, 4:5 and poster pictures, and its decoded sound, sample for sample, were identical to the test's.
+- The one change was the price tag's drop-in (`cabe854c5`): 20 px on the toy shelf and 19 px on the promo instead of 26, during its 0.3 s fade-in, so its ink no longer starts above the safe band. Both ffmpeg graphs, rebuilt, reproduced both MP4s bit for bit, and the other frames that differ are encoder carry-over at a PSNR-Y of 42 dB or more.
+- On each, 11 of 11 drawn texts had every character in both fonts, 9 of 9 inked layers sat inside the safe band, at rest and as they move in, and the true peak, −4.5 dBTP, was under the −1.5 dBTP target.
+- The label still covers the deer on the promo's table, as in the test: the box fix runs only in a paid make.
+
+### Not tested, and known limits
+
+- Nobody watched or listened on a phone: the voices were judged by measurements and spectrograms.
+- Everything was rendered on Windows with ffmpeg 8.0.1, not on the worker image's ffmpeg 5.1, though every filter the ad uses exists in 5.1.
+- The harness stood in for the database, storage, the AI spend ledger and Temporal.
+- Both ads had 2 products; an ad of 1 or 3 wasn't made.
+- The Kazakh words haven't been checked by a native speaker.
+- The 4:5 ad picture was compared with the test's byte for byte, not checked against its margins.
+- These were local runs. The studio has been live on airi.chat since Nov 3; no ad made there is reported here.
