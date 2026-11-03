@@ -39,6 +39,8 @@ import {
   CREATIVE_IMAGE_GENERATION_ACTIVITY,
   PRODUCT_VIDEO_IMPORT_ACTIVITY,
   PRODUCT_VIDEO_IMPORT_FAIL_ACTIVITY,
+  PRODUCT_AD_ACTIVITY,
+  PRODUCT_AD_FAIL_ACTIVITY,
   CREATIVE_ASSET_FAIL_EDIT_ACTIVITY,
   CREATIVE_ASSET_PROCESS_EDIT_ACTIVITY,
   WAN_AVATAR_FAIL_ACTIVITY,
@@ -133,6 +135,10 @@ import {
   productVideoImportActivity,
   productVideoImportFailActivity,
 } from "./activities/product-video-import.js";
+import {
+  productAdActivity,
+  productAdFailActivity,
+} from "./activities/product-ad.js";
 import {
   acceptScenarioGenerativeAIVideoActivity,
   acceptScenarioGenerativeAIImageActivity,
@@ -428,6 +434,8 @@ export async function runTemporalWorker(): Promise<void> {
       [CREATIVE_IMAGE_GENERATION_ACTIVITY]: creativeImageGenerationActivity,
       [PRODUCT_VIDEO_IMPORT_ACTIVITY]: productVideoImportActivity,
       [PRODUCT_VIDEO_IMPORT_FAIL_ACTIVITY]: productVideoImportFailActivity,
+      [PRODUCT_AD_ACTIVITY]: productAdActivity,
+      [PRODUCT_AD_FAIL_ACTIVITY]: productAdFailActivity,
       [CONVERSATION_MEDIA_ANALYSIS_ACTIVITY]:
         conversationMediaAnalysisProcessActivity,
       [CONVERSATION_MEDIA_ANALYSIS_COMPLETE_ACTIVITY]:
@@ -558,6 +566,8 @@ export async function runTemporalWorker(): Promise<void> {
           [CREATIVE_IMAGE_GENERATION_ACTIVITY]: creativeImageGenerationActivity,
           [PRODUCT_VIDEO_IMPORT_ACTIVITY]: productVideoImportActivity,
           [PRODUCT_VIDEO_IMPORT_FAIL_ACTIVITY]: productVideoImportFailActivity,
+          [PRODUCT_AD_ACTIVITY]: productAdActivity,
+          [PRODUCT_AD_FAIL_ACTIVITY]: productAdFailActivity,
           [CONVERSATION_MEDIA_ANALYSIS_ACTIVITY]:
             conversationMediaAnalysisProcessActivity,
           [CONVERSATION_MEDIA_ANALYSIS_COMPLETE_ACTIVITY]:

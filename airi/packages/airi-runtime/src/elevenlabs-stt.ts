@@ -37,6 +37,37 @@ export function isElevenLabsSttTransientError(
   return error instanceof ElevenLabsSttError && error.info.transient;
 }
 
+/**
+ * True when ElevenLabs transcribed nothing, so billed nothing: the request was
+ * refused before it was sent (configuration, an empty file) or answered 4xx.
+ * A network failure or a timeout before any answer, or a 5xx, leaves the
+ * outcome unknown; isElevenLabsSttAcceptedRequest covers an unusable 2xx.
+ */
+export function isElevenLabsSttRefusedRequest(
+  error: unknown,
+): error is ElevenLabsSttError {
+  if (!(error instanceof ElevenLabsSttError)) return false;
+  const { kind, status } = error.info;
+  if (status === undefined)
+    return kind === "config" || kind === "invalid_request";
+  return status >= 400 && status < 500;
+}
+
+/**
+ * True when ElevenLabs answered 2xx, taking the audio as it does for a
+ * successful request, but the answer was unusable: it had no audio, or its
+ * body never finished arriving. In this copy only the Voice Isolator's errors
+ * (elevenlabs-audio-isolation.ts) keep a 2xx status; a transcription error
+ * never does, so an unusable transcription answer stays unknown here.
+ */
+export function isElevenLabsSttAcceptedRequest(
+  error: unknown,
+): error is ElevenLabsSttError {
+  if (!(error instanceof ElevenLabsSttError)) return false;
+  const { status } = error.info;
+  return status !== undefined && status >= 200 && status < 300;
+}
+
 export type ElevenLabsConversationTranscriptionWebhookMetadata = {
   workflowId: string;
   workspaceId: string;

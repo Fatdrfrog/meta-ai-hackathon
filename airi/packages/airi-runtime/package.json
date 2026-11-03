@@ -14,6 +14,7 @@
     "./llm-analytics": "./src/llm-analytics.ts",
     "./llm-pricing": "./src/llm-pricing.ts",
     "./workspace-ai-spend": "./src/workspace-ai-spend.ts",
+    "./elevenlabs-audio-isolation": "./src/elevenlabs-audio-isolation.ts",
     "./elevenlabs-stt": "./src/elevenlabs-stt.ts",
     "./elevenlabs-stt-webhook": "./src/elevenlabs-stt-webhook.ts",
     "./meta-model-api": "./src/meta-model-api.ts",

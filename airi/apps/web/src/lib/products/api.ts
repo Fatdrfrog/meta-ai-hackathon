@@ -28,6 +28,15 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   whatsapp_link_linked_elsewhere: "That phone is linked to another workspace",
   whatsapp_link_shop_name_taken:
     "Another workspace with Products has the same name",
+  kit_not_found: "That kit wasn't found",
+  ad_not_found: "That ad wasn't found",
+  ad_not_ready: "The ad can only be changed once it's ready",
+  ad_letters_unsupported:
+    "Video ads support Latin and Cyrillic letters for now",
+  ad_unavailable: "The ad couldn't be started",
+  ai_actions_used: "The plan's included AI actions are used up",
+  spend_limit: "The company's AI spending limit has been reached",
+  trial_ended: "The free trial has ended",
 };
 
 export const productsJson = (data: unknown, status = 200) =>

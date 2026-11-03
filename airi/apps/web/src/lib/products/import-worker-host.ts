@@ -1,11 +1,12 @@
 import "server-only";
 
 /**
- * Web-owned code the worker's Products code uses (the video import activity,
- * and the WhatsApp intake on airi's own number), in one module, so each
- * reaches the web app through a single import.
+ * Web-owned code the worker's Products code uses (the video import and video
+ * ad activities, and the WhatsApp intake on airi's own number), in one
+ * module, so each reaches the web app through a single import.
  */
 export { default as connectDB } from "@/lib/mongoose";
+export { ProductAd } from "@/models/product-ad";
 export { ProductVideoImport } from "@/models/product-video-import";
 export { WorkspaceProduct } from "@/models/workspace-product";
 export { emitProductsChangedRealtimeEvent } from "@/lib/realtime/server";

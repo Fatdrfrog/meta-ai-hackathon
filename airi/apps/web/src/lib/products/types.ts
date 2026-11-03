@@ -87,7 +87,14 @@ export type WorkspaceProductRecord = {
   priceIsFrom: boolean;
   /** Its featured option cut out of the video on a transparent background, or null. */
   imageUrl: string | null;
+  /**
+   * Whether that photo is a cut-out: a product with no clear view keeps
+   * the whole frame as its photo, which a video ad can't show.
+   */
+  hasCutout?: boolean;
   updatedAt: string | null;
+  /** The video it was found in; the Products list sends it, to count the shelf's videos. */
+  importId?: string | null;
 };
 
 export type ProductsListResponse = {
@@ -326,8 +333,22 @@ export const PRODUCTS_ERROR_CODES = [
   "whatsapp_link_not_found",
   "whatsapp_link_linked_elsewhere",
   "whatsapp_link_shop_name_taken",
+  // Kits and video ads.
+  "kit_not_found",
+  "ad_not_found",
+  "ad_not_ready",
+  "ad_letters_unsupported",
+  "ad_unavailable",
+  // An AI action refused before it starts, as the import refuses one.
+  "ai_actions_used",
+  "spend_limit",
+  "trial_ended",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
+
+// Kits (carousel + order form) and video ads, each in its own file.
+export * from "./types-kit";
+export * from "./types-ad";
 
 export type ProductsErrorBody = {
   error: string;
