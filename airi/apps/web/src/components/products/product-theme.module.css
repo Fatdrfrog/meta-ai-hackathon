@@ -1,0 +1,506 @@
+/*
+ * Products' "Paper" look: role tokens layered on airi's globals, for the
+ * Products scroll column only (the route puts .theme on it). Every Products
+ * component reads them as var(--p-…); airi's sidebar, shell and own tokens
+ * stay as they are. Light mode is warm paper with no black surface; dark mode
+ * is a warm "evening shop" whose surfaces get lighter as they rise.
+ *
+ * Content portaled out of the column (popovers, dialogs) doesn't inherit
+ * these: put .theme on the portaled content to use them there.
+ */
+
+.theme {
+  /* Surfaces: each step up is lighter, each step in is warmer. */
+  --p-paper: #fbf9f6; /* oklch(0.984 0.0055 84): the page ground */
+  --p-raised: #fefdfc; /* sheets and cards */
+  --p-sunk: #f5f2ed; /* wells, tracks, hover */
+  --p-deep: #efeae3; /* done dots, bar tracks */
+
+  /* Text. ink-3 (3.8:1) is for icons, decoration and the unchecked edge only. */
+  --p-ink: #241e1a;
+  --p-ink-2: #5e5750;
+  --p-ink-3: #857f79;
+
+  /* Hairlines, from the ink, so they follow it into dark mode. */
+  --p-line: color-mix(in oklab, var(--p-ink) 11%, transparent);
+  --p-line-strong: color-mix(in oklab, var(--p-ink) 19%, transparent);
+
+  /* The one accent, airi rose: the fill for the single primary action per
+     view and for checks; the ink for links and the current step. */
+  --p-accent: var(--primary);
+  --p-accent-fg: var(--primary-foreground);
+  --p-accent-ink: var(--airi-rose-ink);
+  --p-accent-wash: color-mix(in oklab, var(--primary) 7%, transparent);
+  --p-accent-line: color-mix(in oklab, var(--primary) 48%, transparent);
+
+  /* States. --p-ok fills (white text on it); --p-ok-ink is green text. */
+  --p-ok: var(--airi-green-ink);
+  --p-ok-ink: var(--airi-green-ink);
+  --p-ok-wash: color-mix(in oklab, var(--airi-green-ink) 9%, transparent);
+  /*
+   * Green text on the green wash (the ok chip): airi's green there is only
+   * 4.46:1 on paper and 4.19 on sunk, so it goes a step deeper: 5.28 on
+   * paper, 5.44 raised, 4.97 sunk, 4.92 on the wall.
+   */
+  --p-ok-chip-ink: #087019;
+  --p-danger: var(--destructive);
+  --p-danger-ink: #b7191c;
+  --p-danger-wash: color-mix(in oklab, var(--destructive) 6%, transparent);
+  --p-danger-line: color-mix(in oklab, var(--destructive) 26%, transparent);
+
+  /*
+   * Controls: the unchecked box's edge, and a chosen item's outline. The
+   * outline is ink at 52%, not the spec's 46% (2.81-2.89:1): its own
+   * acceptance asks 3:1 of controls, which 52% meets on every surface
+   * (3.31 on the wall, 3.41 raised; 4.92 in dark mode).
+   */
+  --p-check-edge: var(--p-ink-3);
+  --p-pick-line: color-mix(in oklab, var(--p-ink) 52%, transparent);
+
+  /* The shelf: plaster wall with window light, birch plank, ply edge. */
+  --p-wall: #f4f0ea;
+  --p-wall-low: #ede7df;
+  --p-window: rgb(255 255 255 / 0.55);
+  --p-birch: #f5ead8;
+  --p-birch-low: #efe1cd;
+  --p-birch-shade: rgb(var(--p-shade) / 0.11);
+  --p-ply: #e6d2ba;
+  --p-ply-low: #d8bda3;
+  --p-ply-highlight: rgb(255 255 255 / 0.5);
+  --p-ply-shade: rgb(var(--p-shade) / 0.18);
+  /* Only if a 1080p screen recording shows no shimmer; else the lip is flat. */
+  --p-ply-line: oklch(0.55 0.05 60 / 0.15);
+  --p-under: rgb(var(--p-shade) / 0.12);
+  /* Price labels are paper with dark ink in both themes ("from" in ink-2). */
+  --p-label: #fefdfa;
+  --p-label-ink: #241e1a;
+  --p-label-ink-2: #5e5750;
+  /* The backdrop of made things (pictures of the output). */
+  --p-sand: #f6efe4;
+  --p-sand-low: #ece1d2;
+  /* A cut-out's lift off the wall. */
+  --p-cutout-lift: drop-shadow(0 1px 1px rgb(var(--p-shade) / 0.12));
+
+  /* Shadows: one warm shade at low opacity; borders are inset hairlines. */
+  --p-shade: 35 25 15;
+  --p-shadow-sheet:
+    0 1px 2px rgb(var(--p-shade) / 0.05),
+    0 12px 32px -18px rgb(var(--p-shade) / 0.18);
+  --p-shadow-tile:
+    0 1px 1px rgb(var(--p-shade) / 0.04),
+    0 4px 12px -6px rgb(var(--p-shade) / 0.12);
+  --p-shadow-label:
+    0 1px 1px rgb(var(--p-shade) / 0.16),
+    0 2px 6px -2px rgb(var(--p-shade) / 0.16);
+  --p-shadow-control: 0 1px 1px rgb(var(--p-shade) / 0.05);
+  /* A product's shadows on the plank: contact (70% × 8px) and ambient
+     (104% × 22px, 7px lower) ellipses, in place of a blurred drop shadow. */
+  --p-contact: rgb(var(--p-shade) / 0.34);
+  --p-ambient: rgb(var(--p-shade) / 0.13);
+
+  /* Radii. */
+  --p-r-sheet: 20px;
+  --p-r-tile: 14px;
+  --p-r-control: 10px;
+  --p-r-push: 12px;
+  --p-r-thumb: 10px;
+  --p-r-film: 14px;
+  --p-r-phone: 22px;
+  --p-r-pill: 999px;
+  --p-r-label: 3px;
+
+  /* Motion: nothing runs longer than 240ms, and nothing loops. The spring
+     (damping 0.75, about 2.8% overshoot, settled at 240ms) is only for
+     set-down, card rise, the chosen-bay lift and tile hover. With reduced
+     motion, components drop transforms for 120ms opacity cross-fades. */
+  --p-dur-press: 90ms;
+  --p-dur-fast: 140ms;
+  --p-dur-base: 200ms;
+  --p-dur-settle: 240ms;
+  --p-dur-reduced: 120ms;
+  --p-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --p-ease-spring: linear(
+    0,
+    0.09 6.3%,
+    0.281 12.5%,
+    0.489 18.8%,
+    0.673 25%,
+    0.815 31.3%,
+    0.914 37.5%,
+    0.976 43.8%,
+    1.01 50%,
+    1.025 56.3%,
+    1.028 62.5%,
+    1.025 68.8%,
+    1.02 75%,
+    1.014 81.3%,
+    1.009 87.5%,
+    1.005 93.8%,
+    1
+  );
+
+  /* Display type: Geologica (product-fonts.ts puts its variable on the
+     column); text stays airi's Inter. */
+  --p-font-display:
+    var(--font-products-display), ui-sans-serif, system-ui, sans-serif;
+
+  background: var(--p-paper);
+  color: var(--p-ink);
+}
+
+/* Dark: elevation, not blackness. */
+:global(.dark) .theme {
+  --p-paper: #141210;
+  --p-raised: #1e1b18;
+  --p-sunk: #1a1815;
+  --p-deep: #282521;
+
+  --p-ink: #f1eee9;
+  --p-ink-2: #b4b0aa;
+  --p-ink-3: #898580;
+
+  /* The rose fill stays; rose text lightens. */
+  --p-accent-ink: #fc7184;
+  --p-accent-wash: color-mix(in oklab, var(--primary) 15%, transparent);
+  --p-accent-line: color-mix(in oklab, var(--p-accent-ink) 55%, transparent);
+
+  --p-ok: #1b7e2a;
+  --p-ok-ink: #66cb79;
+  --p-ok-wash: color-mix(in oklab, #66cb79 12%, transparent);
+  --p-ok-chip-ink: var(--p-ok-ink);
+  --p-danger-ink: #ff7d78;
+  --p-danger-wash: color-mix(in oklab, var(--destructive) 10%, transparent);
+  --p-danger-line: color-mix(in oklab, var(--destructive) 32%, transparent);
+
+  /* The shelf becomes an evening shop. */
+  --p-wall: #1e1b18;
+  --p-wall-low: #181512;
+  --p-window: rgb(255 255 255 / 0.035);
+  --p-birch: #493e30;
+  --p-birch-low: #3f3326;
+  --p-ply: #392b1c;
+  --p-ply-low: #2d2013;
+  --p-ply-highlight: rgb(255 255 255 / 0.08);
+  --p-ply-shade: rgb(0 0 0 / 0.4);
+  --p-ply-line: oklch(0.12 0.02 60 / 0.4);
+  --p-under: rgb(0 0 0 / 0.42);
+  --p-label: #f5f3ef;
+  --p-sand: oklch(0.93 0.018 82);
+  --p-sand-low: oklch(0.885 0.026 78);
+  /* A 1px light rim, so black goods don't sink into the wall. */
+  --p-cutout-lift: drop-shadow(0 0 1px rgb(255 255 255 / 0.28));
+
+  --p-shade: 0 0 0;
+  --p-shadow-sheet:
+    inset 0 1px 0 rgb(255 255 255 / 0.04), 0 14px 36px -18px rgb(0 0 0 / 0.7);
+  --p-shadow-tile:
+    inset 0 1px 0 rgb(255 255 255 / 0.035), 0 6px 16px -8px rgb(0 0 0 / 0.6);
+  --p-shadow-label: 0 1px 1px rgb(0 0 0 / 0.4), 0 3px 8px -2px rgb(0 0 0 / 0.5);
+  --p-shadow-control: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --p-contact: rgb(0 0 0 / 0.6);
+  --p-ambient: rgb(0 0 0 / 0.32);
+}
+
+@media (prefers-contrast: more) {
+  .theme {
+    --p-ink-2: var(--p-ink);
+    --p-line: color-mix(in oklab, var(--p-ink) 30%, transparent);
+    --p-line-strong: color-mix(in oklab, var(--p-ink) 40%, transparent);
+    --p-check-edge: var(--p-ink-2);
+    --p-accent-ink: #b0002f;
+  }
+
+  :global(.dark) .theme {
+    --p-ink-2: var(--p-ink);
+    --p-accent-ink: #ff9aa7;
+  }
+}
+
+/* Shared roles, for any Products part to use. */
+
+/* Display type, Geologica 600. */
+.displayXl,
+.displayL,
+.displayM {
+  font-family: var(--p-font-display);
+  font-weight: 600;
+}
+
+.displayXl {
+  font-size: 34px;
+  line-height: 40px;
+  letter-spacing: -0.022em;
+}
+
+.displayL {
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -0.018em;
+}
+
+.displayM {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.012em;
+}
+
+@media (max-width: 639px) {
+  .displayXl {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .displayL {
+    font-size: 23px;
+    line-height: 29px;
+  }
+}
+
+/* A raised sheet (stage, review card, make and studio panels) and a tile. */
+.sheet {
+  background: var(--p-raised);
+  border-radius: var(--p-r-sheet);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line),
+    var(--p-shadow-sheet);
+}
+
+.tile {
+  background: var(--p-raised);
+  border-radius: var(--p-r-tile);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line),
+    var(--p-shadow-tile);
+}
+
+/* Portaled content (a popover, a dialog) put on Products paper: with .theme
+   on it too, raised like a sheet. */
+.theme.popover {
+  background: var(--p-raised);
+  border-color: var(--p-line);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line),
+    var(--p-shadow-sheet);
+}
+
+/* A paper price label: code-drawn prices, tabular, in both themes. */
+.priceLabel {
+  display: inline-block;
+  padding: 2px 6px 1px;
+  border-radius: var(--p-r-label);
+  background: var(--p-label);
+  color: var(--p-label-ink);
+  box-shadow: var(--p-shadow-label);
+  font-size: 13px;
+  line-height: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A view or sheet coming in: it fades in with a 6px rise over 200ms, or, with
+   reduced motion, fades in over 120ms. Nothing stays applied after, so a
+   sticky or fixed part inside it keeps to the page. */
+@media (prefers-reduced-motion: no-preference) {
+  .enter {
+    animation: p-enter var(--p-dur-base) var(--p-ease-out) backwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    animation: p-enter-still var(--p-dur-reduced) linear backwards;
+  }
+}
+@keyframes p-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes p-enter-still {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * airi's buttons (components/ui/button), the Products way. Every Button in
+ * the column takes these; nothing changes outside it. They win over the
+ * variants' Tailwind classes because those sit in a cascade layer.
+ */
+
+/* Push, the one primary action per view: a rose face lifted 3px (4 on
+   hover, 1 when pressed) over a flat edge, never near-black. */
+.theme :global(.btn-push .btn-push-shadow) {
+  background: rgb(var(--p-shade) / 0.16);
+  transform: translateY(2px);
+  transition: none;
+}
+.theme :global(.btn-push:hover .btn-push-shadow),
+.theme :global(.btn-push:active .btn-push-shadow) {
+  transform: translateY(2px);
+}
+.theme :global(.btn-push .btn-push-edge) {
+  background: color-mix(in oklab, var(--btn-push-color) 74%, black);
+}
+.theme :global(.btn-push .btn-push-front) {
+  min-height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+  line-height: 20px;
+  transform: translateY(-3px);
+  transition: transform var(--p-dur-settle) var(--p-ease-out);
+}
+.theme :global(.btn-push:hover .btn-push-front) {
+  transform: translateY(-4px);
+  transition: transform var(--p-dur-base) var(--p-ease-out);
+}
+.theme :global(.btn-push:active .btn-push-front) {
+  transform: translateY(-1px);
+  transition-duration: 60ms;
+}
+.theme :global(.btn-push:disabled .btn-push-front),
+.theme :global(.btn-push:disabled:hover .btn-push-front) {
+  transform: translateY(-3px);
+}
+.theme :global(.btn-push-sm .btn-push-front) {
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+.theme :global(.btn-push-lg .btn-push-front) {
+  min-height: 48px;
+  padding: 0 24px;
+  font-size: 15px;
+}
+.theme :global(.btn-push-icon .btn-push-front) {
+  min-width: 40px;
+  padding: 0;
+}
+:global(.dark) .theme :global(.btn-push .btn-push-shadow) {
+  background: rgb(0 0 0 / 0.4);
+}
+/* A push that fills its column on a phone (a stacked pair, a bar's half): a
+   push only stretches its face with an explicit track, as Button's own
+   fullWidth does at every width. */
+@media (max-width: 639px) {
+  .theme .fillOnPhone:global(.btn-push) {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .theme .fillOnPhone:global(.btn-push) > span {
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Outline: raised paper inside a strong hairline; hover sinks it, a press
+   gives a little. Ghost: hover sinks it. A large one (48px) sets
+   --p-button-radius to 12px. */
+.theme [data-slot="button"][data-variant="outline"] {
+  border-color: var(--p-line-strong);
+  border-radius: var(--p-button-radius, var(--p-r-control));
+  background: var(--p-raised);
+  color: var(--p-ink);
+  box-shadow: var(--p-shadow-control);
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    transform var(--p-dur-press) var(--p-ease-out);
+}
+.theme [data-slot="button"][data-variant="outline"]:hover,
+.theme [data-slot="button"][data-variant="ghost"]:hover {
+  background: var(--p-sunk);
+  color: var(--p-ink);
+}
+.theme [data-slot="button"][data-variant="ghost"] {
+  border-radius: var(--p-button-radius, var(--p-r-control));
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    transform var(--p-dur-press) var(--p-ease-out);
+}
+.theme [data-slot="button"][data-variant="outline"]:active,
+.theme [data-slot="button"][data-variant="ghost"]:active {
+  transform: scale(0.98);
+}
+
+/* Link: rose ink, a thin underline in rose. */
+.theme [data-slot="button"][data-variant="link"] {
+  color: var(--p-accent-ink);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--p-accent-line);
+}
+.theme [data-slot="button"][data-variant="link"]:hover {
+  text-decoration-color: currentColor;
+}
+
+/* "Add to shelf": green ink fill with white text. No glow, no hover scale.
+   Put it on a secondary Button. */
+.theme .ok[data-slot="button"] {
+  border-radius: var(--p-r-push);
+  background: var(--p-ok);
+  color: #fff;
+  box-shadow: 0 1px 2px rgb(var(--p-shade) / 0.12);
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    transform var(--p-dur-press) var(--p-ease-out);
+}
+.theme .ok[data-slot="button"]:hover {
+  background: color-mix(in oklab, var(--p-ok) 90%, black);
+}
+.theme .ok[data-slot="button"]:active {
+  transform: scale(0.98);
+}
+
+/* Keyboard hints: small sunk keys; a pointer device shows them only where it
+   has fine control (the components hide them otherwise). */
+.theme [data-slot="kbd"] {
+  height: 20px;
+  min-width: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--p-ink-2);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+.theme [data-slot="kbd"] svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.25;
+}
+.theme .ok [data-slot="kbd"] {
+  color: #fff;
+  background: rgb(255 255 255 / 0.16);
+  box-shadow: none;
+}
+
+/* Focus: airi's ring as a 2px outline, 2px off the control. */
+.theme [data-slot="button"]:focus-visible,
+.theme a:focus-visible,
+.theme [role="checkbox"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.theme [data-slot="button"][data-variant="outline"]:focus-visible {
+  box-shadow: var(--p-shadow-control);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme :global(.btn-push .btn-push-front),
+  .theme :global(.btn-push:hover .btn-push-front),
+  .theme :global(.btn-push:active .btn-push-front),
+  .theme [data-slot="button"],
+  .theme .ok[data-slot="button"] {
+    transition: none;
+  }
+  .theme [data-slot="button"][data-variant="outline"]:active,
+  .theme [data-slot="button"][data-variant="ghost"]:active,
+  .theme .ok[data-slot="button"]:active {
+    transform: none;
+  }
+}

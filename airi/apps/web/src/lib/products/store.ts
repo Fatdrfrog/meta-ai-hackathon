@@ -84,6 +84,7 @@ async function toRecord(
   workspaceId: string,
   row: ProductRow
 ): Promise<WorkspaceProductRecord> {
+  const photo = row.options?.[featuredIndex(row)]?.photo;
   return {
     id: String(row._id),
     name: text(row.name) ?? "",
@@ -92,10 +93,11 @@ async function toRecord(
     priceIsFrom: row.priceIsFrom === true,
     // The featured option's small copy: the shelf shows products about
     // 176 px tall.
-    imageUrl: await productPhotoUrl(
-      workspaceId,
-      row.options?.[featuredIndex(row)]?.photo?.thumb
-    ),
+    imageUrl: await productPhotoUrl(workspaceId, photo?.thumb),
+    // A product with no clear view has a thumb of the whole frame, and no
+    // cut-out: the ad's brief refuses it (adProductProblem), so the page
+    // doesn't offer it.
+    hasCutout: Boolean(photo?.cutout?.bucket && photo.cutout.path),
     updatedAt: toIsoOrNull(row.updatedAt),
   };
 }
@@ -119,7 +121,10 @@ async function toOptionRecord(
   };
 }
 
-/** The workspace's published products, in shelf order, as the Products page lists them. */
+/**
+ * The workspace's published products, in shelf order, as the Products page
+ * lists them, each with the video it was found in.
+ */
 export async function listPublishedProducts(
   workspaceId: string
 ): Promise<WorkspaceProductRecord[]> {
@@ -127,11 +132,16 @@ export async function listPublishedProducts(
     .sort({ position: 1, _id: 1 })
     .limit(MAX_LISTED_PRODUCTS)
     .select(
-      "name price currency priceIsFrom updatedAt featuredOption options.photo.thumb"
+      "name price currency priceIsFrom updatedAt featuredOption options.photo.thumb options.photo.cutout importId"
     )
     .lean<ProductRow[]>();
   return withProductPhotoUrls(() =>
-    Promise.all(rows.map(row => toRecord(workspaceId, row)))
+    Promise.all(
+      rows.map(async row => ({
+        ...(await toRecord(workspaceId, row)),
+        importId: row.importId ? String(row.importId) : null,
+      }))
+    )
   );
 }
 

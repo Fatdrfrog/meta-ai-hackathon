@@ -44,11 +44,11 @@ describe("listPublishedProducts", () => {
     expect(query.sort).toHaveBeenCalledWith({ position: 1, _id: 1 });
     expect(query.limit).toHaveBeenCalledWith(MAX_LISTED_PRODUCTS);
     expect(query.select).toHaveBeenCalledWith(
-      "name price currency priceIsFrom updatedAt featuredOption options.photo.thumb"
+      "name price currency priceIsFrom updatedAt featuredOption options.photo.thumb options.photo.cutout importId"
     );
   });
 
-  it("maps rows to records, with the featured option's small copy signed", async () => {
+  it("maps rows to records, with the featured option's small copy signed and the video it came from", async () => {
     mockFind.mockReturnValue(
       createFindQuery([
         {
@@ -60,9 +60,16 @@ describe("listPublishedProducts", () => {
           featuredOption: 1,
           options: [
             { photo: { thumb: { bucket: "media", path: "p1/a.webp" } } },
-            { photo: { thumb: { bucket: "media", path: "p1/thumb.webp" } } },
+            {
+              photo: {
+                thumb: { bucket: "media", path: "p1/thumb.webp" },
+                cutout: { bucket: "media", path: "p1/cutout.png" },
+              },
+            },
           ],
           updatedAt: new Date("2026-10-27T09:30:00.000Z"),
+          // An ObjectId, as Mongo gives it.
+          importId: { toString: () => "651f1f77bcf86cd799439040" },
         },
         {
           _id: "651f1f77bcf86cd799439032",
@@ -70,12 +77,16 @@ describe("listPublishedProducts", () => {
           price: null,
           updatedAt: "not a date",
         },
-        // A price said in dollars keeps its currency.
+        // A price said in dollars keeps its currency. With no clear view of
+        // it, its photo is the whole frame: a thumb, and no cut-out.
         {
           _id: "651f1f77bcf86cd799439033",
           name: "Phone stand",
           price: 10,
           currency: "USD",
+          options: [
+            { photo: { thumb: { bucket: "media", path: "p3/thumb.webp" } } },
+          ],
         },
       ])
     );
@@ -88,7 +99,9 @@ describe("listPublishedProducts", () => {
         currency: "KZT",
         priceIsFrom: true,
         imageUrl: "https://signed.test/workspace-1/p1/thumb.webp",
+        hasCutout: true,
         updatedAt: "2026-10-27T09:30:00.000Z",
+        importId: "651f1f77bcf86cd799439040",
       },
       {
         id: "651f1f77bcf86cd799439032",
@@ -97,7 +110,9 @@ describe("listPublishedProducts", () => {
         currency: null,
         priceIsFrom: false,
         imageUrl: null,
+        hasCutout: false,
         updatedAt: null,
+        importId: null,
       },
       {
         id: "651f1f77bcf86cd799439033",
@@ -105,8 +120,10 @@ describe("listPublishedProducts", () => {
         price: 10,
         currency: "USD",
         priceIsFrom: false,
-        imageUrl: null,
+        imageUrl: "https://signed.test/workspace-1/p3/thumb.webp",
+        hasCutout: false,
         updatedAt: null,
+        importId: null,
       },
     ]);
   });
@@ -202,6 +219,7 @@ describe("listImportProducts", () => {
       ],
       clipUrl: "https://signed.test/workspace-1/p/clip.mp4",
       imageUrl: "https://signed.test/workspace-1/p/thumb.webp",
+      hasCutout: true,
       featuredOption: 0,
       options: [
         {

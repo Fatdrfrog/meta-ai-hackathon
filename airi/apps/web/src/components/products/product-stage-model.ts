@@ -3,6 +3,7 @@
 
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import {
+  formatProductPrice,
   PRODUCT_VIDEO_IMPORT_PHOTO_CONCURRENCY,
   type DraftProductRecord,
   type ProductPhotoMethod,
@@ -222,47 +223,6 @@ export function photoTrail(
   return parts.join(" ");
 }
 
-// Colours an item's description names, for the glow its photo develops in.
-const AURA_COLORS: ReadonlyArray<readonly [string, readonly string[]]> = [
-  ["oklch(0.45 0 0)", ["black", "charcoal"]],
-  ["oklch(0.95 0.01 90)", ["white", "ivory", "cream", "milky"]],
-  ["oklch(0.75 0 0)", ["grey", "gray", "silver", "metal"]],
-  ["oklch(0.8 0.14 85)", ["gold", "golden", "brass"]],
-  ["oklch(0.86 0.17 95)", ["yellow"]],
-  ["oklch(0.75 0.17 55)", ["orange", "peach", "coral"]],
-  ["oklch(0.6 0.22 25)", ["red", "burgundy"]],
-  ["oklch(0.78 0.13 350)", ["pink", "rose", "magenta"]],
-  ["oklch(0.62 0.18 305)", ["purple", "violet", "lilac"]],
-  ["oklch(0.6 0.16 255)", ["blue", "navy"]],
-  ["oklch(0.78 0.12 215)", ["sky", "cyan", "turquoise", "teal"]],
-  ["oklch(0.7 0.16 150)", ["green", "olive", "mint", "khaki"]],
-  [
-    "oklch(0.55 0.08 55)",
-    ["brown", "wood", "wooden", "leather", "tan", "beige"],
-  ],
-  ["oklch(0.88 0.03 220)", ["clear", "transparent", "glass", "frosted"]],
-];
-const COLOR_OF_WORD = new Map(
-  AURA_COLORS.flatMap(([color, words]) =>
-    words.map(word => [word, color] as const)
-  )
-);
-
-/** The first two colours a description names, or airi's own without any. */
-export function auraColors(
-  text: string | null | undefined
-): readonly [string, string] {
-  const found: string[] = [];
-  for (const word of text?.toLowerCase().match(/[a-z]+/g) ?? []) {
-    const color = COLOR_OF_WORD.get(word);
-    if (color && !found.includes(color)) found.push(color);
-    if (found.length === 2) break;
-  }
-  const [first, second] = found;
-  if (!first) return ["var(--primary)", "var(--airi-sky)"];
-  return [first, second ?? `color-mix(in oklab, ${first} 55%, white)`];
-}
-
 /**
  * What a draft shows on the shelf. photo: its cut-out; print: a whole frame,
  * as there was no clear view; initial: its first letter, without a photo;
@@ -280,7 +240,6 @@ export type DraftShelfInfo = {
   photo: ShelfPhotoState;
   /** The words its photo is made from. */
   prompt: string | null;
-  aura: readonly [string, string];
   priceDoubt: boolean;
 };
 
@@ -302,13 +261,11 @@ export function draftShelfInfo(
       else if (photo.state !== "made") state = photo.state;
       else if (!product.imageUrl) state = "initial";
       else state = photo.method === "none" ? "print" : "photo";
-      const prompt = option?.description || product.englishName || null;
       return [
         product.id,
         {
           photo: state,
-          prompt,
-          aura: auraColors(prompt),
+          prompt: option?.description || product.englishName || null,
           priceDoubt: product.doubts.some(doubt => doubt.about === "price"),
         },
       ];
@@ -490,6 +447,190 @@ export function stageText(
       };
     }
   }
+}
+
+/**
+ * What the stage and a row say about an import: a title, the lines under it,
+ * and the check it offers. Making photos counts them; a finished import
+ * names how many it found, then what to do with them.
+ */
+export type StageHead = {
+  title: string;
+  lines: string[];
+  alert: boolean;
+  check: StageText["check"];
+};
+
+export function stageHead(
+  record: ImportState,
+  drafts: number | null
+): StageHead {
+  const text = stageText(record, drafts);
+  const phase = importPhase(record);
+  const missing = record.photoTotal - record.photoDone;
+  if (isRunning(record) && record.photosStopped && missing > 0)
+    // Only the review clips are left: the photos stopped for good.
+    return {
+      title: text.label,
+      lines: [
+        PRODUCTS_COPY.photosStopped(
+          record.photosStopped,
+          missing,
+          record.photoTotal
+        ),
+      ],
+      alert: false,
+      check: null,
+    };
+  if (phase === "cutting" && record.photoTotal > 0)
+    return {
+      title: text.label,
+      lines: [
+        COPY.photosDone(
+          Math.min(record.photoDone, record.photoTotal),
+          record.photoTotal
+        ),
+      ],
+      alert: false,
+      check: null,
+    };
+  if (phase === "ready" && text.check === "products") {
+    const count = drafts ?? record.productTotal;
+    return {
+      title: COPY.foundTitle(count),
+      lines: [COPY.checkBefore(count), ...(text.helper ? [text.helper] : [])],
+      alert: false,
+      check: "products",
+    };
+  }
+  const [title, rest] = splitSentences(text.label);
+  return {
+    title,
+    lines: [...(rest ? [rest] : []), ...(text.helper ? [text.helper] : [])],
+    alert: text.alert,
+    check: text.check,
+  };
+}
+
+/**
+ * A message's first sentence, which says what happened, and the rest, which
+ * says what to do: "This video couldn't be read." and "Try an MP4 or MOV
+ * straight from your phone's camera." A title stays short that way, and the
+ * rest reads as the line under it. One sentence stands alone.
+ */
+export function splitSentences(text: string): [string, string | null] {
+  // The copy is English: a sentence starts with a capital Latin letter.
+  const match = /^([\s\S]+?[.!?])\s+([A-Z][\s\S]*)$/.exec(text);
+  return match ? [match[1]!, match[2]!] : [text, null];
+}
+
+/**
+ * What the steps say beside their names: how many photos are made on the
+ * step making them, and, once a step is behind, what it came to.
+ */
+export function railNotes(
+  record: ImportState,
+  rail: { current: StageStep; stopped: StageStep | null }
+): {
+  counts: Partial<Record<StageStep, string>>;
+  results: Partial<Record<StageStep, string>>;
+} {
+  const at = STAGE_STEPS.indexOf(rail.current);
+  const counts: Partial<Record<StageStep, string>> = {};
+  const results: Partial<Record<StageStep, string>> = {};
+  if (record.productTotal > 0 && at > STAGE_STEPS.indexOf("watch"))
+    results.watch = COPY.foundTitle(record.productTotal);
+  if (record.photoTotal > 0) {
+    const made = PRODUCTS_COPY.photosMade(
+      Math.min(record.photoDone, record.photoTotal),
+      record.photoTotal
+    );
+    if (rail.current === "photos") counts.photos = made;
+    else if (rail.stopped === "photos" || at > STAGE_STEPS.indexOf("photos"))
+      results.photos = made;
+  }
+  return { counts, results };
+}
+
+/** Where a product's photo is, as the ledger says it. */
+export type LedgerPhoto = "made" | "making" | "waiting" | "unmade" | "noView";
+
+/** One product in the stage's "What you said" ledger. */
+export type LedgerRow = {
+  key: string;
+  /** Seconds into the video where its photo was taken. */
+  moment: number | null;
+  /** The owner's words the price came from. */
+  quote: string | null;
+  /** The words were read on screen, not heard. */
+  onScreen: boolean;
+  name: string;
+  /** Its price as the shelf writes it; null without one. */
+  price: string | null;
+  priceDoubt: boolean;
+  photo: LedgerPhoto;
+};
+
+/**
+ * Each product an import found, in the order filmed: what the owner said,
+ * the name and price the models made of it, and where its photo is. The
+ * photo is the featured option's, the one the shelf shows.
+ */
+export function ledgerRows(
+  products: readonly DraftProductRecord[],
+  photos: readonly StagePhoto[]
+): LedgerRow[] {
+  const byKey = new Map(photos.map(photo => [photo.key, photo]));
+  return products.map(product => {
+    const photo = byKey.get(`${product.id}:${product.featuredOption}`);
+    let state: LedgerPhoto = "unmade";
+    if (photo && photo.state !== "made") state = photo.state;
+    else if (photo?.method === "none") state = "noView";
+    else if (photo?.imageUrl) state = "made";
+    return {
+      key: product.id,
+      moment: photo?.momentSeconds ?? null,
+      quote: product.priceQuote,
+      onScreen:
+        product.priceQuote !== null && product.priceSource === "on_screen",
+      name: product.name,
+      price:
+        product.price === null
+          ? null
+          : formatProductPrice(product.price, {
+              from: product.priceIsFrom,
+              currency: product.currency,
+            }),
+      priceDoubt: product.doubts.some(doubt => doubt.about === "price"),
+      photo: state,
+    };
+  });
+}
+
+const KB = 1024;
+const MB = KB * 1024;
+const GB = MB * 1024;
+
+// A size in the unit its whole fits: tenths below 10, whole numbers above.
+function sizeIn(bytes: number, unit: number): string {
+  const value = Math.max(0, bytes) / unit;
+  return value < 10
+    ? String(Math.round(value * 10) / 10)
+    : String(Math.round(value));
+}
+const unitOf = (bytes: number): [number, string] =>
+  bytes >= GB ? [GB, "GB"] : bytes >= MB ? [MB, "MB"] : [KB, "KB"];
+
+/** A video's size: "43 MB", "4.5 MB", "1.2 GB". */
+export function formatVideoSize(bytes: number): string {
+  const [unit, name] = unitOf(bytes);
+  return `${sizeIn(bytes, unit)} ${name}`;
+}
+
+/** How much of a video is sent, in the unit of its size: "18 of 43 MB". */
+export function formatSentOf(sent: number, total: number): string {
+  const [unit, name] = unitOf(total);
+  return `${sizeIn(Math.min(sent, total), unit)} of ${sizeIn(total, unit)} ${name}`;
 }
 
 /**

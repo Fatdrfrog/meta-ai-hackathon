@@ -6,8 +6,14 @@ import {
   fetchProductsWhatsAppLink,
   openProductsWhatsAppLink,
   ProductDraftError,
+  productAdsUrl,
+  productAdUrl,
+  productKitsUrl,
+  productKitUrl,
+  productsMadeUrl,
   productsWhatsAppLinkUrl,
   ProductVideoUploadError,
+  sendForAnswer,
   unlinkProductsWhatsAppPhone,
   uploadProductVideo,
 } from "./products-client";
@@ -145,5 +151,43 @@ describe("the Send from WhatsApp panel", () => {
       throw new TypeError("Failed to fetch");
     }) as typeof fetch;
     await failsWith(fetchProductsWhatsAppLink("/panel"), "failed");
+  });
+});
+
+describe("kits and ads", () => {
+  const json = (status: number, body: unknown) =>
+    new Response(JSON.stringify(body), { status });
+
+  it("addresses each route of the workspace", () => {
+    const base = "/api/workspaces/workspace%201/products";
+    expect(productKitsUrl("workspace 1")).toBe(`${base}/kits`);
+    expect(productKitUrl("workspace 1", "kit/1")).toBe(`${base}/kits/kit%2F1`);
+    expect(productsMadeUrl("workspace 1")).toBe(`${base}/made`);
+    expect(productAdsUrl("workspace 1")).toBe(`${base}/ads`);
+    expect(productAdUrl("workspace 1", "ad-1")).toBe(`${base}/ads/ad-1`);
+  });
+
+  it("sends a body as JSON, and fails with the API's code", async () => {
+    global.fetch = jest.fn(async () =>
+      json(201, { kit: { id: "kit-1" } })
+    ) as typeof fetch;
+    await expect(
+      sendForAnswer("/kits", "POST", { requestId: "request-1" })
+    ).resolves.toEqual({ kit: { id: "kit-1" } });
+    expect(global.fetch).toHaveBeenCalledWith("/kits", {
+      method: "POST",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requestId: "request-1" }),
+    });
+
+    global.fetch = jest.fn(async () =>
+      json(409, { code: "whatsapp_not_connected" })
+    ) as typeof fetch;
+    const error = await sendForAnswer("/kits", "POST", {}).catch(
+      (caught: unknown) => caught
+    );
+    expect(error).toBeInstanceOf(ProductDraftError);
+    expect((error as ProductDraftError).code).toBe("whatsapp_not_connected");
   });
 });

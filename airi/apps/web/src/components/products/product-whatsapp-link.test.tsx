@@ -121,7 +121,7 @@ describe("WhatsAppLinkButton", () => {
     expect(requestsTo("GET")).toHaveLength(0);
   });
 
-  it("shows the QR is on its way while the shop opens, still for reduced motion", async () => {
+  it("shows the QR is on its way while the shop opens, on a still paper square", async () => {
     let opened: (value: Answer) => void = () => undefined;
     routes[`POST ${API}`] = () => new Promise(resolve => (opened = resolve));
     openPanel();
@@ -129,8 +129,11 @@ describe("WhatsAppLinkButton", () => {
     const placeholder = screen.getByRole("status", {
       name: "Getting your QR code ready…",
     });
-    expect(placeholder).toHaveClass("motion-safe:animate-pulse");
+    // Nothing in Products loops: the wait says so in words, not a pulse.
+    expect(placeholder).not.toHaveClass("motion-safe:animate-pulse");
     expect(placeholder).not.toHaveClass("animate-pulse");
+    // The panel wears the Products paper, though it's drawn outside it.
+    expect(placeholder.closest(".theme")).toHaveClass("popover");
 
     await act(async () => opened(answer(panel(), 201)()));
     expect(await screen.findByRole("img", { name: TITLE })).toBeInTheDocument();

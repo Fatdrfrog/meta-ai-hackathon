@@ -4,16 +4,21 @@ import type {
   ProductVideoImportRecord,
 } from "@/lib/products/types";
 import {
-  auraColors,
   draftShelfInfo,
   formatElapsed,
+  formatSentOf,
+  formatVideoSize,
   importPercent,
   importPhase,
   latestMade,
+  ledgerRows,
   newestLanded,
   photoTrail,
   pickHero,
+  railNotes,
   railState,
+  splitSentences,
+  stageHead,
   stagePhotos,
   stageText,
   type StagePhoto,
@@ -201,15 +206,11 @@ describe("today's run", () => {
     ).toBe("3 photos weren't made because your free trial has ended.");
   });
 
-  test("the shelf's prompts and glows come from each item's description", () => {
+  test("the shelf's prompts come from each item's description", () => {
     const shelf = draftShelfInfo(todaysRun(), record());
     expect(shelf.get("ms")).toEqual({
       photo: "making",
       prompt: "worn black wireless mouse",
-      aura: [
-        "oklch(0.45 0 0)",
-        "color-mix(in oklab, oklch(0.45 0 0) 55%, white)",
-      ],
       priceDoubt: false,
     });
   });
@@ -438,42 +439,6 @@ describe("the stage's spotlight", () => {
     ).toBe(
       "There was no clear view of it in the video. At 1:11 in your video."
     );
-  });
-});
-
-describe("auraColors", () => {
-  test.each([
-    [
-      "black Hollyland charging case",
-      ["oklch(0.45 0 0)", "color-mix(in oklab, oklch(0.45 0 0) 55%, white)"],
-    ],
-    ["green and black stamp", ["oklch(0.7 0.16 150)", "oklch(0.45 0 0)"]],
-    [
-      "yellow sticky notes pack",
-      [
-        "oklch(0.86 0.17 95)",
-        "color-mix(in oklab, oklch(0.86 0.17 95) 55%, white)",
-      ],
-    ],
-    [
-      "white AirPods case with pink D",
-      ["oklch(0.95 0.01 90)", "oklch(0.78 0.13 350)"],
-    ],
-  ])("%s", (text, colors) => {
-    expect(auraColors(text)).toEqual(colors);
-  });
-
-  test("whole words only, either spelling, airi's own colours without any", () => {
-    expect(auraColors("Gray box")).toEqual(auraColors("grey box"));
-    expect(auraColors("redwood")).toEqual([
-      "var(--primary)",
-      "var(--airi-sky)",
-    ]);
-    expect(auraColors("phone stand")).toEqual([
-      "var(--primary)",
-      "var(--airi-sky)",
-    ]);
-    expect(auraColors(null)).toEqual(["var(--primary)", "var(--airi-sky)"]);
   });
 });
 
@@ -773,4 +738,312 @@ test("an import whose products were all checked leaves the stage", () => {
   expect(
     pickHero([{ ...older, id: "all-added", draftsLeft: false }])
   ).toBeNull();
+});
+
+describe("stageHead", () => {
+  test("making photos counts them; other running steps say what they do", () => {
+    expect(stageHead(record(), null)).toEqual({
+      title: "Making photos",
+      lines: ["2 of 5 photos are made."],
+      alert: false,
+      check: null,
+    });
+    expect(
+      stageHead(record({ photoTotal: 1, photoDone: 0, productTotal: 1 }), null)
+        .lines
+    ).toEqual(["0 of 1 photo is made."]);
+    const early = { productTotal: 0, photoTotal: 0, photoDone: 0 };
+    expect(stageHead(record({ stage: "listening", ...early }), null)).toEqual({
+      title: "Listening to what you said",
+      lines: ["Writing down each name and price you said."],
+      alert: false,
+      check: null,
+    });
+    expect(
+      stageHead(record({ status: "queued", stage: null, ...early }), null)
+    ).toMatchObject({
+      title: "Getting ready to read your video",
+      lines: ["Your video is next in line."],
+    });
+  });
+
+  test("once photos stop, the clips still being cut don't count them on", () => {
+    expect(stageHead(record({ photosStopped: "spend_limit" }), null)).toEqual({
+      title: "Making photos",
+      lines: [
+        "3 photos weren't made because your company's AI spending limit was reached.",
+      ],
+      alert: false,
+      check: null,
+    });
+  });
+
+  test("a finished import names what it found, then what to do next", () => {
+    expect(stageHead(record({ status: "ready", stage: null }), 5)).toEqual({
+      title: "5 products found",
+      lines: ["Check them before they go on your shelf."],
+      alert: false,
+      check: "products",
+    });
+    // Until its products load, the list's count stands in.
+    expect(
+      stageHead(record({ status: "ready", stage: null, productTotal: 1 }), null)
+    ).toMatchObject({
+      title: "1 product found",
+      lines: ["Check it before it goes on your shelf."],
+    });
+    // Photos that stopped are said after.
+    expect(
+      stageHead(
+        record({ status: "ready", stage: null, photosStopped: "trial_ended" }),
+        5
+      ).lines
+    ).toEqual([
+      "Check them before they go on your shelf.",
+      "3 photos weren't made because your free trial has ended.",
+    ]);
+  });
+
+  test("a failure keeps its sentence, and offers what it found", () => {
+    const failed = record({
+      status: "failed",
+      stage: null,
+      errorCode: "spend_limit",
+    });
+    expect(stageHead(failed, 5)).toEqual({
+      title: "Airi reached an AI spending limit after 2 of 5 photos.",
+      lines: ["The products it found are kept for you to check."],
+      alert: true,
+      check: "found",
+    });
+    expect(stageHead({ ...failed, draftsLeft: false }, 0)).toEqual({
+      title: "Airi reached an AI spending limit after 2 of 5 photos.",
+      lines: [],
+      alert: true,
+      check: null,
+    });
+    expect(
+      stageHead(
+        record({
+          status: "ready",
+          stage: null,
+          productTotal: 0,
+          photoTotal: 0,
+          photoDone: 0,
+        }),
+        null
+      )
+    ).toEqual({
+      title: "No products were found in this video.",
+      lines: [
+        "Film your shelf again, saying each product's name and price, with the currency at least once.",
+      ],
+      alert: false,
+      check: null,
+    });
+  });
+
+  test("what went wrong is the title; what to do, the line under it", () => {
+    const unreadable = record({
+      status: "failed",
+      stage: null,
+      productTotal: 0,
+      photoTotal: 0,
+      photoDone: 0,
+      errorCode: "video_unreadable",
+      draftsLeft: false,
+    });
+    expect(stageHead(unreadable, null)).toEqual({
+      title: "This video couldn't be read.",
+      lines: ["Try an MP4 or MOV straight from your phone's camera."],
+      alert: true,
+      check: null,
+    });
+    // Products kept after it: said after what to do.
+    expect(
+      stageHead(
+        record({ status: "failed", stage: null, errorCode: "video_missing" }),
+        2
+      )
+    ).toEqual({
+      title: "The uploaded video went missing.",
+      lines: [
+        "Upload it again.",
+        "The products it found are kept for you to check.",
+      ],
+      alert: true,
+      check: "found",
+    });
+  });
+});
+
+test("splitSentences keeps a title to what happened", () => {
+  expect(
+    splitSentences(
+      "The video was uploaded, but reading it couldn't start. Try again."
+    )
+  ).toEqual([
+    "The video was uploaded, but reading it couldn't start.",
+    "Try again.",
+  ]);
+  // A size or a model name never ends a sentence.
+  expect(
+    splitSentences(
+      "The video is larger than 2 GB. Film a shorter one and upload it."
+    )
+  ).toEqual([
+    "The video is larger than 2 GB.",
+    "Film a shorter one and upload it.",
+  ]);
+  expect(splitSentences("Muse Spark 1.3 and SAM 3.1 worked.")).toEqual([
+    "Muse Spark 1.3 and SAM 3.1 worked.",
+    null,
+  ]);
+  expect(
+    splitSentences("Your free trial has ended, so this video couldn't be read.")
+  ).toEqual([
+    "Your free trial has ended, so this video couldn't be read.",
+    null,
+  ]);
+});
+
+describe("railNotes", () => {
+  test("the step making photos counts them", () => {
+    const making = record();
+    expect(railNotes(making, railState(making, null, true))).toEqual({
+      counts: { photos: "2 of 5" },
+      results: { watch: "5 products found" },
+    });
+  });
+
+  test("steps behind say what they came to; nothing before it's known", () => {
+    const ready = record({ status: "ready", stage: null, photoDone: 5 });
+    expect(railNotes(ready, railState(ready, null, true))).toEqual({
+      counts: {},
+      results: { watch: "5 products found", photos: "5 of 5" },
+    });
+    const watching = record({
+      stage: "watching",
+      productTotal: 0,
+      photoTotal: 0,
+      photoDone: 0,
+    });
+    expect(railNotes(watching, railState(watching, null, true))).toEqual({
+      counts: {},
+      results: {},
+    });
+  });
+
+  test("where photos stopped, it says how many were made", () => {
+    const failed = record({
+      status: "failed",
+      stage: null,
+      errorCode: "spend_limit",
+    });
+    expect(railNotes(failed, railState(failed, "cutting", true))).toEqual({
+      counts: {},
+      results: { watch: "5 products found", photos: "2 of 5" },
+    });
+    // With nothing left to check, the stop is the current step.
+    expect(railNotes(failed, railState(failed, "cutting", false))).toEqual({
+      counts: { photos: "2 of 5" },
+      results: { watch: "5 products found" },
+    });
+  });
+});
+
+describe("ledgerRows", () => {
+  const heard = (
+    extra: Partial<DraftProductRecord>,
+    option: OptionSpec = made("frosted cup", 0)
+  ) => product("cup", "Кружка Web UMN", 500, [option], extra);
+
+  test("each product's words, name, price and photo, in the order filmed", () => {
+    const products = [
+      heard({ priceQuote: "мына кружка бес жүз теңге" }),
+      product("doll", "Кукла Лол", 5000, [pending("blue doll")], {
+        priceQuote: "кукла бес мың",
+        priceIsFrom: true,
+        doubts: [{ about: "price", text: "Did you mean 5 000?" }],
+      }),
+    ];
+    products[0]!.options[0]!.videoMomentSeconds = 2.4;
+    expect(ledgerRows(products, stagePhotos(products, record()))).toEqual([
+      {
+        key: "cup",
+        moment: 2.4,
+        quote: "мына кружка бес жүз теңге",
+        onScreen: false,
+        name: "Кружка Web UMN",
+        price: "500\u00a0₸",
+        priceDoubt: false,
+        photo: "made",
+      },
+      {
+        key: "doll",
+        moment: null,
+        quote: "кукла бес мың",
+        onScreen: false,
+        name: "Кукла Лол",
+        price: "from\u00a05\u00a0000\u00a0₸",
+        priceDoubt: true,
+        photo: "making",
+      },
+    ]);
+  });
+
+  test("words read on screen are marked, never passed off as heard", () => {
+    const products = [
+      heard({ priceQuote: "500 ₸", priceSource: "on_screen" }),
+      heard({ priceQuote: null, priceSource: "on_screen", price: null }),
+    ];
+    const rows = ledgerRows(products, stagePhotos(products, record()));
+    expect(rows.map(row => [row.quote, row.onScreen, row.price])).toEqual([
+      ["500 ₸", true, "500\u00a0₸"],
+      [null, false, null],
+    ]);
+  });
+
+  test("a photo that couldn't be cut out, or never was, says so", () => {
+    const products = [
+      product("frame", "Frame", 1, [
+        {
+          method: "none",
+          description: "mug",
+          imageUrl: "https://storage.test/frame.webp",
+        },
+      ]),
+      product("capped", "Capped", 1, []),
+      ...todaysRun().slice(1, 2),
+    ];
+    const failed = record({
+      status: "failed",
+      stage: null,
+      errorCode: "spend_limit",
+    });
+    expect(
+      ledgerRows(products, stagePhotos(products, failed)).map(row => row.photo)
+    ).toEqual(["noView", "unmade", "unmade"]);
+    // Next in line while the job makes others.
+    const many = Array.from({ length: 6 }, (_, n) =>
+      product(`p${n}`, `P${n}`, 1, [pending(`item ${n}`)])
+    );
+    expect(
+      ledgerRows(many, stagePhotos(many, record())).map(row => row.photo)
+    ).toEqual(["making", "making", "making", "making", "waiting", "waiting"]);
+  });
+});
+
+test("a video's size and how much of it is sent read in one unit", () => {
+  expect(formatVideoSize(43 * 1024 * 1024)).toBe("43 MB");
+  expect(formatVideoSize(4.53 * 1024 * 1024)).toBe("4.5 MB");
+  expect(formatVideoSize(1.24 * 1024 ** 3)).toBe("1.2 GB");
+  expect(formatVideoSize(2048)).toBe("2 KB");
+  expect(formatSentOf(18.4 * 1024 * 1024, 43 * 1024 * 1024)).toBe(
+    "18 of 43 MB"
+  );
+  expect(formatSentOf(0, 43 * 1024 * 1024)).toBe("0 of 43 MB");
+  expect(formatSentOf(0.4 * 1024 ** 3, 1.2 * 1024 ** 3)).toBe("0.4 of 1.2 GB");
+  // Never more than all of it.
+  expect(formatSentOf(50 * 1024 * 1024, 43 * 1024 * 1024)).toBe("43 of 43 MB");
 });

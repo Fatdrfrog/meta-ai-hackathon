@@ -32,6 +32,28 @@ export type ProductVideoUploadState =
 
 const IDLE: ProductVideoUploadState = { phase: "idle" };
 
+/** The file a local preview link was made from, as the stage captions it. */
+export type PreviewFile = { name: string; size: number };
+
+// The files behind the preview links made on this page, so the stage that
+// gets only a link once the import starts can still name its file. A few at
+// most: one per video uploaded since the page opened.
+const PREVIEW_FILES_KEPT = 12;
+const previewFiles = new Map<string, PreviewFile>();
+
+function rememberPreview(preview: string, file: File) {
+  previewFiles.set(preview, { name: file.name, size: file.size });
+  for (const old of previewFiles.keys()) {
+    if (previewFiles.size <= PREVIEW_FILES_KEPT) break;
+    previewFiles.delete(old);
+  }
+}
+
+/** The file a preview link from this page shows, or null for any other. */
+export function previewFile(preview: string | null): PreviewFile | null {
+  return preview ? (previewFiles.get(preview) ?? null) : null;
+}
+
 /**
  * Uploads a chosen video and starts its import. Once the import has
  * started, `onStarted` gets it with the local preview, which is then the
@@ -46,7 +68,10 @@ export function useProductVideoUpload(
   // The preview this hook still owns: until its import starts.
   const ownPreview = useRef<string | null>(null);
   const dropPreview = useCallback(() => {
-    if (ownPreview.current) URL.revokeObjectURL(ownPreview.current);
+    if (ownPreview.current) {
+      URL.revokeObjectURL(ownPreview.current);
+      previewFiles.delete(ownPreview.current);
+    }
     ownPreview.current = null;
   }, []);
 
@@ -119,6 +144,7 @@ export function useProductVideoUpload(
       dropPreview();
       const preview = URL.createObjectURL(file);
       ownPreview.current = preview;
+      rememberPreview(preview, file);
       void run(file, preview, null);
     },
     [run, dropPreview]

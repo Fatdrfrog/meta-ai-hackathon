@@ -45,6 +45,29 @@ export function productUrl(workspaceId: string, productId: string) {
   return `${productsApiUrl(workspaceId)}/${encodeURIComponent(productId)}`;
 }
 
+/** Kits: a carousel and an order form made by one press (kits-client.ts asks them). */
+export function productKitsUrl(workspaceId: string): string {
+  return `${productsApiUrl(workspaceId)}/kits`;
+}
+
+export function productKitUrl(workspaceId: string, kitId: string): string {
+  return `${productKitsUrl(workspaceId)}/${encodeURIComponent(kitId)}`;
+}
+
+/** What the owner made from the shelf: kits and video ads. */
+export function productsMadeUrl(workspaceId: string): string {
+  return `${productsApiUrl(workspaceId)}/made`;
+}
+
+/** Video ads (ads-client.ts asks them). */
+export function productAdsUrl(workspaceId: string): string {
+  return `${productsApiUrl(workspaceId)}/ads`;
+}
+
+export function productAdUrl(workspaceId: string, adId: string): string {
+  return `${productAdsUrl(workspaceId)}/${encodeURIComponent(adId)}`;
+}
+
 /** A JSON request whose answer is needed; any failure throws. */
 async function sendJson<T>(url: string, method: string, body: unknown) {
   const response = await fetch(url, {
@@ -57,8 +80,9 @@ async function sendJson<T>(url: string, method: string, body: unknown) {
 }
 
 /**
- * Why a WhatsApp draft couldn't be made, or the "Send from WhatsApp" panel
- * couldn't do something, as the API's code; "failed" for anything else.
+ * Why a Products request the page explains failed (a WhatsApp draft, the
+ * "Send from WhatsApp" panel, a kit or an ad), as the API's code; "failed"
+ * for anything else.
  */
 export class ProductDraftError extends Error {
   constructor(readonly code: ProductsErrorCode | "failed") {
@@ -67,14 +91,27 @@ export class ProductDraftError extends Error {
   }
 }
 
-/** A request whose failure the page explains by the API's code. */
-async function sendForAnswer<T>(
+/**
+ * A request whose failure the page explains by the API's code: it throws a
+ * ProductDraftError with it. `body`, when given, is sent as JSON.
+ */
+export async function sendForAnswer<T>(
   url: string,
-  method: "GET" | "POST" | "DELETE" = "POST"
+  method: "GET" | "POST" | "PATCH" | "DELETE" = "POST",
+  body?: unknown
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(url, { method, cache: "no-store" });
+    response = await fetch(url, {
+      method,
+      cache: "no-store",
+      ...(body === undefined
+        ? {}
+        : {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }),
+    });
   } catch {
     throw new ProductDraftError("failed");
   }

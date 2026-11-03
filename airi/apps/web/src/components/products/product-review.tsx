@@ -17,10 +17,15 @@ import {
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   CheckCheck,
   CircleAlert,
+  Eye,
   Info,
+  Mic,
+  Pause,
+  Pencil,
   Play,
   Undo2,
   Volume2,
@@ -40,9 +45,16 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { prefersReducedMotion } from "./product-motion";
+import { ProductSegmented } from "./product-controls";
+import { MakeOutputs } from "./product-make";
+import {
+  animateOnSpring,
+  EASE_OUT,
+  prefersReducedMotion,
+} from "./product-motion";
+import styles from "./product-review.module.css";
 import { NameInitial, PriceText } from "./product-shelf";
-import { WhatsAppDrafts } from "./product-whatsapp-drafts";
+import theme from "./product-theme.module.css";
 import { useProductReview, type ReviewMove } from "./use-product-review";
 
 const COPY = PRODUCTS_COPY.review;
@@ -55,7 +67,12 @@ const FLICK_MIN_PX = 64;
 const DRAG_START_PX = 8;
 // How far a drag goes before its stamp shows fully and the next card is up.
 const FULL_DRAG_PX = 110;
-const FLY_MS = 280;
+// A decided card leaves along its drag; the next one rises into place.
+const FLY_MS = 220;
+const RISE_MS = 200;
+// The cards behind the top one: their edges show, 8px apart.
+const BEHIND_STEP_PX = 8;
+const BEHIND_SCALE_STEP = 0.04;
 
 type Direction = "left" | "right";
 type Flight = {
@@ -105,10 +122,16 @@ export function ProductReview({
   workspaceId,
   importId,
   onClose,
+  onChangeProducts,
+  onMakeAd,
 }: {
   workspaceId: string;
   importId: string;
   onClose: () => void;
+  /** "Change" in what to make: the shelf's Choose mode, with these chosen. */
+  onChangeProducts: (productIds: string[]) => void;
+  /** "Make a video ad": the ad's brief with these products. */
+  onMakeAd: (productIds: string[]) => void;
 }) {
   const review = useProductReview(workspaceId, importId);
   const { products, queue, lastMove } = review;
@@ -121,6 +144,8 @@ export function ProductReview({
     from: Direction;
   } | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  // Once a card was decided, the next one up rises into place.
+  const [decided, setDecided] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
   // The review takes the keyboard's focus, so its keys work at once.
@@ -132,6 +157,7 @@ export function ProductReview({
     if (!top) return;
     setDragX(0);
     setReturning(null);
+    setDecided(true);
     if (!prefersReducedMotion())
       setFlights(current => [
         ...current,
@@ -199,14 +225,25 @@ export function ProductReview({
     content = (
       <div role="status" aria-label={PRODUCTS_COPY.loading}>
         <div className={STACK}>
-          <div className="absolute inset-0 rounded-[28px] bg-foreground/[0.06] motion-safe:animate-pulse" />
+          {/* A still, blank card: nothing pulses while it loads. */}
+          <div
+            className={cn(
+              theme.sheet,
+              "absolute inset-0 flex flex-col overflow-hidden opacity-70"
+            )}
+          >
+            <div className={styles.photo}>
+              <span className={styles.board} />
+            </div>
+            <div className="h-32 shrink-0" />
+          </div>
         </div>
       </div>
     );
   } else if (review.loadFailed) {
     content = (
       <div className="flex flex-col items-center gap-3 pt-16 text-center">
-        <p role="alert" className="text-[15px] font-medium">
+        <p role="alert" className="text-[15px] font-medium text-(--p-ink)">
           {COPY.loadFailed}
         </p>
         <div className="flex gap-2">
@@ -228,6 +265,8 @@ export function ProductReview({
         canUndo={lastMove !== null}
         onUndo={undo}
         onClose={onClose}
+        onChangeProducts={onChangeProducts}
+        onMakeAd={onMakeAd}
       />
     );
   } else {
@@ -245,10 +284,12 @@ export function ProductReview({
                 <div
                   key={product.id}
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 transition-transform duration-150 ease-out"
+                  className={cn(
+                    styles.behind,
+                    "pointer-events-none absolute inset-0"
+                  )}
                   style={{
-                    transform: `translateY(${depth * 14}px) scale(${1 - depth * 0.05})`,
-                    opacity: index === 0 ? 1 : 0.6,
+                    transform: `translateY(${depth * BEHIND_STEP_PX}px) scale(${1 - depth * BEHIND_SCALE_STEP})`,
                   }}
                 >
                   <ReviewCard product={product} still />
@@ -259,6 +300,7 @@ export function ProductReview({
           <SwipeCard
             key={top.id}
             returningFrom={returning?.id === top.id ? returning.from : null}
+            rise={decided && returning?.id !== top.id}
             onDrag={setDragX}
             onSwipe={(direction, fromX) =>
               decideTop(direction === "right" ? "published" : "rejected", fromX)
@@ -273,78 +315,56 @@ export function ProductReview({
             />
           </SwipeCard>
         </div>
-        <div className="mt-7 flex items-center justify-center gap-6">
-          <RoundButton
-            label={COPY.skip}
-            hint="←"
-            onClick={() => decideTop("rejected")}
-            className="size-16 text-destructive"
-          >
-            <X className="size-7" strokeWidth={2.5} aria-hidden="true" />
-          </RoundButton>
-          <RoundButton
-            label={COPY.undo}
-            hint="Backspace"
-            onClick={undo}
-            disabled={!lastMove}
-            className="size-11 text-muted-foreground"
-          >
-            <Undo2 className="size-5" aria-hidden="true" />
-          </RoundButton>
-          <RoundButton
-            label={COPY.add}
-            hint="→"
-            onClick={() => decideTop("published")}
-            className="size-16 border-transparent bg-emerald-500 text-white shadow-emerald-500/30 hover:bg-emerald-500"
-          >
-            <Check className="size-7" strokeWidth={3} aria-hidden="true" />
-          </RoundButton>
-        </div>
-        <p className="mt-5 hidden items-center justify-center gap-5 text-xs text-muted-foreground pointer-fine:flex">
-          <span className="flex items-center gap-1.5">
-            <Kbd>←</Kbd> {COPY.skip}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Kbd>Backspace</Kbd> {COPY.undo}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Kbd>→</Kbd> {COPY.add}
-          </span>
-        </p>
+        <DecisionBar
+          canUndo={lastMove !== null}
+          onSkip={() => decideTop("rejected")}
+          onUndo={undo}
+          onAdd={() => decideTop("published")}
+        />
       </>
     );
   }
 
+  // Cards are checked in a narrow column; what to make with them takes the
+  // page's width.
+  const done = !review.loading && !review.loadFailed && !top;
+  const position = Math.min(
+    products.length,
+    products.length - queue.length + 1
+  );
   return (
     <div
       ref={root}
       tabIndex={-1}
       aria-labelledby="product-review-title"
-      className="mx-auto flex w-full max-w-md flex-col outline-none"
+      className={cn(
+        theme.enter,
+        "mx-auto flex w-full flex-col outline-none",
+        done ? "max-w-none" : "max-w-[520px]"
+      )}
     >
-      <h2 id="product-review-title" className="sr-only">
-        {COPY.title}
-      </h2>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" className="-ml-2" onClick={onClose}>
+      <div className="flex items-center gap-1.5">
+        <Button variant="ghost" size="sm" className="-ml-2.5" onClick={onClose}>
           <ArrowLeft aria-hidden="true" />
           {COPY.back}
         </Button>
         <div className="ml-auto flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={COPY.sound}
-            aria-pressed={soundOn}
-            title={COPY.sound}
-            onClick={() => setSoundOn(on => !on)}
-          >
-            {soundOn ? (
-              <Volume2 aria-hidden="true" />
-            ) : (
-              <VolumeX aria-hidden="true" />
-            )}
-          </Button>
+          {done ? null : (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={COPY.sound}
+              aria-pressed={soundOn}
+              title={COPY.sound}
+              onClick={() => setSoundOn(on => !on)}
+            >
+              {soundOn ? (
+                <Volume2 aria-hidden="true" />
+              ) : (
+                <VolumeX aria-hidden="true" />
+              )}
+            </Button>
+          )}
           {queue.length > 0 ? (
             <Button variant="outline" size="sm" onClick={acceptAll}>
               <CheckCheck aria-hidden="true" />
@@ -353,8 +373,20 @@ export function ProductReview({
           ) : null}
         </div>
       </div>
-      {products.length > 0 ? <ReviewProgress products={products} /> : null}
-      <div className="relative mt-6">
+      <div className="mt-[18px] flex items-baseline justify-between gap-3">
+        <h2 id="product-review-title" className={theme.displayM}>
+          {COPY.title}
+        </h2>
+        {top ? (
+          <span className="text-xs leading-4 text-(--p-ink-2) tabular-nums">
+            {COPY.position(position, products.length)}
+          </span>
+        ) : null}
+      </div>
+      {products.length > 0 ? (
+        <ReviewProgress products={products} current={top?.id ?? null} />
+      ) : null}
+      <div className={cn("relative", done ? "mt-8" : "mt-[22px]")}>
         {content}
         {/* Over whatever shows, so the last card still flies off. */}
         <div
@@ -374,7 +406,10 @@ export function ProductReview({
         </div>
       </div>
       {review.failed ? (
-        <p role="alert" className="mt-4 text-center text-sm text-destructive">
+        <p
+          role="alert"
+          className="mt-4 text-center text-sm text-(--p-danger-ink)"
+        >
           {COPY.saveFailed}
         </p>
       ) : null}
@@ -385,59 +420,107 @@ export function ProductReview({
   );
 }
 
-// Tall enough for a photo and the product's details, within a phone's screen.
-const STACK = "relative h-[min(34rem,calc(100svh-17rem))] min-h-[26rem] w-full";
+// Tall enough for a photo and the product's details (548px), within a
+// phone's screen with the title, progress and buttons around it.
+const STACK =
+  "relative h-[min(34.25rem,calc(100svh-20rem))] min-h-[26rem] w-full";
 
-/** One mark per product, filled as each is added (green) or skipped. */
-function ReviewProgress({ products }: { products: DraftProductRecord[] }) {
+/**
+ * One segment per product: green once added, ink once skipped, rose for the
+ * one being checked.
+ */
+function ReviewProgress({
+  products,
+  current,
+}: {
+  products: DraftProductRecord[];
+  current: string | null;
+}) {
   return (
-    <div aria-hidden="true" className="mt-3 flex gap-1">
+    <div aria-hidden="true" className={styles.segments}>
       {products.map(product => (
         <span
           key={product.id}
-          className={cn(
-            "h-1 min-w-0 flex-1 rounded-full transition-colors duration-300",
+          data-state={
             product.status === "published"
-              ? "bg-emerald-500"
+              ? "added"
               : product.status === "rejected"
-                ? "bg-foreground/35"
-                : "bg-foreground/10"
-          )}
+                ? "skipped"
+                : product.id === current
+                  ? "now"
+                  : undefined
+          }
         />
       ))}
     </div>
   );
 }
 
-function RoundButton({
-  label,
-  hint,
-  onClick,
-  disabled = false,
-  className,
-  children,
+/** A key's hint inside a button, for a keyboard and a fine pointer only. */
+function KeyHint({ children }: { children: ReactNode }) {
+  return <Kbd className="ml-1 hidden pointer-fine:inline-flex">{children}</Kbd>;
+}
+
+/**
+ * Skip (←), Undo and Add to shelf (→): labelled 48px buttons, 52px and
+ * sharing the width on a phone. Adding is the view's one filled action.
+ */
+function DecisionBar({
+  canUndo,
+  onSkip,
+  onUndo,
+  onAdd,
 }: {
-  label: string;
-  hint: string;
-  onClick: () => void;
-  disabled?: boolean;
-  className?: string;
-  children: ReactNode;
+  canUndo: boolean;
+  onSkip: () => void;
+  onUndo: () => void;
+  onAdd: () => void;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={`${label} (${hint})`}
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "grid shrink-0 place-items-center rounded-full border border-foreground/10 bg-card shadow-lg shadow-black/[0.06] transition-transform outline-none hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95 disabled:pointer-events-none disabled:opacity-40",
-        className
-      )}
-    >
-      {children}
-    </button>
+    <div className="mt-[30px] flex items-center justify-center gap-3 max-sm:mt-[26px] max-sm:gap-2.5">
+      <Button
+        variant="outline"
+        title={`${COPY.skip} (←)`}
+        className="h-12 px-5 text-[15px] [--p-button-radius:12px] max-sm:h-[52px] max-sm:flex-1"
+        onClick={onSkip}
+      >
+        <X
+          aria-hidden="true"
+          strokeWidth={2.25}
+          className="text-(--p-danger-ink)"
+        />
+        {COPY.skip}
+        <KeyHint>
+          <ArrowLeft aria-hidden="true" />
+        </KeyHint>
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={COPY.undo}
+        title={`${COPY.undo} (Backspace)`}
+        disabled={!canUndo}
+        className="size-12 [--p-button-radius:12px] max-sm:size-[52px]"
+        onClick={onUndo}
+      >
+        <Undo2 aria-hidden="true" />
+      </Button>
+      <Button
+        variant="secondary"
+        title={`${COPY.add} (→)`}
+        className={cn(
+          theme.ok,
+          "h-12 px-5 text-[15px] max-sm:h-[52px] max-sm:flex-1"
+        )}
+        onClick={onAdd}
+      >
+        <Check aria-hidden="true" strokeWidth={2.5} />
+        {COPY.add}
+        <KeyHint>
+          <ArrowRight aria-hidden="true" />
+        </KeyHint>
+      </Button>
+    </div>
   );
 }
 
@@ -447,11 +530,14 @@ function RoundButton({
  */
 function SwipeCard({
   returningFrom,
+  rise,
   onDrag,
   onSwipe,
   children,
 }: {
   returningFrom: Direction | null;
+  /** Up from behind the one just decided: it rises from the deck on the spring. */
+  rise: boolean;
   onDrag: (x: number) => void;
   onSwipe: (direction: Direction, fromX: number) => void;
   children: ReactNode;
@@ -480,10 +566,30 @@ function SwipeCard({
         },
         { transform: "none", opacity: 1 },
       ],
-      { duration: FLY_MS, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+      { duration: FLY_MS, easing: EASE_OUT }
     );
     return () => animation?.cancel();
   }, [returningFrom]);
+
+  // Rising from the deck: from where the card behind stood, once, as it
+  // comes up.
+  const [risesNow] = useState(rise);
+  useEffect(() => {
+    const element = ref.current;
+    if (!risesNow || !element || prefersReducedMotion()) return;
+    const animation = animateOnSpring(
+      element,
+      [
+        {
+          transform: `translateY(${BEHIND_STEP_PX}px) scale(${1 - BEHIND_SCALE_STEP})`,
+          transformOrigin: "50% 100%",
+        },
+        { transform: "none", transformOrigin: "50% 100%" },
+      ],
+      RISE_MS
+    );
+    return () => animation?.cancel();
+  }, [risesNow]);
 
   const follow = (next: number) => {
     setX(next);
@@ -648,33 +754,49 @@ function ReviewCard({
   const priceDoubts = product.doubts.filter(doubt => doubt.about === "price");
   const otherDoubts = product.doubts.filter(doubt => doubt.about !== "price");
   const edit = still ? undefined : onEdit;
+  // The price's editor, which the doubt's own button opens too.
+  const priceField = useEditing();
 
   return (
     <article
       aria-label={still ? undefined : product.name}
-      className="flex size-full flex-col overflow-hidden rounded-[28px] border border-foreground/10 bg-card text-card-foreground shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)]"
+      className={cn(
+        theme.sheet,
+        "flex size-full flex-col overflow-hidden text-(--p-ink)"
+      )}
     >
-      <div className="relative min-h-0 flex-1 bg-linear-to-b from-foreground/[0.02] to-foreground/[0.08]">
+      <div className={styles.photo}>
         <CardPhoto
           key={shown ?? "none"}
           url={shown}
           original={showOriginal}
           name={product.name}
         />
+        <span aria-hidden="true" className={styles.board} />
         {edit && polished && original ? (
-          <PhotoToggle view={view} onChange={setView} />
+          <ProductSegmented
+            label={COPY.photo}
+            className={styles.toggle}
+            options={[
+              { value: "polished", label: COPY.polished },
+              { value: "original", label: COPY.original },
+            ]}
+            value={view}
+            onChange={setView}
+          />
         ) : null}
         {!still && product.clipUrl ? (
           <VoiceClip url={product.clipUrl} soundOn={soundOn} />
         ) : null}
         {dragX !== 0 ? <Stamp dragX={dragX} /> : null}
       </div>
-      <div className="flex max-h-[58%] shrink-0 flex-col overflow-y-auto px-5 pt-4 pb-5">
+      <div className="flex max-h-[58%] shrink-0 flex-col overflow-y-auto px-[22px] pt-[18px] pb-[22px] max-sm:px-[18px] max-sm:pt-4 max-sm:pb-[18px]">
         <EditableName
           name={product.name}
           onSave={edit && (name => edit({ name }))}
         />
         <EditablePrice
+          field={priceField}
           price={product.price}
           currency={product.currency}
           defaultCurrency={defaultCurrency}
@@ -683,21 +805,32 @@ function ReviewCard({
           onSave={edit}
         />
         {product.doubts.length > 0 ? (
-          <ul className="mt-1.5 flex flex-col gap-1">
-            {[...priceDoubts, ...otherDoubts].map((doubt, index) => (
-              <li
-                key={index}
-                className="flex gap-1.5 text-[13px] leading-snug text-destructive"
+          <div role="note" className={styles.doubt}>
+            <CircleAlert aria-hidden="true" strokeWidth={2} />
+            <ul className="flex min-w-0 flex-col gap-1">
+              {[...priceDoubts, ...otherDoubts].map((doubt, index) => (
+                <li key={index} className="text-pretty">
+                  {doubt.text}
+                </li>
+              ))}
+            </ul>
+            {edit && priceDoubts.length > 0 && !priceField.editing ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="col-start-2 mt-1.5 justify-self-start"
+                onClick={priceField.open}
               >
-                <CircleAlert
-                  aria-hidden="true"
-                  className="mt-0.5 size-3.5 shrink-0"
-                />
-                {doubt.text}
-              </li>
-            ))}
-          </ul>
+                {COPY.changePrice}
+              </Button>
+            ) : null}
+          </div>
         ) : null}
+        <YouSaid
+          quote={product.priceQuote}
+          shown={product.priceSource === "on_screen"}
+          seconds={option?.videoMomentSeconds ?? null}
+        />
         {edit && product.options.length > 1 ? (
           <OptionPicker
             product={product}
@@ -709,7 +842,7 @@ function ReviewCard({
             {option.notes.map((note, index) => (
               <li
                 key={index}
-                className="flex gap-1.5 text-[13px] leading-snug text-muted-foreground"
+                className="flex gap-1.5 text-[13px] leading-[18px] text-(--p-ink-2)"
               >
                 <Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
                 {note}
@@ -722,7 +855,52 @@ function ReviewCard({
   );
 }
 
-/** The cut-out standing on the card's floor, or the photo as filmed. */
+/** A moment in the video, as "0:33". */
+const formatMoment = (seconds: number) => {
+  const whole = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+};
+
+/**
+ * The owner's words the price came from, and when: "You said «кукла бес
+ * мың» at 0:33". One line that wraps as text, never a row of columns.
+ */
+function YouSaid({
+  quote,
+  shown,
+  seconds,
+}: {
+  quote: string | null;
+  /** Read from text on screen, not said aloud. */
+  shown: boolean;
+  seconds: number | null;
+}) {
+  if (!quote) return null;
+  return (
+    <p className="mt-2 text-[13px] leading-[18px] text-pretty text-(--p-ink-2)">
+      {shown ? (
+        <Eye
+          aria-hidden="true"
+          strokeWidth={1.75}
+          className="mr-1.5 inline-block size-3.5 align-[-2px]"
+        />
+      ) : (
+        <Mic
+          aria-hidden="true"
+          strokeWidth={1.75}
+          className="mr-1.5 inline-block size-3.5 align-[-2px]"
+        />
+      )}
+      {shown ? COPY.shownInVideo : COPY.youSaid}{" "}
+      <span className="text-(--p-ink)">
+        «<bdi>{quote}</bdi>»
+      </span>
+      {seconds !== null ? ` ${COPY.at(formatMoment(seconds))}` : null}
+    </p>
+  );
+}
+
+/** The cut-out standing on the card's board, or the photo as filmed. */
 function CardPhoto({
   url,
   original,
@@ -742,82 +920,41 @@ function CardPhoto({
   }
   if (original) {
     return (
-      // Signed storage URLs; next/image would need every bucket host configured.
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={url}
-        alt=""
-        draggable={false}
-        onError={() => setFailed(true)}
-        className="absolute inset-0 size-full object-contain p-4 select-none"
-      />
-    );
-  }
-  return (
-    <div className="absolute inset-0 flex items-end justify-center px-8 pt-12 pb-8">
-      <div className="relative flex h-full max-w-full items-end justify-center">
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-[12%] bottom-0 h-4 translate-y-1/2 rounded-[50%] bg-black/25 blur-md dark:bg-black/70"
-        />
+      <div className={styles.filmed}>
+        {/* Signed storage URLs; next/image would need every bucket host configured. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={url}
           alt=""
           draggable={false}
           onError={() => setFailed(true)}
-          className="relative max-h-full max-w-full object-contain select-none"
+        />
+      </div>
+    );
+  }
+  return (
+    <div className={styles.stand}>
+      <div className={styles.product}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt=""
+          draggable={false}
+          onError={() => setFailed(true)}
         />
       </div>
     </div>
   );
 }
 
-function PhotoToggle({
-  view,
-  onChange,
-}: {
-  view: "polished" | "original";
-  onChange: (view: "polished" | "original") => void;
-}) {
-  return (
-    <div
-      role="group"
-      aria-label={COPY.photo}
-      className="absolute top-3 right-3 flex rounded-full bg-background/85 p-0.5 text-xs font-medium shadow-sm backdrop-blur"
-    >
-      {(["polished", "original"] as const).map(value => (
-        <button
-          key={value}
-          type="button"
-          aria-pressed={view === value}
-          onClick={() => onChange(value)}
-          className={cn(
-            "rounded-full px-2.5 py-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-            view === value
-              ? "bg-foreground text-background"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {COPY[value]}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// The clip's ring: r = 38 in an 80 × 80 box.
-const RING = 2 * Math.PI * 38;
-
 /**
  * The owner saying the price, as a round video in the corner of the card,
- * the way chat apps show video messages. It plays as the card comes up,
- * with sound when the owner has it on; a browser that wants a tap first
- * plays it silently, marked, until tapped.
+ * the way chat apps show video messages, ringed in paper. It plays as the
+ * card comes up, with sound when the owner has it on; a browser that wants
+ * a tap first plays it silently, marked, until tapped.
  */
 function VoiceClip({ url, soundOn }: { url: string; soundOn: boolean }) {
   const video = useRef<HTMLVideoElement>(null);
-  const ring = useRef<SVGCircleElement>(null);
   const [state, setState] = useState<"idle" | "playing" | "silent" | "ended">(
     "idle"
   );
@@ -843,21 +980,6 @@ function VoiceClip({ url, soundOn }: { url: string; soundOn: boolean }) {
     start(soundOn);
   }, [url, soundOn]);
 
-  useEffect(() => {
-    if (state !== "playing" && state !== "silent") return;
-    let frame = 0;
-    const tick = () => {
-      const element = video.current;
-      if (element && ring.current && element.duration > 0)
-        ring.current.style.strokeDashoffset = String(
-          RING * (1 - element.currentTime / element.duration)
-        );
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [state]);
-
   return (
     <button
       type="button"
@@ -872,7 +994,7 @@ function VoiceClip({ url, soundOn }: { url: string; soundOn: boolean }) {
           play(true);
         }
       }}
-      className="absolute bottom-3 left-3 size-[76px] rounded-full bg-black shadow-lg ring-4 ring-card outline-none focus-visible:ring-ring/60"
+      className={styles.clip}
     >
       <video
         ref={video}
@@ -881,44 +1003,16 @@ function VoiceClip({ url, soundOn }: { url: string; soundOn: boolean }) {
         preload="auto"
         aria-hidden="true"
         onEnded={() => setState("ended")}
-        className="size-full rounded-full object-cover"
       />
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 80 80"
-        className="absolute inset-0 size-full -rotate-90"
-      >
-        <circle
-          cx="40"
-          cy="40"
-          r="38"
-          fill="none"
-          stroke="white"
-          strokeOpacity="0.3"
-          strokeWidth="3"
-        />
-        <circle
-          ref={ring}
-          cx="40"
-          cy="40"
-          r="38"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeDasharray={RING}
-          strokeDashoffset={state === "ended" ? 0 : RING}
-        />
-      </svg>
-      {state === "silent" ? (
-        <span className="absolute right-0 bottom-0 grid size-6 place-items-center rounded-full bg-background text-foreground shadow">
-          <VolumeX aria-hidden="true" className="size-3.5" />
-        </span>
-      ) : state === "idle" || state === "ended" ? (
-        <span className="absolute inset-0 grid place-items-center rounded-full bg-black/30 text-white">
-          <Play aria-hidden="true" className="size-6 fill-current" />
-        </span>
-      ) : null}
+      <span aria-hidden="true" className={styles.clipBadge}>
+        {state === "playing" ? (
+          <Pause className="fill-current" />
+        ) : state === "silent" ? (
+          <VolumeX />
+        ) : (
+          <Play className="translate-x-px fill-current" />
+        )}
+      </span>
     </button>
   );
 }
@@ -929,13 +1023,9 @@ function Stamp({ dragX }: { dragX: number }) {
   return (
     <span
       aria-hidden="true"
+      data-to={add ? "add" : "skip"}
       style={{ opacity: Math.min(1, Math.abs(dragX) / FULL_DRAG_PX) }}
-      className={cn(
-        "absolute top-6 rounded-xl border-[3px] bg-card/70 px-3 py-0.5 text-2xl font-bold tracking-tight backdrop-blur-sm",
-        add
-          ? "left-5 -rotate-12 border-emerald-500 text-emerald-600"
-          : "right-5 rotate-12 border-destructive text-destructive"
-      )}
+      className={styles.stamp}
     >
       {add ? COPY.stampAdd : COPY.stampSkip}
     </span>
@@ -948,7 +1038,7 @@ type EditProblem = { message: string; field: "value" | "unit" };
 // The field with the focus has a stronger ring; one at fault rings in red,
 // as the design system's inputs do.
 const FIELD_CLASS =
-  "min-w-0 rounded-md bg-foreground/[0.05] px-1.5 ring-2 ring-ring/40 transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 aria-invalid:ring-destructive";
+  "min-w-0 rounded-md bg-(--p-sunk) px-1.5 ring-2 ring-ring/40 transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 aria-invalid:ring-destructive";
 
 /** Whether a keyboard is still composing what was typed, as an IME does. */
 const composing = (event: ChangeEvent<HTMLInputElement>) =>
@@ -1154,7 +1244,7 @@ function InlineEdit({
         <span
           id={problemId}
           role="alert"
-          className="text-[13px] leading-snug text-destructive"
+          className="text-[13px] leading-snug text-(--p-danger-ink)"
         >
           {problem.message}
         </span>
@@ -1185,7 +1275,12 @@ function useEditing() {
   };
 }
 
-const NAME_CLASS = "text-[19px] leading-snug font-semibold";
+// Geologica, the review's name size.
+const NAME_CLASS =
+  "font-(family-name:--p-font-display) text-[24px] leading-[30px] font-semibold tracking-[-0.012em]";
+// A text button's quiet hover, and airi's focus ring.
+const TEXT_BUTTON =
+  "rounded-md text-left transition-colors outline-none hover:bg-(--p-sunk) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid";
 
 function EditableName({
   name,
@@ -1225,24 +1320,33 @@ function EditableName({
       title={COPY.changeName}
       onClick={field.open}
       className={cn(
-        "-mx-1.5 self-start rounded-md px-1.5 text-left transition-colors outline-none hover:bg-foreground/[0.04] focus-visible:ring-2 focus-visible:ring-ring/50",
+        "-mx-1.5 flex max-w-full items-center gap-2 self-start px-1.5",
+        TEXT_BUTTON,
         NAME_CLASS
       )}
     >
       <span className="sr-only">{COPY.changeName}: </span>
-      <span dir="auto" className="line-clamp-2 break-words">
+      <span dir="auto" className="line-clamp-2 min-w-0 break-words">
         {name}
       </span>
+      {/* A pencil hint: the name is the owner's to change. */}
+      <Pencil
+        aria-hidden="true"
+        strokeWidth={1.75}
+        className="size-[15px] shrink-0 text-(--p-ink-3)"
+      />
     </button>
   );
 }
 
-const PRICE_CLASS = "leading-tight font-semibold tracking-tight tabular-nums";
-// A long price is set a step smaller, so it fits a phone's card.
+// Geologica, tabular, drawn by code from the shelf's numbers.
+const PRICE_CLASS =
+  "font-(family-name:--p-font-display) font-semibold tracking-[-0.02em] tabular-nums";
+// 44px (32 on a phone); a long price a step smaller, so it fits the card.
 const PRICE_SIZE = {
-  short: "text-[28px]",
-  long: "text-[22px]",
-  longest: "text-[18px]",
+  short: "text-[32px] leading-[38px] sm:text-[44px] sm:leading-[48px]",
+  long: "text-[26px] leading-[32px] sm:text-[32px] sm:leading-[38px]",
+  longest: "text-[22px] leading-[28px] sm:text-[26px] sm:leading-[32px]",
 } as const;
 
 // Priced in thousandths, the most decimals any currency has: an amount it
@@ -1317,6 +1421,7 @@ function typedPrice(
 }
 
 function EditablePrice({
+  field,
   price,
   currency,
   defaultCurrency,
@@ -1324,6 +1429,8 @@ function EditablePrice({
   unsure,
   onSave,
 }: {
+  /** Whether its editor is open: the card's, as the doubt's button opens it too. */
+  field: ReturnType<typeof useEditing>;
   price: number | null;
   currency: string | null;
   /** The currency a price without one is typed in at first. */
@@ -1332,7 +1439,6 @@ function EditablePrice({
   unsure: boolean;
   onSave?: (changes: ProductChanges) => void;
 }) {
-  const field = useEditing();
   const code = productCurrency(currency);
   const size =
     PRICE_SIZE[
@@ -1348,8 +1454,9 @@ function EditablePrice({
     ) : (
       <PriceText price={price} currency={currency} from={from} />
     );
-  const tone = unsure ? "text-destructive" : undefined;
-  if (!onSave) return <p className={cn(PRICE_CLASS, size, tone)}>{shown}</p>;
+  const tone = unsure ? "text-(--p-danger-ink)" : undefined;
+  if (!onSave)
+    return <p className={cn("mt-0.5", PRICE_CLASS, size, tone)}>{shown}</p>;
   if (field.editing) {
     // The amount as the editor opens. Left as it is, it stands for the
     // stored price, whatever code is typed beside it.
@@ -1388,7 +1495,8 @@ function EditablePrice({
       title={COPY.changePrice}
       onClick={field.open}
       className={cn(
-        "-mx-1.5 max-w-full self-start rounded-md px-1.5 text-left transition-colors outline-none hover:bg-foreground/[0.04] focus-visible:ring-2 focus-visible:ring-ring/50",
+        "-mx-1.5 mt-0.5 max-w-full self-start px-1.5",
+        TEXT_BUTTON,
         PRICE_CLASS,
         size,
         tone
@@ -1410,8 +1518,8 @@ function OptionPicker({
 }) {
   return (
     <div className="mt-3">
-      <p className="text-xs text-muted-foreground">{COPY.chooseShown}</p>
-      <div className="mt-1.5 flex gap-2 overflow-x-auto p-0.5 pb-1">
+      <p className="text-xs leading-4 text-(--p-ink-2)">{COPY.chooseShown}</p>
+      <div className="mt-1.5 flex gap-2 overflow-x-auto p-1">
         {product.options.map((option, index) => {
           const chosen = index === product.featuredOption;
           return (
@@ -1424,21 +1532,12 @@ function OptionPicker({
               onClick={() => {
                 if (!chosen) onPick(index);
               }}
-              className={cn(
-                "relative size-12 shrink-0 overflow-hidden rounded-lg bg-foreground/[0.05] transition outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                chosen
-                  ? "ring-2 ring-foreground"
-                  : "opacity-70 hover:opacity-100"
-              )}
+              // The chosen one in a pencil line, never black.
+              className={styles.option}
             >
               {option.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={option.imageUrl}
-                  alt=""
-                  draggable={false}
-                  className="size-full object-contain p-1"
-                />
+                <img src={option.imageUrl} alt="" draggable={false} />
               ) : null}
             </button>
           );
@@ -1448,7 +1547,10 @@ function OptionPicker({
   );
 }
 
-/** Once every product is checked: what went on the shelf, and what to make of it on WhatsApp. */
+/**
+ * Once every product is checked: a strip saying what went on the shelf, then
+ * what to make with it (the carousel and order form, or a video ad).
+ */
 function ReviewDone({
   workspaceId,
   importId,
@@ -1456,6 +1558,8 @@ function ReviewDone({
   canUndo,
   onUndo,
   onClose,
+  onChangeProducts,
+  onMakeAd,
 }: {
   workspaceId: string;
   importId: string;
@@ -1463,43 +1567,63 @@ function ReviewDone({
   canUndo: boolean;
   onUndo: () => void;
   onClose: () => void;
+  onChangeProducts: (productIds: string[]) => void;
+  onMakeAd: (productIds: string[]) => void;
 }) {
   const added = products.filter(product => product.status === "published");
   const skipped = products.filter(
     product => product.status === "rejected"
   ).length;
   return (
-    <div className="flex flex-col items-center pt-10 text-center">
-      <span className="grid size-14 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 motion-safe:animate-in motion-safe:zoom-in-50">
-        <Check aria-hidden="true" className="size-7" strokeWidth={3} />
-      </span>
-      <p role="status" className="mt-5 text-lg font-semibold text-balance">
-        {products.length === 0 ? COPY.nothingLeft : COPY.done(added.length)}
-      </p>
-      {skipped > 0 ? (
-        <p className="mt-1 text-sm text-muted-foreground">
-          {COPY.skippedCount(skipped)}
+    <div className="flex flex-col gap-10">
+      <div
+        className={cn(
+          theme.tile,
+          "flex flex-wrap items-center gap-x-3.5 gap-y-3 px-4 py-3.5"
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className="grid size-8 shrink-0 place-items-center rounded-full bg-(--p-ok) text-white"
+        >
+          <Check className="size-[17px]" strokeWidth={3} />
+        </span>
+        <p
+          role="status"
+          className="min-w-0 flex-1 text-[15px] leading-[22px] text-pretty"
+        >
+          <b className="font-semibold">
+            {products.length === 0 ? COPY.nothingLeft : COPY.done(added.length)}
+          </b>
+          {skipped > 0 ? (
+            <>
+              {" "}
+              <span className="text-(--p-ink-2)">
+                {COPY.skippedCount(skipped)}
+              </span>
+            </>
+          ) : null}
         </p>
-      ) : null}
-      <div className="mt-8 flex gap-2">
-        <Button onClick={onClose} autoFocus>
-          {COPY.backToProducts}
-        </Button>
-        {canUndo ? (
-          <Button variant="ghost" onClick={onUndo}>
-            <Undo2 aria-hidden="true" />
-            {COPY.undo}
+        <div className="flex gap-1.5 max-sm:grid max-sm:w-full max-sm:grid-cols-[1fr_auto]">
+          <Button variant="outline" onClick={onClose} autoFocus>
+            {COPY.backToProducts}
           </Button>
-        ) : null}
+          {canUndo ? (
+            <Button variant="ghost" onClick={onUndo}>
+              <Undo2 aria-hidden="true" />
+              {COPY.undo}
+            </Button>
+          ) : null}
+        </div>
       </div>
       {added.length > 0 ? (
-        <div className="mt-12 w-full">
-          <WhatsAppDrafts
-            workspaceId={workspaceId}
-            importId={importId}
-            added={added}
-          />
-        </div>
+        <MakeOutputs
+          workspaceId={workspaceId}
+          importId={importId}
+          productIds={added.map(product => product.id)}
+          onChangeProducts={onChangeProducts}
+          onMakeAd={onMakeAd}
+        />
       ) : null}
     </div>
   );

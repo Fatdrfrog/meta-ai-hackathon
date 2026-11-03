@@ -1,0 +1,136 @@
+/* Small controls every Products part shares, on the Paper tokens. */
+
+/* The 22px check: a raised box with a 1.5px edge, then a rose fill with a
+   white tick drawn in 160ms. Never black. */
+.check {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--p-raised);
+  box-shadow: inset 0 0 0 1.5px var(--p-check-edge);
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+
+.check svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 160ms var(--p-ease-out);
+}
+
+.check[data-checked] {
+  background: var(--p-accent);
+  box-shadow: none;
+}
+
+.check[data-checked] svg {
+  stroke-dashoffset: 0;
+}
+
+.check[data-disabled] {
+  opacity: 0.45;
+}
+
+/* A status or cost chip: "Order form ready", "1 AI action". */
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--p-r-pill);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--p-ink-2);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.chip svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chip[data-tone="accent"] {
+  color: var(--p-accent-ink);
+  background: var(--p-accent-wash);
+  box-shadow: none;
+}
+
+.chip[data-tone="ok"] {
+  color: var(--p-ok-chip-ink);
+  background: var(--p-ok-wash);
+  box-shadow: none;
+}
+
+.chip[data-tone="danger"] {
+  color: var(--p-danger-ink);
+  background: var(--p-danger-wash);
+  box-shadow: inset 0 0 0 1px var(--p-danger-line);
+}
+
+/* Two or three choices side by side: a sunk track, the chosen one raised. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.segmented button {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--p-r-pill);
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--p-ink-2);
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    color var(--p-dur-fast) var(--p-ease-out);
+}
+
+.segmented button:hover {
+  color: var(--p-ink);
+}
+
+/*
+ * The active segment is told by its outline: the raised fill on the sunk
+ * track is only 1.10:1, so the pick line marks it (3.11:1 on the track).
+ */
+.segmented button[aria-pressed="true"] {
+  color: var(--p-ink);
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+}
+
+.segmented button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check svg {
+    transition: none;
+  }
+}

@@ -18,6 +18,28 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
+// What to make with the added products is its own part (product-make.tsx);
+// here it only shows what the review hands it, and its two ways out.
+jest.mock("./product-make", () => ({
+  MakeOutputs: (props: {
+    workspaceId: string;
+    productIds: readonly string[];
+    importId: string | null;
+    onChangeProducts: (ids: string[]) => void;
+    onMakeAd: (ids: string[]) => void;
+  }) => (
+    <section aria-label="Make something with them">
+      <p>{`${props.workspaceId} ${props.importId} ${props.productIds.join(",")}`}</p>
+      <button onClick={() => props.onChangeProducts([...props.productIds])}>
+        Change
+      </button>
+      <button onClick={() => props.onMakeAd(props.productIds.slice(0, 3))}>
+        Make a video ad
+      </button>
+    </section>
+  ),
+}));
+
 const BASE = "/api/workspaces/workspace-1";
 const IMPORT_URL = `${BASE}/products/imports/import-1`;
 type Route = (init?: RequestInit) => Promise<unknown> | unknown;
@@ -158,6 +180,9 @@ beforeEach(() => {
   }) as unknown as typeof fetch;
 });
 
+const onChangeProducts = jest.fn();
+const onMakeAd = jest.fn();
+
 function renderReview(onClose = jest.fn()) {
   render(
     <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
@@ -165,6 +190,8 @@ function renderReview(onClose = jest.fn()) {
         workspaceId="workspace-1"
         importId="import-1"
         onClose={onClose}
+        onChangeProducts={onChangeProducts}
+        onMakeAd={onMakeAd}
       />
     </SWRConfig>
   );
@@ -218,14 +245,27 @@ describe("ProductReview", () => {
     const price = within(card).getByRole("button", {
       name: /^Change the price: from\s15\s500\s₸$/,
     });
-    expect(price).toHaveClass("text-destructive");
-    const reason = within(card).getByText(
-      "This price was read from text in the video, not said aloud."
-    );
-    expect(reason).toHaveClass("text-destructive");
+    expect(price).toHaveClass("text-(--p-danger-ink)");
+    // Why, in a red note on the card, with its own way to fix the price.
+    const note = within(card).getByRole("note");
     expect(
-      within(card).getByText("The name said doesn't match the box.")
-    ).toHaveClass("text-destructive");
+      within(note).getByText(
+        "This price was read from text in the video, not said aloud."
+      )
+    ).toBeInTheDocument();
+    expect(
+      within(note).getByText("The name said doesn't match the box.")
+    ).toBeInTheDocument();
+    fireEvent.click(
+      within(note).getByRole("button", { name: "Change the price" })
+    );
+    expect(
+      within(card).getByRole("textbox", { name: "Price in tenge" })
+    ).toHaveFocus();
+    // While the price is open, the note doesn't offer it again.
+    expect(
+      within(note).queryByRole("button", { name: "Change the price" })
+    ).not.toBeInTheDocument();
     // The clip plays as the card comes up.
     expect(
       within(card).getByRole("button", { name: /Hear what you said|Pause/ })
@@ -302,16 +342,84 @@ describe("ProductReview", () => {
     );
     const back = screen.getByRole("button", { name: "Back to products" });
     expect(back).toHaveFocus();
-    // What was added can go to WhatsApp next.
-    expect(screen.getByText("Share them on WhatsApp")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Make a carousel" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Make an order form" })
-    ).toBeInTheDocument();
+    // What was added is what to make something with, from this video.
+    const make = screen.getByRole("region", {
+      name: "Make something with them",
+    });
+    expect(make).toHaveTextContent("workspace-1 import-1 p2,p3");
+    fireEvent.click(within(make).getByRole("button", { name: "Change" }));
+    expect(onChangeProducts).toHaveBeenCalledWith(["p2", "p3"]);
+    fireEvent.click(
+      within(make).getByRole("button", { name: "Make a video ad" })
+    );
+    expect(onMakeAd).toHaveBeenCalledWith(["p2", "p3"]);
+    // Making something is the screen's one primary action: back is quiet.
+    expect(back).toHaveAttribute("data-variant", "outline");
     fireEvent.click(back);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("says which card is up, and marks each one added, skipped or being checked", async () => {
+    renderReview();
+    await screen.findByRole("article", { name: "Шежіре" });
+    expect(
+      screen.getByRole("heading", { name: "Check your products" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 of 3")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+    expect(screen.getByText("3 of 3")).toBeInTheDocument();
+    const segments = Array.from(
+      document.querySelectorAll(
+        "[data-state='added'], [data-state='skipped'], [data-state='now']"
+      )
+    ).map(segment => segment.getAttribute("data-state"));
+    expect(segments).toEqual(["added", "skipped", "now"]);
+  });
+
+  it("adds in green and skips in outline, each with its key for a keyboard", async () => {
+    renderReview();
+    await screen.findByRole("article", { name: "Шежіре" });
+    const add = screen.getByRole("button", { name: "Add to shelf" });
+    const skip = screen.getByRole("button", { name: "Skip" });
+    // The ok fill, not the rose push: the review's one filled action.
+    expect(add).toHaveClass("ok");
+    expect(skip).toHaveAttribute("data-variant", "outline");
+    // Their keys show only where a fine pointer is.
+    for (const button of [add, skip]) {
+      const key = button.querySelector("[data-slot='kbd']");
+      expect(key).toHaveClass("hidden", "pointer-fine:inline-flex");
+    }
+    expect(add).toHaveAttribute("title", "Add to shelf (→)");
+    expect(skip).toHaveAttribute("title", "Skip (←)");
+  });
+
+  it("says the words the price came from, and when in the video", async () => {
+    serveImport([
+      product("p1", "Кукла Лол", {
+        price: 5000,
+        priceQuote: "кукла бес мың",
+        options: [{ ...option("doll", "p1"), videoMomentSeconds: 33.4 }],
+      }),
+      product("p2", "Шежіре", {
+        priceQuote: "15 500 ₸ бастап",
+        priceSource: "on_screen",
+        options: [{ ...option("panel", "p2"), videoMomentSeconds: null }],
+      }),
+    ]);
+    renderReview();
+    const card = await screen.findByRole("article", { name: "Кукла Лол" });
+    // One line of text, which wraps as text on a phone.
+    const said = within(card).getByText("кукла бес мың").closest("p");
+    expect(said).toHaveTextContent("You said «кукла бес мың» at 0:33");
+
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    const next = await screen.findByRole("article", { name: "Шежіре" });
+    // Read from text in the video, not said; no moment, no time.
+    expect(
+      within(next).getByText("15 500 ₸ бастап").closest("p")
+    ).toHaveTextContent(/^Shown in your video «15 500 ₸ бастап»$/);
   });
 
   it("a decision that can't be saved comes back, and says so", async () => {
@@ -333,7 +441,7 @@ describe("ProductReview", () => {
     const card = await screen.findByRole("article", { name: "Шежіре" });
 
     fireEvent.click(
-      within(card).getByRole("button", { name: /Change the price/ })
+      within(card).getByRole("button", { name: /^Change the price:/ })
     );
     const input = within(card).getByRole("textbox", { name: "Price in tenge" });
     // The price's currency, beside it, to keep or change.
@@ -348,7 +456,7 @@ describe("ProductReview", () => {
     const price = within(card).getByRole("button", {
       name: /^Change the price: from\s16\s900\s₸$/,
     });
-    expect(price).not.toHaveClass("text-destructive");
+    expect(price).not.toHaveClass("text-(--p-danger-ink)");
     expect(price).toHaveFocus();
     expect(
       within(card).queryByText(
@@ -382,7 +490,7 @@ describe("ProductReview", () => {
     const price = within(card).getByRole("button", {
       name: /^Change the price: 10\sUSD$/,
     });
-    expect(price).toHaveClass("text-destructive");
+    expect(price).toHaveClass("text-(--p-danger-ink)");
     fireEvent.click(price);
     const input = within(card).getByRole("textbox", { name: "Price in USD" });
     expect(input).toHaveValue("10");
@@ -398,7 +506,7 @@ describe("ProductReview", () => {
       within(card).getByRole("button", {
         name: /^Change the price: 12\.50\sUSD$/,
       })
-    ).not.toHaveClass("text-destructive");
+    ).not.toHaveClass("text-(--p-danger-ink)");
     expect(within(card).queryByText(otherCurrency)).not.toBeInTheDocument();
     await waitFor(() =>
       expect(patched("p1")).toEqual([{ price: 12.5, currency: "USD" }])
@@ -426,7 +534,7 @@ describe("ProductReview", () => {
     const price = within(card).getByRole("button", {
       name: /^Change the price: 20$/,
     });
-    expect(price).toHaveClass("text-destructive");
+    expect(price).toHaveClass("text-(--p-danger-ink)");
     fireEvent.click(price);
     const input = within(card).getByRole("textbox", { name: "Price" });
     const code = within(card).getByRole("textbox", { name: "Currency code" });
@@ -453,7 +561,7 @@ describe("ProductReview", () => {
 
     expect(
       within(card).getByRole("button", { name: /^Change the price: 20\sUSD$/ })
-    ).not.toHaveClass("text-destructive");
+    ).not.toHaveClass("text-(--p-danger-ink)");
     expect(within(card).queryByText(noCurrency)).not.toBeInTheDocument();
     await waitFor(() =>
       expect(patched("p1")).toEqual([{ price: 20, currency: "USD" }])
@@ -474,7 +582,7 @@ describe("ProductReview", () => {
     const card = await screen.findByRole("article", { name: "Шежіре" });
     const openPrice = () =>
       fireEvent.click(
-        within(card).getByRole("button", { name: /Change the price/ })
+        within(card).getByRole("button", { name: /^Change the price:/ })
       );
 
     openPrice();
@@ -523,7 +631,7 @@ describe("ProductReview", () => {
     renderReview();
     const card = await screen.findByRole("article", { name: "Phone stand" });
     fireEvent.click(
-      within(card).getByRole("button", { name: /Change the price/ })
+      within(card).getByRole("button", { name: /^Change the price:/ })
     );
     const amount = within(card).getByRole<HTMLInputElement>("textbox", {
       name: "Price in USD",
@@ -554,7 +662,7 @@ describe("ProductReview", () => {
     renderReview();
     const card = await screen.findByRole("article", { name: "Шежіре" });
     fireEvent.click(
-      within(card).getByRole("button", { name: /Change the price/ })
+      within(card).getByRole("button", { name: /^Change the price:/ })
     );
     const code = within(card).getByRole<HTMLInputElement>("textbox", {
       name: "Currency code",
@@ -607,7 +715,7 @@ describe("ProductReview", () => {
     });
     const openPrice = () =>
       fireEvent.click(
-        within(card).getByRole("button", { name: /Change the price/ })
+        within(card).getByRole("button", { name: /^Change the price:/ })
       );
 
     openPrice();
@@ -637,7 +745,7 @@ describe("ProductReview", () => {
       within(card).getByRole("button", {
         name: /^Change the price: from\s17\s500\sEUR$/,
       })
-    ).not.toHaveClass("text-destructive");
+    ).not.toHaveClass("text-(--p-danger-ink)");
     await waitFor(() =>
       expect(patched("p1")).toEqual([{ price: 17500, currency: "EUR" }])
     );
@@ -689,7 +797,7 @@ describe("ProductReview", () => {
 
     expect(
       within(card).getByRole("button", { name: /^Change the price: 25\sUSD$/ })
-    ).not.toHaveClass("text-destructive");
+    ).not.toHaveClass("text-(--p-danger-ink)");
     expect(within(card).queryByText(noCurrency)).not.toBeInTheDocument();
     await waitFor(() =>
       expect(patched("p1")).toEqual([{ price: 25, currency: "USD" }])
@@ -773,7 +881,7 @@ describe("ProductReview", () => {
     renderReview();
     const card = await screen.findByRole("article", { name: "Tea set" });
     fireEvent.click(
-      within(card).getByRole("button", { name: /Change the price/ })
+      within(card).getByRole("button", { name: /^Change the price:/ })
     );
     const input = within(card).getByRole("textbox", { name: "Price in JPY" });
     const code = within(card).getByRole("textbox", { name: "Currency code" });
@@ -876,7 +984,7 @@ describe("ProductReview", () => {
     renderReview();
     const card = await screen.findByRole("article", { name: "Шежіре" });
     fireEvent.click(
-      within(card).getByRole("button", { name: /Change the price/ })
+      within(card).getByRole("button", { name: /^Change the price:/ })
     );
     const input = within(card).getByRole("textbox", { name: "Price in tenge" });
     const code = within(card).getByRole("textbox", { name: "Currency code" });
@@ -893,7 +1001,7 @@ describe("ProductReview", () => {
     renderReview();
     const card = await screen.findByRole("article", { name: "Шежіре" });
     fireEvent.click(
-      within(card).getByRole("button", { name: /Change the price/ })
+      within(card).getByRole("button", { name: /^Change the price:/ })
     );
 
     // jsdom paints nothing, so these check the design system's classes that do.
@@ -927,8 +1035,9 @@ describe("ProductReview", () => {
     const price = within(card).getByRole("button", {
       name: /^Change the price: from\s1\s250\s000\s000\sIRR$/,
     });
-    expect(price).toHaveClass("text-[22px]", "max-w-full");
-    expect(price).not.toHaveClass("text-[28px]");
+    // 44px is for short prices (32px on a phone); a long one is set at 32.
+    expect(price).toHaveClass("text-[26px]", "sm:text-[32px]", "max-w-full");
+    expect(price).not.toHaveClass("sm:text-[44px]");
     const breaks = price.querySelectorAll("wbr");
     expect(breaks).toHaveLength(1);
     expect(breaks[0]!.previousSibling?.textContent).toBe("from ");
@@ -937,12 +1046,12 @@ describe("ProductReview", () => {
       screen.getByText("from 1 000 000 000 000 IRR".replace(/ /g, " "), {
         normalizer: text => text,
       })
-    ).toHaveClass("text-[18px]");
+    ).toHaveClass("text-[22px]", "sm:text-[26px]");
     // The editor's amount is bare digits, which fit at full size.
     fireEvent.click(price);
     expect(
       within(card).getByRole("textbox", { name: "Price in IRR" })
-    ).toHaveClass("text-[28px]");
+    ).toHaveClass("text-[32px]", "sm:text-[44px]");
   });
 
   it("Escape leaves a field unchanged without closing the review", async () => {
@@ -1014,7 +1123,7 @@ describe("ProductReview", () => {
     const photo = () => card.querySelector("img") as HTMLImageElement;
     expect(photo().src).toBe("https://cdn.test/p1-round.png");
 
-    fireEvent.click(within(card).getByRole("button", { name: "Original" }));
+    fireEvent.click(within(card).getByRole("button", { name: "As filmed" }));
     expect(photo().src).toBe("https://cdn.test/p1-round.jpg");
     fireEvent.click(within(card).getByRole("button", { name: "Polished" }));
 

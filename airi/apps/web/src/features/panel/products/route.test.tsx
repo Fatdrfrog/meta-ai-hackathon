@@ -60,6 +60,16 @@ test("renders Products for an admin with the flag on", async () => {
   expect(mockFlag).toHaveBeenCalledWith("workspace-1", "products");
 });
 
+test("puts the Paper look and its display face on the Products column only", async () => {
+  render(await ProductsRoute(params()));
+  // The column that scrolls: the theme's tokens and paper ground, and the
+  // Geologica variable, around the page's usual width.
+  const container = screen.getByTestId("products").parentElement!;
+  expect(container).toHaveClass("mx-auto", "max-w-5xl");
+  const column = container.parentElement!;
+  expect(column).toHaveClass("theme", "variable", "overflow-y-auto");
+});
+
 test("offers sending videos on WhatsApp once airi's number is set up", async () => {
   process.env.PRODUCTS_WHATSAPP_NUMBER = "77080000011";
   try {

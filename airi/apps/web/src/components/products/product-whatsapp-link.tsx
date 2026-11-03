@@ -15,6 +15,7 @@ import {
 } from "@/lib/products/types";
 import { cn } from "@/lib/utils";
 import { QrCode } from "lucide-react";
+import productTheme from "./product-theme.module.css";
 import QRCodeLib from "qrcode";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
@@ -61,11 +62,14 @@ export function WhatsAppLinkButton({
   workspaceId,
   number,
   variant = "outline",
+  className,
 }: {
   workspaceId: string;
   /** Airi's number, as the owner reads it. */
   number: string;
   variant?: "default" | "outline";
+  /** The button's size where it stands, such as the page head's. */
+  className?: string;
 }) {
   const url = productsWhatsAppLinkUrl(workspaceId);
   const ids = useId();
@@ -236,7 +240,7 @@ export function WhatsAppLinkButton({
       }}
     >
       <PopoverTrigger asChild>
-        <Button variant={variant} size="sm">
+        <Button variant={variant} size="sm" className={className}>
           <QrCode aria-hidden="true" />
           {COPY.sendFromWhatsApp}
         </Button>
@@ -250,8 +254,13 @@ export function WhatsAppLinkButton({
           event.preventDefault();
           document.getElementById(titleId)?.focus();
         }}
-        // Never wider than the screen; on a phone, the content column.
-        className="max-h-[var(--radix-popover-content-available-height)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto p-5 max-sm:w-[calc(100vw-2rem)]"
+        // Never wider than the screen; on a phone, the content column. Drawn
+        // outside the Products column, so it takes the paper itself.
+        className={cn(
+          productTheme.theme,
+          productTheme.popover,
+          "max-h-[var(--radix-popover-content-available-height)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto p-5 max-sm:w-[calc(100vw-2rem)]"
+        )}
       >
         <p
           id={titleId}
@@ -373,13 +382,11 @@ export function WhatsAppLinkButton({
                   className="size-44 rounded-lg border border-foreground/10 bg-white p-2"
                 />
               ) : (
+                // A still paper square: nothing in Products loops.
                 <div
                   role={shop === "opening" ? "status" : undefined}
                   aria-label={shop === "opening" ? COPY.makingQr : undefined}
-                  className={cn(
-                    "size-44 rounded-lg bg-foreground/[0.06]",
-                    !closed && "motion-safe:animate-pulse"
-                  )}
+                  className="size-44 rounded-lg bg-(--p-sunk)"
                 />
               )}
             </div>

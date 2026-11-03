@@ -8,58 +8,77 @@ import {
   productPriceParts,
   type WorkspaceProductRecord,
 } from "@/lib/products/types";
-import { CircleAlert, Sparkles } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { ProductCheck } from "./product-controls";
 import type { DraftShelfInfo } from "./product-stage-model";
 import styles from "./product-shelf.module.css";
+import theme from "./product-theme.module.css";
+
+const COPY = PRODUCTS_COPY.page;
 
 // Products stand on a real shelf, the way the owner filmed them, instead of
-// sitting in cards: each bay is a lit wall, a plank with a price tag clipped
-// to its lip, and the shadow it casts. Columns touch, so a row is one board;
-// the wall runs on from row to row.
-const SHELF_GRID =
-  "grid grid-cols-2 overflow-hidden rounded-lg sm:grid-cols-3 lg:grid-cols-4";
-// Every bay keeps this height, so the boards of a row line up.
-const WALL = "relative h-40 sm:h-44";
+// sitting in cards: each bay is a lit plaster wall, a birch plank with a
+// paper price label clipped to its edge, and the shade the plank throws.
+// Bays touch, so a row is one board; the wall runs on from row to row.
 
-// Each product is set down on the shelf once its photo has loaded. The first
-// two rows go one after another; further down, a product scrolled into view
-// shouldn't wait for its place in the queue.
-const SET_DOWN_STEP_MS = 60;
+// Each product is set down once its photo has decoded; the first 8 one
+// after another, the rest as they scroll into view.
+const SET_DOWN_STEP_MS = 40;
 const SET_DOWN_STAGGERED = 8;
-const SET_DOWN =
-  "fill-mode-both duration-500 ease-out fade-in slide-in-from-top-4 motion-safe:animate-in";
-// A photo that was being made resolves out of its glow instead.
-const DEVELOP =
-  "fill-mode-both duration-700 ease-out fade-in zoom-in-95 blur-in-md motion-safe:animate-in";
 
-/** The words over a shelf: what it holds, and a line about it. */
+/** The words over a shelf: what it holds, how many, a line about it, and a control. */
 export function ShelfHeading({
   id,
   title,
   note = null,
+  count,
+  action = null,
 }: {
+  /** On the title alone, so a shelf it names is named by the title. */
   id: string;
   title: string;
   note?: string | null;
+  /** How many it holds, beside the title. */
+  count?: number;
+  /** A control at the heading's end, such as "Choose products". */
+  action?: ReactNode;
 }) {
   return (
-    <div className="mb-3 flex flex-col gap-0.5">
-      <h2 id={id} className="text-[15px] leading-snug font-semibold">
-        {title}
-      </h2>
-      {note ? (
-        <p className="text-[13px] leading-snug text-muted-foreground">{note}</p>
-      ) : null}
+    <div className="mb-4 flex items-end justify-between gap-4 max-sm:items-start">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <h2 className={theme.displayM}>
+          <span id={id}>{title}</span>
+          {count !== undefined ? (
+            <>
+              {" "}
+              <span className="ml-0.5 font-sans text-[15px] font-medium tracking-normal text-(--p-ink-2) tabular-nums">
+                {count}
+              </span>
+            </>
+          ) : null}
+        </h2>
+        {note ? (
+          <p className="text-[13px] leading-[18px] text-(--p-ink-2)">{note}</p>
+        ) : null}
+      </div>
+      {action}
     </div>
   );
 }
+
+/** Choose mode: every bay is a checkbox for making something with it. */
+export type ShelfChoosing = {
+  chosen: ReadonlySet<string>;
+  onToggle: (productId: string) => void;
+};
 
 export function ProductShelf({
   products,
   label = PRODUCTS_COPY.title,
   labelledBy,
   drafts,
+  choose = null,
 }: {
   products: WorkspaceProductRecord[];
   label?: string;
@@ -70,12 +89,14 @@ export function ProductShelf({
    * one's photo is: their shelf gets a dashed edge.
    */
   drafts?: ReadonlyMap<string, DraftShelfInfo>;
+  /** Set while the owner chooses products on the shelf. */
+  choose?: ShelfChoosing | null;
 }) {
   return (
     <ul
       aria-label={labelledBy ? undefined : label}
       aria-labelledby={labelledBy}
-      className={cn(styles.unit, SHELF_GRID)}
+      className={styles.unit}
     >
       {products.map((product, index) => (
         <ShelfItem
@@ -84,6 +105,7 @@ export function ProductShelf({
           index={index}
           draft={drafts !== undefined}
           info={drafts?.get(product.id) ?? null}
+          choose={choose}
         />
       ))}
       <ShelfFillers count={products.length} draft={drafts !== undefined} />
@@ -96,18 +118,20 @@ function ShelfItem({
   index,
   draft,
   info,
+  choose,
 }: {
   product: WorkspaceProductRecord;
   index: number;
   draft: boolean;
   info: DraftShelfInfo | null;
+  choose: ShelfChoosing | null;
 }) {
   const photo = info?.photo ?? (product.imageUrl ? "photo" : "initial");
-  // A photo being made when the shelf appeared develops out of its glow.
-  const [developing] = useState(
-    () => photo === "making" || photo === "waiting"
-  );
+  // A photo being made when the shelf appeared keeps its tent card standing
+  // until the photo has decoded, so its place is never blank.
+  const [wasMaking] = useState(() => photo === "making" || photo === "waiting");
   const url = product.imageUrl;
+  const chosen = choose?.chosen.has(product.id) ?? false;
 
   let content: ReactNode;
   if ((photo === "photo" || photo === "print") && url) {
@@ -119,56 +143,38 @@ function ShelfItem({
         url={url}
         name={product.name}
         index={index}
-        arrival={developing ? "develop" : "set-down"}
         print={photo === "print"}
         placeholder={
-          developing ? (
-            <DevelopingPhoto state="making" prompt={info?.prompt ?? null} />
+          wasMaking ? (
+            <TentCard name={product.name} words={COPY.makingPhoto} />
           ) : null
         }
       />
     );
-  } else if (photo === "making" || photo === "waiting") {
-    content = <DevelopingPhoto state={photo} prompt={info?.prompt ?? null} />;
+  } else if (photo === "making") {
+    content = <TentCard name={product.name} words={COPY.makingPhoto} />;
+  } else if (photo === "waiting") {
+    content = <TentCard name={product.name} words={COPY.nextInLine} />;
   } else {
-    content = <TentCard name={product.name} />;
+    content = <TentCard name={product.name} words={COPY.noPhoto} />;
   }
 
   return (
     <li
       data-photo={photo}
       data-published={draft ? undefined : ""}
-      className={cn(
-        styles.bay,
-        draft && styles.draft,
-        "relative flex min-w-0 flex-col"
-      )}
-      style={
-        {
-          "--i": index,
-          "--aura-1": info?.aura[0],
-          "--aura-2": info?.aura[1],
-        } as CSSProperties
-      }
+      data-chosen={chosen || undefined}
+      className={cn(styles.bay, draft && styles.draft, "flex flex-col")}
     >
-      {/* First, so the name is heard before the price; shown under the shelf.
-          Spaced by margin: a clamp clips at the padding box, so bottom padding
-          would show a third line. */}
-      <p
-        title={product.name}
-        dir="auto"
-        className="order-last mb-4 line-clamp-2 px-3 pt-1 text-center text-[13px] leading-snug break-words text-foreground/60"
-      >
+      {/* First, so the name is heard before the price; shown under the shelf. */}
+      <p title={product.name} dir="auto" className={styles.name}>
         {product.name}
       </p>
-      <div className={cn(styles.wall, WALL)}>
-        {/* The product sinks 5 px into the plank's top, so it stands on it. */}
-        <div className="absolute inset-x-[18px] top-4 -bottom-[5px] z-[1] flex items-end justify-center">
-          {content}
-        </div>
+      <div className={styles.wall}>
+        <div className={styles.stand}>{content}</div>
       </div>
-      <div aria-hidden="true" className={cn(styles.plank, "h-2.5")} />
-      <div className={cn(styles.lip, "relative h-3")}>
+      <div aria-hidden="true" className={styles.top} />
+      <div className={styles.lip}>
         <PriceTag
           price={product.price}
           currency={product.currency}
@@ -176,10 +182,18 @@ function ShelfItem({
           doubt={info?.priceDoubt ?? false}
         />
       </div>
-      <div aria-hidden="true" className={cn(styles.under, "h-7")} />
-      {/* Not made says so on its card; these say it to screen readers. */}
-      {photo === "making" || photo === "waiting" ? (
-        <span className="sr-only">{PRODUCTS_COPY.stage.photo[photo]}</span>
+      <div aria-hidden="true" className={styles.under} />
+      {choose ? (
+        <>
+          <input
+            type="checkbox"
+            aria-label={product.name}
+            checked={chosen}
+            onChange={() => choose.onToggle(product.id)}
+            className={styles.pick}
+          />
+          <ProductCheck checked={chosen} className={styles.check} />
+        </>
       ) : null}
     </li>
   );
@@ -208,7 +222,7 @@ export function PriceText({
   );
 }
 
-// A long price is lettered smaller, so its tag fits a phone's bay.
+// A long price is lettered smaller, so its label fits a phone's bay.
 const TAG_SIZE = {
   short: "text-[13px]",
   long: "text-[11px]",
@@ -227,40 +241,43 @@ function PriceTag({
   /** Airi isn't sure of it: a ring the owner checks. */
   doubt: boolean;
 }) {
-  const text =
-    price === null
-      ? PRODUCTS_COPY.noPrice
-      : formatProductPrice(price, { from, currency });
+  if (price === null)
+    return (
+      <span className={cn(styles.tag, styles.tagEmpty)}>
+        {PRODUCTS_COPY.noPrice}
+      </span>
+    );
+  const [lead, amount] = productPriceParts(price, { from, currency });
   return (
     <span
       className={cn(
         styles.tag,
-        price === null && styles.tagEmpty,
         doubt && styles.tagDoubt,
-        // As wide as its price, but never wider than its bay; one that
-        // still doesn't fit puts its "from" on a line of its own.
-        "absolute top-[3px] left-1/2 z-[2] inline-flex w-max max-w-[calc(100%-8px)] -translate-x-1/2 items-center gap-1 rounded-[3px] px-[7px] py-[5px] leading-[1.25] tracking-tight tabular-nums",
-        TAG_SIZE[productPriceLength(text)],
-        price === null ? "font-medium" : "font-semibold"
+        TAG_SIZE[
+          productPriceLength(formatProductPrice(price, { from, currency }))
+        ]
       )}
     >
       {doubt ? (
         <>
-          <CircleAlert
-            aria-hidden="true"
-            className="size-3 shrink-0"
-            strokeWidth={2.4}
-          />
-          <span className="sr-only">{PRODUCTS_COPY.stage.checkPrice}</span>
+          <CircleAlert aria-hidden="true" strokeWidth={2.4} />
+          <span className="sr-only">{COPY.checkPrice}</span>
         </>
       ) : null}
-      <span className="text-center">
-        {price === null ? (
-          text
-        ) : (
-          <PriceText price={price} currency={currency} from={from} />
-        )}
-      </span>
+      {lead ? (
+        <>
+          {/* "from" is lettered lighter than the amount, and may sit on a
+              line of its own; it's read as one price. */}
+          <span aria-hidden="true" className="min-w-0 text-center">
+            <span className={styles.from}>{lead}</span>
+            <wbr />
+            {amount}
+          </span>
+          <span className="sr-only">{`${lead}${amount}`}</span>
+        </>
+      ) : (
+        <span className="min-w-0 text-center">{amount}</span>
+      )}
     </span>
   );
 }
@@ -269,14 +286,12 @@ function ShelfPhoto({
   url,
   name,
   index,
-  arrival,
   print,
   placeholder,
 }: {
   url: string;
   name: string;
   index: number;
-  arrival: "set-down" | "develop";
   /** A whole video frame, not a cut-out. */
   print: boolean;
   /** Shown until the photo has decoded, so its place is never blank. */
@@ -285,32 +300,25 @@ function ShelfPhoto({
   const [image, setImage] = useState<"loading" | "loaded" | "failed">(
     "loading"
   );
-  if (image === "failed") return <TentCard name={name} />;
+  if (image === "failed") return <TentCard name={name} words={COPY.noPhoto} />;
 
   return (
-    <div className="relative flex h-full w-full items-end justify-center">
+    <>
       {image === "loading" && placeholder ? (
         <div className="absolute inset-0 flex items-end justify-center">
           {placeholder}
         </div>
       ) : null}
       <div
-        className={cn(
-          "relative flex h-full max-w-full items-end justify-center",
-          image === "loaded"
-            ? arrival === "develop"
-              ? DEVELOP
-              : SET_DOWN
-            : "opacity-0"
-        )}
-        style={{
-          animationDelay: `${arrival === "set-down" && index < SET_DOWN_STAGGERED ? index * SET_DOWN_STEP_MS : 0}ms`,
-        }}
+        data-state={image}
+        data-print={print || undefined}
+        className={styles.product}
+        style={
+          {
+            "--delay": `${index < SET_DOWN_STAGGERED ? index * SET_DOWN_STEP_MS : 0}ms`,
+          } as CSSProperties
+        }
       >
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-[10%] bottom-0 h-3 translate-y-1/2 rounded-[50%] bg-black/25 blur-md dark:bg-black/70"
-        />
         {/* Signed storage URLs; next/image would need every bucket host configured. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -319,21 +327,17 @@ function ShelfPhoto({
           loading="lazy"
           decoding="async"
           draggable={false}
-          // Decoded first, so the shadow never lands before the product.
+          // Decoded first, so the shadows never land before the product.
           onLoad={event => {
             void Promise.resolve(event.currentTarget.decode?.())
               .catch(() => undefined)
               .finally(() => setImage("loaded"));
           }}
           onError={() => setImage("failed")}
-          className={cn(
-            print ? styles.print : styles.cutout,
-            "relative max-h-full max-w-full object-contain select-none",
-            print && "mb-1 max-h-[78%]"
-          )}
+          className={print ? styles.print : styles.cutout}
         />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -341,11 +345,12 @@ function ShelfPhoto({
 export const initialOf = (name: string) =>
   Array.from(name.trim())[0]?.toLocaleUpperCase() ?? "";
 
+/** A name's first letter, large and quiet, where a photo would stand. */
 export function NameInitial({ name }: { name: string }) {
   return (
     <span
       aria-hidden="true"
-      className="pb-2 text-7xl leading-none font-extralight text-foreground/20 select-none"
+      className="pb-2 font-(family-name:--p-font-display) text-7xl leading-none font-medium text-(--p-ink-3) select-none"
     >
       {initialOf(name)}
     </span>
@@ -353,92 +358,28 @@ export function NameInitial({ name }: { name: string }) {
 }
 
 /**
- * A product without a photo: a paper tent card standing on the shelf, with
- * its first letter and what's missing. It stays merchandise, not a gap.
+ * A product without its photo: a paper tent card standing on the shelf, with
+ * its first letter and what's happening to the photo. It stays merchandise,
+ * not a gap.
  */
-function TentCard({ name }: { name: string }) {
+function TentCard({ name, words }: { name: string; words: string }) {
   return (
-    <span
-      className={cn(
-        styles.tent,
-        "flex h-[84px] w-16 flex-col items-center justify-center gap-1.5 rounded-[10px] px-1 text-center sm:h-[100px] sm:w-[76px]"
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="text-[28px] leading-none font-medium text-foreground/45 select-none"
-      >
-        {initialOf(name)}
-      </span>
-      <span className="text-[11px] leading-tight text-muted-foreground">
-        {PRODUCTS_COPY.stage.photo.unmade}
-      </span>
+    <span className={styles.tent}>
+      <b aria-hidden="true">{initialOf(name)}</b>
+      <span>{words}</span>
     </span>
   );
 }
 
-/**
- * Where a photo is being made, or waits its turn: a glow in the item's own
- * colours, with the words the models were given for it.
- */
-function DevelopingPhoto({
-  state,
-  prompt,
-}: {
-  state: "making" | "waiting";
-  prompt: string | null;
-}) {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        data-state={state}
-        className={cn(
-          styles.aura,
-          "relative aspect-[.74] h-[78%] max-w-full overflow-hidden"
-        )}
-      >
-        {state === "making" ? (
-          <>
-            <span className={cn(styles.develop, "absolute inset-0")} />
-            <span className={cn(styles.scrim, "absolute inset-0")} />
-            <Sparkles
-              className={cn(styles.twinkle, "absolute top-3 left-3 size-4")}
-              strokeWidth={1.8}
-            />
-          </>
-        ) : null}
-        {prompt ? (
-          <span
-            className={cn(
-              styles.prompt,
-              "absolute inset-x-2.5 bottom-3.5 line-clamp-3 text-center font-mono text-[11px] leading-tight"
-            )}
-          >
-            {prompt}
-          </span>
-        ) : null}
-      </div>
-      <span
-        aria-hidden="true"
-        className={cn(
-          styles.auraShadow,
-          "absolute inset-x-[18%] bottom-0 h-2.5 translate-y-1/2 rounded-[50%] blur-md"
-        )}
-      />
-    </>
-  );
-}
-
-/** The plank, its lip and its shadow: the shelf under every bay. */
+/** The plank, its edge and its shade: the shelf under every bay. */
 function Board({ children = null }: { children?: ReactNode }) {
   return (
     <>
-      <div aria-hidden="true" className={cn(styles.plank, "h-2.5")} />
-      <div aria-hidden="true" className={cn(styles.lip, "relative h-3")}>
+      <div aria-hidden="true" className={styles.top} />
+      <div aria-hidden="true" className={styles.lip}>
         {children}
       </div>
-      <div aria-hidden="true" className={cn(styles.under, "h-7")} />
+      <div aria-hidden="true" className={styles.under} />
     </>
   );
 }
@@ -464,7 +405,7 @@ function ShelfFillers({ count, draft }: { count: number; draft: boolean }) {
           index < need(4) ? "lg:block" : "lg:hidden"
         )}
       >
-        <div className={cn(styles.wall, WALL)} />
+        <div className={styles.wall} />
         <Board />
       </li>
     )
@@ -475,26 +416,26 @@ function ShelfFillers({ count, draft }: { count: number; draft: boolean }) {
 // the fourth from four.
 const SKELETON_BAYS = ["flex", "flex", "hidden sm:flex", "hidden lg:flex"];
 
-/** The shelf while products load: dimmed bays with blank tags. */
+/** The shelf while products load: a still, dim row with blank labels. */
 export function ProductShelfSkeleton() {
   return (
-    <div aria-hidden="true" className={cn(styles.unit, SHELF_GRID)}>
+    <div
+      role="status"
+      aria-label={PRODUCTS_COPY.loading}
+      className={styles.unit}
+    >
       {SKELETON_BAYS.map((visibility, index) => (
         <div
           key={index}
+          aria-hidden="true"
           data-light="dim"
           className={cn(styles.bay, visibility, "flex-col")}
         >
-          <div className={cn(styles.wall, WALL)} />
+          <div className={styles.wall} />
           <Board>
-            <span
-              className={cn(
-                styles.tag,
-                "absolute top-[3px] left-1/2 h-[26px] w-14 -translate-x-1/2 rounded-[3px] opacity-60 motion-safe:animate-pulse"
-              )}
-            />
+            <span className={cn(styles.tag, styles.tagBlank)} />
           </Board>
-          <div className="mx-auto mt-1 mb-4 h-3 w-20 rounded bg-foreground/[0.06] motion-safe:animate-pulse" />
+          <span className={styles.nameBar} />
         </div>
       ))}
     </div>
@@ -511,22 +452,16 @@ export function EmptyShelf({
   lit?: boolean;
 }) {
   return (
-    <div className={cn(styles.unit, "overflow-hidden rounded-lg")}>
-      <div
-        data-light={lit ? "half" : "off"}
-        className={cn(styles.bay, "flex flex-col")}
-      >
-        <div
-          className={cn(
-            styles.wall,
-            "relative flex min-h-56 flex-col items-center justify-end gap-1.5 px-4 pt-8 pb-6 text-center"
-          )}
-        >
-          {children}
+    <div className={styles.empty} data-light={lit ? undefined : "off"}>
+      <div className={styles.emptyWall}>{children}</div>
+      <Board>
+        <div className={styles.ghostTags}>
+          <span />
+          <span />
+          <span />
+          <span />
         </div>
-        <Board />
-        <div className="h-4" />
-      </div>
+      </Board>
     </div>
   );
 }

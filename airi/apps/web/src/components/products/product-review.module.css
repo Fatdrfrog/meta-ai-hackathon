@@ -1,0 +1,297 @@
+/* Checking a video's products, card by card, in the Paper tokens: each card
+   is a raised sheet whose photo stands on the shelf's own wall and board. */
+
+/* The cards behind the top one: their edges show below it. */
+.behind {
+  transform-origin: 50% 100%;
+  transition: transform var(--p-dur-fast) var(--p-ease-out);
+}
+
+/* The photo: the plaster wall with the window's light. */
+.photo {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  isolation: isolate;
+  background: linear-gradient(var(--p-wall), var(--p-wall-low));
+}
+.photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 95% at 18% -10%,
+    var(--p-window),
+    transparent 62%
+  );
+}
+
+/* Where the product stands, on the board. */
+.stand {
+  position: absolute;
+  inset: 44px 40px 20px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (min-width: 640px) {
+  .stand {
+    inset: 46px 56px 20px;
+  }
+}
+/* As filmed: the whole frame, inside the wall's margin. */
+.filmed {
+  position: absolute;
+  inset: 52px 16px 30px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.filmed img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--p-r-thumb);
+  box-shadow: var(--p-shadow-tile);
+  user-select: none;
+}
+
+/* A cut-out with its contact line and ambient shade, no blur. */
+.product {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  max-width: 100%;
+}
+.product::before,
+.product::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.product::before {
+  width: 104%;
+  height: 30px;
+  translate: calc(-50% + 7px) 46%;
+  background: radial-gradient(closest-side, var(--p-ambient), transparent);
+}
+.product::after {
+  width: 70%;
+  height: 10px;
+  translate: calc(-50% + 1px) 50%;
+  background: radial-gradient(closest-side, var(--p-contact), transparent);
+}
+.product img {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: var(--p-cutout-lift);
+  user-select: none;
+}
+
+/* The board along the photo's foot: a birch top and its ply edge. */
+.board {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.board::before,
+.board::after {
+  content: "";
+  display: block;
+}
+.board::before {
+  height: 12px;
+  background: linear-gradient(
+    var(--p-birch-shade) 0 1px,
+    var(--p-birch) 1px,
+    var(--p-birch-low)
+  );
+}
+.board::after {
+  height: 10px;
+  background: linear-gradient(var(--p-ply), var(--p-ply-low));
+  box-shadow:
+    inset 0 1px 0 var(--p-ply-highlight),
+    inset 0 -1px 0 var(--p-ply-shade);
+}
+
+/* Polished · As filmed, at the photo's top right. */
+.toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+}
+
+/* The owner saying the price: a round clip ringed in paper, with a paper
+   badge saying what a tap does. */
+.clip {
+  position: absolute;
+  left: 16px;
+  bottom: 34px;
+  z-index: 3;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+}
+.clip video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--p-sunk);
+  box-shadow:
+    0 0 0 3px var(--p-raised),
+    0 4px 10px -2px rgb(var(--p-shade) / 0.3);
+}
+.clip:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 5px;
+}
+.clipBadge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--p-raised);
+  color: var(--p-ink);
+  box-shadow:
+    0 0 0 1px var(--p-line),
+    0 1px 3px rgb(var(--p-shade) / 0.18);
+}
+.clipBadge svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* "Add" or "Skip", stamped on the card as it's dragged that way: paper, not
+   glass; its opacity follows the drag. */
+.stamp {
+  position: absolute;
+  top: 24px;
+  z-index: 4;
+  padding: 2px 12px;
+  border: 3px solid currentColor;
+  border-radius: 12px;
+  background: var(--p-raised);
+  font-family: var(--p-font-display);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.stamp[data-to="add"] {
+  left: 20px;
+  rotate: -12deg;
+  color: var(--p-ok-ink);
+}
+.stamp[data-to="skip"] {
+  right: 20px;
+  rotate: 12deg;
+  color: var(--p-danger-ink);
+}
+
+/* What Airi isn't sure of: a soft red note with the way to fix it. */
+.doubt {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 4px 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--p-danger-wash);
+  box-shadow: inset 0 0 0 1px var(--p-danger-line);
+  font-size: 13.5px;
+  line-height: 19px;
+  color: var(--p-ink);
+}
+.doubt > svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 1.5px;
+  color: var(--p-danger-ink);
+}
+
+/* Progress: one segment per product. */
+.segments {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+}
+.segments span {
+  flex: 1;
+  min-width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--p-line-strong);
+  transition: background-color var(--p-dur-base) var(--p-ease-out);
+}
+.segments span[data-state="added"] {
+  background: var(--p-ok);
+}
+.segments span[data-state="skipped"] {
+  background: color-mix(in oklab, var(--p-ink) 42%, transparent);
+}
+.segments span[data-state="now"] {
+  background: var(--p-accent);
+}
+
+/* A product's options, to choose the one the shelf shows. */
+.option {
+  position: relative;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: var(--p-r-thumb);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  opacity: 0.75;
+  transition:
+    opacity var(--p-dur-fast) var(--p-ease-out),
+    box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+.option:hover {
+  opacity: 1;
+}
+.option[aria-pressed="true"] {
+  opacity: 1;
+  box-shadow: inset 0 0 0 1.5px var(--p-pick-line);
+}
+.option:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.option img {
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .behind,
+  .segments span,
+  .option {
+    transition: none;
+  }
+}

@@ -1,75 +1,48 @@
-/* A real shelf: each product's bay is a lit wall, a plank with its front lip
-   and the shadow the plank casts. Columns and rows touch, so a row reads as
-   one board and the wall runs on from row to row. Layout lives in the
-   component's Tailwind classes; this file only paints, and animates only
-   when the visitor allows motion. */
+/* A real shelf, in the Paper tokens (product-theme.module.css): each bay is a
+   plaster wall lit from a window up to the left, a birch plank with its ply
+   front edge, and the shade the plank throws below. Bays touch, so a row reads
+   as one board and the wall runs on from row to row. Layout lives here too;
+   motion only runs when the visitor allows it, and nothing loops. */
 
 .unit {
-  /* The wall, darkening just above each board. */
-  --wall: oklch(0.955 0 0);
-  --wall-low: oklch(0.93 0 0);
-  --pool: color-mix(in oklab, white 45%, transparent);
-  /* The plank's top face, lit from above, with its back edge against the wall. */
-  --face-1: oklch(0.985 0 0);
-  --face-2: oklch(0.985 0 0);
-  --face-back: rgb(0 0 0 / 0.1);
-  /* Its front edge, in shade, with a bright top and a crisp underside. */
-  --lip-1: oklch(0.87 0 0);
-  --lip-2: oklch(0.8 0 0);
-  --lip-hi: #fff;
-  --lip-under: rgb(0 0 0 / 0.14);
-  --under: rgb(0 0 0 / 0.16);
-  --pool-tint-share: 12%;
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--p-wall);
+  box-shadow: 0 0 0 1px var(--p-line);
 }
-:global(.dark) .unit {
-  --wall: color-mix(in oklab, var(--foreground) 3%, var(--background));
-  --wall-low: color-mix(in oklab, var(--foreground) 6%, var(--background));
-  --pool: color-mix(in oklab, white 10%, transparent);
-  --face-1: color-mix(in oklab, var(--foreground) 20%, var(--background));
-  --face-2: color-mix(in oklab, var(--foreground) 14%, var(--background));
-  --face-back: transparent;
-  --lip-1: color-mix(in oklab, var(--foreground) 26%, var(--background));
-  --lip-2: color-mix(in oklab, var(--foreground) 18%, var(--background));
-  --lip-hi: color-mix(in oklab, white 30%, transparent);
-  --lip-under: transparent;
-  --under: color-mix(in oklab, black 55%, transparent);
-  --pool-tint-share: 22%;
+@media (min-width: 640px) {
+  .unit {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .unit {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
-/* Each bay ends on the colour the next row's wall starts with. */
+/* A bay; its display (a flex column, or hidden at some widths for the spots
+   that finish a row) is the component's Tailwind classes, which this file
+   would otherwise override. */
 .bay {
-  --light: 1;
-  background: var(--wall);
-}
-.bay[data-light="dim"] {
-  --light: 0.3;
-}
-.bay[data-light="half"] {
-  --light: 0.5;
-}
-/* Spots that only finish a row, and a shelf that couldn't load: lights off. */
-.bay[data-light="off"],
-.bay[data-spot] {
-  --light: 0.15;
-}
-.bay[data-photo="unmade"] {
-  --light: 0.2;
-}
-/* A photo being made tints its bay's light with its own colours. */
-.bay[data-photo="making"],
-.bay[data-photo="waiting"] {
-  --pool-tint: color-mix(
-    in oklab,
-    var(--aura-1) var(--pool-tint-share),
-    transparent
-  );
+  position: relative;
+  min-width: 0;
+  background: var(--p-wall);
 }
 
-/* The wall, and the pool of light the shelf throws on it. */
+/* The wall, darkening just above the plank, with the window's light. */
 .wall {
+  position: relative;
   isolation: isolate;
-  background: linear-gradient(var(--wall), var(--wall-low));
+  height: 150px;
+  background: linear-gradient(var(--p-wall), var(--p-wall-low));
+}
+@media (min-width: 640px) {
+  .wall {
+    height: 176px;
+  }
 }
 .wall::before {
   content: "";
@@ -77,174 +50,386 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: var(--light);
   background: radial-gradient(
-    62% 78% at 50% 100%,
-    var(--pool-tint, var(--pool)),
-    transparent 72%
+    130% 95% at 18% -10%,
+    var(--p-window),
+    transparent 62%
   );
 }
-/* On a light wall a coloured glow is a shade, not a smudge. */
-.bay[data-photo="making"] .wall::before,
-.bay[data-photo="waiting"] .wall::before {
-  mix-blend-mode: multiply;
+/* A shelf still loading, or one that couldn't load: the light is low. */
+.bay[data-light="dim"] .wall::before {
+  opacity: 0.4;
 }
-:global(.dark) .bay[data-photo="making"] .wall::before,
-:global(.dark) .bay[data-photo="waiting"] .wall::before {
-  mix-blend-mode: normal;
+.bay[data-light="off"] .wall::before {
+  opacity: 0.15;
 }
 
-.plank {
+/* Where the product stands: it sinks 4px into the plank's top. */
+.stand {
+  position: absolute;
+  inset: 16px 16px -4px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (min-width: 640px) {
+  .stand {
+    inset: 18px 22px -4px;
+  }
+}
+
+/* The birch plank's top, with the shade of its back edge against the wall. */
+.top {
+  position: relative;
+  z-index: 2;
+  height: 10px;
   background: linear-gradient(
-    var(--face-back) 0 1px,
-    var(--face-1) 1px,
-    var(--face-2)
+    var(--p-birch-shade) 0 1px,
+    var(--p-birch) 1px,
+    var(--p-birch-low)
   );
 }
+/* Its ply front edge: flat (no ply lines, which shimmer in a recording),
+   with a lit top and a crisp underside. The price label clips on here. */
 .lip {
-  background: linear-gradient(var(--lip-1), var(--lip-2));
+  position: relative;
+  z-index: 3;
+  height: 14px;
+  background: linear-gradient(var(--p-ply), var(--p-ply-low));
   box-shadow:
-    inset 0 1px 0 var(--lip-hi),
-    inset 0 -1px 0 var(--lip-under);
+    inset 0 1px 0 var(--p-ply-highlight),
+    inset 0 -1px 0 var(--p-ply-shade);
 }
-/* Products not on the shelf yet: a dashed edge, as on today's draft rail. */
+/* Products found in a video, not on the shelf yet: a dashed pencil line
+   along the front edge. */
 .draft .lip {
   background:
-    repeating-linear-gradient(90deg, var(--lip-hi) 0 6px, transparent 6px 10px)
+    repeating-linear-gradient(
+        90deg,
+        var(--p-ply-highlight) 0 6px,
+        transparent 6px 11px
+      )
       0 0 / 100% 1px no-repeat,
-    linear-gradient(var(--lip-1), var(--lip-2));
-  box-shadow: inset 0 -1px 0 var(--lip-under);
+    linear-gradient(var(--p-ply), var(--p-ply-low));
+  box-shadow: inset 0 -1px 0 var(--p-ply-shade);
 }
 .under {
-  background: linear-gradient(var(--under), transparent);
+  height: 22px;
+  background: linear-gradient(var(--p-under), transparent);
 }
 
-/* Price tags are white paper in both themes, like the QR code. */
-.tag {
-  background: white;
-  color: oklch(0.205 0 0);
-  box-shadow:
-    0 1px 1px rgb(0 0 0 / 0.16),
-    0 3px 8px rgb(0 0 0 / 0.12);
+/* The name, under the shelf: two lines at most. Spaced by margin, as a clamp
+   clips at the padding box. */
+.name {
+  order: 99;
+  margin: -6px 0 20px;
+  padding: 0 14px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  text-align: center;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  overflow-wrap: anywhere;
 }
+
+/* ---------------------------------------------------------------- labels */
+
+/* A paper price label clipped to the lip: dark ink on paper in both themes.
+   As wide as its price, never wider than its bay. */
+.tag {
+  position: absolute;
+  z-index: 4;
+  top: 1px;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 8px);
+  padding: 5px 7px 4px;
+  transform: translateX(-50%);
+  border-radius: var(--p-r-label);
+  background: var(--p-label);
+  color: var(--p-label-ink);
+  box-shadow: var(--p-shadow-label);
+  line-height: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums;
+}
+.tag .from {
+  font-weight: 450;
+  color: var(--p-label-ink-2);
+}
+/* No price yet: a dashed outline where the label goes. */
 .tagEmpty {
   background: transparent;
-  color: color-mix(in oklab, var(--foreground) 65%, transparent);
   box-shadow: none;
-  outline: 1px dashed color-mix(in oklab, var(--foreground) 35%, transparent);
+  outline: 1px dashed var(--p-line-strong);
   outline-offset: -1px;
+  color: var(--p-ink-2);
+  font-size: 12px;
+  font-weight: 500;
 }
+/* Airi isn't sure of it: a red ring and mark the owner checks. The label is
+   paper in both themes, so its red is the light theme's. */
 .tagDoubt {
+  color: #b7191c;
   box-shadow:
-    0 0 0 2px var(--destructive),
-    0 1px 1px rgb(0 0 0 / 0.16),
-    0 3px 8px rgb(0 0 0 / 0.12);
+    0 0 0 1.5px var(--p-danger),
+    var(--p-shadow-label);
 }
 .tagDoubt svg {
-  color: oklch(0.577 0.245 27.325);
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+/* A label still loading: blank paper. */
+.tagBlank {
+  width: 54px;
+  height: 24px;
+  padding: 0;
+  opacity: 0.7;
 }
 
-/* A cut-out's shadow follows its own outline; in the dark a faint rim keeps
-   black goods apart from the wall. */
+/* ---------------------------------------------------------------- products */
+
+/* A cut-out standing on the plank, with two shadows instead of a blur: the
+   tight contact line where it touches the board, and a soft ambient shade a
+   little to the right, away from the window. */
+.product {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  max-width: 100%;
+}
+.product::before,
+.product::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.product::before {
+  width: 104%;
+  height: 22px;
+  translate: calc(-50% + 7px) 46%;
+  background: radial-gradient(closest-side, var(--p-ambient), transparent);
+}
+.product::after {
+  width: 70%;
+  height: 8px;
+  translate: calc(-50% + 1px) 50%;
+  background: radial-gradient(closest-side, var(--p-contact), transparent);
+}
+.product img {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
 .cutout {
-  filter: drop-shadow(0 8px 6px rgb(0 0 0 / 0.16));
+  filter: var(--p-cutout-lift);
 }
-:global(.dark) .cutout {
-  filter: drop-shadow(0 0 1px rgb(255 255 255 / 0.35))
-    drop-shadow(0 10px 8px rgb(0 0 0 / 0.5));
-}
-/* A whole frame, when there was no clear view: it stands as a print. */
-.print {
-  border: 4px solid white;
-  border-radius: 3px;
-  transform: rotate(-2deg);
-  box-shadow: 0 6px 14px rgb(0 0 0 / 0.25);
+/* Until its photo has decoded, a product isn't on the shelf yet. */
+.product[data-state="loading"] {
+  opacity: 0;
 }
 
-/* A product without a photo: a paper tent card on the shelf. Found in a
-   video and not checked yet, its edge is dashed like the board's. */
-.tent {
-  background: var(--card);
+/* A whole video frame, when there was no clear view: a print on paper,
+   leaning on the wall, which casts no shadow on the plank. */
+.product[data-print]::before,
+.product[data-print]::after {
+  display: none;
+}
+.product .print {
+  max-height: 82%;
+  margin-bottom: 3px;
+  padding: 4px;
+  border-radius: 3px;
+  background: var(--p-label);
+  rotate: -2.5deg;
+  transform-origin: bottom center;
   box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent),
-    0 10px 16px -10px rgb(0 0 0 / 0.35);
+    0 1px 1px rgb(var(--p-shade) / 0.14),
+    0 6px 12px -6px rgb(var(--p-shade) / 0.3);
+}
+
+/* A product without a photo yet, or whose photo failed: a paper tent card
+   with its initial and what's happening. Found in a video and not checked
+   yet, its edge is dashed. */
+.tent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 68px;
+  height: 88px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--p-raised);
+  box-shadow:
+    0 0 0 1px var(--p-line),
+    0 10px 14px -10px rgb(var(--p-shade) / 0.35);
+  text-align: center;
+}
+@media (min-width: 640px) {
+  .tent {
+    width: 76px;
+    height: 98px;
+  }
+}
+.tent b {
+  font-family: var(--p-font-display);
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--p-ink-3);
+}
+.tent span {
+  font-size: 11px;
+  line-height: 13px;
+  color: var(--p-ink-2);
 }
 .draft .tent {
-  box-shadow: 0 10px 16px -10px rgb(0 0 0 / 0.35);
-  outline: 1px dashed color-mix(in oklab, var(--foreground) 30%, transparent);
+  box-shadow: 0 10px 14px -10px rgb(var(--p-shade) / 0.35);
+  outline: 1px dashed var(--p-line-strong);
   outline-offset: -1px;
 }
 
-/* A photo being made: a glow in the item's own colours, with its prompt. */
-.aura {
-  isolation: isolate;
-  border-radius: 42% 42% 30% 30% / 40% 40% 18% 18%;
-}
-.aura::before {
-  content: "";
+/* ---------------------------------------------------------------- choosing */
+
+/* In Choose mode the whole bay is its checkbox: an invisible native one laid
+   over it (Space toggles it, Tab moves on), with the rose check showing. */
+.pick {
   position: absolute;
-  inset: -45%;
-  z-index: -1;
-  opacity: 0.85;
-  filter: blur(16px);
-  background: conic-gradient(
-    var(--aura-1, var(--primary)),
-    var(--aura-2, var(--airi-sky)),
-    var(--primary) 75%,
-    var(--aura-1, var(--primary))
-  );
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
 }
-.aura::after {
+.check {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  pointer-events: none;
+}
+/* A chosen bay: a pencil line around its wall, and the product lifted a
+   little off the plank. */
+.bay[data-chosen] .wall {
+  box-shadow: inset 0 0 0 1.5px var(--p-pick-line);
+}
+.bay[data-chosen] .stand {
+  translate: 0 -3px;
+}
+.bay:has(.pick:focus-visible) .wall {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* ---------------------------------------------------------------- loading */
+
+/* A name still loading: a faint bar where it goes. */
+.nameBar {
+  order: 99;
+  display: block;
+  width: 46%;
+  height: 8px;
+  margin: 2px auto 25px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--p-ink) 7%, transparent);
+}
+
+/* ---------------------------------------------------------------- empty */
+
+/* The empty shelf: the message stands on the wall, above a plank with dashed
+   ghost labels where products will be. */
+.empty {
+  overflow: hidden;
+  border-radius: var(--p-r-tile);
+  background: var(--p-wall);
+  box-shadow: 0 0 0 1px var(--p-line);
+}
+.emptyWall {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 32px 18px 24px;
+  text-align: center;
+  background: linear-gradient(var(--p-wall), var(--p-wall-low));
+}
+@media (min-width: 640px) {
+  .emptyWall {
+    min-height: 300px;
+    padding: 44px 24px 30px;
+  }
+}
+.emptyWall::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -1;
   pointer-events: none;
-  background-image: var(--grain);
-  background-size: 160px;
-  opacity: 0.2;
-  mix-blend-mode: overlay;
+  background: radial-gradient(
+    130% 95% at 18% -10%,
+    var(--p-window),
+    transparent 62%
+  );
 }
-/* Next in line: a faint glow inside a dashed outline, not a faded print. */
-.aura[data-state="waiting"] {
-  outline: 1px dashed color-mix(in oklab, var(--foreground) 30%, transparent);
+.empty[data-light="off"] .emptyWall::before {
+  opacity: 0.15;
+}
+.ghostTags {
+  position: absolute;
+  inset: 1px 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  pointer-events: none;
+}
+.ghostTags span {
+  justify-self: center;
+  width: 54px;
+  height: 22px;
+  border-radius: 3px;
+  outline: 1px dashed color-mix(in oklab, var(--p-ink) 22%, transparent);
   outline-offset: -1px;
+  /* A faint sheet of the raised paper, so the dashes carry the ghost in
+     the evening shop too. */
+  background: color-mix(in oklab, var(--p-raised) 50%, transparent);
 }
-.aura[data-state="waiting"]::before {
-  opacity: 0.09;
+.ghostTags span:nth-child(n + 3) {
+  display: none;
 }
-/* The words sit on their own shade, so they read on any colour. */
-.scrim {
-  background: linear-gradient(
-    to top,
-    rgb(0 0 0 / 0.62),
-    rgb(0 0 0 / 0.5) 42%,
-    transparent 78%
-  );
-}
-.prompt {
-  color: rgb(255 255 255 / 0.95);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
-}
-.aura[data-state="waiting"] .prompt {
-  color: color-mix(in oklab, var(--foreground) 78%, transparent);
-  text-shadow: none;
-}
-.auraShadow {
-  background: color-mix(in oklab, var(--aura-1, var(--primary)) 40%, black);
-}
-/* A line rising up the print as it develops, with a faint trail. At rest
-   it waits below, out of sight. */
-.develop {
-  transform: translateY(100%);
-  background: linear-gradient(
-    to bottom,
-    rgb(255 255 255 / 0.7) 0 1.5px,
-    rgb(255 255 255 / 0.12) 1.5px,
-    transparent 40px
-  );
-}
-.twinkle {
-  color: rgb(255 255 255 / 0.85);
+@media (min-width: 640px) {
+  .ghostTags {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .ghostTags span:nth-child(n + 3) {
+    display: block;
+  }
 }
 
 /* A long shelf paints only the bays in view; a bay is about 17rem tall. */
@@ -253,35 +438,49 @@
   contain-intrinsic-size: auto 17rem;
 }
 
+/* ---------------------------------------------------------------- motion */
+
+/* A product is set down, not materialised: it settles 8px onto the plank on
+   the spring while its shadows widen from 0.82 to full. The first 8 go one
+   after another, 40ms apart. Nothing runs longer than 240ms. */
 @media (prefers-reduced-motion: no-preference) {
-  .aura[data-state="making"]::before {
-    animation: shelf-aura-spin 5s linear infinite;
+  .product[data-state="loaded"] {
+    animation: set-down var(--p-dur-settle) var(--p-ease-spring) both;
+    animation-delay: var(--delay, 0ms);
   }
-  .aura[data-state="making"] .develop {
-    animation: shelf-print 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    animation-delay: calc(var(--i, 0) * -0.4s);
+  .product[data-state="loaded"]::before,
+  .product[data-state="loaded"]::after {
+    animation: shadow-land var(--p-dur-settle) var(--p-ease-out) both;
+    animation-delay: var(--delay, 0ms);
   }
-  .aura[data-state="making"] .twinkle {
-    animation: shelf-twinkle 2.4s ease-in-out infinite;
+  .stand {
+    transition: translate var(--p-dur-settle) var(--p-ease-spring);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product[data-state="loaded"] {
+    animation: fade-in var(--p-dur-reduced) linear both;
+  }
+  /* Chosen is said by the pencil line and the check alone. */
+  .bay[data-chosen] .stand {
+    translate: none;
   }
 }
 
-@keyframes shelf-aura-spin {
-  to {
-    transform: rotate(1turn);
-  }
-}
-@keyframes shelf-print {
+@keyframes set-down {
   from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(-40px);
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }
-@keyframes shelf-twinkle {
-  50% {
-    opacity: 0.35;
-    transform: scale(0.8) rotate(12deg);
+@keyframes shadow-land {
+  from {
+    opacity: 0;
+    scale: 0.82 1;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
   }
 }

@@ -1,0 +1,489 @@
+/*
+ * "Make something with them", on the Paper tokens: two raised cards (the kit
+ * for customers on WhatsApp, the video ad for new ones) and what buyers see
+ * in a 392px column beside them; where the column is narrow (a phone, or a
+ * desktop with the sidebar open) the preview follows the cards. The layout
+ * reads the view's own width, not the window's.
+ */
+
+.make {
+  /* Sized by its column, never by its cards (the container needs that). */
+  container-type: inline-size;
+  display: grid;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+.head {
+  display: grid;
+  gap: 6px;
+}
+
+.language {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.lede {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--p-ink-2);
+  text-wrap: pretty;
+}
+
+/* A link-styled button: rose ink, a 1px underline at 3px. */
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--p-accent-ink);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--p-accent-line);
+  cursor: pointer;
+}
+
+.link:focus-visible,
+.toggle:has(input:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 14px 16px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink-2);
+}
+
+.noticeIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--p-danger-ink);
+}
+
+/* Loading: two static sheets, no pulse. */
+.skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 392px;
+  gap: 32px;
+}
+
+.ghostCard {
+  display: block;
+  min-height: 260px;
+  opacity: 0.55;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 392px;
+  align-items: start;
+  gap: 32px;
+}
+
+.cards {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px;
+}
+
+/* The card's title takes the focus when the control it was on goes. */
+.cardTitle:focus {
+  outline: none;
+}
+.cardTitle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.forWhom {
+  margin-bottom: 2px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.about {
+  max-width: 60ch;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--p-ink-2);
+  text-wrap: pretty;
+}
+
+/* The two parts, both ticked by default. */
+.toggles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line),
+    var(--p-shadow-control);
+  cursor: pointer;
+  transition: box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+
+.toggle:has(input:checked) {
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+}
+
+.toggle[data-disabled] {
+  background: var(--p-sunk);
+  cursor: not-allowed;
+}
+
+.toggleText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toggleTitle {
+  font-size: 15px;
+  line-height: 21px;
+  font-weight: 600;
+}
+
+.toggleMeta,
+.toggleNote {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.toggleNote {
+  margin-top: 2px;
+}
+
+.productsLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.callout {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.alert,
+.partAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--p-r-control);
+  background: var(--p-danger-wash);
+  box-shadow: inset 0 0 0 1px var(--p-danger-line);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-danger-ink);
+}
+
+.alert svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.footnote {
+  max-width: 60ch;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  text-wrap: pretty;
+}
+
+/* While the press is made: static marks and the seconds so far. */
+.making {
+  display: grid;
+  gap: 12px;
+}
+
+.checklist {
+  display: grid;
+  border-top: 1px solid var(--p-line);
+}
+
+.checklist li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--p-line);
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--p-line-strong);
+}
+
+.makingTime {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink-2);
+}
+
+.elapsed {
+  margin-right: 4px;
+  color: var(--p-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.madeAt {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The kit's status: a row per part. */
+.status {
+  display: grid;
+  gap: 10px;
+}
+
+.statusRows {
+  display: grid;
+}
+
+.statusRow {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.statusRow:first-child {
+  padding-top: 0;
+}
+
+.partIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--p-r-control);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink-2);
+}
+
+.partIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.partBody {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.partHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.partName {
+  font-size: 15px;
+  line-height: 21px;
+  font-weight: 600;
+}
+
+.partLine {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink-2);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.partActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.kept {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ok-ink);
+}
+
+/* The video ad card: a 9:16 poster of the first product it would show. */
+.adCard {
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.adPoster {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--p-r-thumb);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-label-ink-2);
+}
+
+/* Placed absolutely, so a tall photo never stretches the poster. */
+.adPoster img {
+  position: absolute;
+  top: 12%;
+  left: 12%;
+  width: 76%;
+  height: 56%;
+  object-fit: contain;
+  filter: var(--p-cutout-lift);
+}
+
+.adPoster svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The poster's paper price label: smaller than the shelf's (two classes, so
+   it wins over the theme's label whatever order the sheets load in). */
+.adPoster .adPrice {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  max-width: calc(100% - 6px);
+  overflow: hidden;
+  padding: 1px 3px;
+  font-size: 10px;
+  line-height: 13px;
+  text-overflow: ellipsis;
+  transform: translateX(-50%);
+}
+
+.adBody {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.adTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Too narrow for the cards beside a 392px preview: one column. */
+@container (max-width: 879px) {
+  .grid,
+  .skeleton {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .skeleton .ghostCard:last-child {
+    display: none;
+  }
+}
+
+@container (max-width: 559px) {
+  .card {
+    padding: 16px;
+  }
+
+  .toggles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adCard {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .adPoster {
+    width: 56px;
+  }
+
+  .actions > :global([data-slot="button"]) {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle {
+    transition: none;
+  }
+}

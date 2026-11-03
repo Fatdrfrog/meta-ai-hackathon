@@ -1,679 +1,972 @@
-/* The creation stage: a dark island where an import's models work in view.
-   Layout lives in the components' Tailwind classes; this file paints, and
-   animates only when the visitor allows motion. The resting styles are the
-   finished picture, so with motion off nothing is left half-way. */
+/* The import stage, its steps, the "What you said" ledger, and the rows of
+   other videos: paper in the page's own theme, painted only with the
+   Products tokens (product-theme.module.css). Nothing here loops, glows or
+   blurs; a change eases in once, and with reduced motion it only fades.
+   Layout follows each part's own width (container queries), so the stage
+   reads the same wherever it's placed. */
 
-.canvas {
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
-}
+/* ---------- the sheet (theme.sheet paints it) ---------- */
 
-/* The stage's own buttons: the shared ring is a faint maroon on the dark
-   canvas, so a solid outline marks the keyboard's focus instead. */
-.canvas [data-slot="button"]:not(:global(.btn-push)):focus-visible {
-  box-shadow: none;
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-/* A generative backdrop in airi's rose, sky and green. */
-.aurora,
-.miniAurora {
-  background:
-    radial-gradient(
-      40% 50% at 25% 30%,
-      color-mix(in oklab, var(--airi-rose) 60%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      35% 45% at 75% 35%,
-      color-mix(in oklab, var(--airi-sky) 50%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      45% 40% at 55% 80%,
-      color-mix(in oklab, var(--airi-green) 28%, transparent),
-      transparent 70%
-    );
-}
-.aurora {
-  opacity: 0.55;
-  filter: blur(48px) saturate(1.2);
-}
-/* Before there is any picture, the aurora carries the stage on its own. */
-.canvas[data-unlit] .aurora {
-  opacity: 1;
-}
-.canvas[data-still] .aurora {
-  opacity: 0.35;
-  filter: blur(48px) grayscale(1);
-}
-.miniAurora {
-  opacity: 0.85;
-  filter: blur(8px) saturate(1.2);
-}
-
-/* The owner's own footage over the aurora: its light and shapes, in the
-   aurora's colours, so the stage never turns a muddy grey. */
-.backdrop {
-  opacity: 0.55;
-  mix-blend-mode: luminosity;
-  filter: blur(28px) brightness(0.55);
-}
-.canvas[data-still] .backdrop {
-  filter: blur(28px) brightness(0.45);
-}
-
-/* A soft light behind what stands on the stage, and darker corners. */
-.keylight {
-  background: radial-gradient(
-    42% 52% at 50% 58%,
-    rgb(255 255 255 / 0.1),
-    transparent 70%
-  );
-}
-.vignette {
-  background: radial-gradient(
-    130% 100% at 50% 40%,
-    transparent 55%,
-    rgb(0 0 0 / 0.5)
-  );
-}
-
-.grain {
-  background-image: var(--grain);
-  background-size: 160px;
-  opacity: 0.12;
-  mix-blend-mode: overlay;
-}
-
-/* Darkened edges, so the words on the stage read over any footage. */
-.scrimTop {
-  background: linear-gradient(
-    to bottom,
-    rgb(0 0 0 / 0.7),
-    rgb(0 0 0 / 0.35) 60%,
-    transparent
-  );
-}
-.scrimSide {
-  background: linear-gradient(
-    to right,
-    rgb(0 0 0 / 0.45),
-    rgb(0 0 0 / 0.15) 60%,
-    transparent
-  );
-}
-.scrimBottom {
-  background: linear-gradient(
-    to top,
-    rgb(0 0 0 / 0.65),
-    rgb(0 0 0 / 0.25) 60%,
-    transparent
-  );
-}
-
-/* The phone the video was filmed on: a lit pane of glass. */
-.frame {
-  background: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 0.07),
-    rgb(255 255 255 / 0.02)
-  );
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.16),
-    0 30px 60px -30px rgb(0 0 0 / 0.6);
-  backdrop-filter: blur(8px);
-}
-.canvas[data-still] .frame video {
-  filter: grayscale(1);
-}
-.viewfinder {
-  --corner: rgb(255 255 255 / 0.45);
-  background:
-    linear-gradient(var(--corner), var(--corner)) top left / 16px 2px no-repeat,
-    linear-gradient(var(--corner), var(--corner)) top left / 2px 16px no-repeat,
-    linear-gradient(var(--corner), var(--corner)) top right / 16px 2px no-repeat,
-    linear-gradient(var(--corner), var(--corner)) top right / 2px 16px no-repeat,
-    linear-gradient(var(--corner), var(--corner)) bottom left / 16px 2px
-      no-repeat,
-    linear-gradient(var(--corner), var(--corner)) bottom left / 2px 16px
-      no-repeat,
-    linear-gradient(var(--corner), var(--corner)) bottom right / 16px 2px
-      no-repeat,
-    linear-gradient(var(--corner), var(--corner)) bottom right / 2px 16px
-      no-repeat;
-}
-.glyph {
-  filter: drop-shadow(0 0 16px rgb(255 255 255 / 0.35));
-}
-
-/* A rose hairline in a faint band, scanning the phone while the video is
-   read. At rest it waits above the phone, out of sight. */
-.scan {
-  pointer-events: none;
-  transform: translateY(-100%);
-  background:
-    linear-gradient(
-        to bottom,
-        transparent calc(100% - 24.5px),
-        var(--primary) calc(100% - 24.5px) calc(100% - 23.5px),
-        transparent calc(100% - 23.5px)
-      )
-      no-repeat,
-    linear-gradient(
-        to bottom,
-        transparent calc(100% - 48px),
-        rgb(255 255 255 / 0.06) calc(100% - 24px),
-        transparent
-      )
-      no-repeat;
-}
-
-/* The bytes sent so far, rising up the phone in rose. */
-.fill {
-  background: linear-gradient(
-    to top,
-    color-mix(in oklab, var(--airi-rose) 30%, transparent),
-    color-mix(in oklab, var(--airi-rose) 6%, transparent)
-  );
-  box-shadow:
-    inset 0 2px 0 var(--airi-rose),
-    0 -6px 16px -6px color-mix(in oklab, var(--airi-rose) 70%, transparent);
-}
-
-/* A still waveform; it moves only while motion is allowed. */
-.bar {
-  background: rgb(255 255 255 / 0.85);
-  transform: scaleY(var(--h, 0.5));
-}
-
-/* What the stage shows hands over by cross-fading, never through a blank. */
-.layer {
+.stage {
+  container: stage / inline-size;
   position: relative;
+  min-width: 0;
+  /* Clips the photo line along the bottom to the sheet's corners. */
+  overflow: hidden;
+  color: var(--p-ink);
 }
 
-/* The photos being made, fanned out like prints: the front one, then the
-   others behind it, smaller and fainter. */
-.card {
-  transform-origin: 50% 100%;
+/* Narrow: the frame is a thumb beside the title, the rest stacks under. */
+.layout {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-areas:
+    "film head"
+    "rest rest";
+  column-gap: 14px;
+  align-items: start;
+  padding: 16px 16px 19px;
 }
-.card[data-pos="0"] {
-  z-index: 4;
-}
-.card[data-pos="1"] {
-  z-index: 3;
-  opacity: 0.55;
-  transform: translate(16px, -4px) rotate(4deg) scale(0.92);
-}
-.card[data-pos="2"] {
-  z-index: 2;
-  opacity: 0.35;
-  transform: translate(28px, -7px) rotate(8deg) scale(0.84);
-}
-.card[data-pos="3"] {
-  z-index: 1;
-  opacity: 0.2;
-  transform: translate(38px, -9px) rotate(12deg) scale(0.76);
-}
-@container (min-width: 34rem) {
-  .deck:not([data-paired]) .card[data-pos="1"] {
-    transform: translate(26px, -6px) rotate(4deg) scale(0.92);
-  }
-  .deck:not([data-paired]) .card[data-pos="2"] {
-    transform: translate(48px, -10px) rotate(8deg) scale(0.84);
-  }
-  .deck:not([data-paired]) .card[data-pos="3"] {
-    transform: translate(66px, -12px) rotate(12deg) scale(0.76);
+
+/* Wide: the first frame in its own column, the words beside it. */
+@container stage (min-width: 44rem) {
+  .layout {
+    grid-template-columns: 168px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "film head"
+      "film rest";
+    column-gap: 24px;
+    padding: 24px 24px 27px;
   }
 }
 
-/* A photo being made: a glow in the item's own colours, with its prompt. */
-.genTile {
-  isolation: isolate;
-  background:
-    radial-gradient(
-      80% 60% at 28% 24%,
-      color-mix(in oklab, var(--aura-1, var(--airi-rose)) 60%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      70% 60% at 76% 74%,
-      color-mix(in oklab, var(--aura-2, var(--airi-sky)) 55%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      60% 50% at 72% 16%,
-      color-mix(in oklab, var(--airi-rose) 35%, transparent),
-      transparent 70%
-    ),
-    /* Opaque, like a print: the ones behind show only at its edges. */
-      oklch(0.24 0.01 285);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.16),
-    inset 0 0 0 1px rgb(255 255 255 / 0.08),
-    0 24px 50px -24px rgb(0 0 0 / 0.7);
+/* ---------- the video's first frame ---------- */
+
+.film {
+  min-width: 0;
+  margin: 0;
 }
-.genTile::before {
-  content: "";
+
+.layout > .film {
+  grid-area: film;
+}
+
+.filmFrame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--p-sunk);
+  box-shadow: 0 0 0 1px var(--p-line);
+}
+
+.filmFrame > video,
+.filmFrame > img {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background-image: var(--grain);
-  background-size: 160px;
-  opacity: 0.3;
-  mix-blend-mode: soft-light;
-}
-/* The colours the photo is forming from, drifting under the print. */
-.genGlow {
-  z-index: -2;
-  opacity: 0.6;
-  filter: blur(36px);
-  background: conic-gradient(
-    from 30deg,
-    var(--aura-1, var(--primary)),
-    var(--aura-2, var(--airi-sky)),
-    color-mix(in oklab, var(--airi-rose) 80%, transparent) 55%,
-    color-mix(in oklab, var(--airi-sky) 60%, transparent) 78%,
-    var(--aura-1, var(--primary))
-  );
-}
-/* The words sit on their own shade, so they read on any colour. */
-.genScrim {
-  background: linear-gradient(
-    to top,
-    rgb(0 0 0 / 0.55),
-    rgb(0 0 0 / 0.2) 45%,
-    transparent 70%
-  );
-}
-.genPrompt {
-  color: rgb(255 255 255 / 0.95);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
-}
-/* A line rising up the print as it develops, with a faint trail. At rest
-   it waits below, out of sight. */
-.genPrint {
-  transform: translateY(100%);
-  background: linear-gradient(
-    to bottom,
-    rgb(255 255 255 / 0.7) 0 1.5px,
-    rgb(255 255 255 / 0.12) 1.5px,
-    transparent 40px
-  );
-}
-.twinkle {
-  color: rgb(255 255 255 / 0.85);
-  filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.45));
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* The floor the stage's products stand on. */
-.floor {
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgb(255 255 255 / 0.28),
-    transparent
-  );
-}
-
-/* A made photo takes the stage; beside the photos still being made, about
-   half of it. */
-.spotBox {
-  flex: 0 0 100%;
-}
-.spotBox[data-paired] {
-  flex-basis: 52%;
-}
-
-/* A finished photo lifting off its filmed crop. At rest the crop is gone
-   and the cut-out stands lifted, with its shadow, inside its box. */
-.spotCrop {
-  opacity: 0;
-}
-.spotCut {
-  padding-top: 8px;
-}
-.spotCut img {
-  transform: translateY(-8px);
-  filter: drop-shadow(0 18px 18px rgb(0 0 0 / 0.5));
-}
-.spotCut::after {
-  content: "";
+/* The newest photo made, standing on a piece of the shelf's wall. */
+.filmWall {
   position: absolute;
-  left: 12%;
-  right: 12%;
-  bottom: -6px;
-  height: 14px;
-  z-index: -1;
-  border-radius: 50%;
-  background: rgb(0 0 0 / 0.7);
-  filter: blur(10px);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(130% 95% at 18% -10%, var(--p-window), transparent 62%),
+    linear-gradient(var(--p-wall), var(--p-wall-low));
 }
 
-/* Once ready, the products stand together on the floor, by height: the
-   host tallest, the middle ones in front. */
-.posterItem {
-  height: clamp(9rem, 62%, 19rem);
-  width: auto;
-  max-width: 30%;
-  margin-inline: -1.5%;
+.filmWall img {
+  max-width: 78%;
+  max-height: 72%;
   object-fit: contain;
-  object-position: bottom;
-  filter: drop-shadow(0 14px 14px rgb(0 0 0 / 0.5));
+  filter: var(--p-cutout-lift);
 }
-.posterItem[data-kind="few"] {
-  height: 74%;
+
+/* A whole frame, as there was no clear view: it fills the tile. */
+.filmWall[data-print] img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  filter: none;
 }
-.posterItem[data-kind="host"] {
-  height: 82%;
-  max-width: 26%;
+
+.filmEmpty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--p-ink-3);
 }
-@container (width < 34rem) {
-  .posterItem {
-    height: 46%;
-    max-width: 25%;
+
+.filmEmpty svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The video's length on a paper label, like a price. */
+.filmTime {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: none;
+  padding: 2px 6px 1px;
+  border-radius: var(--p-r-label);
+  background: var(--p-label);
+  box-shadow: var(--p-shadow-label);
+  color: var(--p-label-ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.filmCaption {
+  display: none;
+  min-width: 0;
+  margin-top: 10px;
+  color: var(--p-ink-2);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.filmName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filmSize {
+  flex: none;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+}
+
+@container stage (min-width: 44rem) {
+  .filmFrame {
+    border-radius: var(--p-r-film);
   }
-  .posterItem[data-kind="few"] {
-    height: 70%;
-    max-width: 44%;
+
+  .filmEmpty svg {
+    width: 28px;
+    height: 28px;
   }
-  .posterItem[data-kind="host"] {
-    height: 62%;
-    max-width: 24%;
+
+  .filmTime {
+    display: block;
   }
-  .posterItem[data-extra] {
-    display: none;
+
+  .filmCaption {
+    display: flex;
   }
 }
 
-/* The filmstrip: one frame per photo, edges fading out. */
-.strip {
-  scrollbar-width: none;
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 12px,
-    #000 calc(100% - 12px),
-    transparent
+/* In a row, a small thumb. */
+.film[data-size="row"] .filmFrame {
+  border-radius: 7px;
+}
+
+.film[data-size="row"] .filmEmpty svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- the words ---------- */
+
+.head {
+  grid-area: head;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  min-width: 0;
+  margin: 0;
+  color: var(--p-ink);
+  font-family: var(--p-font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 26px;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+/* A failure: its sentence, marked in red ink, at the section heads' size. */
+.title[data-alert] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: start;
+}
+
+.alertIcon {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  color: var(--p-danger-ink);
+}
+
+.time {
+  color: var(--p-ink-2);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.doing {
+  margin: 6px 0 0;
+  color: var(--p-ink-2);
+  font-size: 15px;
+  line-height: 22px;
+  text-wrap: pretty;
+}
+
+@container stage (min-width: 44rem) {
+  .titleRow {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .title:not([data-alert]) {
+    font-size: 26px;
+    line-height: 32px;
+    letter-spacing: -0.018em;
+  }
+}
+
+/* ---------- under the words ---------- */
+
+.rest {
+  grid-area: rest;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.rest > * {
+  margin-top: 18px;
+}
+
+/* The upload: a bar, how much is sent, and Cancel. */
+.upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+.uploadTrack {
+  flex: 1 1 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--p-deep);
+}
+
+.uploadTrack > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--p-accent);
+}
+
+.uploadText {
+  margin-right: auto;
+  color: var(--p-ink-2);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.uploadActions {
+  display: flex;
+  gap: 8px;
+}
+
+@container stage (min-width: 44rem) {
+  .uploadTrack {
+    flex: 1 1 0;
+    min-width: 120px;
+  }
+
+  .uploadText {
+    margin-right: 0;
+  }
+}
+
+/* The products a ready import found, each on a tile of the shelf's wall. */
+.thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thumbs > li {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: var(--p-r-thumb);
+  background: linear-gradient(var(--p-wall), var(--p-wall-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.thumbs img {
+  max-width: 40px;
+  max-height: 40px;
+  object-fit: contain;
+  filter: var(--p-cutout-lift);
+}
+
+.thumbs > li[data-print] img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  filter: none;
+}
+
+.thumbs > li.thumbMore {
+  background: var(--p-sunk);
+  color: var(--p-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Photos made of all, along the sheet's bottom edge. */
+.line {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--p-sunk);
+}
+
+.line > span {
+  display: block;
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  background: var(--p-accent);
+}
+
+/* ---------- the steps (StageSteps) ---------- */
+
+/* Narrow: five segments, and the current step's one line. */
+.rest > .steps {
+  margin-top: 16px;
+}
+
+.steps {
+  container: steps / inline-size;
+}
+
+.segments {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.segments > span {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--p-line-strong);
+}
+
+.segments > span[data-state="done"] {
+  background: color-mix(in oklab, var(--p-ink) 45%, transparent);
+}
+
+.segments > span[data-state="current"] {
+  background: var(--p-accent);
+}
+
+/* Dashed, so a stop never reads as a second current step. */
+.segments > span[data-state="stopped"] {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--p-danger-ink) 0 5px,
+    transparent 5px 8px
   );
 }
-.strip::-webkit-scrollbar {
+
+.stepList {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  line-height: 19px;
+}
+
+/* The steps not current are there for screen readers only. */
+.step:not([aria-current]),
+.stepMaker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dot {
   display: none;
 }
-.thumb {
-  isolation: isolate;
-  /* Clipped on the compositor too, so the moving line never escapes. */
-  clip-path: inset(0 round 7px);
-  background: rgb(255 255 255 / 0.07);
-}
-.thumb[data-state="making"] {
-  background:
-    radial-gradient(
-      80% 70% at 30% 25%,
-      color-mix(in oklab, var(--airi-rose) 45%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      80% 70% at 75% 75%,
-      color-mix(in oklab, var(--airi-sky) 40%, transparent),
-      transparent 70%
-    ),
-    rgb(255 255 255 / 0.06);
-}
-.thumb[data-state="making"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateY(100%);
-  background: linear-gradient(
-    to bottom,
-    rgb(255 255 255 / 0.7) 0 1px,
-    rgb(255 255 255 / 0.12) 1px,
-    transparent 16px
-  );
-}
-/* Next in line: the same glow, faint and still. */
-.thumb[data-state="waiting"] {
-  background:
-    radial-gradient(
-      80% 70% at 30% 25%,
-      color-mix(in oklab, var(--airi-rose) 16%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      80% 70% at 75% 75%,
-      color-mix(in oklab, var(--airi-sky) 14%, transparent),
-      transparent 70%
-    ),
-    rgb(255 255 255 / 0.04);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
-}
-.thumb[data-state="unmade"] {
-  background: none;
-  outline: 1px dashed rgb(255 255 255 / 0.24);
-  outline-offset: -1px;
-}
-.thumb[data-current] {
-  box-shadow: inset 0 0 0 2px var(--primary);
+
+.stepLabel {
+  color: var(--p-ink);
+  font-weight: 600;
 }
 
-/* The rail's step marks, in the page's own theme. */
-.dot {
-  background: color-mix(in oklab, var(--foreground) 8%, transparent);
-  color: color-mix(in oklab, var(--foreground) 70%, transparent);
+.step[data-state="current"] .stepLabel {
+  color: var(--p-accent-ink);
 }
-.dot[data-state="current"] {
-  background: color-mix(in oklab, var(--primary) 14%, transparent);
-  color: var(--primary);
+
+.step[data-state="stopped"] .stepLabel {
+  color: var(--p-danger-ink);
 }
-.dot[data-state="stopped"] {
-  background: color-mix(in oklab, var(--destructive) 12%, transparent);
-  color: color-mix(in oklab, var(--destructive) 80%, var(--foreground));
+
+.stepCount {
+  color: var(--p-ink);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
-.dot[data-state="upcoming"] {
-  background: color-mix(in oklab, var(--foreground) 5%, transparent);
-  color: color-mix(in oklab, var(--foreground) 40%, transparent);
+
+.stepCount::before,
+.stepMakerShort::before {
+  content: " · ";
 }
-/* A ring around the step being worked on. */
-.dot[data-busy]::before {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: inherit;
-  background: conic-gradient(var(--primary), transparent 70%);
-  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0);
+
+.stepMakerShort {
+  color: var(--p-ink-2);
 }
+
+.stepResult {
+  display: none;
+}
+
+/* Wide: a row of dots joined by lines, each step with its credit. */
+@container steps (min-width: 30rem) {
+  .segments {
+    display: none;
+  }
+
+  .stepList {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin-top: 0;
+  }
+
+  .step:not([aria-current]),
+  .step {
+    position: relative;
+    display: flex;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 26px 8px 0 0;
+    overflow: visible;
+    flex-direction: column;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  /* The line to the next step; ink once this one is done. */
+  .step::before {
+    position: absolute;
+    top: 8px;
+    right: 6px;
+    left: 24px;
+    height: 1.5px;
+    border-radius: 1px;
+    background: var(--p-line);
+    content: "";
+  }
+
+  .step:last-child::before {
+    display: none;
+  }
+
+  .step[data-state="done"]::before {
+    background: color-mix(in oklab, var(--p-ink) 34%, transparent);
+  }
+
+  .dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    width: 17px;
+    height: 17px;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .dot svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .step[data-state="done"] .dot {
+    background: var(--p-deep);
+    color: var(--p-ink);
+  }
+
+  .step[data-state="current"] .dot {
+    background: var(--p-accent);
+    box-shadow: 0 0 0 4px var(--p-accent-wash);
+  }
+
+  .step[data-state="current"] .dot::after {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--p-accent-fg);
+    content: "";
+  }
+
+  .step[data-state="upcoming"] .dot {
+    background: var(--p-raised);
+    box-shadow: inset 0 0 0 1.5px var(--p-line-strong);
+  }
+
+  .step[data-state="stopped"] .dot {
+    background: var(--p-danger-wash);
+    box-shadow: inset 0 0 0 1.5px var(--p-danger-line);
+    color: var(--p-danger-ink);
+  }
+
+  .stepLabel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 6px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .step[data-state="upcoming"] .stepLabel {
+    color: var(--p-ink-2);
+    font-weight: 500;
+  }
+
+  /* Its dot marks the stop; red words would vie with the current step's. */
+  .step[data-state="stopped"] .stepLabel {
+    color: var(--p-ink);
+  }
+
+  .stepCount::before {
+    content: none;
+  }
+
+  .stepMaker {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 1px 0 0;
+    overflow: visible;
+    clip-path: none;
+    color: var(--p-ink-2);
+    font-size: 12px;
+    line-height: 16px;
+    text-wrap: balance;
+    white-space: normal;
+  }
+
+  .stepMakerShort {
+    display: none;
+  }
+
+  /* What a finished step came to: "7 products found". */
+  .stepResult {
+    display: block;
+    margin-top: 2px;
+    color: var(--p-ink);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ---------- "What you said" (StageLedger) ---------- */
+
+.rest > .ledger {
+  margin-top: 26px;
+}
+
+.ledger {
+  container: ledger / inline-size;
+}
+
+.ledgerHead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.ledgerTitle {
+  margin: 0;
+  color: var(--p-ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.ledgerCredit {
+  margin: 0;
+  color: var(--p-ink-2);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* One grid for every row (each row a subgrid of it), so the columns line
+   up down the list whatever each price's length. */
+.ledgerRows {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Narrow: the words on one line; the name and price on the next, the name
+   wrapping rather than cut («Есімі жазылған медаль ілгіш» had 103 px at
+   375); the photo on a line of its own, as in Paper's phone stage. */
+.ledgerRow {
+  display: grid;
+  min-height: 36px;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  row-gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--p-line);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* A long list shows its first rows until the owner asks for all. */
+.ledgerRows:not([data-expanded]) > .ledgerRow:nth-child(n + 5) {
+  display: none;
+}
+
+.ledgerTime {
+  grid-row: 1;
+  grid-column: 1;
+  color: var(--p-ink-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledgerQuote {
+  grid-row: 1;
+  grid-column: 2 / -1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--p-ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The price in the owner's words, set apart (Paper: 500, in ink). */
+.ledgerSaidPrice {
+  color: var(--p-ink);
+  font-weight: 500;
+}
+
+.onScreen {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 4px;
+  vertical-align: -2px;
+  color: var(--p-ink-3);
+}
+
+.ledgerName {
+  grid-row: 2;
+  grid-column: 1 / 3;
+  min-width: 0;
+  color: var(--p-ink);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.ledgerPrice {
+  grid-row: 2;
+  grid-column: 3;
+  color: var(--p-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ledgerPrice[data-doubt] {
+  color: var(--p-danger-ink);
+}
+
+.ledgerPrice[data-none] {
+  color: var(--p-ink-2);
+  font-weight: 500;
+}
+
+.ledgerPhoto {
+  display: inline-flex;
+  grid-row: 3;
+  grid-column: 1 / -1;
+  align-items: center;
+  align-self: center;
+  justify-self: start;
+  gap: 6px;
+  color: var(--p-ink-2);
+  font-size: 12.5px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.ledgerPhoto svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.ledgerPhoto[data-photo="made"] {
+  color: var(--p-ok-ink);
+}
+
+.ledgerMore {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/* Wide: one line per product, in five columns. */
+@container ledger (min-width: 36rem) {
+  .ledgerHead {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .ledgerRows {
+    grid-template-columns: 44px minmax(0, 1.3fr) minmax(0, 1fr) auto 120px;
+    column-gap: 12px;
+  }
+
+  .ledgerRow {
+    align-items: center;
+    padding: 6px 0;
+  }
+
+  .ledgerTime,
+  .ledgerQuote,
+  .ledgerName,
+  .ledgerPrice,
+  .ledgerPhoto {
+    grid-row: 1;
+  }
+
+  .ledgerQuote {
+    grid-column: 2;
+  }
+
+  /* Up to two lines, rather than cut on one (199 px of name had 178). */
+  .ledgerName {
+    display: -webkit-box;
+    grid-column: 3;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .ledgerPrice {
+    grid-column: 4;
+  }
+
+  .ledgerPhoto {
+    grid-column: 5;
+    justify-self: stretch;
+  }
+
+  .ledgerRows:not([data-expanded]) > .ledgerRow:nth-child(n + 5) {
+    display: grid;
+  }
+
+  .ledgerRows:not([data-expanded]) > .ledgerRow:nth-child(n + 9) {
+    display: none;
+  }
+
+  .ledgerMore[data-more="narrow"] {
+    display: none;
+  }
+
+  .ledgerPhoto {
+    font-size: 13px;
+  }
+}
+
+/* ---------- other videos (ImportProgress rows) ---------- */
+
+.row {
+  container: row / inline-size;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--p-r-tile);
+  background: var(--p-raised);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink);
+}
+
+/* Narrow: the actions go under the words, lined up with them. */
+.rowLayout {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 10px;
+  padding: 12px 14px 12px 12px;
+}
+
+.rowText {
+  min-width: 0;
+}
+
+.rowTitle {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--p-ink);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 20px;
+  text-wrap: pretty;
+}
+
+.rowTitle svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--p-danger-ink);
+}
+
+.rowHelper {
+  margin: 2px 0 0;
+  color: var(--p-ink-2);
+  font-size: 13px;
+  line-height: 18px;
+  text-wrap: pretty;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2;
+  align-items: center;
+  gap: 6px;
+}
+
+@container row (min-width: 34rem) {
+  .rowLayout {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+  }
+
+  .rowActions {
+    grid-column: 3;
+    justify-content: flex-end;
+  }
+}
+
+/* ---------- motion: once, short, and only when allowed ---------- */
 
 @media (prefers-reduced-motion: no-preference) {
-  .aurora {
-    transition: opacity 1.2s ease;
+  /* A sheet comes in with a small rise. */
+  .stage {
+    animation: stage-rise var(--p-dur-base) var(--p-ease-out) both;
   }
-  .canvas:not([data-still]) .aurora {
-    will-change: transform;
-    animation: stage-aurora 18s ease-in-out infinite alternate;
+
+  /* A new picture or a photo's new state fades in where it lands. */
+  .arrive {
+    animation: stage-fade var(--p-dur-base) var(--p-ease-out) both;
   }
-  .backdrop {
-    animation: stage-fade 0.9s ease-out both;
+
+  /* Bars move only when their numbers change. */
+  .uploadTrack > span,
+  .line > span {
+    transition: width var(--p-dur-settle) var(--p-ease-out);
   }
-  .canvas:not([data-still]) .scan {
-    animation: stage-scan 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  }
-  .canvas:not([data-still]) .scan[data-pace="slow"] {
-    animation-duration: 5.5s;
-  }
-  .canvas:not([data-still]) .glyph {
-    animation: stage-breathe 2.4s ease-in-out infinite alternate;
-  }
-  .canvas:not([data-still]) .bar {
-    animation: stage-voice 1.1s ease-in-out infinite alternate;
-    animation-delay: calc(var(--i, 0) * -73ms);
-  }
-  /* Both pictures move at once, from the first frame: no blank between. */
-  .layer[data-fade="in"] {
-    animation: stage-fade 0.4s ease-out;
-  }
-  .layer[data-fade="out"] {
-    animation: stage-fade-out 0.4s ease-out forwards;
-  }
-  .card {
+
+  .dot,
+  .stepLabel,
+  .segments > span {
     transition:
-      transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
-      opacity 0.7s ease;
-  }
-  .canvas:not([data-still]) .genPrint {
-    animation: stage-print 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    animation-delay: calc(var(--i, 0) * -0.6s);
-  }
-  /* Only the print in front drifts; the ones behind wait their turn. */
-  .canvas:not([data-still]) .card[data-pos="0"] .genGlow {
-    animation: stage-spin 14s linear infinite;
-  }
-  .canvas:not([data-still]) .twinkle {
-    animation: stage-twinkle 2.4s ease-in-out infinite;
-  }
-  [data-play] > .spotCrop {
-    animation: stage-crop 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
-  /* The reveal fills backwards only: a clip left in place after it would
-     cut the drop shadow into a visible rectangle. */
-  [data-play] > .spotCut img {
-    animation:
-      stage-reveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s backwards,
-      stage-lift 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.2) 1.15s both;
-  }
-  [data-play] > .spotCut::after {
-    animation: stage-fade 0.4s 1.1s both;
-  }
-  /* A photo that just landed has the stage to itself until it has lifted
-     off; then the photos still being made come back beside it. */
-  [data-landing] > .spotBox[data-paired] {
-    animation: stage-pair 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 1.8s both;
-  }
-  [data-landing] > .deck[data-paired] {
-    animation: stage-deck-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 1.8s both;
-  }
-  .posterItem {
-    animation: stage-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    animation-delay: calc(var(--i, 0) * 90ms);
-  }
-  .dip {
-    animation: stage-dip 0.15s ease-out;
-  }
-  .canvas:not([data-still]) .thumb[data-state="making"]::after {
-    animation: stage-print 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  }
-  .dot[data-busy]::before {
-    animation: stage-spin 1.4s linear infinite;
+      background-color var(--p-dur-base) var(--p-ease-out),
+      box-shadow var(--p-dur-base) var(--p-ease-out),
+      color var(--p-dur-base) var(--p-ease-out);
   }
 }
 
-@keyframes stage-aurora {
-  to {
-    transform: rotate(25deg) scale(1.15) translate3d(4%, -3%, 0);
+/* With reduced motion: no movement, only a short fade. */
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .arrive {
+    animation: stage-fade var(--p-dur-reduced) linear both;
   }
 }
-@keyframes stage-fade {
-  from {
-    opacity: 0;
-  }
-}
-@keyframes stage-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes stage-dip {
-  from {
-    opacity: 0.4;
-  }
-}
-@keyframes stage-scan {
-  to {
-    transform: translateY(48px);
-  }
-}
-@keyframes stage-breathe {
-  from {
-    transform: scale(0.96);
-  }
-  to {
-    transform: scale(1.04);
-  }
-}
-@keyframes stage-voice {
-  from {
-    transform: scaleY(calc(var(--h, 0.5) * 0.3));
-  }
-  to {
-    transform: scaleY(var(--h, 0.5));
-  }
-}
-@keyframes stage-print {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(-40px);
-  }
-}
+
 @keyframes stage-rise {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(6px);
   }
 }
-@keyframes stage-twinkle {
-  50% {
-    opacity: 0.35;
-    transform: scale(0.8) rotate(12deg);
-  }
-}
-@keyframes stage-crop {
-  0% {
-    opacity: 0;
-    filter: blur(14px);
-    transform: scale(1.04);
-  }
-  30% {
-    opacity: 1;
-    filter: blur(0);
-    transform: scale(1);
-  }
-  62% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    filter: blur(6px);
-  }
-}
-@keyframes stage-reveal {
-  from {
-    clip-path: inset(100% 0 0 0);
-  }
-  to {
-    clip-path: inset(0);
-  }
-}
-@keyframes stage-lift {
-  from {
-    transform: translateY(0);
-    filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.35));
-  }
-}
-@keyframes stage-pair {
-  from {
-    flex-basis: 100%;
-  }
-}
-@keyframes stage-deck-in {
+
+@keyframes stage-fade {
   from {
     opacity: 0;
-    transform: translateX(24px) scale(0.94);
-  }
-}
-@keyframes stage-spin {
-  to {
-    transform: rotate(1turn);
   }
 }

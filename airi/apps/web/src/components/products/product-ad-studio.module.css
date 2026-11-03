@@ -1,0 +1,1108 @@
+/*
+ * The video ad studio, on the Paper tokens (product-theme.module.css): the
+ * brief, the making list, the finished ad and a failed one. Two columns from
+ * 900px (the work on the left, the picture on the right); below that one
+ * column with the picture first and the main action in a bar kept at the
+ * bottom. Nothing loops and nothing blurs. The page fades the view in.
+ */
+
+.studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+
+/* The head: title, what the ad shows, and its state. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.headText {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 280px;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  color: var(--p-ink);
+}
+
+.meta {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--p-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: var(--p-r-pill);
+  background: currentColor;
+}
+
+/* Columns. */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+
+.side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 24px;
+  }
+
+  .side {
+    position: sticky;
+    top: 16px;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 899px) {
+  /* The brief keeps its fields first for the keyboard; its sketch shows on top. */
+  .pictureFirst .side {
+    order: -1;
+  }
+
+  /* The picture: about 60% of a phone's width, centred. */
+  .side .picture {
+    width: min(60vw, 280px);
+    justify-self: center;
+  }
+}
+
+/* A raised panel. */
+.panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+}
+
+@media (max-width: 639px) {
+  .panel {
+    padding: 16px;
+  }
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--p-ink);
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.issue {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-danger-ink);
+}
+
+/* A danger line: why something can't happen. */
+.alert {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-danger-wash);
+  box-shadow: inset 0 0 0 1px var(--p-danger-line);
+  color: var(--p-danger-ink);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.alert svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+/* The bar below everything on narrow screens, with the one main action. */
+.bar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line),
+    var(--p-shadow-sheet);
+}
+
+/* Products: cut-out, name and a locked paper price label. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.productChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 4px 10px 4px 4px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.productChip[data-problem] {
+  box-shadow: inset 0 0 0 1.5px var(--p-danger-line);
+}
+
+.chipThumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sand);
+  color: var(--p-label-ink-2);
+  font-family: var(--p-font-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chipThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: var(--p-cutout-lift);
+}
+
+.chipName {
+  min-width: 0;
+  max-width: 20ch;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--p-ink);
+}
+
+/* The lock sits inline before the price, whatever display the label has
+   (a flex item's label is blockified, and the base styles make SVGs blocks). */
+.lockedPrice svg {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  color: var(--p-label-ink-2);
+}
+
+.chipProblem {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--p-danger-ink);
+}
+
+/* A short summary of the brief under the products. */
+.briefLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.briefLine dt {
+  display: inline;
+}
+
+.briefLine dd {
+  display: inline;
+  margin: 0 0 0 4px;
+  color: var(--p-ink);
+}
+
+/* The brief's fields. */
+.fieldset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--p-ink);
+}
+
+/* Choices that wrap: the chosen one raised with the pick line, never black. */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice {
+  position: relative;
+  display: inline-flex;
+}
+
+.choicePill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink-2);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    box-shadow var(--p-dur-fast) var(--p-ease-out),
+    color var(--p-dur-fast) var(--p-ease-out);
+}
+
+.choicePill:hover {
+  color: var(--p-ink);
+}
+
+.choicePill[data-checked] {
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+  color: var(--p-ink);
+}
+
+.choice input:focus-visible + .choicePill {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Text the owner types. */
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--p-r-control);
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line-strong),
+    var(--p-shadow-control);
+  color: var(--p-ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 22px;
+  resize: none;
+  transition: box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+
+.input::placeholder {
+  color: var(--p-ink-3);
+}
+
+.input:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--p-pick-line),
+    var(--p-shadow-control);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--p-danger-line);
+}
+
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 8px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.fieldLabel {
+  font-weight: 600;
+  color: var(--p-ink);
+}
+
+.fieldRoom {
+  color: var(--p-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A checkbox drawn as the shared rose check. */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 32px;
+  padding-top: 5px;
+  color: var(--p-ink);
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.toggle[data-disabled] {
+  color: var(--p-ink-2);
+  cursor: default;
+}
+
+.toggleCheck {
+  margin-top: -1px;
+}
+
+.toggle input:focus-visible + .toggleCheck {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+/* The person from the video: a ringed circle and its credit. */
+.presenter {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.presenterPhoto {
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sand);
+  box-shadow:
+    0 0 0 3px var(--p-label),
+    0 0 0 4px var(--p-line);
+}
+
+.presenterPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.presenterBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-width: 0;
+}
+
+/* The first scene, sketched in CSS from the real cut-out, name and price. */
+.picture {
+  width: 100%;
+  min-width: 0;
+}
+
+.sketch {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--p-r-film);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.sketchLabels {
+  position: absolute;
+  top: 14%;
+  right: 6%;
+  left: 6%;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+.sketchName {
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--p-label);
+  box-shadow: var(--p-shadow-label);
+  color: var(--p-label-ink);
+  font-family: var(--p-font-display);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sketchProduct {
+  position: absolute;
+  bottom: 31%;
+  left: 50%;
+  width: 64%;
+  max-height: 38%;
+  object-fit: contain;
+  object-position: bottom;
+  transform: translateX(-50%);
+  filter: var(--p-cutout-lift);
+}
+
+.sketchInitial {
+  position: absolute;
+  bottom: 34%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--p-label-ink-2);
+  font-family: var(--p-font-display);
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+/* The plank the product stands on, and its contact shadow. */
+.sketchPlank {
+  position: absolute;
+  top: 69%;
+  right: 0;
+  left: 0;
+  height: 3%;
+  background: var(--p-sand-low);
+  box-shadow:
+    inset 0 1px 0 var(--p-ply-highlight),
+    0 10px 22px -12px var(--p-under);
+}
+
+.sketchPlank::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 46%;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--p-contact), transparent);
+  transform: translateX(-50%);
+}
+
+.pictureCaption {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-ink-2);
+}
+
+/* A still the ad made: the Status picture, or a scene. */
+.still {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: var(--p-r-film);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+/* The making list: dot, step and its model, seconds. */
+.progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--p-r-pill);
+  background: var(--p-deep);
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--p-accent);
+  transition: width var(--p-dur-settle) var(--p-ease-out);
+}
+
+.steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2px 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--p-line);
+}
+
+.step:first-child {
+  border-top: 0;
+}
+
+.stepDot {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  border-radius: var(--p-r-pill);
+  box-shadow: inset 0 0 0 1.5px var(--p-line-strong);
+  color: var(--p-ink);
+  transition:
+    background-color var(--p-dur-base) var(--p-ease-out),
+    box-shadow var(--p-dur-base) var(--p-ease-out);
+}
+
+.stepDot svg {
+  width: 11px;
+  height: 11px;
+}
+
+.step[data-state="done"] .stepDot {
+  background: var(--p-deep);
+  box-shadow: none;
+}
+
+.step[data-state="now"] .stepDot {
+  background: var(--p-accent);
+  box-shadow: 0 0 0 4px var(--p-accent-wash);
+}
+
+.step[data-state="now"] .stepDot::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-accent-fg);
+}
+
+.stepText {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-width: 0;
+}
+
+.stepName {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  color: var(--p-ink);
+  transition: color var(--p-dur-base) var(--p-ease-out);
+}
+
+.step[data-state="now"] .stepName {
+  color: var(--p-accent-ink);
+}
+
+.step[data-state="next"] .stepName {
+  color: var(--p-ink-2);
+}
+
+.stepModel {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.stepTime {
+  font-size: 13px;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-ink-2);
+}
+
+/* Scene rows: the picture, the product, its caption and where the picture came from. */
+.scenes {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scene {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--p-line);
+}
+
+.scene:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.sceneThumb {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--p-r-thumb);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.sceneThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sceneThumb img[data-cutout] {
+  padding: 6px;
+  object-fit: contain;
+  filter: var(--p-cutout-lift);
+}
+
+.sceneBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sceneName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  color: var(--p-ink);
+  overflow-wrap: anywhere;
+}
+
+.caption {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink);
+  overflow-wrap: anywhere;
+}
+
+.source {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.source[data-tone="ok"] {
+  color: var(--p-ok-ink);
+}
+
+.source svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin-top: 2px;
+}
+
+/* The player: 9:16, letterboxed in paper, never black. */
+.player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--p-r-film);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--p-sunk);
+}
+
+.frameNote {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+  color: var(--p-ink-2);
+}
+
+/* Meta's Reels safe zones over the video: top 14%, bottom 35%, sides 6%. */
+.safe {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.safeTop,
+.safeBottom,
+.safeLeft,
+.safeRight {
+  position: absolute;
+  background: color-mix(in oklab, var(--p-accent) 18%, transparent);
+}
+
+.safeTop {
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 14%;
+  border-bottom: 1px dashed var(--p-accent-line);
+}
+
+.safeBottom {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 35%;
+  border-top: 1px dashed var(--p-accent-line);
+}
+
+.safeLeft,
+.safeRight {
+  top: 14%;
+  bottom: 35%;
+  width: 6%;
+}
+
+.safeLeft {
+  left: 0;
+}
+
+.safeRight {
+  right: 0;
+}
+
+.safeTop span,
+.safeBottom span {
+  position: absolute;
+  left: 8px;
+  padding: 1px 6px;
+  border-radius: var(--p-r-label);
+  background: var(--p-label);
+  color: var(--p-label-ink);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 500;
+}
+
+.safeTop span {
+  bottom: 6px;
+}
+
+.safeBottom span {
+  top: 6px;
+}
+
+.downloads {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.downloadPair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+/* Copy: the post and the Click-to-WhatsApp ad, and rows of facts. */
+.postText {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--p-r-control);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink);
+  font-size: 14px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.rows {
+  display: grid;
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--p-line);
+}
+
+.row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.row dt {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--p-ink-2);
+}
+
+.row dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .row dt {
+    grid-column: 1 / -1;
+  }
+}
+
+.copyWrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.questions li {
+  padding: 3px 10px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+/* What Airi checked. */
+.checks {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checks li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink);
+}
+
+.checks svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--p-ok-ink);
+}
+
+.checks li[data-tone="info"] svg {
+  color: var(--p-ink-3);
+}
+
+/* How this ad was made: closed until asked. */
+.credits summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--p-ink);
+  list-style: none;
+  cursor: pointer;
+}
+
+.credits summary::-webkit-details-marker {
+  display: none;
+}
+
+.credits summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.credits summary svg {
+  width: 16px;
+  height: 16px;
+  color: var(--p-ink-2);
+  transition: transform var(--p-dur-fast) var(--p-ease-out);
+}
+
+.credits[open] summary svg {
+  transform: rotate(90deg);
+}
+
+.creditList {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Loading: a still, dim outline of the studio. */
+.skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.skeletonLine {
+  height: 14px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-deep);
+}
+
+.skeletonPicture {
+  aspect-ratio: 9 / 16;
+  border-radius: var(--p-r-film);
+  background: var(--p-sunk);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill,
+  .stepDot,
+  .stepName,
+  .choicePill,
+  .input,
+  .credits summary svg {
+    transition: none;
+  }
+  /* The open credits' chevron still turns, at once: it says they're open. */
+}

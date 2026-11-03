@@ -7,13 +7,14 @@ import type {
 } from "@/lib/products/types";
 import type { RealtimeEventEnvelope } from "@icecore/shared/types/realtime";
 import { useEffect, useMemo, useRef } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
 import {
   fetchProductImports,
   productImportsUrl,
   productImportUrl,
   productsApiUrl,
 } from "./products-client";
+import { usePolledSWR } from "./use-polled-swr";
 
 // The import job announces each step on the workspace's realtime channel. The
 // page also asks again on its own while an import runs, since a lost event
@@ -28,21 +29,20 @@ export function isImportRunning(
   return record.status === "queued" || record.status === "processing";
 }
 
+const importsPollMs = (latest: ProductVideoImportsResponse | undefined) =>
+  latest?.imports.some(isImportRunning) ? PRODUCT_IMPORT_POLL_MS : 0;
+
 /**
  * The imports the Products page shows, kept live: the list, and each
  * import's own products, refresh when the job reports a step; the shelf
  * too when products were checked, on this device or another.
  */
 export function useProductImports(workspaceId: string) {
-  const { data, error, mutate } = useSWR<ProductVideoImportsResponse>(
+  const { data, error, mutate } = usePolledSWR<ProductVideoImportsResponse>(
     productImportsUrl(workspaceId),
     fetchProductImports,
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false,
-      refreshInterval: latest =>
-        latest?.imports.some(isImportRunning) ? PRODUCT_IMPORT_POLL_MS : 0,
-    }
+    { revalidateOnFocus: false, shouldRetryOnError: false },
+    importsPollMs
   );
   const { mutate: mutateKey } = useSWRConfig();
   const scope = useMemo(
