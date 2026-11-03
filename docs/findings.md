@@ -159,7 +159,7 @@ Before the studio went live on Nov 3, we made ads from two real videos through t
 | Full makes | 3: $0.0769–0.0795, 68–79 s | 3: the first, which tried one scene twice, $0.0912 and 105 s; then $0.0732, and $0.0701 in 64 s |
 | Every run of the ad | 6, for $0.2452, two of them render-only at $0 | 4, for $0.2345, one render-only at $0 |
 
-In the final makes, the money went roughly on the words ($0.012–0.015), two Muse Image scenes ($0.020), two same-product checks ($0.015), two SAM boxes ($0.005) and the Voice Isolator ($0.018–0.024). A full make's time went on the words (10–20 s), the pictures (25–33 s, or 56 s with a second try), framing (4–7 s) and the video (16–32 s). A render-only run, as after the owner edits the words, took 13–19 s and cost nothing.
+In the final makes, the money went roughly on the words ($0.011–0.013), two Muse Image scenes ($0.020), two same-product checks (about $0.016), two SAM boxes ($0.005) and the Voice Isolator ($0.018–0.024). A full make's time went on the words (10–20 s), the pictures (25–33 s, or 56 s with a second try), framing (4–7 s) and the video (16–32 s). A render-only run, as after the owner edits the words, took 13–19 s and cost nothing.
 
 Muse Spark wrote the words in Kazakh, the language of both narrations, and code drew the prices from the shelf: 5 000 ₸ and 500 ₸ on the toy shelf, 15 500 ₸ and 35 000 ₸ with "бастап" ("from") on the promo. In both final files, every drawn text has every character in both bundled fonts, every word layer sits inside the Reels safe band, and the format is one WhatsApp takes, under its 16 MB.
 
@@ -171,7 +171,7 @@ Muse Spark wrote the words in Kazakh, the language of both narrations, and code 
 
 ### Where Muse Image puts a product
 
-- The first prompt asked for the product "centred at 45%, half of its width". Tall and wide products then filled the picture up into the words and past the 9:16 sides, and the doll's top stood at 12% of the picture's height. Asked instead for the whole product upright in the lower half, at about half the picture's height (`f152cf8ef`, `05b618307`), the final scenes put the top of the doll at 35%, the mug at 21%, and the panel and the table at 29%.
+- The first prompt asked for the product "centred at 45%, half of its width". Tall and wide products then filled the picture up into the words and past the 9:16 sides, and the doll's top stood at 12% of the picture's height. Asked instead for the whole product upright in the lower half, at about half the picture's height (`f152cf8ef`, `05b618307`), the final scenes put the top of the doll at 35%, the mug at 21% and the panel at 29%; SAM's box put the table's top at 29% too, but the deer standing on it reached 11% (below).
 - It still varies from run to run. With the same final prompt and cut-out, a lab run put the top of the dancing table's deer figure at 30% of the picture, and the final make at 11%, where the label and the price tag cover the deer's body. SAM 3.1 had boxed only the table, not the deer, so the band above looked free. `61bfb2ee5` now grows a box much flatter than the cut-out's own shape to the whole product, but a $0 what-if on the stored answers shows the label would still cover the deer in this picture. The paper label is opaque, so the words stay legible.
 
 ### The voice
