@@ -400,29 +400,17 @@ function AdWorkbench({
     onStale: refresh,
   });
 
-  // A Reel tile shows the ad in its own motion: opening another one makes
-  // the video again in it at once, free, as Update would, with any picks
-  // waiting (a 409 while a run goes waits for its end).
+  // Switching between Reel tiles queues the tile's motion as a pending pick
+  // for the owner's one Update video press, without auto-regenerating.
   const want =
     template.renderer === "motion" ? (template.motion ?? null) : null;
   const motion = ad ? productAdMotionOf(ad.motion) : null;
   const hasVideo = Boolean(ad?.video);
-  const { queue, send, shared } = auto;
+  const { queue } = auto;
   useEffect(() => {
-    // On the Products page (shared provider), clicking a Reel tile sends its
-    // motion from the page; only a standalone workbench sends it here.
-    if (
-      shared ||
-      !want ||
-      !hasVideo ||
-      ad?.status !== "ready" ||
-      motion === null ||
-      motion === want
-    )
-      return;
+    if (!want || !hasVideo || motion === null) return;
     queue({ motion: want });
-    send();
-  }, [shared, want, motion, hasVideo, ad?.status, queue, send]);
+  }, [want, motion, hasVideo, queue]);
 
   // A run that ends changes the tiles' art and stamps on the page.
   const status = ad?.status;

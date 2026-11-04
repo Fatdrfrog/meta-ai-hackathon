@@ -17,7 +17,6 @@ import {
 import {
   productAdMotionOf,
   type DraftProductRecord,
-  type ProductAdMotion,
   type ProductAdRecord,
   type ProductKitRecord,
   type ProductsErrorCode,
@@ -46,7 +45,6 @@ import {
   fetchProductAd,
   fetchProductAdBrief,
   productAdBriefUrl,
-  updateProductAd,
 } from "./ads-client";
 import { fetchMetaReadiness, productsMetaUrl } from "./meta-client";
 import { adRequestId } from "./product-ad-parts";
@@ -788,13 +786,6 @@ function ProductsPageContent({
   const makes = useRef(0);
   const openAdId = open?.subject.kind === "ad" ? open.subject.adId : null;
 
-  // A motion change asked for while the ad's video was being made: sent
-  // once it's ready (409 ad_not_ready means a run is going).
-  const [waitingMotion, setWaitingMotion] = useState<{
-    adId: string;
-    motion: ProductAdMotion;
-  } | null>(null);
-
   // The ad these picks made, as the workbench reads it: its stills and its
   // stamps. The same request as the workbench's, so it's asked for once.
   const watchedAdId = openAdId ?? startAd ?? currentAdId;
@@ -804,7 +795,6 @@ function ProductsPageContent({
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
-      refreshInterval: waitingMotion ? 3000 : 0,
     }
   );
   // The picks' ad as its own read, with its stills: the made list's read
@@ -890,38 +880,6 @@ function ProductsPageContent({
     [draftImports, workspaceId, mutate, mutateKey, refreshImports]
   );
 
-  const sendMotion = useCallback(
-    async (adId: string, motion: ProductAdMotion) => {
-      try {
-        const ad = await updateProductAd(workspaceId, adId, { motion });
-        setWaitingMotion(current => (current?.adId === adId ? null : current));
-        await mutateKey(productAdUrl(workspaceId, adId), ad, {
-          revalidate: false,
-        });
-        void mutateKey(productsMadeUrl(workspaceId));
-      } catch (failure) {
-        // A run is going: the change waits for it, as the workbench's own
-        // changes do, and goes when the video is ready.
-        if (codeOf(failure) === "ad_not_ready")
-          setWaitingMotion({ adId, motion });
-        else
-          setWaitingMotion(current =>
-            current?.adId === adId ? null : current
-          );
-      }
-    },
-    [workspaceId, mutateKey]
-  );
-  useEffect(() => {
-    if (!waitingMotion || watchedAd?.id !== waitingMotion.adId) return;
-    if (watchedAd.status !== "ready") return;
-    if (productAdMotionOf(watchedAd.motion) === waitingMotion.motion) {
-      setWaitingMotion(null);
-      return;
-    }
-    void sendMotion(waitingMotion.adId, waitingMotion.motion);
-  }, [waitingMotion, watchedAd, sendMotion]);
-
   // The press being made, so trying again sends the same id: under it the
   // server answers with the ad it already saved.
   const press = useRef<{ key: string; id: string } | null>(null);
@@ -994,17 +952,6 @@ function ProductsPageContent({
         adForPicks(madeAds, ids)?.id ?? madeHere.get(key) ?? null;
       if (existing) {
         opened({ kind: "ad", adId: existing });
-        const known =
-          watchedAd?.id === existing
-            ? watchedAd
-            : (madeAds.find(ad => ad.id === existing) ?? null);
-        if (
-          template.renderer === "motion" &&
-          template.motion &&
-          known &&
-          productAdMotionOf(known.motion) !== template.motion
-        )
-          void sendMotion(existing, template.motion);
         return;
       }
 
@@ -1069,9 +1016,7 @@ function ProductsPageContent({
       doubts,
       madeAds,
       madeHere,
-      watchedAd,
       publishDrafts,
-      sendMotion,
       workspaceId,
       mutateKey,
     ]

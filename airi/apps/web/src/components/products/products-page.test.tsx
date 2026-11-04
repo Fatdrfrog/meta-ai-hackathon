@@ -683,7 +683,7 @@ test("Escape closes the workbench and gives the focus back to its tile", async (
   );
 });
 
-test("the ad these picks made is used again; another motion tile asks for a free render", async () => {
+test("the ad these picks made is used again without auto-regenerating when switching motion tiles", async () => {
   await serveMake();
   // v2's one feed picture stands for In a room.
   const stills = { statusUrl: null, feedUrl: "https://signed.test/feed.jpg" };
@@ -695,8 +695,6 @@ test("the ad these picks made is used again; another motion tile asks for a free
     });
   routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
     respond(200, { ad: adRecord({ motion: "shelf", stills }) });
-  routes[`PATCH ${BASE}/ads/${AD_ID}`] = () =>
-    respond(202, { ad: adRecord({ status: "making", motion: "filmed_sold" }) });
   await ready();
 
   fireEvent.click(tile("post_room"));
@@ -708,40 +706,8 @@ test("the ad these picks made is used again; another motion tile asks for a free
   expect(
     await screen.findByText(`reel_filmed_sold: ad ${AD_ID}`)
   ).toBeInTheDocument();
-  await waitFor(() =>
-    expect(sent("PATCH", `${BASE}/ads/${AD_ID}`)).toHaveLength(1)
-  );
-  expect(sent("PATCH", `${BASE}/ads/${AD_ID}`)[0]!.body).toEqual({
-    motion: "filmed_sold",
-  });
+  expect(sent("PATCH", `${BASE}/ads/${AD_ID}`)).toHaveLength(0);
 });
-
-test("a motion asked for while the video is made waits for it, then goes", async () => {
-  await serveMake();
-  let status = "making";
-  routes[`GET ${BASE}/made`] = () =>
-    respond(200, {
-      kits: [],
-      ads: [adRecord({ motion: "shelf", status: "making" })],
-      whatsapp: { connected: false, displayPhone: null },
-    });
-  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
-    respond(200, { ad: adRecord({ motion: "shelf", status }) });
-  let patches = 0;
-  routes[`PATCH ${BASE}/ads/${AD_ID}`] = () => {
-    patches += 1;
-    return status === "making"
-      ? respond(409, { code: "ad_not_ready", error: "x" })
-      : respond(202, {
-          ad: adRecord({ status: "making", motion: "filmed_sold" }),
-        });
-  };
-  await ready();
-  fireEvent.click(tile("reel_filmed_sold"));
-  await waitFor(() => expect(patches).toBe(1));
-  status = "ready";
-  await waitFor(() => expect(patches).toBe(2), { timeout: 5000 });
-}, 10_000);
 
 test("drafts among the picks go on the shelf before the make, as the owner's swipe right", async () => {
   await serveMake();

@@ -658,7 +658,7 @@ describe("picks wait for Update", () => {
     expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
   });
 
-  it("makes the video again in the tile's motion", async () => {
+  it("queues the tile's motion when switching Reel tiles, and renders only on Update video", async () => {
     routes[`PATCH ${AD_URL}`] = answer(
       {
         ad: adRecord({
@@ -671,9 +671,12 @@ describe("picks wait for Update", () => {
       202
     );
     bench("reel_filmed_sold");
-    await waitFor(() => expect(callsTo("PATCH", AD_URL)).toHaveLength(1), {
-      timeout: 3000,
+    const updateBtn = await screen.findByRole("button", {
+      name: "Update video",
     });
+    expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
+    fireEvent.click(updateBtn);
+    await waitFor(() => expect(callsTo("PATCH", AD_URL)).toHaveLength(1));
     expect(bodyOf("PATCH", AD_URL)).toEqual({ motion: "filmed_sold" });
   });
 
