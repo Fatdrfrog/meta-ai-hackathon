@@ -170,6 +170,33 @@ describe("createUnifiedTemplateRecord", () => {
     expect(mockGetWhatsAppAccountCredentials).not.toHaveBeenCalled();
   });
 
+  it("gives Meta the time its caller allows for the WhatsApp create", async () => {
+    const { supabase } = createSupabaseInsertMock();
+
+    await createUnifiedTemplateRecord({
+      supabase: supabase as never,
+      workspaceId: "workspace-1",
+      userId: "user-1",
+      name: "products_20261103_055534",
+      channel: "whatsapp",
+      whatsappData: {
+        language: "kk",
+        category: "MARKETING",
+        components: [{ type: "BODY", text: "Hello" }],
+      },
+      analyticsOrigin: "products",
+      metaTimeoutMs: 25_000,
+      metaDeadlineAt: 1_793_000_000_000,
+    });
+
+    expect(mockCreateWhatsAppTemplateMutation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metaTimeoutMs: 25_000,
+        metaDeadlineAt: 1_793_000_000_000,
+      })
+    );
+  });
+
   it.each([undefined, null])(
     "rejects deferred creation without a selected account before any provider or local insert",
     async accountContext => {

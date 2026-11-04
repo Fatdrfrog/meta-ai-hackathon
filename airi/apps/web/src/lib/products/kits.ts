@@ -56,6 +56,7 @@ import { WhatsAppTemplateGraphRefusalError } from "@/lib/whatsapp/templates/grap
 import {
   findWhatsAppTemplateByName,
   getTemplate,
+  WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS,
 } from "@/lib/whatsapp/templates/service";
 import {
   createUnifiedTemplateRecord,
@@ -72,6 +73,7 @@ import {
 import { ProductVideoImport } from "@/models/product-video-import";
 import { WorkspaceProduct } from "@/models/workspace-product";
 import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
+import mongoose from "mongoose";
 
 // Kits: the carousel and the order form one press makes from shelf products,
 // for customers on WhatsApp. The carousel goes straight to Meta for review,
@@ -82,6 +84,34 @@ import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
 
 /** A part still "making" this long after its last change has stopped: functions end at 60 s. */
 const MAKING_TIMEOUT_MS = 90_000;
+/**
+ * The kit routes stop at 60 s (maxDuration). From when the parts start,
+ * nothing new is begun after this, so the answer leaves well before then:
+ * the sign-in, shelf and connection reads before it take 1–3 s.
+ *
+ * Before the carousel's create come a Try again's look by name (up to 5 s),
+ * the cards on white and their header uploads, 4 at a time: about 7 s for 4
+ * cards in production (2026-11-03, where the 10 s abort came 17 s into the
+ * request), up to about 15 s for 10. The create then gets up to
+ * WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS (25 s) rather than the usual
+ * 10 s, but only until one look (5 s) before this deadline, and never under
+ * 10 s. Meta's status is read back only while that read (10 s at most) ends
+ * by then too, and the looks after a lost answer end by the deadline, so
+ * the answer leaves by about 50 s unless the cards alone take over 30 s.
+ */
+const KIT_DEADLINE_MS = 45_000;
+/** One look at Meta for a carousel by its name. */
+const LOOKUP_TIMEOUT_MS = 5_000;
+/** Meta's code for a second template under a name and language it has… */
+const TWIN_SUBCODE = 2388024;
+/** …and its words for it: "There is already Kazakh content for this template." */
+const TWIN_WORDS = /already .*content for this template/i;
+/** After Meta's answer to the create was lost: looks at once, then after these waits, while time allows. */
+const LOST_LOOK_WAITS_MS = [0, 2_000, 4_000] as const;
+/** A carousel still "checking" is looked for again at most this often, as the page polls the kit… */
+const CHECKING_LOOK_MS = 15_000;
+/** …for this long, before it counts as not made (Try again looks for it first). */
+const CHECKING_FOR_MS = 3 * 60_000;
 /** How often Meta's verdict on a waiting carousel is read again. */
 const WAITING_RECHECK_MS = 60_000;
 /** …and, once it has waited 10 minutes, every 5. */
@@ -380,13 +410,18 @@ export function toProductKitRecord(
 
 // ---------------------------------------------------------------- names
 
-/** products_YYYYMMDD_HHMMSS (UTC): two kits a minute apart don't clash at Meta. */
-export function carouselTemplateName(now: Date): string {
-  return `products_${now
+/**
+ * products_YYYYMMDD_HHMMSS_<the kit id's last 6> (UTC). The kit in it keeps
+ * two kits made in the same second apart at Meta, so a look by name after a
+ * lost answer only ever finds this kit's own carousel.
+ */
+export function carouselTemplateName(now: Date, kitId: KitId): string {
+  const stamp = now
     .toISOString()
     .slice(0, 19)
     .replace(/[-:]/g, "")
-    .replace("T", "_")}`;
+    .replace("T", "_");
+  return `products_${stamp}_${String(kitId).slice(-6).toLowerCase()}`;
 }
 
 /** "Order form · 2 Nov 09:14" on the owner's clock, or "… 04:14 UTC" without their zone. */
@@ -428,11 +463,16 @@ type KitContext = {
 
 /** A first attempt: nothing made before it. */
 const firstAttempt = (
-  now: Date
+  now: Date,
+  kitId: KitId
 ): Pick<KitContext, "carousel" | "orderForm"> => ({
-  carousel: { name: carouselTemplateName(now), mayExist: false },
+  carousel: { name: carouselTemplateName(now, kitId), mayExist: false },
   orderForm: { flowId: null, flowName: null },
 });
+
+/** When nothing new starts for this attempt's parts any more. */
+const kitDeadline = (context: KitContext) =>
+  context.now.getTime() + KIT_DEADLINE_MS;
 
 type OrderFormOutcome = Partial<Omit<IProductKitOrderFormPart, "updatedAt">> &
   Pick<IProductKitOrderFormPart, "state">;
@@ -472,6 +512,27 @@ const timedOut = (error: unknown) => {
   return name === "TimeoutError" || name === "AbortError";
 };
 
+/** Meta's refusal among what an error wraps; null when Meta refused nothing. */
+const graphRefusalOf = (error: unknown) =>
+  causesOf(error).find(
+    (entry): entry is WhatsAppTemplateGraphRefusalError =>
+      entry instanceof WhatsAppTemplateGraphRefusalError
+  ) ?? null;
+
+/** Whether Meta refused a template because it has one under that name and language. */
+function isTwinRefusal(refusal: WhatsAppTemplateGraphRefusalError): boolean {
+  // Meta's body carries the subcode; airi's type of it doesn't name it.
+  const body = refusal.graphError as
+    | (typeof refusal.graphError & { error_subcode?: unknown })
+    | undefined;
+  return (
+    Number(body?.error_subcode) === TWIN_SUBCODE ||
+    [refusal.message, body?.message, body?.error_user_msg].some(
+      words => typeof words === "string" && TWIN_WORDS.test(words)
+    )
+  );
+}
+
 /**
  * Why sending the carousel failed: Meta's refusal in its own words (its
  * template limit apart), or airi's own call timing out, or failing some
@@ -479,10 +540,7 @@ const timedOut = (error: unknown) => {
  */
 function carouselSendError(error: unknown): ProductKitStoredError {
   const chain = causesOf(error);
-  const refusal = chain.find(
-    (entry): entry is WhatsAppTemplateGraphRefusalError =>
-      entry instanceof WhatsAppTemplateGraphRefusalError
-  );
+  const refusal = graphRefusalOf(error);
   if (refusal) {
     const words = metaWords(refusal);
     return {
@@ -646,22 +704,45 @@ function submittedCarousel(
   };
 }
 
+/** What looking for a kit's carousel at Meta by name needs. */
+type CarouselLookup = Pick<
+  KitContext,
+  "workspaceId" | "kitId" | "language" | "whatsapp"
+>;
+
+/** A template Meta has under a carousel's name. */
+type FoundTemplate = { id: string; status: string };
+
 /**
- * The template an earlier attempt sent under this name, when Meta has it.
- * Null when it hasn't, or can't be asked now: the same name sent again,
- * Meta refuses a twin, so nothing goes to review twice.
+ * What a look at Meta for a carousel by its name found: the template, or
+ * "absent" when Meta lists none, or "unknown" when Meta couldn't be asked
+ * (the look timed out, or Meta refused it: a rate limit, an outage).
+ */
+type CarouselLook = FoundTemplate | "absent" | "unknown";
+
+const isFound = (look: CarouselLook | null): look is FoundTemplate =>
+  typeof look === "object" && look !== null;
+
+/**
+ * The template an earlier attempt sent under this name, as Meta has it now.
+ * Only "absent" lets the carousel be sent again or called refused: sent
+ * again under the same name, Meta refuses a twin, so nothing goes to review
+ * twice, while a new name would make a second.
  */
 async function sentEarlier(
-  context: KitContext,
+  context: CarouselLookup,
   name: string
-): Promise<{ id: string; status: string } | null> {
+): Promise<CarouselLook> {
   try {
-    return await findWhatsAppTemplateByName({
-      accessToken: context.whatsapp.accessToken,
-      wabaId: context.whatsapp.wabaId,
-      name,
-      language: context.language,
-    });
+    return (
+      (await findWhatsAppTemplateByName({
+        accessToken: context.whatsapp.accessToken,
+        wabaId: context.whatsapp.wabaId,
+        name,
+        language: context.language,
+        timeoutMs: LOOKUP_TIMEOUT_MS,
+      })) ?? "absent"
+    );
   } catch (error) {
     logger.warn("[Products] kit carousel lookup failed", {
       event: "products.kit_carousel_lookup_failed",
@@ -669,8 +750,103 @@ async function sentEarlier(
       kitId: String(context.kitId),
       error: error instanceof Error ? error.message : String(error),
     });
-    return null;
+    return "unknown";
   }
+}
+
+/**
+ * A carousel Meta may have under its name without airi having seen it: the
+ * kit's poll looks again (settleCheckingCarousels) until it turns up or its
+ * time is over, when it fails as timed out with its name kept. `checkedAt`
+ * is null when there was no time to look: the first poll looks at once.
+ */
+const checkingCarousel = (
+  name: string,
+  cardCount: number,
+  checkedAt: Date | null
+): CarouselOutcome => ({
+  state: "checking",
+  templateName: name,
+  cardCount,
+  checkedAt,
+  error: null,
+});
+
+const pause = (ms: number) =>
+  new Promise<void>(resolve => setTimeout(resolve, ms));
+
+/**
+ * After airi stopped waiting for Meta's answer to the create, Meta may have
+ * made the carousel all the same, or still be making it. It is looked for by
+ * name at once and after short waits, while the kit's time allows: found,
+ * it is with Meta. Not found yet, it is "checking", and the kit's poll looks
+ * again (settleCheckingCarousels) until it turns up or the time is over.
+ */
+async function lookForLostCarousel(
+  context: KitContext,
+  name: string,
+  cardCount: number
+): Promise<CarouselOutcome> {
+  const deadline = kitDeadline(context);
+  let lookedAt: Date | null = null;
+  for (const wait of LOST_LOOK_WAITS_MS) {
+    if (Date.now() + wait + LOOKUP_TIMEOUT_MS > deadline) break;
+    if (wait > 0) await pause(wait);
+    lookedAt = new Date();
+    const look = await sentEarlier(context, name);
+    if (isFound(look)) {
+      logger.info("[Products] kit carousel found after a lost answer", {
+        event: "products.kit_carousel_found",
+        workspaceId: context.workspaceId,
+        kitId: String(context.kitId),
+      });
+      return submittedCarousel(
+        { templateId: look.id, status: look.status, rowId: null },
+        name,
+        cardCount
+      );
+    }
+  }
+  return checkingCarousel(name, cardCount, lookedAt);
+}
+
+/**
+ * After Meta refused the carousel while it may have one under this name: a
+ * twin it refused, or any refusal of a resend after an earlier attempt's
+ * answer was lost. Found, that one is this carousel (the name carries the
+ * kit). Not found, a twin refusal still says Meta has it, and a look that
+ * couldn't be made says nothing: either way it is "checking", never
+ * refused, since Try again would then start anew under another name and
+ * Meta would have two. Null when Meta has none: the refusal stands.
+ */
+async function carouselBehindRefusal(
+  context: KitContext,
+  name: string,
+  cardCount: number,
+  twin: boolean,
+  reason: string
+): Promise<CarouselOutcome | null> {
+  const inTime = Date.now() + LOOKUP_TIMEOUT_MS <= kitDeadline(context);
+  const look: CarouselLook = inTime
+    ? await sentEarlier(context, name)
+    : "unknown";
+  if (isFound(look))
+    return submittedCarousel(
+      { templateId: look.id, status: look.status, rowId: null },
+      name,
+      cardCount,
+      true
+    );
+  if (!twin && look === "absent") return null;
+  logger.warn("[Products] kit carousel may be at Meta already", {
+    event: "products.kit_carousel_twin_unconfirmed",
+    workspaceId: context.workspaceId,
+    kitId: String(context.kitId),
+    twin,
+    look,
+    reason,
+  });
+  return checkingCarousel(name, cardCount, inTime ? new Date() : null);
 }
 
 /**
@@ -683,17 +859,21 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
   // An earlier attempt's answer was lost (it timed out, or its function
   // was stopped): Meta may have its template under this very name.
   if (context.carousel.mayExist) {
-    const found = await sentEarlier(context, name);
-    if (found)
+    const look = await sentEarlier(context, name);
+    const cards = Math.min(
+      context.products.filter(product => product.photo).length,
+      KIT_CAROUSEL_MAX_CARDS
+    );
+    if (isFound(look))
       return submittedCarousel(
-        { templateId: found.id, status: found.status, rowId: null },
+        { templateId: look.id, status: look.status, rowId: null },
         name,
-        Math.min(
-          context.products.filter(product => product.photo).length,
-          KIT_CAROUSEL_MAX_CARDS
-        ),
+        cards,
         true
       );
+    // Meta couldn't say: nothing is sent while it may have it. The kit's
+    // poll looks again.
+    if (look === "unknown") return checkingCarousel(name, cards, new Date());
   }
   const draft = await prepareCarouselDraft(
     context.workspaceId,
@@ -740,6 +920,9 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
         components,
       },
       analyticsOrigin: "products",
+      metaTimeoutMs: WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS,
+      // Cut to leave one look by name within the kit's time.
+      metaDeadlineAt: kitDeadline(context) - LOOKUP_TIMEOUT_MS,
     });
     sent = {
       templateId: record.metaTemplateId,
@@ -749,12 +932,38 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
   } catch (error) {
     if (!(error instanceof WhatsAppTemplateRecordPersistenceError)) {
       const failure = carouselSendError(error);
+      const reason = error instanceof Error ? error.message : String(error);
+      // airi stopped waiting; Meta may have it all the same.
+      if (failure.code === "timed_out") {
+        logger.warn("[Products] kit carousel answer lost", {
+          event: "products.kit_carousel_answer_lost",
+          workspaceId: context.workspaceId,
+          kitId: String(context.kitId),
+          reason,
+        });
+        return lookForLostCarousel(context, name, cardCount);
+      }
+      const refusal = graphRefusalOf(error);
+      const twin = refusal !== null && isTwinRefusal(refusal);
+      if (
+        twin ||
+        (failure.code === "meta_refused" && context.carousel.mayExist)
+      ) {
+        const behind = await carouselBehindRefusal(
+          context,
+          name,
+          cardCount,
+          twin,
+          reason
+        );
+        if (behind) return behind;
+      }
       logger.warn("[Products] kit carousel not sent", {
         event: "products.kit_carousel_refused",
         workspaceId: context.workspaceId,
         kitId: String(context.kitId),
         code: failure.code,
-        reason: error instanceof Error ? error.message : String(error),
+        reason,
       });
       return { state: "failed", cardCount, error: failure };
     }
@@ -896,6 +1105,135 @@ async function expireStaleParts(
     if (latest) next = latest;
   }
   return next;
+}
+
+/** A "checking" carousel's time to be found is over. */
+const checkingOver = (carousel: IProductKitCarouselPart, now: Date) =>
+  now.getTime() - carousel.updatedAt.getTime() >= CHECKING_FOR_MS;
+
+/** A carousel airi lost Meta's answer for, due another look (or out of time). */
+function checkingDue(
+  carousel: IProductKitCarouselPart | null | undefined,
+  now: Date
+): carousel is IProductKitCarouselPart {
+  if (carousel?.state !== "checking") return false;
+  return (
+    !carousel.templateName ||
+    checkingOver(carousel, now) ||
+    now.getTime() - (carousel.checkedAt?.getTime() ?? 0) >= CHECKING_LOOK_MS
+  );
+}
+
+/** Sets carousel fields while it is still "checking"; the kit as it then is. */
+async function updateCheckingCarousel(
+  doc: IProductKit,
+  carousel: IProductKitCarouselPart,
+  fields: Partial<IProductKitCarouselPart>
+): Promise<IProductKit> {
+  const result = await ProductKit.updateOne(
+    {
+      _id: doc._id,
+      workspaceId: doc.workspaceId,
+      "parts.carousel.state": "checking",
+      "parts.carousel.updatedAt": carousel.updatedAt,
+    },
+    {
+      $set: Object.fromEntries(
+        Object.entries(fields).map(([key, value]) => [
+          `parts.carousel.${key}`,
+          value,
+        ])
+      ),
+    }
+  );
+  if (result.modifiedCount > 0)
+    return {
+      ...doc,
+      parts: { ...doc.parts, carousel: { ...carousel, ...fields } },
+    };
+  // It settled meanwhile: read what it became.
+  return (await findKit(doc.workspaceId, doc._id)) ?? doc;
+}
+
+/**
+ * Looks again, by name, for carousels airi lost Meta's answer for, at most
+ * `reads.left` times: found, a carousel is with Meta; still missing after
+ * CHECKING_FOR_MS, it wasn't made. Its name is kept, so Try again looks for
+ * it first, and Meta refuses a twin of a name it has.
+ */
+async function settleCheckingCarousels(
+  workspaceId: string,
+  docs: IProductKit[],
+  now: Date,
+  reads: { left: number }
+): Promise<IProductKit[]> {
+  const due = docs.filter(doc => checkingDue(doc.parts?.carousel, now));
+  if (due.length === 0) return docs;
+  const whatsapp = await readKitWhatsApp(workspaceId).catch(
+    (error: unknown) => {
+      logger.warn("[Products] kit connection unreadable for a lookup", {
+        event: "products.kit_carousel_lookup_failed",
+        workspaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  );
+  const settled = await Promise.all(
+    due.map(async doc => {
+      const carousel = doc.parts!.carousel!;
+      const name = carousel.templateName;
+      const lookup =
+        name && whatsapp?.connected && reads.left-- > 0 ? whatsapp : null;
+      // A look that couldn't be made is no answer: it waits for the next.
+      const look =
+        lookup && name
+          ? await sentEarlier(
+              {
+                workspaceId,
+                kitId: doc._id,
+                language: doc.language,
+                whatsapp: lookup,
+              },
+              name
+            )
+          : null;
+      const at = new Date();
+      if (isFound(look) && name) {
+        // Found soon after the last look, Meta's approval came about now.
+        const lookedPromptly =
+          now.getTime() -
+            (carousel.checkedAt ?? carousel.updatedAt).getTime() <=
+          PROMPT_LOOK_MS;
+        return updateCheckingCarousel(doc, carousel, {
+          ...submittedCarousel(
+            { templateId: look.id, status: look.status, rowId: null },
+            name,
+            carousel.cardCount,
+            !lookedPromptly
+          ),
+          updatedAt: at,
+        });
+      }
+      if (!name || checkingOver(carousel, now)) {
+        logger.warn("[Products] kit carousel not found at Meta", {
+          event: "products.kit_carousel_not_found",
+          workspaceId,
+          kitId: String(doc._id),
+        });
+        return updateCheckingCarousel(doc, carousel, {
+          state: "failed",
+          error: { code: "timed_out", message: null },
+          updatedAt: at,
+        });
+      }
+      return lookup
+        ? updateCheckingCarousel(doc, carousel, { checkedAt: at })
+        : doc;
+    })
+  );
+  const byId = new Map(settled.map(doc => [String(doc._id), doc]));
+  return docs.map(doc => byId.get(String(doc._id)) ?? doc);
 }
 
 function statusCheckDue(
@@ -1056,9 +1394,11 @@ async function saveVerdict(
 }
 
 /**
- * Kits as they now are: parts stuck "making" time out, and a carousel due a
- * look has Meta's verdict read again: from airi's Templates rows first (one
- * read for all), then from Meta itself, at most `metaReads` times, at once.
+ * Kits as they now are: parts stuck "making" time out, a carousel airi lost
+ * Meta's answer for is looked for again, and a carousel due a look has
+ * Meta's verdict read again: from airi's Templates rows first (one read for
+ * all), then from Meta itself. Meta is asked at most `metaReads` times in
+ * all, at once.
  */
 async function refreshKits(
   workspaceId: string,
@@ -1066,7 +1406,13 @@ async function refreshKits(
   metaReads: number
 ): Promise<IProductKit[]> {
   const now = new Date();
-  const fresh = await Promise.all(docs.map(doc => expireStaleParts(doc, now)));
+  const reads = { left: metaReads };
+  const fresh = await settleCheckingCarousels(
+    workspaceId,
+    await Promise.all(docs.map(doc => expireStaleParts(doc, now))),
+    now,
+    reads
+  );
   const due = fresh.flatMap(doc => {
     const carousel = doc.parts?.carousel;
     return statusCheckDue(carousel, now) ? [{ doc, carousel }] : [];
@@ -1078,7 +1424,6 @@ async function refreshKits(
       carousel.templateRowId ? [carousel.templateRowId] : []
     )
   );
-  let reads = metaReads;
   const checked = await Promise.all(
     due.map(async ({ doc, carousel }) => {
       const fromRow = {
@@ -1089,7 +1434,7 @@ async function refreshKits(
         metaReason: carousel.metaReason ?? null,
       };
       const askMeta =
-        wantsMetaRead(carousel, fromRow.metaStatus, now) && reads-- > 0;
+        wantsMetaRead(carousel, fromRow.metaStatus, now) && reads.left-- > 0;
       const fromMeta = askMeta
         ? await readMetaVerdict(workspaceId, carousel.templateId)
         : null;
@@ -1169,7 +1514,9 @@ export async function makeProductKit(params: {
     return { refused: "not_enough_products" };
 
   const now = new Date();
-  const attempt = firstAttempt(now);
+  // The kit's id first: its carousel's name carries it.
+  const kitId: KitId = new mongoose.Types.ObjectId();
+  const attempt = firstAttempt(now, kitId);
   const parts: IProductKit["parts"] = {};
   if (request.make.orderForm)
     parts.orderForm = {
@@ -1196,9 +1543,9 @@ export async function makeProductKit(params: {
         };
   const language = request.language ?? shopWords(shelf.language).code;
 
-  let kitId: KitId;
   try {
-    const created = await ProductKit.create({
+    await ProductKit.create({
+      _id: kitId,
       workspaceId,
       requestId: request.requestId,
       createdBy: userId,
@@ -1209,7 +1556,6 @@ export async function makeProductKit(params: {
       prices: priceSnapshot(shelf.products),
       parts,
     });
-    kitId = created._id;
   } catch (error) {
     // The same press, sent twice at once: the other made it.
     const raced = isDuplicateKey(error)
@@ -1269,14 +1615,15 @@ export async function listProductKitRecords(
  * or failed on airi's side, may have reached Meta before its answer was
  * lost: its template name is kept (Meta is asked for it first, and refuses
  * a twin), and so is its Flow, to finish. A part Meta refused or turned
- * down starts anew.
+ * down starts anew. (A carousel Meta may still have is never saved as
+ * refused: it is "checking" until found, or timed out with its name.)
  */
 function retryAttempt(
   part: ProductKitPart,
   doc: IProductKit,
   now: Date
 ): Pick<KitContext, "carousel" | "orderForm"> {
-  const attempt = firstAttempt(now);
+  const attempt = firstAttempt(now, doc._id);
   const current = doc.parts?.[part];
   const lost =
     current?.state === "failed" &&

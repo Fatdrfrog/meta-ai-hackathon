@@ -28,7 +28,7 @@ jest.mock("@/lib/products/kits", () => ({
   readProductKitPlan: (...args: unknown[]) => mockReadPlan(...args),
 }));
 
-import { GET, POST } from "./route";
+import { GET, maxDuration, POST } from "./route";
 
 const workspaceId = "workspace-1";
 const ids = ["651f1f77bcf86cd799439011", "651f1f77bcf86cd799439012"];
@@ -112,6 +112,30 @@ describe("POST a kit", () => {
       },
     });
     expect(response.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("answers a carousel Meta was slow to answer as still being checked, within the route's 60 s", async () => {
+    // The kit's own deadline (45 s after its parts start) is set against this.
+    expect(maxDuration).toBe(60);
+    const checking = {
+      ...kit,
+      status: "making",
+      parts: {
+        ...kit.parts,
+        carousel: {
+          ...kit.parts.carousel,
+          state: "checking",
+          templateId: null,
+          metaStatus: null,
+        },
+      },
+    };
+    mockMakeKit.mockResolvedValue({ kit: checking, repeated: false });
+
+    const response = await POST(post(), context);
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ kit: checking });
   });
 
   it("answers a press sent again with the kit it made, as 200", async () => {

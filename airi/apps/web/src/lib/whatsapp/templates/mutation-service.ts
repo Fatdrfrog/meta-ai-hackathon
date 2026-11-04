@@ -57,7 +57,18 @@ export type CreateWhatsAppTemplateMutationInput = {
   audit?: WhatsAppTemplateMutationAuditOptions;
   /** Where a person submitted it; omitted for system re-creations. */
   analyticsOrigin?: WhatsAppTemplateSubmissionOrigin;
+  /** How long Meta gets to answer the create; 10 s by default. */
+  metaTimeoutMs?: number;
+  /**
+   * When (ms since the epoch) the caller needs the answer by: the create's
+   * wait is cut to it (never below 10 s), and Meta's status is read back
+   * only while that read still fits before it.
+   */
+  metaDeadlineAt?: number;
 };
+
+/** The status read after a create needs this much of the caller's time: the read's own limit. */
+const CREATED_STATUS_READ_ROOM_MS = 10_000;
 
 export type WhatsAppTemplateSubmissionOrigin =
   | "templates_page"
@@ -277,11 +288,24 @@ export async function createWhatsAppTemplateMutation(
             input.workspaceId
           ),
         };
-  const result = await createTemplate(input.workspaceId, payload, options);
-  const status =
-    input.deferCreatedStatusReadback === true
-      ? null
-      : await readCreatedTemplateStatus(input.workspaceId, result.id, options);
+  const result = await createTemplate(input.workspaceId, payload, {
+    ...options,
+    ...(input.metaTimeoutMs !== undefined
+      ? { timeoutMs: input.metaTimeoutMs }
+      : {}),
+    ...(input.metaDeadlineAt !== undefined
+      ? { metaDeadlineAt: input.metaDeadlineAt }
+      : {}),
+  });
+  // Without the time to read it back, the create's own status stands; a
+  // caller that cares reads it later.
+  const readBack =
+    input.deferCreatedStatusReadback !== true &&
+    (input.metaDeadlineAt === undefined ||
+      input.metaDeadlineAt - Date.now() >= CREATED_STATUS_READ_ROOM_MS);
+  const status = readBack
+    ? await readCreatedTemplateStatus(input.workspaceId, result.id, options)
+    : null;
 
   if (shouldWriteAudit(input)) {
     await logTemplateAction(

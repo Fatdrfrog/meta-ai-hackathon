@@ -135,6 +135,51 @@ export type WhatsAppTemplateAccountOptions = {
   };
 };
 
+/** How long Meta gets to answer a template create or edit, unless a caller allows more. */
+const TEMPLATE_MUTATION_TIMEOUT_MS = 10_000;
+
+/**
+ * How long Meta gets to accept a carousel, for a caller whose function may
+ * run 60 s: Meta took more than 10 s for a 4-card carousel with image
+ * headers (2026-11-03), and made it after airi had stopped waiting. Before
+ * the create, the card headers are uploaded (4 at a time, about 1–3 s a
+ * round, so up to about 9 s for 10 cards); after it, Meta's status is read
+ * back (at most 10 s). 25 s keeps the whole create within about 45 s.
+ */
+export const WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS = 25_000;
+
+/** Whether a template's components hold a carousel, which Meta can take longer than 10 s to accept. */
+export function isCarouselTemplate(components: unknown): boolean {
+  return (
+    Array.isArray(components) &&
+    components.some(
+      component => (component as { type?: unknown } | null)?.type === "CAROUSEL"
+    )
+  );
+}
+
+export type WhatsAppTemplateCreateOptions = WhatsAppTemplateAccountOptions & {
+  /** How long Meta gets to answer the create; 10 s by default. */
+  timeoutMs?: number;
+  /**
+   * When (ms since the epoch) the caller needs Meta's answer by, because its
+   * function stops soon after: a longer `timeoutMs` is cut to the time left
+   * when the create is posted (after its header uploads), but never below
+   * the usual 10 s.
+   */
+  metaDeadlineAt?: number;
+};
+
+/** How long a create posted now waits for Meta. */
+function createTimeoutMs(options: WhatsAppTemplateCreateOptions): number {
+  const allowed = options.timeoutMs ?? TEMPLATE_MUTATION_TIMEOUT_MS;
+  if (options.metaDeadlineAt === undefined) return allowed;
+  return Math.max(
+    Math.min(allowed, TEMPLATE_MUTATION_TIMEOUT_MS),
+    Math.min(allowed, options.metaDeadlineAt - Date.now())
+  );
+}
+
 interface DeleteTemplateOptions {
   templateName: string;
   templateId?: string;
@@ -544,7 +589,8 @@ function omitOptimizationSpec(
 async function postTemplateMutation(
   url: string,
   accessToken: string,
-  graphPayload: Record<string, unknown>
+  graphPayload: Record<string, unknown>,
+  timeoutMs: number = TEMPLATE_MUTATION_TIMEOUT_MS
 ): Promise<{ res: Response; response: GraphTemplateMutationResponse }> {
   const res = await fetch(url, {
     method: "POST",
@@ -553,7 +599,7 @@ async function postTemplateMutation(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(graphPayload),
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   return {
@@ -828,7 +874,7 @@ export async function listTemplates(
 export async function createTemplate(
   workspaceId: string,
   payload: CreateWhatsAppTemplatePayload,
-  options: WhatsAppTemplateAccountOptions = {}
+  options: WhatsAppTemplateCreateOptions = {}
 ): Promise<{ id: string; status: string; warning?: string }> {
   const language = normalizeWhatsAppTemplateLanguageCode(payload.language);
   if (!language) {
@@ -879,7 +925,8 @@ export async function createTemplate(
     let { res, response } = await postTemplateMutation(
       url,
       accessToken,
-      graphPayload
+      graphPayload,
+      createTimeoutMs(options)
     );
     let optimizationSpecDropped = false;
 
@@ -898,7 +945,8 @@ export async function createTemplate(
       const retryResult = await postTemplateMutation(
         url,
         accessToken,
-        omitOptimizationSpec(graphPayload)
+        omitOptimizationSpec(graphPayload),
+        createTimeoutMs(options)
       );
       res = retryResult.res;
       response = retryResult.response;
@@ -1160,6 +1208,8 @@ export async function findWhatsAppTemplateByName(params: {
   wabaId: string;
   name: string;
   language: string;
+  /** How long Meta gets to answer; 10 s by default. */
+  timeoutMs?: number;
 }): Promise<{ id: string; status: string } | null> {
   const query = new URLSearchParams({
     name: params.name,
@@ -1170,7 +1220,7 @@ export async function findWhatsAppTemplateByName(params: {
     buildGraphApiUrl(`${params.wabaId}/message_templates?${query.toString()}`),
     {
       headers: { Authorization: `Bearer ${params.accessToken}` },
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(params.timeoutMs ?? 10_000),
     }
   );
   const response = await parseGraphResponse<{

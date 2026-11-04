@@ -29,10 +29,25 @@ jest.mock("@/lib/whatsapp/templates/switch-to-current-waba", () => ({
     mockSwitchUnifiedTemplateToCurrentWaba(...args),
 }));
 
-jest.mock("@/lib/whatsapp/templates/service", () => ({
-  deleteTemplate: (...args: unknown[]) => mockDeleteTemplate(...args),
-  logTemplateAction: (...args: unknown[]) => mockLogTemplateAction(...args),
+// The real template service is loaded below for two of its exports; its
+// database connection needs a MONGODB_URI the tests don't have.
+jest.mock("@/lib/mongoose", () => ({
+  __esModule: true,
+  connectDB: jest.fn(),
+  default: jest.fn(),
 }));
+
+jest.mock("@/lib/whatsapp/templates/service", () => {
+  // Which creates are carousels, and their time, as the service says.
+  const actual = jest.requireActual("@/lib/whatsapp/templates/service");
+  return {
+    deleteTemplate: (...args: unknown[]) => mockDeleteTemplate(...args),
+    logTemplateAction: (...args: unknown[]) => mockLogTemplateAction(...args),
+    isCarouselTemplate: actual.isCarouselTemplate,
+    WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS:
+      actual.WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS,
+  };
+});
 
 jest.mock("next/cache", () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
@@ -176,6 +191,90 @@ describe("whatsapp template actions", () => {
     }
     expect(mockCreateClient).not.toHaveBeenCalled();
     expect(mockCreateWhatsAppTemplateMutation).not.toHaveBeenCalled();
+  });
+
+  describe("creating a template in the editor", () => {
+    const card = (n: number) => ({
+      components: [
+        {
+          type: "HEADER",
+          format: "IMAGE",
+          example: { header_handle: [`https://cdn.example.com/${n}.png`] },
+        },
+        { type: "BODY", text: `Product ${n}` },
+        {
+          type: "BUTTONS",
+          buttons: [{ type: "QUICK_REPLY", text: "Order" }],
+        },
+      ],
+    });
+    const CAROUSEL_DATA = {
+      language: "en_US",
+      category: "MARKETING",
+      components: [
+        { type: "BODY", text: "Our products" },
+        { type: "CAROUSEL", cards: [card(1), card(2), card(3), card(4)] },
+      ],
+    };
+    const create = async (whatsappData: unknown) => {
+      const { createUnifiedTemplateAction } = await import("./actions");
+      return createUnifiedTemplateAction({
+        workspaceId: WORKSPACE_ID,
+        name: "products_carousel",
+        channel: "whatsapp",
+        whatsappData,
+      });
+    };
+    const sentWith = () =>
+      mockCreateWhatsAppTemplateMutation.mock.calls.at(-1)?.[0] as Record<
+        string,
+        unknown
+      >;
+
+    it("gives Meta 25 s for a carousel, and the usual 10 s for any other template", async () => {
+      mockCreateWhatsAppTemplateMutation.mockRejectedValue(
+        new Error("Invalid parameter")
+      );
+
+      await create(CAROUSEL_DATA);
+      expect(sentWith()).toMatchObject({
+        name: "products_carousel",
+        metaTimeoutMs: 25_000,
+      });
+
+      await create(WHATSAPP_DATA);
+      expect(sentWith()).not.toHaveProperty("metaTimeoutMs");
+    });
+
+    it("says Meta was slow, rather than that an operation was aborted, when airi stopped waiting for its answer", async () => {
+      mockCreateWhatsAppTemplateMutation.mockRejectedValueOnce(
+        Object.assign(new Error("The operation was aborted due to timeout"), {
+          name: "TimeoutError",
+        })
+      );
+
+      expect(await create(CAROUSEL_DATA)).toEqual({
+        success: false,
+        error:
+          "Meta took too long to answer. It may still make this template, so sync your templates before you send it again.",
+      });
+    });
+
+    it("keeps a header download's own words when it timed out before Meta was asked", async () => {
+      mockCreateWhatsAppTemplateMutation.mockRejectedValueOnce(
+        new Error("Timed out downloading header media from the URL.", {
+          cause: Object.assign(new Error("This operation was aborted"), {
+            name: "AbortError",
+          }),
+        })
+      );
+
+      expect(await create(CAROUSEL_DATA)).toEqual({
+        success: false,
+        error:
+          "WhatsApp API error: Timed out downloading header media from the URL.",
+      });
+    });
   });
 
   it("deletes a unified WhatsApp template through the shared mutation service", async () => {

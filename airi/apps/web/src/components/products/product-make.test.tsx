@@ -250,7 +250,11 @@ test("one press sends one request, shows the checklist while it's made, then the
   expect(
     within(card).getByText("Making 3 cards and sending them to Meta")
   ).toBeVisible();
-  expect(within(card).getByText("This takes about 20 seconds.")).toBeVisible();
+  expect(
+    within(card).getByText(
+      "This usually takes about 20 seconds, at most a minute."
+    )
+  ).toBeVisible();
   expect(within(card).queryByRole("button", { name: /Make/ })).toBeNull();
   expect(posts).toHaveLength(1);
   expect(posts[0]).toEqual({

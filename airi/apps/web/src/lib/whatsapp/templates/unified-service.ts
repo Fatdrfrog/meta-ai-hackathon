@@ -26,6 +26,10 @@ export type CreateUnifiedTemplateRecordParams = {
   whatsappData?: WhatsAppTemplateData;
   telegramData?: TelegramTemplateData;
   analyticsOrigin?: WhatsAppTemplateSubmissionOrigin;
+  /** How long Meta gets to answer the WhatsApp create; 10 s by default. */
+  metaTimeoutMs?: number;
+  /** When (ms since the epoch) the caller needs Meta's answer by; see createWhatsAppTemplateMutation. */
+  metaDeadlineAt?: number;
 };
 
 export type CreateUnifiedTemplateRecordResult = {
@@ -90,6 +94,12 @@ export async function createUnifiedTemplateRecord(
         audit: { enabled: false },
         ...(params.analyticsOrigin
           ? { analyticsOrigin: params.analyticsOrigin }
+          : {}),
+        ...(params.metaTimeoutMs !== undefined
+          ? { metaTimeoutMs: params.metaTimeoutMs }
+          : {}),
+        ...(params.metaDeadlineAt !== undefined
+          ? { metaDeadlineAt: params.metaDeadlineAt }
           : {}),
       });
     } catch (error) {

@@ -352,6 +352,35 @@ describe("the carousel's row", () => {
       screen.getByText("Making 7 cards and sending them to Meta…")
     ).toBeInTheDocument();
   });
+
+  it("is checked with Meta after a slow answer, with nothing to press meanwhile", () => {
+    const checking = kit({
+      orderForm: form(),
+      carousel: carousel({
+        state: "checking",
+        templateId: null,
+        metaStatus: null,
+      }),
+    });
+    renderStatus(checking);
+
+    const carouselRow = row("Carousel");
+    expect(within(carouselRow).getByText("Checking")).toBeInTheDocument();
+    expect(
+      within(carouselRow).getByText(
+        "Checking with Meta… It was slow to answer, so Airi is looking for the carousel there. This page updates on its own."
+      )
+    ).toBeInTheDocument();
+    // No Try again: it would send Meta a second carousel.
+    expect(within(carouselRow).queryByRole("button")).toBeNull();
+    expect(within(carouselRow).queryByRole("link")).toBeNull();
+    const views = kitPartViews(WS, checking);
+    expect(views.find(view => view.part === "carousel")).toMatchObject({
+      listChip: { label: "Carousel checking", tone: "neutral" },
+      holds: false,
+    });
+    expect(keptLine(views)).toBeNull();
+  });
 });
 
 test("a refusal to make a part again shows under its row", () => {

@@ -32,6 +32,13 @@ describe("productKitStatus", () => {
     expect(
       productKitStatus({ orderForm: ready, carousel: { state: "making" } })
     ).toBe("making");
+    // Sent, its answer lost: still being looked for at Meta.
+    expect(
+      productKitStatus({
+        orderForm: { state: "failed" },
+        carousel: { state: "checking" },
+      })
+    ).toBe("making");
   });
 
   it("waits for Meta while it checks the carousel, and is ready once it approves", () => {
@@ -90,6 +97,7 @@ describe("kitPartCanRetry", () => {
     expect(kitPartCanRetry("orderForm", { state: "ready" })).toBe(false);
     expect(kitPartCanRetry("orderForm", { state: "draft" })).toBe(false);
     expect(kitPartCanRetry("orderForm", { state: "making" })).toBe(false);
+    expect(kitPartCanRetry("carousel", { state: "checking" })).toBe(false);
     expect(
       kitPartCanRetry("carousel", { state: "submitted", metaStatus: "PENDING" })
     ).toBe(false);

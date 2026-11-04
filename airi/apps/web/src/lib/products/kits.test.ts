@@ -69,6 +69,7 @@ jest.mock("@/lib/whatsapp/templates/unified-service", () => {
 jest.mock("@/lib/whatsapp/templates/service", () => ({
   getTemplate: (...args: unknown[]) => mockGetTemplate(...args),
   findWhatsAppTemplateByName: (...args: unknown[]) => mockFindTemplate(...args),
+  WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS: 25_000,
 }));
 jest.mock("@/lib/supabase/server", () => ({
   createClient: async () => mockSupabase,
@@ -476,8 +477,13 @@ describe("makeProductKit", () => {
         components: carouselTemplateComponents(draft),
       },
       analyticsOrigin: "products",
+      // Meta gets 25 s for a carousel, not the usual 10, within the kit's time.
+      metaTimeoutMs: 25_000,
+      metaDeadlineAt: expect.any(Number),
     });
-    expect(kit.parts.carousel.templateName).toMatch(/^products_\d{8}_\d{6}$/);
+    expect(kit.parts.carousel.templateName).toMatch(
+      /^products_\d{8}_\d{6}_[0-9a-f]{6}$/
+    );
     expect(read(mockKits.docs[0], "parts.carousel")).toMatchObject({
       templateRowId: "row-1",
       submittedAt: expect.any(Date),
@@ -633,27 +639,8 @@ describe("makeProductKit", () => {
     });
   });
 
-  it("doesn't call airi's own timeout or failure Meta refusing the carousel", async () => {
-    // createTemplate's 10 s AbortSignal.timeout on the Graph POST, as the
-    // unified service wraps it: Meta refused nothing (and may have the template).
-    mockCreateTemplate.mockRejectedValueOnce(
-      wrapped(
-        new DOMException(
-          "The operation was aborted due to timeout",
-          "TimeoutError"
-        )
-      )
-    );
-    const timedOut = (await make()) as { kit: Record<string, unknown> };
-    expect(timedOut.kit).toMatchObject({
-      parts: {
-        carousel: {
-          state: "failed",
-          error: { code: "timed_out", message: null },
-        },
-      },
-    });
-
+  it("doesn't call airi's own failure Meta refusing the carousel", async () => {
+    // (airi's own timeout is "a carousel Meta is slow to answer", below.)
     // The account not resolving, a header that couldn't be fetched…: airi's.
     mockCreateTemplate.mockRejectedValueOnce(
       wrapped(new Error("WhatsApp source ID not found"))
@@ -666,6 +653,7 @@ describe("makeProductKit", () => {
         carousel: { state: "failed", error: { code: "failed", message: null } },
       },
     });
+    expect(mockFindTemplate).not.toHaveBeenCalled();
   });
 
   it("says the company's storage is full, and keeps the order form", async () => {
@@ -800,8 +788,10 @@ describe("makeProductKit", () => {
 describe("kit names", () => {
   const at = new Date("2026-11-02T04:14:05Z");
 
-  it("names the template to the second in UTC, and the form on the owner's clock", () => {
-    expect(carouselTemplateName(at)).toBe("products_20261102_041405");
+  it("names the template to the second in UTC with its kit, and the form on the owner's clock", () => {
+    expect(
+      carouselTemplateName(at, new Types.ObjectId("651f1f77bcf86cd7994391ab"))
+    ).toBe("products_20261102_041405_4391ab");
     expect(orderFormName(at, "Asia/Tokyo")).toBe("Order form · 2 Nov 13:14");
     expect(orderFormName(at, null)).toBe("Order form · 2 Nov 04:14 UTC");
   });
@@ -944,7 +934,7 @@ describe("retryProductKitPart", () => {
     const [stored] = mockKits.docs;
     expect(read(stored, "parts.carousel")).toMatchObject({
       state: "making",
-      templateName: expect.stringMatching(/^products_\d{8}_\d{6}$/),
+      templateName: expect.stringMatching(/^products_\d{8}_\d{6}_[0-9a-f]{6}$/),
     });
     expect(read(stored, "parts.orderForm")).toMatchObject({
       state: "making",
@@ -974,6 +964,7 @@ describe("retryProductKitPart", () => {
       wabaId: "waba-1",
       name: "products_20261102_041405",
       language: "kk",
+      timeoutMs: 5_000,
     });
     expect(mockPrepareCarousel).not.toHaveBeenCalled();
     expect(mockCreateTemplate).not.toHaveBeenCalled();
@@ -1020,7 +1011,7 @@ describe("retryProductKitPart", () => {
     const [{ name }] = mockCreateTemplate.mock.calls.at(-1)! as [
       { name: string },
     ];
-    expect(name).toMatch(/^products_\d{8}_\d{6}$/);
+    expect(name).toMatch(/^products_\d{8}_\d{6}_[0-9a-f]{6}$/);
     expect(name).not.toBe("products_20261102_041405");
   });
 
@@ -1461,6 +1452,712 @@ describe("readProductKitPlan", () => {
     ).toMatchObject({
       latestKit: null,
       whatsapp: { connected: false, displayPhone: null },
+    });
+  });
+});
+
+describe("a carousel Meta is slow to answer", () => {
+  const retry = (kitId: string) =>
+    retryProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId,
+      part: "carousel",
+    });
+
+  /** What the template service throws when it stops waiting for Meta. */
+  const abort = () =>
+    wrapped(
+      new DOMException(
+        "The operation was aborted due to timeout",
+        "TimeoutError"
+      )
+    );
+
+  /**
+   * Meta answers the create after `ms`, unless the template service stops
+   * waiting first: after the time airi gives it (10 s unless it says more),
+   * cut to the caller's deadline but never below 10 s, as createTemplate does.
+   */
+  function metaAnswersAfter(ms: number, templateId = "tpl-1") {
+    mockCreateTemplate.mockImplementation(
+      (params: { metaTimeoutMs?: number; metaDeadlineAt?: number }) =>
+        new Promise((resolve, reject) => {
+          const allowed = params.metaTimeoutMs ?? 10_000;
+          const limit =
+            params.metaDeadlineAt === undefined
+              ? allowed
+              : Math.max(
+                  Math.min(allowed, 10_000),
+                  Math.min(allowed, params.metaDeadlineAt - Date.now())
+                );
+          if (ms <= limit)
+            setTimeout(
+              () =>
+                resolve({
+                  id: "row-1",
+                  metaTemplateId: templateId,
+                  metaTemplateStatus: "PENDING",
+                }),
+              ms
+            );
+          else setTimeout(() => reject(abort()), limit);
+        })
+    );
+  }
+
+  const lookedFor = (name: string) => ({
+    accessToken: "token",
+    wabaId: "waba-1",
+    name,
+    language: "kk",
+    timeoutMs: 5_000,
+  });
+
+  type Made = { kit: { id: string; status: string; parts: Stored } };
+  const carouselOf = (made: unknown) =>
+    (made as Made).kit.parts.carousel as Stored;
+
+  /** A press, run while time passes. */
+  async function makeOver(ms: number) {
+    const result = make();
+    await flush();
+    await jest.advanceTimersByTimeAsync(ms);
+    await flush();
+    return (await result) as Made;
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers({
+      doNotFake: ["nextTick", "queueMicrotask", "setImmediate"],
+    });
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("gives Meta 25 s, so a carousel it accepts after 18 s is with Meta", async () => {
+    // The 10 s every other create gets would have stopped this one.
+    metaAnswersAfter(18_000);
+
+    const made = await makeOver(18_000);
+
+    expect(made.kit.status).toBe("waiting_for_meta");
+    expect(carouselOf(made)).toMatchObject({
+      state: "submitted",
+      templateId: "tpl-1",
+      metaStatus: "PENDING",
+      error: null,
+    });
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+  });
+
+  it("looks for it at Meta once airi stops waiting, and keeps the one Meta made", async () => {
+    metaAnswersAfter(40_000);
+    // Not there at once; there 2 s later.
+    mockFindTemplate
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "tpl-9", status: "PENDING" });
+
+    const made = await makeOver(25_000 + 2_000);
+
+    const name = String(carouselOf(made).templateName);
+    expect(name).toMatch(/^products_\d{8}_\d{6}_[0-9a-f]{6}$/);
+    expect(mockFindTemplate).toHaveBeenCalledTimes(2);
+    expect(mockFindTemplate).toHaveBeenLastCalledWith(lookedFor(name));
+    expect(made.kit.status).toBe("waiting_for_meta");
+    expect(carouselOf(made)).toMatchObject({
+      state: "submitted",
+      templateId: "tpl-9",
+      metaStatus: "PENDING",
+      error: null,
+    });
+    // Sent once; airi's Templates row comes with Meta's webhooks and Sync.
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+    expect(read(mockKits.docs[0], "parts.carousel.templateRowId")).toBeNull();
+    // The order form was made all the same.
+    expect(made.kit.parts.orderForm).toMatchObject({ state: "ready" });
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      "[Products] kit carousel answer lost",
+      expect.objectContaining({ event: "products.kit_carousel_answer_lost" })
+    );
+    expect(mockLoggerWarn).not.toHaveBeenCalledWith(
+      "[Products] kit carousel not sent",
+      expect.anything()
+    );
+  });
+
+  it("keeps checking with Meta when it isn't there yet, and the kit's poll finds it", async () => {
+    metaAnswersAfter(60_000);
+
+    const made = await makeOver(25_000 + 2_000 + 4_000);
+
+    // Looked at once, after 2 s and after 4 more: not there yet.
+    expect(mockFindTemplate).toHaveBeenCalledTimes(3);
+    expect(made.kit.status).toBe("making");
+    expect(carouselOf(made)).toMatchObject({
+      state: "checking",
+      templateId: null,
+      error: null,
+    });
+    const kitId = made.kit.id;
+
+    // Polled within 15 s of the last look, Meta isn't asked again…
+    await jest.advanceTimersByTimeAsync(5_000);
+    expect(await readProductKit(WS, kitId)).toMatchObject({
+      status: "making",
+      parts: { carousel: { state: "checking" } },
+    });
+    expect(mockFindTemplate).toHaveBeenCalledTimes(3);
+    // …and nothing is made again meanwhile.
+    expect(await retry(kitId)).toMatchObject({
+      kit: { parts: { carousel: { state: "checking" } } },
+    });
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+
+    // Polled later, it is there, approved since the last look.
+    await jest.advanceTimersByTimeAsync(10_000);
+    mockFindTemplate.mockResolvedValueOnce({ id: "tpl-9", status: "APPROVED" });
+    expect(await readProductKit(WS, kitId)).toMatchObject({
+      status: "ready",
+      parts: {
+        carousel: {
+          state: "submitted",
+          templateId: "tpl-9",
+          metaStatus: "APPROVED",
+          approvedAt: expect.any(String),
+          error: null,
+        },
+      },
+    });
+    expect(mockFindTemplate).toHaveBeenCalledTimes(4);
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls it not made after 3 minutes without it, and Try again finds the one Meta made late, sending nothing twice", async () => {
+    metaAnswersAfter(60_000);
+    const made = await makeOver(25_000 + 2_000 + 4_000);
+    const name = String(carouselOf(made).templateName);
+
+    // Polled every 15 s for 3 minutes, never there.
+    for (let poll = 0; poll < 12; poll += 1) {
+      await jest.advanceTimersByTimeAsync(15_000);
+      await readProductKit(WS, made.kit.id);
+    }
+    expect(await readProductKit(WS, made.kit.id)).toMatchObject({
+      status: "needs_attention",
+      parts: {
+        carousel: {
+          state: "failed",
+          templateName: name,
+          error: { code: "timed_out", message: null },
+        },
+      },
+    });
+
+    // Meta made it after all: Try again finds it rather than send another.
+    mockFindTemplate.mockResolvedValueOnce({
+      id: "tpl-late",
+      status: "PENDING",
+    });
+    expect(await retry(made.kit.id)).toMatchObject({
+      kit: {
+        status: "waiting_for_meta",
+        parts: {
+          carousel: {
+            state: "submitted",
+            templateId: "tpl-late",
+            templateName: name,
+          },
+        },
+      },
+    });
+    expect(mockFindTemplate).toHaveBeenLastCalledWith(lookedFor(name));
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+    expect(mockPrepareCarousel).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the looks to the page's poll when the create stops too late to look within the kit's time", async () => {
+    // The cards took 32 s to make; the create still got its 10 s, so it
+    // stopped 42 s in, too late for a 5 s look before 45 s.
+    mockPrepareCarousel.mockImplementation(
+      async (_workspaceId: string, added: Parameters<typeof draftFor>[0]) => {
+        await new Promise(resolve => setTimeout(resolve, 32_000));
+        return draftFor(added);
+      }
+    );
+    metaAnswersAfter(60_000);
+
+    const made = await makeOver(32_000 + 10_000);
+
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+    expect(carouselOf(made)).toMatchObject({ state: "checking" });
+    expect(read(mockKits.docs[0], "parts.carousel.checkedAt")).toBeNull();
+
+    // The first poll looks at once.
+    mockFindTemplate.mockResolvedValueOnce({ id: "tpl-9", status: "PENDING" });
+    expect(await readProductKit(WS, made.kit.id)).toMatchObject({
+      status: "waiting_for_meta",
+      parts: { carousel: { state: "submitted", templateId: "tpl-9" } },
+    });
+  });
+
+  it("asks Meta at most 3 times for a list, lookups included", async () => {
+    for (let day = 1; day <= 4; day += 1)
+      mockKits.add(
+        withCarousel(
+          {
+            state: "checking",
+            templateId: null,
+            templateName: `products_2026110${day}_090000`,
+            metaStatus: null,
+            approvedAt: null,
+            submittedAt: null,
+            checkedAt: ago(20_000),
+            updatedAt: ago(40_000),
+          },
+          { createdAt: new Date(`2026-11-0${day}T09:00:00Z`) }
+        )
+      );
+
+    const kits = await listProductKitRecords(WS, 20);
+
+    expect(mockFindTemplate).toHaveBeenCalledTimes(3);
+    expect(kits.map(kit => kit.parts.carousel?.state)).toEqual([
+      "checking",
+      "checking",
+      "checking",
+      "checking",
+    ]);
+  });
+
+  it("cuts a Try again's create to the kit's time, so the answer leaves well within the route's 60 s", async () => {
+    const kit = withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261103_055534",
+      metaStatus: null,
+      approvedAt: null,
+      submittedAt: null,
+      checkedAt: null,
+      error: { code: "timed_out", message: null },
+    });
+    mockKits.add(kit);
+    // Meta is slow all round: the first look takes its 5 s, the cards 15 s,
+    // and Meta would accept the create 24 s after it is sent.
+    mockFindTemplate.mockImplementationOnce(
+      () => new Promise(resolve => setTimeout(() => resolve(null), 5_000))
+    );
+    mockPrepareCarousel.mockImplementation(
+      async (_workspaceId: string, added: Parameters<typeof draftFor>[0]) => {
+        await new Promise(resolve => setTimeout(resolve, 15_000));
+        return draftFor(added);
+      }
+    );
+    metaAnswersAfter(24_000);
+    const startedAt = Date.now();
+    let answeredAt = 0;
+
+    const result = retry(String(kit._id)).then(answer => {
+      answeredAt = Date.now();
+      return answer;
+    });
+    await flush();
+    await jest.advanceTimersByTimeAsync(60_000);
+    await flush();
+
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "products_20261103_055534",
+        metaTimeoutMs: 25_000,
+        // 40 s after the parts start, so one look still fits within 45.
+        metaDeadlineAt: startedAt + 40_000,
+      })
+    );
+    // Sent 20 s in, the create waits 20 s rather than 25, then one look:
+    // checking, for the page's poll to settle.
+    expect(await result).toMatchObject({
+      kit: {
+        status: "making",
+        parts: {
+          carousel: {
+            state: "checking",
+            templateName: "products_20261103_055534",
+          },
+        },
+      },
+    });
+    expect(mockFindTemplate).toHaveBeenCalledTimes(2);
+    expect(answeredAt - startedAt).toBeLessThanOrEqual(45_000);
+  });
+
+  it("names two kits pressed in the same second apart, so a lost answer's look never takes the other's carousel", async () => {
+    jest.setSystemTime(new Date("2026-11-03T05:55:34.100Z"));
+    const first = (await make({ requestId: "press-a" })) as Made;
+    const firstName = String(carouselOf(first).templateName);
+    // Meta has the first kit's carousel; the second's answer is lost.
+    mockFindTemplate.mockImplementation(async ({ name }: { name: string }) =>
+      name === firstName ? { id: "tpl-1", status: "PENDING" } : null
+    );
+    mockCreateTemplate.mockRejectedValueOnce(abort());
+    jest.setSystemTime(new Date("2026-11-03T05:55:34.900Z"));
+
+    const pressed = make({ requestId: "press-b" });
+    await flush();
+    await jest.advanceTimersByTimeAsync(6_000);
+    const second = (await pressed) as Made;
+
+    const secondName = String(carouselOf(second).templateName);
+    expect(firstName).toBe(
+      `products_20261103_055534_${first.kit.id.slice(-6)}`
+    );
+    expect(secondName).toBe(
+      `products_20261103_055534_${second.kit.id.slice(-6)}`
+    );
+    expect(secondName).not.toBe(firstName);
+    expect(
+      mockCreateTemplate.mock.calls.map(([call]) => (call as Stored).name)
+    ).toEqual([firstName, secondName]);
+    // Looked for under its own name only, so it isn't given the first's.
+    expect(mockFindTemplate).toHaveBeenCalledWith(lookedFor(secondName));
+    expect(mockFindTemplate).not.toHaveBeenCalledWith(lookedFor(firstName));
+    expect(carouselOf(second)).toMatchObject({
+      state: "checking",
+      templateId: null,
+    });
+    expect(carouselOf(first)).toMatchObject({
+      state: "submitted",
+      templateId: "tpl-1",
+    });
+  });
+
+  /** A kit whose carousel airi is still looking for at Meta. */
+  const checkingKit = () =>
+    withCarousel({
+      state: "checking",
+      templateId: null,
+      templateName: "products_20261103_055534",
+      metaStatus: null,
+      approvedAt: null,
+      submittedAt: null,
+      checkedAt: ago(20_000),
+      updatedAt: ago(40_000),
+    });
+
+  it("keeps a carousel checking while no number is connected to look with, and calls it not made after 3 minutes, its name kept", async () => {
+    const kit = checkingKit();
+    mockKits.add(kit);
+    mockWhatsApp.mockResolvedValue({ context: { credentials: {} } });
+
+    expect(await readProductKit(WS, String(kit._id))).toMatchObject({
+      status: "making",
+      parts: { carousel: { state: "checking" } },
+    });
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+
+    await jest.advanceTimersByTimeAsync(3 * 60_000);
+    expect(await readProductKit(WS, String(kit._id))).toMatchObject({
+      status: "needs_attention",
+      parts: {
+        carousel: {
+          state: "failed",
+          templateName: "products_20261103_055534",
+          error: { code: "timed_out", message: null },
+        },
+      },
+    });
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+  });
+
+  it("keeps a carousel checking, and still answers, when the connection can't be read", async () => {
+    const kit = checkingKit();
+    mockKits.add(kit);
+    mockWhatsApp.mockResolvedValue({ error: { status: 503 } });
+
+    await expect(readProductKit(WS, String(kit._id))).resolves.toMatchObject({
+      status: "making",
+      parts: { carousel: { state: "checking" } },
+    });
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      "[Products] kit connection unreadable for a lookup",
+      expect.objectContaining({ event: "products.kit_carousel_lookup_failed" })
+    );
+  });
+});
+
+describe("Try again on a carousel that timed out", () => {
+  const retry = (kitId: string) =>
+    retryProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId,
+      part: "carousel",
+    });
+  // As production's kit of 2026-11-03 05:55 UTC was left.
+  const timedOutKit = () =>
+    withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261103_055534",
+      templateRowId: null,
+      metaStatus: null,
+      approvedAt: null,
+      submittedAt: null,
+      checkedAt: null,
+      cardCount: 4,
+      error: { code: "timed_out", message: null },
+    });
+
+  it("finds the carousel Meta made, and a second press sends nothing", async () => {
+    const kit = timedOutKit();
+    mockKits.add(kit);
+    mockFindTemplate.mockResolvedValue({ id: "tpl-made", status: "PENDING" });
+
+    expect(await retry(String(kit._id))).toMatchObject({
+      kit: {
+        status: "waiting_for_meta",
+        parts: {
+          carousel: {
+            state: "submitted",
+            templateId: "tpl-made",
+            templateName: "products_20261103_055534",
+          },
+        },
+      },
+    });
+    // Pressed again (a second tab, a double tap): with Meta, nothing to do.
+    await retry(String(kit._id));
+
+    expect(mockFindTemplate).toHaveBeenCalledTimes(1);
+    expect(mockPrepareCarousel).not.toHaveBeenCalled();
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+  });
+
+  it("finds it when the first look misses it and Meta refuses the same name again", async () => {
+    const kit = timedOutKit();
+    mockKits.add(kit);
+    mockFindTemplate
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "tpl-made", status: "PENDING" });
+    mockCreateTemplate.mockRejectedValueOnce(
+      wrapped(
+        new WhatsAppTemplateGraphRefusalError(
+          "Invalid parameter - There is already Kazakh content for this template.",
+          400,
+          { message: "Invalid parameter" }
+        )
+      )
+    );
+
+    expect(await retry(String(kit._id))).toMatchObject({
+      kit: {
+        parts: {
+          carousel: {
+            state: "submitted",
+            templateId: "tpl-made",
+            templateName: "products_20261103_055534",
+            error: null,
+          },
+        },
+      },
+    });
+    // Sent once more under the same name, which Meta refused: no second template.
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "products_20261103_055534" })
+    );
+  });
+
+  it("says what Meta refused a new carousel for without looking for a twin", async () => {
+    mockCreateTemplate.mockRejectedValueOnce(
+      wrapped(
+        new WhatsAppTemplateGraphRefusalError("Invalid parameter", 400, {
+          message: "Invalid parameter",
+        })
+      )
+    );
+
+    const made = (await make()) as { kit: { parts: Stored } };
+
+    expect(made.kit.parts.carousel).toMatchObject({
+      state: "failed",
+      error: { code: "meta_refused" },
+    });
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+  });
+
+  describe("when Meta can't say whether it has it", () => {
+    beforeEach(() => {
+      jest.useFakeTimers({
+        doNotFake: ["nextTick", "queueMicrotask", "setImmediate"],
+      });
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    /** A look at Meta that ran out of time (or that Meta refused: a rate limit, an outage). */
+    const lookFails = () =>
+      new DOMException(
+        "The operation was aborted due to timeout",
+        "TimeoutError"
+      );
+    /** Meta refusing a second template under a name and language it has. */
+    const twinWords =
+      "There is already Kazakh content for this template. You can create a new template and try again.";
+    const refusedAsTwin = () =>
+      wrapped(
+        new WhatsAppTemplateGraphRefusalError(
+          `Invalid parameter - ${twinWords}`,
+          400,
+          { message: "Invalid parameter", error_user_msg: twinWords }
+        )
+      );
+    const createdNames = () =>
+      mockCreateTemplate.mock.calls.map(([call]) => (call as Stored).name);
+
+    it("sends nothing while the first look can't be made, and keeps checking", async () => {
+      const kit = timedOutKit();
+      mockKits.add(kit);
+      mockFindTemplate.mockRejectedValue(lookFails());
+
+      expect(await retry(String(kit._id))).toMatchObject({
+        kit: {
+          status: "making",
+          parts: {
+            carousel: {
+              state: "checking",
+              templateId: null,
+              templateName: "products_20261103_055534",
+              error: null,
+            },
+          },
+        },
+      });
+      expect(mockFindTemplate).toHaveBeenCalledTimes(1);
+      expect(mockPrepareCarousel).not.toHaveBeenCalled();
+      expect(mockCreateTemplate).not.toHaveBeenCalled();
+    });
+
+    it("keeps the name when Meta refuses it as a twin it can't show yet, so no Try again makes a second", async () => {
+      const kit = timedOutKit();
+      mockKits.add(kit);
+      // Not listed at the first look; the look after the refusal can't be made.
+      mockFindTemplate
+        .mockResolvedValueOnce(null)
+        .mockRejectedValueOnce(lookFails());
+      mockCreateTemplate.mockRejectedValueOnce(refusedAsTwin());
+
+      expect(await retry(String(kit._id))).toMatchObject({
+        kit: {
+          status: "making",
+          parts: {
+            carousel: {
+              state: "checking",
+              templateName: "products_20261103_055534",
+              error: null,
+            },
+          },
+        },
+      });
+      expect(mockFindTemplate).toHaveBeenCalledTimes(2);
+
+      // The page's poll can't look either: after 3 minutes it isn't made…
+      mockFindTemplate.mockRejectedValue(lookFails());
+      await jest.advanceTimersByTimeAsync(3 * 60_000);
+      expect(await readProductKit(WS, String(kit._id))).toMatchObject({
+        parts: {
+          carousel: {
+            state: "failed",
+            templateName: "products_20261103_055534",
+            error: { code: "timed_out", message: null },
+          },
+        },
+      });
+
+      // …and Try again looks first, then sends under the same name again.
+      mockFindTemplate.mockResolvedValue(null);
+      expect(await retry(String(kit._id))).toMatchObject({
+        kit: {
+          parts: {
+            carousel: {
+              state: "submitted",
+              templateId: "tpl-1",
+              templateName: "products_20261103_055534",
+            },
+          },
+        },
+      });
+      expect(createdNames()).toEqual([
+        "products_20261103_055534",
+        "products_20261103_055534",
+      ]);
+    });
+
+    it("keeps the name when Meta refuses it as a twin and doesn't list it yet", async () => {
+      const kit = timedOutKit();
+      mockKits.add(kit);
+      mockCreateTemplate.mockRejectedValueOnce(refusedAsTwin());
+
+      expect(await retry(String(kit._id))).toMatchObject({
+        kit: { parts: { carousel: { state: "checking", error: null } } },
+      });
+      // Looked for before the resend and after the refusal; both missed it.
+      expect(mockFindTemplate).toHaveBeenCalledTimes(2);
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        "[Products] kit carousel may be at Meta already",
+        expect.objectContaining({
+          event: "products.kit_carousel_twin_unconfirmed",
+          twin: true,
+        })
+      );
+    });
+
+    it("tells a twin by Meta's code too, on a new carousel", async () => {
+      const body = { message: "Invalid parameter", error_subcode: 2388024 };
+      mockCreateTemplate.mockRejectedValueOnce(
+        wrapped(
+          new WhatsAppTemplateGraphRefusalError("Invalid parameter", 400, body)
+        )
+      );
+
+      const made = (await make()) as { kit: { parts: Stored } };
+
+      expect(made.kit.parts.carousel).toMatchObject({
+        state: "checking",
+        error: null,
+      });
+      expect(mockFindTemplate).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the name when a resend is refused for another reason and Meta can't be asked about it", async () => {
+      const kit = timedOutKit();
+      mockKits.add(kit);
+      const tooMany =
+        "(#80008) There have been too many calls to this WhatsApp Business account.";
+      mockFindTemplate
+        .mockResolvedValueOnce(null)
+        .mockRejectedValueOnce(lookFails());
+      mockCreateTemplate.mockRejectedValueOnce(
+        wrapped(
+          new WhatsAppTemplateGraphRefusalError(tooMany, 400, {
+            message: tooMany,
+            code: 80008,
+          })
+        )
+      );
+
+      expect(await retry(String(kit._id))).toMatchObject({
+        kit: {
+          parts: {
+            carousel: {
+              state: "checking",
+              templateName: "products_20261103_055534",
+            },
+          },
+        },
+      });
     });
   });
 });

@@ -13,7 +13,11 @@ import {
   syncWhatsAppTemplatesMutation,
   updateWhatsAppTemplateMutation,
 } from "@/lib/whatsapp/templates/mutation-service";
-import { logTemplateAction } from "@/lib/whatsapp/templates/service";
+import {
+  isCarouselTemplate,
+  logTemplateAction,
+  WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS,
+} from "@/lib/whatsapp/templates/service";
 import {
   WhatsAppTemplateCatalogError,
   type WhatsAppTemplateCatalogErrorCode,
@@ -438,6 +442,11 @@ export async function createUnifiedTemplateAction(
       whatsappData: validated.whatsappData,
       telegramData: validated.telegramData,
       analyticsOrigin: "templates_page",
+      // Meta can take longer than 10 s to accept a carousel; the pages that
+      // show the editor allow the time.
+      ...(isCarouselTemplate(validated.whatsappData?.components)
+        ? { metaTimeoutMs: WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS }
+        : {}),
     });
 
     revalidatePath(
@@ -462,9 +471,29 @@ export async function createUnifiedTemplateAction(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: metaStoppedWaiting(error)
+        ? META_SLOW_CREATE_MESSAGE
+        : error instanceof Error
+          ? error.message
+          : "Unknown error",
     };
   }
+}
+
+/** What the owner is told when airi stopped waiting for Meta to answer a create. */
+const META_SLOW_CREATE_MESSAGE =
+  "Meta took too long to answer. It may still make this template, so sync your templates before you send it again.";
+
+/**
+ * Whether a create stopped because airi's own wait for Meta's answer ran
+ * out. createUnifiedTemplateRecord wraps what the create threw once; a
+ * header download that timed out (Meta not asked yet) has words of its own.
+ */
+function metaStoppedWaiting(error: unknown): boolean {
+  return [error, (error as { cause?: unknown } | null)?.cause].some(at => {
+    const name = (at as { name?: unknown } | null)?.name;
+    return name === "TimeoutError" || name === "AbortError";
+  });
 }
 
 /**

@@ -69,7 +69,7 @@ export const MAKE_COPY = {
     makingOrderForm: "Publishing the order form",
     makingCarousel: (n: number) =>
       `Making ${count(n, "card", "cards")} and sending them to Meta`,
-    makingTiming: "This takes about 20 seconds.",
+    makingTiming: "This usually takes about 20 seconds, at most a minute.",
     makingLeave:
       "You can leave this page. It carries on, and you'll find it under Made from your shelf.",
     // The kit once made.
@@ -85,6 +85,8 @@ export const MAKE_COPY = {
     orderFormMaking: "Publishing the order form…",
     carouselMaking: (n: number) =>
       `Making ${count(n, "card", "cards")} and sending them to Meta…`,
+    carouselChecking:
+      "Checking with Meta… It was slow to answer, so Airi is looking for the carousel there. This page updates on its own.",
     carouselPending:
       "Meta is checking it. That usually takes minutes, and at most 24 hours. This page updates on its own.",
     carouselApproved: (time: string) =>
@@ -111,6 +113,7 @@ export const MAKE_COPY = {
     openAssets: "Open Assets",
     chips: {
       making: "Making",
+      checking: "Checking",
       ready: "Ready",
       draft: "Draft",
       withMeta: "With Meta",
@@ -178,6 +181,7 @@ export const MAKE_COPY = {
       orderFormDraft: "Order form draft",
       orderFormNotMade: "Order form not made",
       carouselMaking: "Carousel making",
+      carouselChecking: "Carousel checking",
       carouselWithMeta: "Carousel with Meta",
       carouselApproved: "Carousel approved",
       carouselNotApproved: "Carousel not approved",

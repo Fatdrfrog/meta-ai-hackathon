@@ -72,15 +72,19 @@ export function kitPartCanRetry(
 }
 
 /**
- * The kit as a whole: making while a part is; needing attention when a part
- * wasn't made, the form is only a draft or Meta turned the carousel down or
- * paused it; waiting while Meta checks the carousel; ready otherwise. A
- * carousel skipped for too few photos was never possible, so it doesn't
- * count.
+ * The kit as a whole: making while a part is (a carousel airi is still
+ * looking for at Meta included); needing attention when a part wasn't made,
+ * the form is only a draft or Meta turned the carousel down or paused it;
+ * waiting while Meta checks the carousel; ready otherwise. A carousel
+ * skipped for too few photos was never possible, so it doesn't count.
  */
 export function productKitStatus(parts: PartsLike): ProductKitStatus {
   const { orderForm, carousel } = parts;
-  if (orderForm?.state === "making" || carousel?.state === "making")
+  if (
+    orderForm?.state === "making" ||
+    carousel?.state === "making" ||
+    carousel?.state === "checking"
+  )
     return "making";
   const verdict =
     carousel?.state === "submitted"

@@ -26,11 +26,13 @@ export type ProductKitOrderFormState =
   (typeof PRODUCT_KIT_ORDER_FORM_STATES)[number];
 
 /**
- * The carousel: being made, submitted (with Meta, whose verdict is in
- * `metaStatus`), failed, or skipped (not asked for, or too few photos).
+ * The carousel: being made, checking (sent, but Meta's answer was lost, so
+ * airi looks for it at Meta by name), submitted (with Meta, whose verdict is
+ * in `metaStatus`), failed, or skipped (not asked for, or too few photos).
  */
 export const PRODUCT_KIT_CAROUSEL_STATES = [
   "making",
+  "checking",
   "submitted",
   "failed",
   "skipped",

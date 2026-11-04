@@ -172,6 +172,17 @@ function carouselView(
       actions: [],
       holds: false,
     };
+  // Meta's answer was lost: no Try again while Airi looks for it there,
+  // so nothing is sent twice.
+  if (carousel.state === "checking")
+    return {
+      ...base,
+      chip: { label: COPY.chips.checking, tone: "neutral" },
+      listChip: { label: LIST.carouselChecking, tone: "neutral" },
+      line: COPY.carouselChecking,
+      actions: [],
+      holds: false,
+    };
   if (carousel.state === "skipped")
     return {
       ...base,

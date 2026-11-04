@@ -120,6 +120,85 @@ describe("template-mutation-service", () => {
     );
   });
 
+  it("gives Meta the time a caller allows for the create only", async () => {
+    await createWhatsAppTemplateMutation({
+      workspaceId: "workspace-1",
+      name: "products_20261103_055534",
+      language: "kk",
+      category: "MARKETING",
+      components: [{ type: "BODY", text: "Hello" }],
+      metaTimeoutMs: 25_000,
+    });
+
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      "workspace-1",
+      expect.any(Object),
+      { accountContext: resolvedAccountContext, timeoutMs: 25_000 }
+    );
+    // The status readback keeps its own time.
+    expect(mockGetTemplate).toHaveBeenCalledWith(
+      "workspace-1",
+      "meta-template-1",
+      { accountContext: resolvedAccountContext }
+    );
+  });
+
+  describe("with a caller's deadline", () => {
+    const at = new Date("2026-11-03T05:55:34Z").getTime();
+    const createBy = (metaDeadlineAt: number) =>
+      createWhatsAppTemplateMutation({
+        workspaceId: "workspace-1",
+        name: "products_20261103_055534",
+        language: "kk",
+        category: "MARKETING",
+        components: [{ type: "BODY", text: "Hello" }],
+        metaTimeoutMs: 25_000,
+        metaDeadlineAt,
+      });
+
+    beforeEach(() => {
+      jest.useFakeTimers({
+        doNotFake: ["nextTick", "queueMicrotask", "setImmediate"],
+      });
+      jest.setSystemTime(at);
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("passes the deadline to the create, and reads the status back while that read fits before it", async () => {
+      await expect(createBy(at + 10_000)).resolves.toMatchObject({
+        id: "meta-template-1",
+        status: "APPROVED",
+      });
+
+      expect(mockCreateTemplate).toHaveBeenCalledWith(
+        "workspace-1",
+        expect.any(Object),
+        {
+          accountContext: resolvedAccountContext,
+          timeoutMs: 25_000,
+          metaDeadlineAt: at + 10_000,
+        }
+      );
+      expect(mockGetTemplate).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the create's own status, without reading it back, once that read (10 s at most) would pass the deadline", async () => {
+      // Meta answered the create 31 s into a caller that needs its answer by 40.
+      mockCreateTemplate.mockImplementationOnce(async () => {
+        jest.setSystemTime(at + 31_000);
+        return { id: "meta-template-1", status: "PENDING" };
+      });
+
+      await expect(createBy(at + 40_000)).resolves.toMatchObject({
+        id: "meta-template-1",
+        status: "PENDING",
+      });
+      expect(mockGetTemplate).not.toHaveBeenCalled();
+    });
+  });
+
   it("passes one resolved fallback account through default update and readback without changing its public result", async () => {
     const result = await updateWhatsAppTemplateMutation({
       workspaceId: "workspace-1",

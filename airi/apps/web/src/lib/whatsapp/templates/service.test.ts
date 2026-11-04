@@ -2159,6 +2159,163 @@ describe("WhatsApp template service", () => {
     ).toEqual(["4::meta-card-two"]);
   });
 
+  describe("how long Meta gets to answer", () => {
+    beforeEach(() => {
+      jest.useFakeTimers({
+        doNotFake: ["nextTick", "queueMicrotask", "setImmediate"],
+      });
+      // AbortSignal.timeout runs on Node's own timers: this one runs on Jest's.
+      jest.spyOn(AbortSignal, "timeout").mockImplementation((ms: number) => {
+        const controller = new AbortController();
+        setTimeout(
+          () =>
+            controller.abort(
+              new DOMException(
+                "The operation was aborted due to timeout",
+                "TimeoutError"
+              )
+            ),
+          ms
+        );
+        return controller.signal;
+      });
+    });
+
+    /** Meta answers the template POST after `ms`, unless the request is stopped first. */
+    function metaAnswersCreateAfter(ms: number) {
+      mockFetch.mockImplementation(
+        (_input: string, init?: RequestInit) =>
+          new Promise((resolve, reject) => {
+            const answer = setTimeout(
+              () =>
+                resolve(jsonResponse({ id: "carousel-1", status: "PENDING" })),
+              ms
+            );
+            init?.signal?.addEventListener("abort", () => {
+              clearTimeout(answer);
+              reject(init.signal!.reason);
+            });
+          })
+      );
+    }
+
+    const slowCreate = async (timeoutMs?: number) => {
+      const { createTemplate } = await import("./service");
+      return createTemplate(
+        "workspace-1",
+        {
+          name: "products_20261103_055534",
+          language: "kk",
+          category: "MARKETING",
+          components: [{ type: "BODY", text: "Біздің тауарлар" }],
+        },
+        {
+          ...verifiedAccountOptions,
+          ...(timeoutMs === undefined ? {} : { timeoutMs }),
+        }
+      );
+    };
+
+    it("stops waiting for a create after 10 s by default", async () => {
+      metaAnswersCreateAfter(15_000);
+
+      const created = slowCreate().catch((caught: unknown) => caught);
+      await jest.advanceTimersByTimeAsync(10_000);
+
+      expect(await created).toMatchObject({ name: "TimeoutError" });
+      expect(AbortSignal.timeout).toHaveBeenCalledWith(10_000);
+    });
+
+    it("waits as long as its caller allows, so a slow create Meta accepts is kept", async () => {
+      metaAnswersCreateAfter(15_000);
+      const { WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS } = await import(
+        "./service"
+      );
+
+      const created = slowCreate(WHATSAPP_TEMPLATE_CAROUSEL_CREATE_TIMEOUT_MS);
+      await jest.advanceTimersByTimeAsync(15_000);
+
+      await expect(created).resolves.toMatchObject({
+        id: "carousel-1",
+        status: "PENDING",
+      });
+      expect(AbortSignal.timeout).toHaveBeenCalledWith(25_000);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("still stops a create Meta doesn't answer within the time allowed", async () => {
+      metaAnswersCreateAfter(40_000);
+
+      const created = slowCreate(25_000).catch((caught: unknown) => caught);
+      await jest.advanceTimersByTimeAsync(25_000);
+
+      expect(await created).toMatchObject({ name: "TimeoutError" });
+    });
+
+    it("cuts a longer wait to its caller's deadline when the create is posted, never below 10 s", async () => {
+      metaAnswersCreateAfter(1_000);
+      const { createTemplate } = await import("./service");
+      const createBy = async (msLeft: number, timeoutMs = 25_000) => {
+        const created = createTemplate(
+          "workspace-1",
+          {
+            name: "products_20261103_055534",
+            language: "kk",
+            category: "MARKETING",
+            components: [{ type: "BODY", text: "Біздің тауарлар" }],
+          },
+          {
+            ...verifiedAccountOptions,
+            timeoutMs,
+            metaDeadlineAt: Date.now() + msLeft,
+          }
+        );
+        await jest.advanceTimersByTimeAsync(1_000);
+        await created;
+        return (AbortSignal.timeout as jest.Mock).mock.calls.at(-1)?.[0];
+      };
+
+      // 18 s left: Meta gets those, not its 25.
+      expect(await createBy(18_000)).toBe(18_000);
+      // 4 s left: still the usual 10 s, which every create gets.
+      expect(await createBy(4_000)).toBe(10_000);
+      // A minute left: the 25 s it was given, and never more than given.
+      expect(await createBy(60_000)).toBe(25_000);
+      expect(await createBy(60_000, 5_000)).toBe(5_000);
+    });
+
+    it("looks a template up by name within the time its caller allows", async () => {
+      mockFetch.mockImplementation(async () =>
+        jsonResponse({
+          data: [
+            // Meta also matches names that contain the one asked for.
+            { id: "other", name: "products_20261103_055534_b", language: "kk" },
+            {
+              id: "carousel-1",
+              name: "products_20261103_055534",
+              status: "APPROVED",
+              language: "kk",
+            },
+          ],
+        })
+      );
+      const { findWhatsAppTemplateByName } = await import("./service");
+      const lookup = {
+        accessToken: "access-token-1",
+        wabaId: "waba-1",
+        name: "products_20261103_055534",
+        language: "kk",
+      };
+
+      await expect(
+        findWhatsAppTemplateByName({ ...lookup, timeoutMs: 5_000 })
+      ).resolves.toEqual({ id: "carousel-1", status: "APPROVED" });
+      expect(AbortSignal.timeout).toHaveBeenLastCalledWith(5_000);
+      await findWhatsAppTemplateByName(lookup);
+      expect(AbortSignal.timeout).toHaveBeenLastCalledWith(10_000);
+    });
+  });
+
   describe("header media URL downloads", () => {
     const notAllowed =
       "Header media URL is not allowed. Use a public http(s) URL or upload the file.";

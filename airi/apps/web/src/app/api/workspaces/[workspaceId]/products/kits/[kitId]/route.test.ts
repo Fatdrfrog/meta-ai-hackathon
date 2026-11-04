@@ -61,6 +61,34 @@ describe("GET a kit", () => {
     expect(mockReadKit).toHaveBeenCalledWith(workspaceId, kitId);
   });
 
+  it("answers a carousel still being looked for at Meta uncached, for the page to poll again", async () => {
+    // Meta's answer to the create was lost: each GET looks for it by name,
+    // so no cache may answer a poll with the kit as it was.
+    const checking = {
+      id: kitId,
+      status: "making",
+      parts: {
+        carousel: {
+          state: "checking",
+          templateId: null,
+          templateName: "products_20261103_055534",
+          cardCount: 4,
+          metaStatus: null,
+          metaReason: null,
+          approvedAt: null,
+          error: null,
+        },
+      },
+    };
+    mockReadKit.mockResolvedValue(checking);
+
+    const response = await GET(get(), context);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(await response.json()).toEqual({ kit: checking });
+  });
+
   it("answers 404 for a kit that isn't this workspace's", async () => {
     mockReadKit.mockResolvedValue(null);
 
