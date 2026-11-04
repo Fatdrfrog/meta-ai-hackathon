@@ -201,7 +201,7 @@ test("a scene's setting is one of the places Muse Image knows", () => {
     ["doll", "mug"],
   );
   assert.deepEqual(issues, [
-    "scenes[1].setting must be one of oak_table_window, linen_shelf, stone_counter, playroom_shelf, gift_table.",
+    "scenes[1].setting must be one of oak_table_window, linen_shelf, stone_counter, playroom_shelf, gift_table, market_stall, marble_boutique, festive_table, vanity_table, kitchen_counter.",
   ]);
 });
 
