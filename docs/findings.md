@@ -220,7 +220,7 @@ After the review, both ads were rendered again from the test's saved scenes, wor
 
 ## Nov 3: studio v2's paid gate
 
-Studio v2 (airi.chat's pull request 511, live on Nov 3 and not yet ported to this repository) added new words, new pictures and new voices to the video ad. Before it went live, we ran each new paid step through the real ad code on a local worker with the hackathon's Meta and ElevenLabs keys, on the two test ads above, with the same harness standing in for airi's database, storage, AI spend ledger and Temporal. Every paid call was booked in the ad's one AI action. After each run, Scribe transcribed the ad's sound, and code checked that every spoken price matched the shelf. The whole gate cost $0.446: $0.253 of Meta calls and $0.193 of ElevenLabs.
+Studio v2 (airi.chat's pull request 511, live on Nov 3) added new words, new pictures and new voices to the video ad. Before it went live, we ran each new paid step through the real ad code on a local worker with the hackathon's Meta and ElevenLabs keys, on the two test ads above, with the same harness standing in for airi's database, storage, AI spend ledger and Temporal. Every paid call was booked in the ad's one AI action. After each run, Scribe transcribed the ad's sound, and code checked that every spoken price matched the shelf. The whole gate cost $0.446: $0.253 of Meta calls and $0.193 of ElevenLabs.
 
 | Run | What it did | Cost | Time |
 | --- | --- | --- | --- |
@@ -239,7 +239,7 @@ Studio v2 (airi.chat's pull request 511, live on Nov 3 and not yet ported to thi
 
 ## Nov 3–4: studio v3's motions and pictures, rendered
 
-Studio v3 (built in airi.chat's branch `claude/products-studio-v3`, **not live yet**) adds Reel motions and pictures that are code over what an ad already made. We rendered each motion from the two test ads' saved scenes, words and voices, render-only, with v3's worker code on a local worker. No model was called: 0 paid calls in every run. Each render also draws the ad's whole set of pictures for the Post, Story and carousel tiles: 26 for the toy shelf, which has 3 products here, and 18 for QazOner's 2.
+Studio v3 (airi.chat's pull request 512, live since Nov 4 at 05:56 UTC) adds Reel motions and pictures that are code over what an ad already made. We rendered each motion from the two test ads' saved scenes, words and voices, render-only, with v3's worker code on a local worker. No model was called: 0 paid calls in every run. Each render also draws the ad's whole set of pictures for the Post, Story and carousel tiles: 26 for the toy shelf, which has 3 products here, and 18 for QazOner's 2.
 
 | Motion | Shipped | Toy shelf: whole run, its pictures, the video | QazOner: whole run, its pictures, the video |
 | --- | --- | --- | --- |
@@ -253,7 +253,7 @@ The Filmed → Sold, Float and Pop runs are from Nov 3, about 20:00 UTC; the She
 ## Nov 3–4: Meta actions before going live
 
 - **One `validate_only` check.** On Nov 3 at 19:49 UTC, before any v3 deploy, we sent one Marketing API ad-set create with `execution_options=["validate_only"]` to our own ad account, shaped as v3 makes it: Kazakhstan, Facebook placements, Meta's Advantage audience, promoted for our Facebook Page. Meta answered `{"success": true}`, and nothing was created. It was the only Marketing API write before the deploy.
-- **Not measured yet:** the time from a Reel's container to its published post, the Graph steps of a Click-to-WhatsApp ad created paused on Facebook placements, and Meta's verdict on a carousel made since pull request 509. Studio v3 isn't live; this section gets them after the deploy.
+- **Not measured yet:** the time from a Reel's container to its published post, the Graph steps of a Click-to-WhatsApp ad created paused on Facebook placements, and Meta's verdict on a carousel made since pull request 509. Studio v3 went live on Nov 4 at 05:56 UTC, after the production read below, and these haven't been measured since.
 
 ## Production, read on Nov 4
 
@@ -266,5 +266,5 @@ Read-only aggregates of airi.chat's production database and AI spend ledger, on 
 | Video ads | 2, on Nov 3, 3 products each, 1080×1920, 16 s and 17 s long, in Russian. **Ad 1:** $0.076 in 95 s (words 23 s, pictures 33 s, framing 8 s, video 29 s), slower than the local test's 64–79 s. **Ad 2,** read by an Airi voice: $0.090, of which $0.080 Meta and $0.009 ElevenLabs text-to-speech; a later free render overwrote its first video's time |
 | What one ad's AI action paid for | 1 Muse Spark call for the words, 3 Muse Image scenes, 3 Muse Spark same-product checks and 3 SAM 3.1 boxes, plus the text-to-speech when a voice reads it |
 | WhatsApp kits | 1, on Nov 3: its order form was published as a WhatsApp Flow; its carousel failed on the old 10-second limit, before pull request 509, and was never sent to Meta. So Meta has approved no production carousel yet |
-| Instagram posts, and Click-to-WhatsApp ads created paused on Facebook placements | 0 and 0: studio v3, which makes them, isn't live yet |
+| Instagram posts, and Click-to-WhatsApp ads created paused on Facebook placements | 0 and 0: studio v3, which makes them, went live at 05:56 UTC, after this read |
 | Cloned voices | 0 |
