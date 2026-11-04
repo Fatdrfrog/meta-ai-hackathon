@@ -11,6 +11,7 @@ import {
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MIN_PRODUCTS,
   PRODUCT_AD_MOTIONS,
+  PRODUCT_AD_MUSICS,
   PRODUCT_AD_PICTURES_KEPT,
   PRODUCT_AD_PLACE_WORDS_MAX,
   PRODUCT_AD_SETTINGS,
@@ -22,6 +23,7 @@ import {
   type ProductAdCreateRequest,
   type ProductAdIdeaKind,
   type ProductAdMotion,
+  type ProductAdMusic,
   type ProductAdPublishRequest,
   type ProductAdSceneChange,
   type ProductAdSceneRequest,
@@ -53,6 +55,10 @@ const length = (text: string) => Array.from(text).length;
 /** Whether a value is one of the ad's motions (studio v3's Reel tiles). */
 const isAdMotion = (value: unknown): value is ProductAdMotion =>
   (PRODUCT_AD_MOTIONS as readonly unknown[]).includes(value);
+
+/** Whether a value is one of the ad's music styles. */
+const isAdMusic = (value: unknown): value is ProductAdMusic =>
+  (PRODUCT_AD_MUSICS as readonly unknown[]).includes(value);
 
 /** The ids an ad is asked for: 1 to 3 distinct product ids; null otherwise. */
 export function parseAdProductIds(value: unknown): string[] | null {
@@ -109,6 +115,7 @@ export function parseProductAdCreateRequest(
   // The person from the video appears only with the owner's word that they agreed.
   if (presenter.use && !presenter.consent) return null;
   if (body.motion !== undefined && !isAdMotion(body.motion)) return null;
+  if (body.music !== undefined && !isAdMusic(body.music)) return null;
   return {
     requestId,
     productIds,
@@ -117,6 +124,7 @@ export function parseProductAdCreateRequest(
     ...(voice === "stock" ? { stockVoiceId: body.stockVoiceId as string } : {}),
     presenter: { use: presenter.use, consent: presenter.consent },
     ...(body.motion === undefined ? {} : { motion: body.motion }),
+    ...(body.music === undefined ? {} : { music: body.music }),
   };
 }
 
@@ -127,6 +135,7 @@ const UPDATE_KEYS: ReadonlySet<string> = new Set([
   "captions",
   "scenes",
   "motion",
+  "music",
 ]);
 
 const SCENE_CHANGE_KEYS: ReadonlySet<string> = new Set([
@@ -233,6 +242,10 @@ export function parseProductAdUpdateRequest(
   if (body.motion !== undefined) {
     if (!isAdMotion(body.motion)) return null;
     changes.motion = body.motion;
+  }
+  if (body.music !== undefined) {
+    if (!isAdMusic(body.music)) return null;
+    changes.music = body.music;
   }
   return Object.keys(changes).length > 0 ? changes : null;
 }

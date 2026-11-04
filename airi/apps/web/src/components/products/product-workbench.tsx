@@ -82,6 +82,7 @@ import {
 import {
   adVoiceKey,
   LookRail,
+  MusicRail,
   nextSetting,
   ShotsRail,
   VoiceRail,
@@ -1383,18 +1384,26 @@ function AdReadyBench({
               </p>
             ) : null}
             {template.format === "video" ? (
-              <VoiceRail
-                workspaceId={workspaceId}
-                ad={ad}
-                pick={voiceChange}
-                onPick={next => {
-                  setVoiceProblem(null);
-                  setVoicePick(next);
-                }}
-                sending={voiceSending}
-                problem={voiceProblem}
-                blocked={paidBlocked}
-              />
+              <>
+                <VoiceRail
+                  workspaceId={workspaceId}
+                  ad={ad}
+                  pick={voiceChange}
+                  onPick={next => {
+                    setVoiceProblem(null);
+                    setVoicePick(next);
+                  }}
+                  sending={voiceSending}
+                  problem={voiceProblem}
+                  blocked={paidBlocked}
+                />
+                <MusicRail
+                  ad={ad}
+                  pending={auto.pending}
+                  onQueue={auto.queue}
+                  disabled={updating}
+                />
+              </>
             ) : null}
           </>
         )}

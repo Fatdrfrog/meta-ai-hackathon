@@ -1,10 +1,11 @@
 "use client";
 
-import type {
-  ProductAdRecord,
-  ProductAdSceneChange,
-  ProductAdUpdateRequest,
-  ProductsErrorCode,
+import {
+  productAdMusicOf,
+  type ProductAdRecord,
+  type ProductAdSceneChange,
+  type ProductAdUpdateRequest,
+  type ProductsErrorCode,
 } from "@/lib/products/types";
 import {
   createContext,
@@ -143,6 +144,11 @@ export function effectiveAdChanges(
   const script = ad.script;
   if (changes.motion !== undefined && changes.motion !== ad.motion)
     out.motion = changes.motion;
+  if (
+    changes.music !== undefined &&
+    changes.music !== productAdMusicOf(ad.music)
+  )
+    out.music = changes.music;
   if (script) {
     if (
       changes.sticker !== undefined &&

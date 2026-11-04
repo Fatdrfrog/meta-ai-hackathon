@@ -4,6 +4,7 @@
 // spec's words; U2 owns it.
 
 import type {
+  ProductAdMusic,
   ProductAdPostDestination,
   ProductAdStudioColourway,
   ProductsErrorCode,
@@ -75,7 +76,7 @@ const META_REFUSALS = {
 export const WORKBENCH_COPY = {
   workbench: {
     close: "Close",
-    rails: { shots: "Shots", look: "Look", voice: "Voice" },
+    rails: { shots: "Shots", look: "Look", voice: "Voice", music: "Music" },
     actions: ACTIONS,
     more: "More",
     menu: {
@@ -179,6 +180,18 @@ export const WORKBENCH_COPY = {
       now: "In the video",
       running: "New voice…",
       fellBack: "The video kept another voice. Tap to try again.",
+    },
+    music: {
+      styles: {
+        acoustic: "Acoustic",
+        upbeat: "Upbeat",
+        piano: "Piano",
+        cinematic: "Cinematic",
+        festive: "Festive",
+        none: "Off",
+      } satisfies Record<ProductAdMusic, string>,
+      picked: "picked, free on Update",
+      now: "In the video",
     },
     states: {
       priceToCheck: "Tap the red tag first",

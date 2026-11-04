@@ -1035,6 +1035,7 @@ function ProductsPageContent({
             ? "own"
             : "none",
           presenter: { use: false, consent: false },
+          music: "acoustic",
           ...(motion ? { motion } : {}),
         });
         press.current = null;

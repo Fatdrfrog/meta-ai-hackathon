@@ -14,6 +14,7 @@ import {
   PRODUCT_AD_PLACE_MAX_COST_MICROS,
   PRODUCT_AD_REDO_ATTEMPTS,
   productAdMotionOf,
+  productAdMusicOf,
   productAdShopName,
   type ProductAdBox,
   type ProductAdErrorCode,
@@ -21,6 +22,7 @@ import {
   type ProductAdIdeaKind,
   type ProductAdMode,
   type ProductAdMotion,
+  type ProductAdMusic,
   type ProductAdRedoOutcome,
   type ProductAdRunKind,
   type ProductAdScenePlace,
@@ -188,6 +190,8 @@ export type AdRecord = {
    * from before motions, or one this worker doesn't know, renders as "shelf".
    */
   motion?: ProductAdMotion;
+  /** Background music style; absent or "none" when silent. */
+  music?: ProductAdMusic;
 };
 
 /** What a run reads about each product beyond the ad's snapshot. */
@@ -1290,18 +1294,30 @@ async function ownVoices(
   return voices;
 }
 
-const AD_MUSIC_KEY = "music-bed";
 const AD_MUSIC_SECONDS = 20;
 
+const MUSIC_PROMPTS: Record<Exclude<ProductAdMusic, "none">, string> = {
+  acoustic:
+    "Warm, calm boutique instrumental background music for a product showcase reel, soft acoustic guitar, gentle piano and light rhythm, no vocals",
+  upbeat:
+    "Upbeat, modern lifestyle instrumental background music for a product showcase reel, warm lo-fi groove and light percussion, no vocals",
+  piano:
+    "Calm, elegant solo piano and soft warm strings instrumental background music for a boutique product showcase, gentle and modern, no vocals",
+  cinematic:
+    "Warm, inspiring cinematic instrumental background music for a product showcase reel, soft orchestral strings and gentle modern pulse, no vocals",
+  festive:
+    "Warm, uplifting festive instrumental background music for a gift shop reel, gentle acoustic guitar, soft bells and cheerful light rhythm, no vocals",
+};
+
 export function adMusicPrompt(
-  ad: Pick<AdRecord, "idea" | "motion" | "products">,
+  ad: Pick<AdRecord, "idea" | "motion" | "music" | "products">,
 ): string {
+  const style = productAdMusicOf(ad.music);
+  if (style !== "none") return MUSIC_PROMPTS[style];
   const motion = productAdMotionOf(ad.motion);
-  if (ad.idea.kind === "gift")
-    return "Warm, uplifting acoustic instrumental background music for a boutique gift shop reel, gentle guitar, soft bells and light rhythm, cheerful and modern, no vocals";
-  if (motion === "pop" || motion === "filmed_sold")
-    return "Upbeat, modern lifestyle instrumental background music for a product showcase reel, warm lo-fi groove and light percussion, no vocals";
-  return "Warm, calm boutique instrumental background music for a product showcase reel, soft acoustic guitar, gentle piano and light rhythm, no vocals";
+  if (ad.idea.kind === "gift") return MUSIC_PROMPTS.festive;
+  if (motion === "pop" || motion === "filmed_sold") return MUSIC_PROMPTS.upbeat;
+  return MUSIC_PROMPTS.acoustic;
 }
 
 /**
@@ -1315,10 +1331,14 @@ async function adMusic(
   ad: AdRecord,
   paid: PaidCall,
 ): Promise<Pcm | null> {
-  const keptPath = join(ports.workDir, "kept-music.flac");
+  const chosen = ad.music ? productAdMusicOf(ad.music) : null;
+  if (chosen === "none") return null;
+  const style: Exclude<ProductAdMusic, "none"> = chosen ?? "acoustic";
+  const key = `music-${style}`;
+  const keptPath = join(ports.workDir, `kept-${key}.flac`);
   try {
-    if (await ports.storage.loadVoice(AD_MUSIC_KEY, keptPath))
-      return await decodeVoice(keptPath, ports.workDir, "kept-music", {
+    if (await ports.storage.loadVoice(key, keptPath))
+      return await decodeVoice(keptPath, ports.workDir, `kept-${key}`, {
         signal: ports.signal,
         pulse: ports.pulse,
       });
@@ -1330,34 +1350,39 @@ async function adMusic(
   const costMicros = ports.musicCostMicros
     ? ports.musicCostMicros(AD_MUSIC_SECONDS)
     : 20_000;
-  const prompt = adMusicPrompt(ad);
+  const prompt = adMusicPrompt({ ...ad, music: style });
   try {
     const raw =
       ports.mode === "make"
-        ? await paid("music", "elevenlabs", costMicros, async (onCost) => {
-            try {
-              return {
-                value: await generate(AD_MUSIC_SECONDS, prompt),
-                costMicros,
-              };
-            } catch (error) {
-              if (isElevenLabsSttAcceptedRequest(error))
-                onCost(costMicros / 1_000_000, "background music");
-              throw error;
-            }
-          })
+        ? await paid(
+            `music:${style}`,
+            "elevenlabs",
+            costMicros,
+            async (onCost) => {
+              try {
+                return {
+                  value: await generate(AD_MUSIC_SECONDS, prompt),
+                  costMicros,
+                };
+              } catch (error) {
+                if (isElevenLabsSttAcceptedRequest(error))
+                  onCost(costMicros / 1_000_000, "background music");
+                throw error;
+              }
+            },
+          )
         : await generate(AD_MUSIC_SECONDS, prompt);
-    const rawPath = join(ports.workDir, "music-raw.mp3");
+    const rawPath = join(ports.workDir, `${key}-raw.mp3`);
     await writeFile(rawPath, raw);
-    const pcm = await decodeVoice(rawPath, ports.workDir, "music-decoded", {
+    const pcm = await decodeVoice(rawPath, ports.workDir, `${key}-decoded`, {
       signal: ports.signal,
       pulse: ports.pulse,
     });
-    const flac = await encodeFlac(pcm, ports.workDir, "music-bed", {
+    const flac = await encodeFlac(pcm, ports.workDir, key, {
       signal: ports.signal,
       pulse: ports.pulse,
     });
-    await ports.storage.saveVoice(AD_MUSIC_KEY, flac);
+    await ports.storage.saveVoice(key, flac);
     return pcm;
   } catch (error) {
     ports.log?.("products.ad_music_skipped", { error: messageOf(error) });

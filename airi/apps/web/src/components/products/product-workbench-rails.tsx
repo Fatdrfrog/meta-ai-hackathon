@@ -2,10 +2,13 @@
 
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import {
+  PRODUCT_AD_MUSICS,
   PRODUCT_AD_SETTINGS,
   PRODUCT_AD_STOCK_VOICES,
+  productAdMusicOf,
   productAdRecordingIsPaid,
   productAdSpeechCode,
+  type ProductAdMusic,
   type ProductAdRecord,
   type ProductAdRecordStill,
   type ProductAdSetting,
@@ -21,6 +24,7 @@ import {
   Images,
   Lock,
   Mic,
+  Music,
   Palette,
   Sparkles,
   VolumeX,
@@ -685,6 +689,62 @@ export function VoiceRail({
             onPick(pickOf(clone, voice.state === "pending"));
         }}
       />
+    </Rail>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Music
+
+export function MusicRail({
+  ad,
+  pending,
+  onQueue,
+  disabled,
+}: {
+  ad: Pick<ProductAdRecord, "music" | "status">;
+  pending: ProductAdUpdateRequest | null;
+  onQueue: (change: ProductAdUpdateRequest) => void;
+  disabled?: boolean;
+}) {
+  const nowMusic = productAdMusicOf(ad.music);
+  const shownMusic = pending?.music ?? nowMusic;
+  const busy = ad.status !== "ready" || disabled;
+  return (
+    <Rail title={COPY.rails.music} icon={<Music />}>
+      {PRODUCT_AD_MUSICS.map((style: ProductAdMusic) => {
+        const label = COPY.music.styles[style];
+        const on = style === shownMusic;
+        const picked = pending?.music === style && style !== nowMusic;
+        return (
+          <button
+            key={style}
+            type="button"
+            className={styles.face}
+            aria-pressed={on}
+            data-on={on || undefined}
+            data-armed={picked || undefined}
+            disabled={busy}
+            aria-label={
+              picked
+                ? `${label}, ${COPY.music.picked}`
+                : style === nowMusic
+                  ? `${label}, ${COPY.music.now}`
+                  : label
+            }
+            onClick={() => {
+              if (!busy) onQueue({ music: style });
+            }}
+          >
+            <span className={styles.faceDisc} aria-hidden="true">
+              {style === "none" ? <VolumeX /> : <Music />}
+            </span>
+            <span className={styles.faceName} aria-hidden="true">
+              {label}
+            </span>
+          </button>
+        );
+      })}
     </Rail>
   );
 }

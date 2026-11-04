@@ -29,6 +29,7 @@ import {
   PRODUCT_AD_STEPS,
   productAdLettersSupported,
   productAdMotionOf,
+  productAdMusicOf,
   type ProductAdAdmissionStop,
   type ProductAdBrief,
   type ProductAdCreateRequest,
@@ -605,6 +606,7 @@ async function toAdRecord(
     timings,
     idea: { kind: doc.idea.kind, text: doc.idea.text ?? null },
     motion: productAdMotionOf(doc.motion),
+    ...(doc.music ? { music: productAdMusicOf(doc.music) } : {}),
     voice: doc.voice,
     stockVoiceId: doc.stockVoiceId ?? null,
     voiceResult: doc.voiceResult
@@ -1163,6 +1165,7 @@ export async function createProductAd(params: {
         request.voice === "stock" ? (request.stockVoiceId ?? null) : null,
       // Studio v3's Reel tile; absent reads as "shelf".
       ...(request.motion ? { motion: request.motion } : {}),
+      ...(request.music ? { music: request.music } : {}),
       presenter,
       ending,
       products,
@@ -1235,6 +1238,7 @@ export const adChangesSet = (
     script: words && !sameAdWords(doc.script!, words) ? words : doc.script,
     scenes: applyAdSceneChanges(doc.scenes ?? [], changes.scenes),
     ...(changes.motion ? { motion: changes.motion } : {}),
+    ...(changes.music ? { music: changes.music } : {}),
   };
 };
 
@@ -1246,6 +1250,7 @@ const restoredBeforeRun = (doc: IProductAd) => ({
   script: doc.script,
   scenes: doc.scenes,
   motion: productAdMotionOf(doc.motion),
+  ...(doc.music ? { music: productAdMusicOf(doc.music) } : {}),
   runKind: doc.runKind ?? runKindOf(doc),
   status: doc.status,
   step: doc.step ?? null,
@@ -1285,10 +1290,12 @@ export async function updateProductAdWords(params: {
   const scenes = applyAdSceneChanges(doc.scenes ?? [], changes.scenes);
   const wordsSame = sameAdWords(doc.script, script);
   const scenesSame = sameAdScenes(doc.scenes ?? [], scenes);
-  // Studio v3: another Reel tile's motion is a free render too.
+  // Studio v3: another Reel tile's motion or a music change is a render too.
   const motion = changes.motion ?? productAdMotionOf(doc.motion);
   const motionSame = motion === productAdMotionOf(doc.motion);
-  if (wordsSame && scenesSame && motionSame)
+  const music = changes.music ?? productAdMusicOf(doc.music);
+  const musicSame = music === productAdMusicOf(doc.music);
+  if (wordsSame && scenesSame && motionSame && musicSame)
     return { ad: await adRecord(workspaceId, doc), started: false };
   const renderNo = doc.renderNo + 1;
   const now = params.now ?? new Date();
@@ -1300,6 +1307,7 @@ export async function updateProductAdWords(params: {
         script: wordsSame ? doc.script : script,
         scenes,
         ...(motionSame ? {} : { motion }),
+        ...(musicSame ? {} : { music }),
         runKind: "render",
         status: "making",
         step: "video",
@@ -1455,8 +1463,9 @@ export async function redoProductAdScene(params: {
       $set: {
         script,
         scenes,
-        // A pending motion or voice change rides along, as the words do.
+        // A pending motion, music or voice change rides along, as the words do.
         ...(changes.motion ? { motion: changes.motion } : {}),
+        ...(changes.music ? { music: changes.music } : {}),
         ...(request.voice !== undefined
           ? {
               voice: request.voice,

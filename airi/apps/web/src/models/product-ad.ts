@@ -7,6 +7,7 @@ import {
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MIN_PRODUCTS,
   PRODUCT_AD_MOTIONS,
+  PRODUCT_AD_MUSICS,
   PRODUCT_AD_OPENING_KINDS,
   PRODUCT_AD_PICTURES_KEPT,
   PRODUCT_AD_PLACE_WORDS_MAX,
@@ -36,6 +37,7 @@ import {
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
   type ProductAdMotion,
+  type ProductAdMusic,
   type ProductAdPostDestination,
   type ProductAdPostState,
   type ProductAdRunKind,
@@ -218,6 +220,8 @@ export interface IProductAd {
    * which read as "shelf" (productAdMotionOf).
    */
   motion?: ProductAdMotion;
+  /** Background music for the video; absent reads as "none" (productAdMusicOf). */
+  music?: ProductAdMusic;
   /**
    * Studio v3's template stills of one render, written by the worker once
    * they all landed; absent when no worker from v3 rendered the ad.
@@ -712,6 +716,7 @@ const ProductAdSchema = new mongoose.Schema<IProductAd>(
     },
     // Studio v3: absent on ads from before.
     motion: { type: String, enum: PRODUCT_AD_MOTIONS, default: undefined },
+    music: { type: String, enum: PRODUCT_AD_MUSICS, default: undefined },
     stillSet: { type: StillSetSchema, default: undefined },
     meta: { type: StoredMetaSchema, default: undefined },
     renderNo: { type: Number, default: 1, min: 1 },

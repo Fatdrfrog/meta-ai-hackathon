@@ -15,6 +15,7 @@ import {
   buildProductAdActionId,
   PRODUCT_AD_ACTIVITY_CONTRACT_VERSION,
   productAdMotionOf,
+  productAdMusicOf,
   type ProductAdActivityInput,
   type ProductAdActivityResult,
   type ProductAdErrorCode,
@@ -171,6 +172,7 @@ function mongoStore(
         costMicros: doc.costMicros ?? 0,
         // Studio v3: how the video moves ("shelf" for ads from before).
         motion: productAdMotionOf(doc.motion),
+        ...(doc.music ? { music: productAdMusicOf(doc.music) } : {}),
       } satisfies AdRecord;
     },
     async updateAd(set, inc) {

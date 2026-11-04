@@ -7,6 +7,7 @@ import type {
   ProductAdErrorCode,
   ProductAdIdeaKind,
   ProductAdMotion,
+  ProductAdMusic,
   ProductAdOpeningKind,
   ProductAdOption,
   ProductAdRedoOutcome,
@@ -41,6 +42,7 @@ export {
   PRODUCT_AD_MAX_SCENE_ATTEMPTS,
   PRODUCT_AD_MIN_PRODUCTS,
   PRODUCT_AD_MOTIONS,
+  PRODUCT_AD_MUSICS,
   PRODUCT_AD_NEW_PICTURE_MAX_MICROS,
   PRODUCT_AD_OPENING_KINDS,
   PRODUCT_AD_OPTIONS_MAX,
@@ -69,6 +71,7 @@ export {
   productAdLettersSupported,
   productAdLines,
   productAdMotionOf,
+  productAdMusicOf,
   productAdOptionIssues,
   productAdScriptIssues,
   productAdShopName,
@@ -79,6 +82,7 @@ export {
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
   type ProductAdMotion,
+  type ProductAdMusic,
   type ProductAdOpeningKind,
   type ProductAdOption,
   type ProductAdPlaceRefusal,
@@ -146,6 +150,8 @@ export type ProductAdRecord = {
    * before motions. A worker from before v3 renders every motion as "shelf".
    */
   motion: ProductAdMotion;
+  /** Background music for the video; absent or "none" when silent. */
+  music?: ProductAdMusic;
   /** The voice asked for: "own" and "none" as in v1, or new words read by "clone" or "stock". */
   voice: ProductAdVoiceMode;
   /** The Airi voice asked for, with "stock"; null otherwise. */
@@ -325,6 +331,8 @@ export type ProductAdCreateRequest = {
   presenter: { use: boolean; consent: boolean };
   /** How the video moves (the Reel tile it was made from); "shelf" when absent. */
   motion?: ProductAdMotion;
+  /** Background music for the video; "none" when absent. */
+  music?: ProductAdMusic;
 };
 
 /** One scene's free changes in PATCH /products/ads/[adId]. */
@@ -352,6 +360,8 @@ export type ProductAdUpdateRequest = {
    * kept scenes, free, as a "render" run.
    */
   motion?: ProductAdMotion;
+  /** Background music for the video. */
+  music?: ProductAdMusic;
 };
 
 /**

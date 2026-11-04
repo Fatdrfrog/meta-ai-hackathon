@@ -767,6 +767,33 @@ describe("picks wait for Update", () => {
     expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
     play.mockRestore();
   });
+
+  it("shows the Music rail on video tiles and sends the picked music style on Update video", async () => {
+    routes[`PATCH ${AD_URL}`] = answer(
+      {
+        ad: adRecord({
+          status: "making",
+          runKind: "render",
+          renderNo: 2,
+          music: "upbeat",
+        }),
+      },
+      202
+    );
+    bench("reel_shelf");
+    const musicRail = await screen.findByRole("region", { name: "Music" });
+    const upbeat = within(musicRail).getByRole("button", { name: "Upbeat" });
+    fireEvent.click(upbeat);
+    expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
+    expect(
+      within(musicRail).getByRole("button", {
+        name: "Upbeat, picked, free on Update",
+      })
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Update video" }));
+    await waitFor(() => expect(callsTo("PATCH", AD_URL)).toHaveLength(1));
+    expect(bodyOf("PATCH", AD_URL)).toEqual({ music: "upbeat" });
+  });
 });
 
 describe("the WhatsApp ad", () => {
