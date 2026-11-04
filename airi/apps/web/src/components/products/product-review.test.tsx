@@ -18,28 +18,6 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-// What to make with the added products is its own part (product-make.tsx);
-// here it only shows what the review hands it, and its two ways out.
-jest.mock("./product-make", () => ({
-  MakeOutputs: (props: {
-    workspaceId: string;
-    productIds: readonly string[];
-    importId: string | null;
-    onChangeProducts: (ids: string[]) => void;
-    onMakeAd: (ids: string[]) => void;
-  }) => (
-    <section aria-label="Make something with them">
-      <p>{`${props.workspaceId} ${props.importId} ${props.productIds.join(",")}`}</p>
-      <button onClick={() => props.onChangeProducts([...props.productIds])}>
-        Change
-      </button>
-      <button onClick={() => props.onMakeAd(props.productIds.slice(0, 3))}>
-        Make a video ad
-      </button>
-    </section>
-  ),
-}));
-
 const BASE = "/api/workspaces/workspace-1";
 const IMPORT_URL = `${BASE}/products/imports/import-1`;
 type Route = (init?: RequestInit) => Promise<unknown> | unknown;
@@ -183,12 +161,13 @@ beforeEach(() => {
 const onChangeProducts = jest.fn();
 const onMakeAd = jest.fn();
 
-function renderReview(onClose = jest.fn()) {
+function renderReview(onClose = jest.fn(), initialProductId?: string) {
   render(
     <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
       <ProductReview
         workspaceId="workspace-1"
         importId="import-1"
+        initialProductId={initialProductId}
         onClose={onClose}
         onChangeProducts={onChangeProducts}
         onMakeAd={onMakeAd}
@@ -237,6 +216,30 @@ function typeKey(field: HTMLInputElement, key: string) {
 }
 
 describe("ProductReview", () => {
+  it("opens the draft chosen by a red price tag, then preserves the other drafts", async () => {
+    renderReview(jest.fn(), "p2");
+    expect(
+      await screen.findByRole("article", { name: "Медаль ілгіш" })
+    ).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    await waitFor(() =>
+      expect(reviewed()).toContainEqual({
+        productIds: ["p2"],
+        status: "published",
+      })
+    );
+    expect(
+      await screen.findByRole("article", { name: "Шежіре" })
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the normal review order when the requested draft no longer exists", async () => {
+    renderReview(jest.fn(), "missing");
+    expect(
+      await screen.findByRole("article", { name: "Шежіре" })
+    ).toBeInTheDocument();
+  });
+
   it("shows the first product with its voice clip, and what is unsure in red with why", async () => {
     renderReview();
 
@@ -342,21 +345,34 @@ describe("ProductReview", () => {
     );
     const back = screen.getByRole("button", { name: "Back to products" });
     expect(back).toHaveFocus();
-    // What was added is what to make something with, from this video.
-    const make = screen.getByRole("region", {
-      name: "Make something with them",
-    });
-    expect(make).toHaveTextContent("workspace-1 import-1 p2,p3");
-    fireEvent.click(within(make).getByRole("button", { name: "Change" }));
+    // Nothing is made here (studio v3 makes on the page): v2's make view is gone.
+    expect(
+      screen.queryByRole("button", { name: /Make a video ad|Make kit/ })
+    ).toBeNull();
+    // Back is the screen's one action, and hands on what was added as the picks.
+    expect(back).toHaveAttribute("data-variant", "default");
+    fireEvent.click(back);
     expect(onChangeProducts).toHaveBeenCalledWith(["p2", "p3"]);
-    fireEvent.click(
-      within(make).getByRole("button", { name: "Make a video ad" })
-    );
-    expect(onMakeAd).toHaveBeenCalledWith(["p2", "p3"]);
-    // Making something is the screen's one primary action: back is quiet.
+    expect(onMakeAd).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("with nothing added, Back to products just closes the review", async () => {
+    onChangeProducts.mockClear();
+    const onClose = renderReview();
+    await screen.findByRole("article", { name: "Шежіре" });
+
+    for (let skips = 0; skips < 3; skips++)
+      fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
+
+    expect(
+      await screen.findByText("Nothing was added to your shelf.")
+    ).toBeInTheDocument();
+    const back = screen.getByRole("button", { name: "Back to products" });
     expect(back).toHaveAttribute("data-variant", "outline");
     fireEvent.click(back);
     expect(onClose).toHaveBeenCalled();
+    expect(onChangeProducts).not.toHaveBeenCalled();
   });
 
   it("says which card is up, and marks each one added, skipped or being checked", async () => {

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   AD_FEED_FRAME,
+  AD_FILMED_LEAD_SECONDS,
   AD_FPS,
   AD_FRAME,
   AD_TRANSITION_SECONDS,
@@ -404,4 +405,72 @@ test("the overlap: whether the words cover the product, and the band that keeps 
       .textOverlap,
     null,
   );
+});
+
+test("Filmed → Sold's lead lengthens its scenes, and the 20 s cap never takes it back", () => {
+  const frame = 1 / 30;
+  // No lead (or a zero one) is the timeline as before.
+  for (const voices of [
+    [null],
+    [2.1, null],
+    [5.5, 5.5, 5.5],
+    [null, null, null],
+  ])
+    assert.deepEqual(
+      planTimeline(
+        voices.map((voiceSeconds) => ({ voiceSeconds, leadSeconds: 0 })),
+      ),
+      planTimeline(voices.map((voiceSeconds) => ({ voiceSeconds }))),
+    );
+  // A lead adds its time to the scene (the first keeps its floor for the sticker).
+  const plain = planTimeline([{ voiceSeconds: null }, { voiceSeconds: 3 }]);
+  const led = planTimeline([
+    { voiceSeconds: null, leadSeconds: AD_FILMED_LEAD_SECONDS },
+    { voiceSeconds: 3, leadSeconds: AD_FILMED_LEAD_SECONDS },
+  ]);
+  assert.ok(led.scenes[0]!.seconds >= plain.scenes[0]!.seconds);
+  assert.ok(
+    Math.abs(
+      led.scenes[1]!.seconds -
+        plain.scenes[1]!.seconds -
+        AD_FILMED_LEAD_SECONDS,
+    ) <= frame,
+  );
+  // Only the products given a lead grow (one without a filmed frame keeps its time).
+  const mixed = planTimeline([
+    { voiceSeconds: null, leadSeconds: AD_FILMED_LEAD_SECONDS },
+    { voiceSeconds: 3 },
+  ]);
+  assert.ok(
+    Math.abs(mixed.scenes[1]!.seconds - plain.scenes[1]!.seconds) <= frame,
+  );
+  // Three long voices with leads: the ad stays at 20 s, each product scene keeps its lead.
+  const long = planTimeline(
+    [5.5, 5.5, 5.5].map((voiceSeconds) => ({
+      voiceSeconds,
+      leadSeconds: AD_FILMED_LEAD_SECONDS,
+    })),
+  );
+  assert.ok(long.totalSeconds <= 20 && long.totalSeconds >= 19);
+  for (const scene of long.scenes.slice(0, 3)) {
+    assert.equal(scene.kind, "product");
+    assert.ok(
+      scene.seconds >= 3 + AD_FILMED_LEAD_SECONDS - frame,
+      `${scene.seconds}`,
+    );
+    // The words still start inside the scene and end before the next one.
+    if (scene.kind === "product" && scene.voice)
+      assert.ok(
+        scene.voice.at + scene.voice.seconds <= scene.start + scene.seconds,
+      );
+  }
+  // Three silent products with leads: still under 20 s, no scene shortened.
+  const silent = planTimeline(
+    [null, null, null].map((voiceSeconds) => ({
+      voiceSeconds,
+      leadSeconds: AD_FILMED_LEAD_SECONDS,
+    })),
+  );
+  assert.ok(silent.totalSeconds <= 20);
+  assert.ok(silent.scenes[1]!.seconds >= 3.5 + AD_FILMED_LEAD_SECONDS - frame);
 });

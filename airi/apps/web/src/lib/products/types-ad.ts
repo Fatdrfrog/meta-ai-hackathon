@@ -6,6 +6,7 @@ import type {
   ProductAdEndingKind,
   ProductAdErrorCode,
   ProductAdIdeaKind,
+  ProductAdMotion,
   ProductAdOpeningKind,
   ProductAdOption,
   ProductAdRedoOutcome,
@@ -15,6 +16,9 @@ import type {
   ProductAdSetting,
   ProductAdStatus,
   ProductAdStep,
+  ProductAdStillFormat,
+  ProductAdStillKind,
+  ProductAdStudioColourway,
   ProductAdTextOverlap,
   ProductAdTextZone,
   ProductAdVoiceMode,
@@ -22,6 +26,7 @@ import type {
   ProductShopWordsCode,
   ProductVideoImportPhotoStop,
 } from "@icecore/temporal";
+import type { ProductAdMetaRecord } from "./types-meta";
 
 export {
   PRODUCT_AD_CTWA_QUESTIONS,
@@ -32,6 +37,7 @@ export {
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MAX_SCENE_ATTEMPTS,
   PRODUCT_AD_MIN_PRODUCTS,
+  PRODUCT_AD_MOTIONS,
   PRODUCT_AD_NEW_PICTURE_MAX_MICROS,
   PRODUCT_AD_OPENING_KINDS,
   PRODUCT_AD_OPTIONS_MAX,
@@ -44,7 +50,13 @@ export {
   PRODUCT_AD_SETTINGS,
   PRODUCT_AD_STATUSES,
   PRODUCT_AD_STEPS,
+  PRODUCT_AD_STILL_FORMATS,
+  PRODUCT_AD_STILL_KINDS,
+  PRODUCT_AD_STILL_SET_MAX,
+  PRODUCT_AD_STILL_SHAPES,
   PRODUCT_AD_STOCK_VOICES,
+  PRODUCT_AD_STUDIO_COLOURWAYS,
+  PRODUCT_AD_STUDIO_SWEEPS,
   PRODUCT_AD_TEXT_LIMITS,
   PRODUCT_AD_TEXT_ZONES,
   PRODUCT_AD_VOICE_FALLBACKS,
@@ -53,6 +65,7 @@ export {
   PRODUCT_SHOP_WORDS_CODES,
   productAdLettersSupported,
   productAdLines,
+  productAdMotionOf,
   productAdOptionIssues,
   productAdScriptIssues,
   productAdShopName,
@@ -62,6 +75,7 @@ export {
   type ProductAdEndingKind,
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
+  type ProductAdMotion,
   type ProductAdOpeningKind,
   type ProductAdOption,
   type ProductAdPlaceRefusal,
@@ -73,7 +87,12 @@ export {
   type ProductAdSetting,
   type ProductAdStatus,
   type ProductAdStep,
+  type ProductAdStillFormat,
+  type ProductAdStillKind,
+  type ProductAdStillSet,
+  type ProductAdStillSetItem,
   type ProductAdStockVoice,
+  type ProductAdStudioColourway,
   type ProductAdTextLimit,
   type ProductAdTextOverlap,
   type ProductAdTextZone,
@@ -119,6 +138,11 @@ export type ProductAdRecord = {
   >;
   /** The brief, as the owner chose it. */
   idea: { kind: ProductAdIdeaKind; text: string | null };
+  /**
+   * How the video moves (studio v3's Reel tiles); "shelf" for an ad from
+   * before motions. A worker from before v3 renders every motion as "shelf".
+   */
+  motion: ProductAdMotion;
   /** The voice asked for: "own" and "none" as in v1, or new words read by "clone" or "stock". */
   voice: ProductAdVoiceMode;
   /** The Airi voice asked for, with "stock"; null otherwise. */
@@ -185,9 +209,16 @@ export type ProductAdRecord = {
   } | null;
   /**
    * The Status picture (9:16) and the 4:5 ad picture, as soon as each
-   * exists. The made list leaves them out (null).
+   * exists. The made list leaves them out (null). `templates` are studio
+   * v3's stills of the video shown (`video.renderNo`), signed; absent when
+   * the worker that rendered it drew none (a worker from before v3), and
+   * then the tiles that need them are hidden.
    */
-  stills: { statusUrl: string | null; feedUrl: string | null };
+  stills: {
+    statusUrl: string | null;
+    feedUrl: string | null;
+    templates?: ProductAdRecordStill[];
+  };
   /** The post text, composed by code around Muse Spark's opening. */
   post: { text: string } | null;
   /** Click-to-WhatsApp ad copy. */
@@ -206,6 +237,26 @@ export type ProductAdRecord = {
    * old one. Read with the ad itself (GET /products/ads/[adId]) only.
    */
   pricesChanged?: boolean;
+  /**
+   * What went out on Meta from this ad: Instagram posts and the
+   * Click-to-WhatsApp ad (studio v3, types-meta.ts). Absent before anything
+   * was asked for.
+   */
+  meta?: ProductAdMetaRecord;
+};
+
+/**
+ * One of studio v3's stills of the ad, signed. For studio, a product's
+ * default colourway (picked by code for contrast) comes first.
+ */
+export type ProductAdRecordStill = {
+  kind: ProductAdStillKind;
+  format: ProductAdStillFormat;
+  /** Null for a still of every product (collection, price_list). */
+  productId: string | null;
+  /** Null for every kind but studio. */
+  colourway: ProductAdStudioColourway | null;
+  url: string;
 };
 
 /** One product's scene as the studio shows it, filled in as its picture lands. */
@@ -269,6 +320,8 @@ export type ProductAdCreateRequest = {
   stockVoiceId?: string;
   /** Whether to show the person from the video, and that they agreed to it. */
   presenter: { use: boolean; consent: boolean };
+  /** How the video moves (the Reel tile it was made from); "shelf" when absent. */
+  motion?: ProductAdMotion;
 };
 
 /** One scene's free changes in PATCH /products/ads/[adId]. */
@@ -291,6 +344,11 @@ export type ProductAdUpdateRequest = {
   priceCardTitle?: string;
   ending?: string;
   scenes?: ProductAdSceneChange[];
+  /**
+   * Another Reel tile's motion (studio v3): the video made again from the
+   * kept scenes, free, as a "render" run.
+   */
+  motion?: ProductAdMotion;
 };
 
 /**

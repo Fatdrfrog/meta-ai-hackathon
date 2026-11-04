@@ -1,165 +1,156 @@
 /*
- * "Made from your shelf": hairline rows above the shelf, each with its
- * picture, what it is, its chips and its next steps (under the text where
- * the list is narrow, as on a phone).
+ * "Out on Meta": one row of receipts under the gallery, scrolling sideways
+ * when it holds more than the column, each a thumbnail, what it is, where
+ * it went and when, its stamp and its link.
  */
 
-.made {
-  /* Sized by its column, never by its rows (the container needs that). */
-  container-type: inline-size;
-  display: grid;
-  justify-items: start;
+.out {
+  display: flex;
+  align-items: center;
   gap: 12px;
   width: 100%;
   min-width: 0;
 }
 
-.head {
-  display: grid;
-  gap: 4px;
-}
-
-.about {
-  max-width: 60ch;
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--p-ink-2);
-  text-wrap: pretty;
-}
-
-.rows {
-  width: 100%;
-  border-top: 1px solid var(--p-line);
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto;
+.title {
+  display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--p-line);
+  gap: 6px;
+  margin: 0;
+  color: var(--p-ink-2);
+  font-size: 14px;
+  font-weight: 600;
 }
 
-/* Three of the kit's cards, stacked: cut-outs on white, as on the carousel. */
-.stack {
-  position: relative;
-  width: 64px;
-  height: 52px;
+.title svg {
+  width: 16px;
+  height: 16px;
 }
 
-.whiteCard {
-  position: absolute;
-  top: 0;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 52px;
-  overflow: hidden;
-  border-radius: 8px;
-  /* The cards are made on pure white; this is a picture of them. */
-  background: #fff;
+.receipts {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 2px 8px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.receipt {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  max-width: 340px;
+  padding: 6px 8px 6px 6px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-raised);
   box-shadow:
-    0 0 0 1px var(--p-line),
-    var(--p-shadow-control);
+    var(--p-shadow-tile),
+    inset 0 0 0 1px var(--p-line);
+  scroll-snap-align: start;
 }
 
-.whiteCard:nth-child(1) {
-  left: 0;
-  z-index: 3;
+.open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--p-ink);
+  font: inherit;
+  text-align: left;
 }
 
-.whiteCard:nth-child(2) {
-  left: 12px;
-  z-index: 2;
+button.open {
+  cursor: pointer;
 }
 
-.whiteCard:nth-child(3) {
-  left: 24px;
-  z-index: 1;
+button.open:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--p-accent);
+  outline-offset: 2px;
 }
 
-.whiteCard img {
-  width: 80%;
-  height: 80%;
-  object-fit: contain;
-}
-
-/* An ad's 9:16 poster. */
-.poster {
+.thumb {
   display: grid;
+  flex: none;
   place-items: center;
-  width: 36px;
-  height: 64px;
-  margin-left: 14px;
+  width: 32px;
+  height: 40px;
   overflow: hidden;
   border-radius: 6px;
-  background: linear-gradient(var(--p-sand), var(--p-sand-low));
-  box-shadow: inset 0 0 0 1px var(--p-line);
-  color: var(--p-label-ink-2);
+  background: var(--p-wall);
 }
 
-.poster img {
+.thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.poster svg {
-  width: 16px;
-  height: 16px;
+.thumb svg {
+  width: 20px;
+  height: 20px;
+  color: var(--p-ink-2);
 }
 
-.rowBody {
-  display: grid;
-  gap: 4px;
+.what {
   min-width: 0;
-}
-
-.rowTitle {
-  font-size: 15px;
-  line-height: 21px;
-  font-weight: 600;
-}
-/* The row's title takes the focus when a part's Try again goes. */
-.rowTitle:focus {
-  outline: none;
-}
-.rowTitle:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-.rowMeta {
   overflow: hidden;
   font-size: 13px;
-  line-height: 18px;
-  color: var(--p-ink-2);
-  font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
+.where {
+  color: var(--p-ink-2);
 }
 
-.refusal {
-  font-size: 13px;
-  line-height: 18px;
+.stamp {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sunk);
+  color: var(--p-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stamp[data-tone="ok"] {
+  background: var(--p-ok-wash);
+  color: var(--p-ok-chip-ink);
+}
+
+.stamp[data-tone="danger"] {
+  background: var(--p-danger-wash);
   color: var(--p-danger-ink);
 }
 
-.rowActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-  max-width: 420px;
+.link {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--p-accent-ink);
+}
+
+.link:hover {
+  background: var(--p-accent-wash);
+}
+
+.link svg {
+  width: 15px;
+  height: 15px;
 }
 
 .error {
@@ -167,25 +158,18 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
+  color: var(--p-danger-ink);
   font-size: 14px;
-  line-height: 20px;
-  color: var(--p-ink-2);
 }
 
-@container (max-width: 639px) {
-  .row {
-    grid-template-columns: 64px minmax(0, 1fr);
-    align-items: start;
-    gap: 12px;
+@media (max-width: 720px) {
+  .out {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
   }
 
-  .rowActions {
-    grid-column: 2;
-    justify-content: flex-start;
-    max-width: none;
-  }
-
-  .rowMeta {
-    white-space: normal;
+  .receipt {
+    max-width: 290px;
   }
 }

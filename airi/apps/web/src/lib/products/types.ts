@@ -69,6 +69,7 @@ import {
   type ProductVideoImportStage,
 } from "@icecore/temporal";
 import type { ProductKitRecord } from "./types-kit";
+import type { ProductsMetaFailureCode } from "./types-meta";
 
 /** A file in the workspace's private media storage. */
 export type StoredFileRef = { bucket: string; path: string };
@@ -364,13 +365,34 @@ export const PRODUCTS_ERROR_CODES = [
   "voice_consent_required",
   "voice_not_found",
   "voice_unavailable",
+  // Studio v3: Meta actions (types-meta.ts). Instagram posts:
+  "instagram_not_connected",
+  "instagram_quota",
+  "post_busy",
+  "post_failed",
+  "post_not_found",
+  // The Click-to-WhatsApp ad:
+  "ads_not_connected",
+  "page_whatsapp_missing",
+  "ctwa_failed",
+  "budget_refused",
+  "run_disabled",
+  // A product in the ad has a price to check (its red tag).
+  "price_to_check",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 
-// Kits (carousel + order form), video ads and voices, each in its own file.
+// Kits (carousel + order form), video ads, voices and Meta actions, each in
+// its own file.
 export * from "./types-kit";
 export * from "./types-ad";
 export * from "./types-voice";
+export * from "./types-meta";
+
+type OnlyErrorCodes<T extends ProductsErrorCode> = T;
+/** Every failure a post or the Click-to-WhatsApp ad stores is an error code the page explains. */
+export type ProductsMetaFailuresAreErrorCodes =
+  OnlyErrorCodes<ProductsMetaFailureCode>;
 
 export type ProductsErrorBody = {
   error: string;

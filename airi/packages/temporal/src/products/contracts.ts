@@ -719,3 +719,127 @@ export type ProductVoiceErrorCode = (typeof PRODUCT_VOICE_ERROR_CODES)[number];
 /** Clear speech a clone needs at least, and takes at most, in seconds. */
 export const PRODUCT_VOICE_MIN_SPEECH_SECONDS = 20;
 export const PRODUCT_VOICE_MAX_SPEECH_SECONDS = 120;
+
+// ---------------------------------------------------------------------------
+// Studio v3: template tiles. A tile is a motion (how the Reel moves) or a
+// still (a picture drawn by code from what the ad already made). Both are
+// code over the ad's saved scenes and cut-outs: no model call, no AI action.
+// Every field is optional on the stored ad, so v1 and v2 ads keep working,
+// and the contracts stay at version 1 (a motion change is a "render" run).
+
+/**
+ * How the ad's video moves. shelf: v2's Muse Image scenes with the SAM-box
+ * push-in. filmed_sold: each shot opens on the owner's filmed frame, then
+ * wipes to the made scene. float: the exact cut-out bobbing on the code
+ * wall. pop: the cut-out scaling up over the blurred scene. An absent or
+ * unknown motion reads as "shelf" (productAdMotionOf).
+ */
+export const PRODUCT_AD_MOTIONS = [
+  "shelf",
+  "filmed_sold",
+  "float",
+  "pop",
+] as const;
+export type ProductAdMotion = (typeof PRODUCT_AD_MOTIONS)[number];
+
+/** The ad's motion, "shelf" for an ad from before motions or one the reader doesn't know. */
+export function productAdMotionOf(value: unknown): ProductAdMotion {
+  return (PRODUCT_AD_MOTIONS as readonly unknown[]).includes(value)
+    ? (value as ProductAdMotion)
+    : "shelf";
+}
+
+/**
+ * The pictures a render draws besides the video. room: v2's feed still
+ * (Muse Image scene, label, tag), one per product. studio: the cut-out on a
+ * code sweep, per product and colourway. big_price: the shelf price huge
+ * behind the product, per product. collection: every product on one plank,
+ * titled by the opening. price_list: every product with dotted leaders, the
+ * shop name and the ending's contact line.
+ */
+export const PRODUCT_AD_STILL_KINDS = [
+  "room",
+  "studio",
+  "big_price",
+  "collection",
+  "price_list",
+] as const;
+export type ProductAdStillKind = (typeof PRODUCT_AD_STILL_KINDS)[number];
+
+/** feed: 1080x1350 (4:5). story: 1080x1920 (9:16). Both JPEG q90 sRGB. */
+export const PRODUCT_AD_STILL_FORMATS = ["feed", "story"] as const;
+export type ProductAdStillFormat = (typeof PRODUCT_AD_STILL_FORMATS)[number];
+
+/** The sweeps the studio still is drawn on, from the Paper look. */
+export const PRODUCT_AD_STUDIO_COLOURWAYS = [
+  "white",
+  "sand",
+  "rose",
+  "sage",
+  "night",
+] as const;
+export type ProductAdStudioColourway =
+  (typeof PRODUCT_AD_STUDIO_COLOURWAYS)[number];
+
+/**
+ * Each colourway's sweep (top to bottom) and the ink drawn on it, so the
+ * worker's stills and the page's tile art match. "night" is a warm evening
+ * shop, never black.
+ */
+export const PRODUCT_AD_STUDIO_SWEEPS: Record<
+  ProductAdStudioColourway,
+  { top: string; bottom: string; ink: string }
+> = {
+  white: { top: "#fefdfc", bottom: "#efeae3", ink: "#241e1a" },
+  sand: { top: "#f6efe4", bottom: "#e6d2ba", ink: "#241e1a" },
+  rose: { top: "#f8e7e5", bottom: "#ebc6c2", ink: "#4a1d1f" },
+  sage: { top: "#edf1e8", bottom: "#cfd9c6", ink: "#1f2a1c" },
+  night: { top: "#3a322c", bottom: "#241e1a", ink: "#fbf9f6" },
+};
+
+/**
+ * Which stills a render draws and for which products: `productId` is null
+ * for a still of every product (collection, price_list), `colourway` null
+ * for every kind but studio.
+ */
+export const PRODUCT_AD_STILL_SHAPES: Record<
+  ProductAdStillKind,
+  { formats: readonly ProductAdStillFormat[]; perProduct: boolean }
+> = {
+  room: { formats: ["feed"], perProduct: true },
+  studio: { formats: ["feed"], perProduct: true },
+  big_price: { formats: ["feed", "story"], perProduct: true },
+  collection: { formats: ["feed"], perProduct: false },
+  price_list: { formats: ["story"], perProduct: false },
+};
+
+/**
+ * One still a render drew, saved as
+ * `${renderNo}-${kind}-${format}-${productId|all}-${colourway|x}.jpg`.
+ * For studio, a product's default colourway (picked by code for contrast)
+ * is its first item.
+ */
+export type ProductAdStillSetItem = {
+  kind: ProductAdStillKind;
+  format: ProductAdStillFormat;
+  productId: string | null;
+  colourway: ProductAdStudioColourway | null;
+  ref: ProductAdFileRef;
+};
+
+/**
+ * The stills of one render, written by the worker once they all landed
+ * (ad-job.ts). Absent on ads rendered by a worker from before v3: the page
+ * then hides the tiles that need them. `renderNo` is the render they were
+ * drawn for; the page shows them only with that render's video.
+ */
+export type ProductAdStillSet = {
+  renderNo: number;
+  items: ProductAdStillSetItem[];
+};
+
+/**
+ * The most stills one render draws: 3 products x (room + 5 studio + 2
+ * big_price) + collection + price_list = 26.
+ */
+export const PRODUCT_AD_STILL_SET_MAX = 26;

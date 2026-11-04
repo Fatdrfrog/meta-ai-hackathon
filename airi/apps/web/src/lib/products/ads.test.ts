@@ -660,6 +660,27 @@ describe("making an ad", () => {
     });
   });
 
+  it("saves the Reel tile's motion, and none for a brief without one", async () => {
+    await createProductAd({
+      workspaceId: WS,
+      userId: "user-1",
+      request: brief({ requestId: "press-motion", motion: "filmed_sold" }),
+      now: NOW,
+    });
+    await createProductAd({
+      workspaceId: WS,
+      userId: "user-1",
+      request: brief({ requestId: "press-plain" }),
+      now: NOW,
+    });
+
+    const [withMotion, plain] = mockProductAd.create.mock.calls.map(
+      call => call[0] as Doc
+    );
+    expect(withMotion!.motion).toBe("filmed_sold");
+    expect(plain).not.toHaveProperty("motion");
+  });
+
   it("writes Russian and English prices the buyers' way", async () => {
     mockImportFind.mockImplementation(() =>
       mockQuery([{ _id: NEW_IMPORT, language: "Russian", presenter: null }])
@@ -1056,6 +1077,8 @@ describe("the ad as the page reads it", () => {
         },
       },
       idea: { kind: "new", text: null },
+      // An ad from before studio v3's motions moves as the shelf ad.
+      motion: "shelf",
       voice: "own",
       // An ad from before studio v2 reads as its defaults.
       stockVoiceId: null,
@@ -1455,6 +1478,167 @@ describe("the ad as the page reads it", () => {
       `https://signed.test/products/${DOLL}/thumb.webp`
     );
   });
+
+  // Studio v3: the template stills of the video shown, and what went out on Meta.
+  const stillSet = (renderNo: number) => ({
+    renderNo,
+    items: [
+      {
+        kind: "studio",
+        format: "feed",
+        productId: DOLL,
+        colourway: "night",
+        ref: ref(`ads/${AD}/${renderNo}-studio-feed-${DOLL}-night.jpg`),
+      },
+      {
+        kind: "studio",
+        format: "feed",
+        productId: DOLL,
+        colourway: "white",
+        ref: ref(`ads/${AD}/${renderNo}-studio-feed-${DOLL}-white.jpg`),
+      },
+      {
+        kind: "collection",
+        format: "feed",
+        productId: null,
+        colourway: null,
+        ref: ref(`ads/${AD}/${renderNo}-collection-feed-all-x.jpg`),
+      },
+    ],
+  });
+  const storedPost = {
+    id: "751f1f77bcf86cd799439041",
+    requestId: "post-press-1",
+    destination: "reel",
+    still: null,
+    slides: [],
+    renderNo: 1,
+    motion: "shelf",
+    caption: "Жаңа тауар",
+    state: "published",
+    containerId: "c-1",
+    childIds: [],
+    mediaId: "m-1",
+    permalink: "https://www.instagram.com/reel/abc/",
+    errorCode: null,
+    errorMessage: null,
+    requestedAt: NOW,
+    publishedAt: new Date("2026-11-02T09:15:00.000Z"),
+    leaseUntil: null,
+  };
+  const postRecord = {
+    id: "751f1f77bcf86cd799439041",
+    destination: "reel",
+    still: null,
+    slides: [],
+    renderNo: 1,
+    motion: "shelf",
+    state: "published",
+    permalink: "https://www.instagram.com/reel/abc/",
+    errorCode: null,
+    errorMessage: null,
+    requestedAt: NOW.toISOString(),
+    publishedAt: "2026-11-02T09:15:00.000Z",
+  };
+
+  it("links the template stills of the video shown, in stored order", async () => {
+    mockAds.push(readyAd(AD, { stillSet: stillSet(1) }));
+
+    const ad = await loadProductAdRecord(WS, AD, NOW);
+
+    expect(ad!.stills).toEqual({
+      statusUrl: `https://signed.test/ads/${AD}/r1/status.jpg`,
+      feedUrl: `https://signed.test/ads/${AD}/r1/feed.jpg`,
+      templates: [
+        {
+          kind: "studio",
+          format: "feed",
+          productId: DOLL,
+          colourway: "night",
+          url: `https://signed.test/ads/${AD}/1-studio-feed-${DOLL}-night.jpg`,
+        },
+        {
+          kind: "studio",
+          format: "feed",
+          productId: DOLL,
+          colourway: "white",
+          url: `https://signed.test/ads/${AD}/1-studio-feed-${DOLL}-white.jpg`,
+        },
+        {
+          kind: "collection",
+          format: "feed",
+          productId: null,
+          colourway: null,
+          url: `https://signed.test/ads/${AD}/1-collection-feed-all-x.jpg`,
+        },
+      ],
+    });
+  });
+
+  it("leaves the template stills out when they aren't the shown video's", async () => {
+    // A run drew render 2's stills, but the video shown is still render 1.
+    mockAds.push(readyAd(AD, { stillSet: stillSet(2) }));
+    const ad = await loadProductAdRecord(WS, AD, NOW);
+    expect(ad!.stills).not.toHaveProperty("templates");
+
+    // The made list signs no stills.
+    mockAds[0]!.stillSet = stillSet(1);
+    const [listed] = await listProductAdRecords(WS, 20);
+    expect(listed!.stills).toEqual({ statusUrl: null, feedUrl: null });
+  });
+
+  it("carries the Instagram posts, in the studio and the made list, without the server's ids", async () => {
+    mockAds.push(readyAd(AD, { meta: { posts: [storedPost], ctwa: null } }));
+
+    const ad = await loadProductAdRecord(WS, AD, NOW);
+    const [listed] = await listProductAdRecords(WS, 20);
+
+    expect(ad!.meta).toEqual({ posts: [postRecord], ctwa: null });
+    expect(listed!.meta).toEqual({ posts: [postRecord], ctwa: null });
+    expect(JSON.stringify(ad!.meta)).not.toContain("c-1");
+    expect(JSON.stringify(ad!.meta)).not.toContain("post-press-1");
+  });
+
+  it("carries a post's choice of picture with its colourway", async () => {
+    mockAds.push(
+      readyAd(AD, {
+        meta: {
+          posts: [
+            {
+              ...storedPost,
+              destination: "carousel",
+              motion: null,
+              state: "failed",
+              permalink: null,
+              publishedAt: null,
+              errorCode: "post_failed",
+              errorMessage:
+                "Instagram couldn't use the picture's size or format.",
+              slides: [
+                { kind: "collection", productId: null, colourway: null },
+                { kind: "studio", productId: DOLL, colourway: "night" },
+              ],
+            },
+          ],
+          ctwa: null,
+        },
+      })
+    );
+
+    const ad = await loadProductAdRecord(WS, AD, NOW);
+
+    expect(ad!.meta!.posts[0]).toMatchObject({
+      destination: "carousel",
+      state: "failed",
+      errorCode: "post_failed",
+      errorMessage: "Instagram couldn't use the picture's size or format.",
+      publishedAt: null,
+      slides: [
+        { kind: "collection", productId: null, colourway: null },
+        { kind: "studio", productId: DOLL, colourway: "night" },
+      ],
+    });
+  });
 });
 
 describe("prices changed since the ad was made", () => {
@@ -1572,6 +1756,62 @@ describe("the owner's edits", () => {
       })
     ).toEqual({ refused: "ad_not_found" });
     expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("makes the video again in another Reel tile's motion, free, and nothing for the motion it has", async () => {
+    mockAds.push(readyAd(AD));
+
+    const same = await updateProductAdWords({
+      workspaceId: WS,
+      adId: AD,
+      // An ad from before motions is the shelf ad already.
+      changes: { motion: "shelf" },
+    });
+    expect(same).toMatchObject({ started: false, ad: { motion: "shelf" } });
+    expect(mockStart).not.toHaveBeenCalled();
+
+    const result = await updateProductAdWords({
+      workspaceId: WS,
+      adId: AD,
+      changes: { motion: "filmed_sold" },
+    });
+    expect(result).toMatchObject({
+      started: true,
+      ad: { status: "making", renderNo: 2, motion: "filmed_sold" },
+    });
+    expect(mockAds[0]).toMatchObject({
+      motion: "filmed_sold",
+      runKind: "render",
+      renderNo: 2,
+    });
+    // The words weren't touched, so they stay unmarked as edited.
+    expect((mockAds[0]!.script as ProductAdScript).edited).toBe(false);
+    expect(mockStart).toHaveBeenCalledWith({
+      workspaceId: WS,
+      adId: AD,
+      renderNo: 2,
+      mode: "render",
+    });
+    expect(mockAllowance).not.toHaveBeenCalled();
+  });
+
+  it("puts the motion back as it was when its render can't start", async () => {
+    mockAds.push(readyAd(AD, { motion: "float" }));
+    mockStart.mockRejectedValue(new Error("Temporal down"));
+
+    await expect(
+      updateProductAdWords({
+        workspaceId: WS,
+        adId: AD,
+        changes: { motion: "pop" },
+      })
+    ).rejects.toThrow("Temporal down");
+
+    expect(mockAds[0]).toMatchObject({
+      status: "ready",
+      renderNo: 1,
+      motion: "float",
+    });
   });
 
   it("starts nothing for edits that change nothing", async () => {

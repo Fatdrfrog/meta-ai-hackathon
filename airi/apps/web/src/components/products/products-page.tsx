@@ -1,118 +1,186 @@
 "use client";
 
+import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
-import type {
-  ProductsListResponse,
-  WorkspaceProductRecord,
+import {
+  productTemplate,
+  productTemplateOfCtwa,
+  productTemplateOfMotion,
+  productTemplateOfPost,
+  productTemplatePicks,
+  PRODUCT_PICKS_MAX,
+  type ProductTemplate,
+  type ProductTemplateId,
+  type ProductTemplateStamp,
+} from "@/lib/products/templates";
+import {
+  productAdMotionOf,
+  type DraftProductRecord,
+  type ProductAdMotion,
+  type ProductAdRecord,
+  type ProductKitRecord,
+  type ProductsErrorCode,
+  type ProductsListResponse,
+  type ProductVideoImportRecord,
+  type ProductVideoImportResponse,
+  type WorkspaceProductRecord,
 } from "@/lib/products/types";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ListChecks, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
   useEffectEvent,
   useId,
+  useMemo,
   useRef,
   useState,
   type DragEvent,
   type ReactNode,
 } from "react";
-import useSWR from "swr";
-import { AdStudio } from "./product-ad-studio";
-import { ProductChooseBar } from "./product-choose-bar";
+import useSWR, { useSWRConfig } from "swr";
+import {
+  createProductAd,
+  fetchProductAd,
+  fetchProductAdBrief,
+  productAdBriefUrl,
+  updateProductAd,
+} from "./ads-client";
+import { fetchMetaReadiness, productsMetaUrl } from "./meta-client";
+import { adRequestId } from "./product-ad-parts";
+import {
+  CarriedStack,
+  galleryTileId,
+  GalleryHint,
+  ProductGallery,
+} from "./product-gallery";
 import { MadeList } from "./product-made-list";
-import { MakeOutputs } from "./product-make";
 import { ProductReview } from "./product-review";
 import {
+  AddVideoBay,
   EmptyShelf,
-  ProductShelf,
   ProductShelfSkeleton,
-  ShelfHeading,
+  ShelfRows,
+  type ShelfRowBay,
+  type ShelfRowModel,
 } from "./product-shelf";
-import { pickHero } from "./product-stage-model";
+import {
+  draftShelfInfo,
+  pickHero,
+  type DraftShelfInfo,
+} from "./product-stage-model";
 import theme from "./product-theme.module.css";
 import { ImportProgress, UploadProgress } from "./product-video-intake";
 import { WhatsAppLinkButton } from "./product-whatsapp-link";
-import { fetchProducts, productsApiUrl } from "./products-client";
-import { useProductImports } from "./use-product-imports";
+import {
+  ProductWorkbench,
+  type ProductWorkbenchSubject,
+} from "./product-workbench";
+import {
+  fetchProductImport,
+  fetchProducts,
+  ProductDraftError,
+  productAdUrl,
+  productImportUrl,
+  productsApiUrl,
+  productsMadeUrl,
+  reviewProducts,
+} from "./products-client";
+import { useProductDrag } from "./use-product-drag";
+import { ProductAdAutoUpdateProvider } from "./use-product-ad";
+import {
+  isImportRunning,
+  PRODUCT_IMPORT_POLL_MS,
+  useProductImports,
+} from "./use-product-imports";
 import { useProductsMade } from "./use-product-kits";
 import {
   AD_MAX_PRODUCTS,
-  MAKE_MAX_PRODUCTS,
+  canGoInAd,
+  cleanPicks,
+  picksIn,
   useProductSelection,
 } from "./use-product-selection";
 import { useProductVideoUpload } from "./use-product-video-upload";
 
 const EMPTY_PRODUCTS: WorkspaceProductRecord[] = [];
+/** The most videos with rows of their own; older ones stand on the plain row. */
+const ROW_IMPORTS_MAX = 12;
+const ROWS = PRODUCTS_COPY.rows;
 
 const carriesFiles = (event: DragEvent) =>
   Array.from(event.dataTransfer.types).includes("Files");
 
 /**
- * What the page shows, each with its own address so a link opens it and Back
- * closes it: the shelf, the check of an import's products (?review=<import>),
- * what to make with products (?make=<ids>, in shelf order), and a video ad's
- * studio, new (?ad=new&products=<ids>) or made (?ad=<ad>).
+ * What the page shows over the one page, with its own address so a link
+ * opens it and Back closes it: the check of an import's products, one by
+ * one (?review=<import>). Everything else is the one page: the shelf, its
+ * picks (?picks=<ids>) and the tiles, with a tile's workbench in place
+ * (?ad=<ad> opens an ad's).
  */
 export type ProductsView =
-  | { kind: "shelf" }
-  | { kind: "review"; importId: string }
-  | { kind: "make"; productIds: string[] }
-  | { kind: "ad-new"; productIds: string[] }
-  | { kind: "ad"; adId: string };
+  | { kind: "page" }
+  | { kind: "review"; importId: string; productId?: string };
 
-const SHELF: ProductsView = { kind: "shelf" };
-const VIEW_PARAMS = ["review", "make", "ad", "products"];
+const PAGE: ProductsView = { kind: "page" };
+/** Addresses of v2's views, read once and turned into picks. */
+const LEGACY_PARAMS = ["make", "products"];
 const OBJECT_ID = /^[a-f\d]{24}$/i;
 
-/** 1 to `max` distinct ids, or null for anything else. */
-function idsIn(value: string | null | undefined, max: number) {
-  if (!value) return null;
-  const ids = [...new Set(value.split(","))];
-  return ids.length <= max && ids.every(id => OBJECT_ID.test(id)) ? ids : null;
-}
-
-/** The view an address opens; the shelf for one it can't read. */
+/** The view an address opens; the page for one it can't read. */
 export function productsViewIn(search: URLSearchParams | null): ProductsView {
   const review = search?.get("review");
-  if (review && OBJECT_ID.test(review))
-    return { kind: "review", importId: review };
-  const make = idsIn(search?.get("make"), MAKE_MAX_PRODUCTS);
-  if (make) return { kind: "make", productIds: make };
-  const ad = search?.get("ad");
-  if (ad === "new") {
-    const products = idsIn(search?.get("products"), AD_MAX_PRODUCTS);
-    if (products) return { kind: "ad-new", productIds: products };
-  } else if (ad && OBJECT_ID.test(ad)) {
-    return { kind: "ad", adId: ad };
+  if (review && OBJECT_ID.test(review)) {
+    const productId = search?.get("reviewProduct");
+    return {
+      kind: "review",
+      importId: review,
+      ...(productId && OBJECT_ID.test(productId) ? { productId } : {}),
+    };
   }
-  return SHELF;
+  return PAGE;
 }
 
-/** This page's address showing `view`, keeping any other parameters. */
-function viewAddress(view: ProductsView): string {
+/**
+ * The picks an address asks for: ?picks=, else v2's ?make=<ids> and
+ * ?ad=new&products=<ids>, which now open the one page with them picked.
+ */
+export function addressPicks(search: URLSearchParams | null): string[] {
+  const picks = picksIn(search);
+  if (picks.length > 0) return picks;
+  const make = search?.get("make");
+  if (make) return cleanPicks(make.split(","));
+  if (search?.get("ad") === "new")
+    return cleanPicks((search.get("products") ?? "").split(","));
+  return [];
+}
+
+/** The ad an address opens (?ad=<id>), or null. */
+export function addressAd(search: URLSearchParams | null): string | null {
+  const ad = search?.get("ad");
+  return ad && OBJECT_ID.test(ad) ? ad.toLowerCase() : null;
+}
+
+/** This page's address with these parameters set (null removes one). */
+function pageAddress(changes: Record<string, string | null>): string {
   const url = new URL(window.location.href);
-  const rest = new URLSearchParams(url.search);
-  for (const name of VIEW_PARAMS) rest.delete(name);
+  const params = new URLSearchParams(url.search);
+  for (const name of LEGACY_PARAMS) params.delete(name);
+  if (params.get("ad") === "new") params.delete("ad");
+  if (changes.review === null) params.delete("reviewProduct");
+  for (const [name, value] of Object.entries(changes)) {
+    if (value === null) params.delete(name);
+    else params.set(name, value);
+  }
   // Ids are joined by plain commas, which an address keeps as they are.
-  const own =
-    view.kind === "review"
-      ? `review=${encodeURIComponent(view.importId)}`
-      : view.kind === "make"
-        ? `make=${view.productIds.join(",")}`
-        : view.kind === "ad-new"
-          ? `ad=new&products=${view.productIds.join(",")}`
-          : view.kind === "ad"
-            ? `ad=${view.adId}`
-            : "";
-  const search = [rest.toString(), own].filter(Boolean).join("&");
+  const search = params.toString().replace(/%2C/gi, ",");
   url.search = search ? `?${search}` : "";
   return url.toString();
 }
 
-/** How many views this page opened on top of the shelf, kept with each entry. */
+/** How many views this page opened on top of its own entry, kept with each entry. */
 const depthOf = (state: unknown): number => {
   const depth = (state as { productsDepth?: unknown } | null)?.productsDepth;
   return typeof depth === "number" && depth > 0 ? depth : 0;
@@ -125,7 +193,7 @@ function scrollColumnOf(from: Element | null): HTMLElement | null {
   return null;
 }
 
-// Inputs a key isn't typed into: a bay's checkbox lets Escape through.
+// Inputs a key isn't typed into.
 const PRESSED_INPUTS = new Set([
   "checkbox",
   "radio",
@@ -143,6 +211,181 @@ function typedInField(event: KeyboardEvent): boolean {
   return Boolean(input && !PRESSED_INPUTS.has(input.type));
 }
 
+const WHEN = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const whenOf = (iso: string | null) => {
+  if (!iso) return null;
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? null : WHEN.format(at);
+};
+
+/** Imports newest first; one without a date last. */
+const newestFirst = (
+  a: ProductVideoImportRecord,
+  b: ProductVideoImportRecord
+) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+
+/** The first-visit hint stays away once the owner made something. */
+const HINT_KEY = "airi.products.v3.hint";
+function hintDismissed(): boolean {
+  try {
+    return window.localStorage.getItem(HINT_KEY) === "done";
+  } catch {
+    return false;
+  }
+}
+function dismissHint() {
+  try {
+    window.localStorage.setItem(HINT_KEY, "done");
+  } catch {
+    // Private windows and blocked storage: the hint just shows again.
+  }
+}
+
+/** Refusals that come before an ad is written: the next press is a new one. */
+const REFUSED_BEFORE_WRITING: ReadonlySet<string> = new Set([
+  "ai_disabled",
+  "ai_actions_used",
+  "spend_limit",
+  "trial_ended",
+  "not_enough_products",
+  "invalid_request",
+  "ad_letters_unsupported",
+  "product_not_found",
+  "price_to_check",
+]);
+
+const codeOf = (error: unknown): ProductsErrorCode | "failed" =>
+  error instanceof ProductDraftError
+    ? (error.code as ProductsErrorCode | "failed")
+    : "failed";
+
+/** An ad's products, in its order, as one key. */
+const productsKey = (ids: readonly string[]) => ids.join(",");
+
+/** The ad these products already made, newest first; not a failed one. */
+export function adForPicks(
+  ads: readonly ProductAdRecord[],
+  productIds: readonly string[]
+): ProductAdRecord | null {
+  if (productIds.length === 0) return null;
+  const key = productsKey(productIds);
+  return (
+    ads.find(
+      ad =>
+        ad.status !== "failed" &&
+        productsKey(ad.products.map(product => product.productId)) === key
+    ) ?? null
+  );
+}
+
+/** What each tile's stamp says, from what the ad and the kit put out on Meta. */
+export function templateStamps(
+  ad: ProductAdRecord | null,
+  kit: ProductKitRecord | null
+): Map<ProductTemplateId, ProductTemplateStamp> {
+  const stamps = new Map<ProductTemplateId, ProductTemplateStamp>();
+  for (const post of ad?.meta?.posts ?? []) {
+    const template = productTemplateOfPost(post);
+    if (!template) continue;
+    if (post.state === "published") stamps.set(template.id, "live");
+    else if (post.state === "failed" && !stamps.has(template.id))
+      stamps.set(template.id, "failed");
+  }
+  const ctwa = ad?.meta?.ctwa ?? null;
+  if (ctwa) {
+    const template = productTemplateOfCtwa(ctwa);
+    const status = ctwa.effectiveStatus?.toUpperCase() ?? null;
+    const stamp: ProductTemplateStamp | null =
+      ctwa.state === "failed"
+        ? "failed"
+        : ctwa.state === "paused"
+          ? "paused"
+          : ctwa.state === "running"
+            ? status === null
+              ? null
+              : status === "ACTIVE"
+                ? "live"
+                : status === "DISAPPROVED"
+                  ? "failed"
+                  : "in_review"
+            : null;
+    if (stamp) stamps.set(template.id, stamp);
+  }
+  const carousel = kit?.parts.carousel ?? null;
+  if (carousel) {
+    const meta = carousel.metaStatus?.toUpperCase() ?? null;
+    const stamp: ProductTemplateStamp | null =
+      meta === "APPROVED"
+        ? "approved"
+        : meta === "REJECTED" || carousel.state === "failed"
+          ? "failed"
+          : carousel.state === "submitted"
+            ? "in_review"
+            : null;
+    if (stamp) stamps.set("chat_kit", stamp);
+  }
+  return stamps;
+}
+
+/** The tile an ad's workbench opens on: what last went out from it, else its Reel. */
+export function templateOfAd(ad: ProductAdRecord): ProductTemplate {
+  const posts = ad.meta?.posts ?? [];
+  const latest = [...posts].sort((a, b) =>
+    b.requestedAt.localeCompare(a.requestedAt)
+  )[0];
+  const fromPost = latest ? productTemplateOfPost(latest) : null;
+  if (fromPost?.shipped) return fromPost;
+  const ctwa = ad.meta?.ctwa;
+  if (ctwa) {
+    const fromCtwa = productTemplateOfCtwa(ctwa);
+    if (fromCtwa.shipped) return fromCtwa;
+  }
+  const reel = productTemplateOfMotion(productAdMotionOf(ad.motion));
+  return reel.shipped ? reel : productTemplateOfMotion("shelf");
+}
+
+/** An open workbench: the tile it opened from, and what it shows. */
+type OpenBench = {
+  templateId: ProductTemplateId;
+  subject: ProductWorkbenchSubject;
+  /** The picks the tile used, in pick order, when it was made. */
+  picks: WorkspaceProductRecord[];
+  /** Each make counts, so an answer for an earlier one is let go. */
+  make: number;
+};
+
+/** Fetches one import's products for its shelf row, sharing the stage's request. */
+function ImportProbe({
+  workspaceId,
+  importId,
+  running,
+  onData,
+}: {
+  workspaceId: string;
+  importId: string;
+  running: boolean;
+  onData: (importId: string, data: ProductVideoImportResponse | null) => void;
+}) {
+  const { data } = useSWR<ProductVideoImportResponse>(
+    productImportUrl(workspaceId, importId),
+    fetchProductImport,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      refreshInterval: running ? PRODUCT_IMPORT_POLL_MS : 0,
+    }
+  );
+  useEffect(() => {
+    onData(importId, data ?? null);
+  }, [importId, data, onData]);
+  return null;
+}
+
 /** Products: the workspace's own catalog, which the owner fills by filming their shelf. */
 export function ProductsPage({
   workspaceId,
@@ -152,6 +395,24 @@ export function ProductsPage({
   /** Airi's number shop owners send videos to, when that's set up. */
   whatsappNumber?: string | null;
 }) {
+  return (
+    <ProductAdAutoUpdateProvider workspaceId={workspaceId}>
+      <ProductsPageContent
+        workspaceId={workspaceId}
+        whatsappNumber={whatsappNumber}
+      />
+    </ProductAdAutoUpdateProvider>
+  );
+}
+
+function ProductsPageContent({
+  workspaceId,
+  whatsappNumber,
+}: {
+  workspaceId: string;
+  whatsappNumber: string | null;
+}) {
+  const { mutate: mutateKey } = useSWRConfig();
   const { data, error, isValidating, mutate } = useSWR<ProductsListResponse>(
     productsApiUrl(workspaceId),
     fetchProducts,
@@ -159,14 +420,14 @@ export function ProductsPage({
     // focus would download every photo again.
     { shouldRetryOnError: false, revalidateOnFocus: false }
   );
-  const products = data?.products ?? EMPTY_PRODUCTS;
-  // Made from your shelf goes above the shelf: asked for with the products
-  // (the list shares this request), and the shelf waits for its answer, so
-  // the list doesn't push the shelf down under the owner's finger.
+  const published = data?.products ?? EMPTY_PRODUCTS;
+  // What went out on Meta sits under the tiles; the tiles' stamps and the
+  // ad the picks already made are read from it too.
   const made = useProductsMade(workspaceId);
   const madeSettled = made.data !== undefined || made.error !== undefined;
   const shelfId = useId();
-  const selection = useProductSelection(products);
+  const galleryId = useId();
+  const tilePrefix = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const { imports: listed, refresh: refreshImports } =
     useProductImports(workspaceId);
@@ -174,10 +435,16 @@ export function ProductsPage({
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(
     () => new Set()
   );
-  const imports =
-    dismissed.size > 0
-      ? listed.filter(record => !dismissed.has(record.id))
-      : listed;
+  const imports = useMemo(
+    () =>
+      (dismissed.size > 0
+        ? listed.filter(record => !dismissed.has(record.id))
+        : listed
+      )
+        .slice()
+        .sort(newestFirst),
+    [listed, dismissed]
+  );
   // First frames of the videos uploaded from this page, by import.
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const previewLinks = useRef(previews);
@@ -192,33 +459,239 @@ export function ProductsPage({
     []
   );
 
-  // Where the keyboard's focus goes once the control it was on has gone:
-  // the upload button (an upload's row went, or a view closed), or the
-  // Choose button, or the choose bar's make button (a view opened from it
-  // closed). Only when the focus fell to the page.
-  const uploadButtonRef = useRef<HTMLButtonElement>(null);
-  const chooseButtonRef = useRef<HTMLButtonElement>(null);
-  const makeKitButtonRef = useRef<HTMLButtonElement>(null);
-  const refocus = useRef<"upload" | "choose" | "make" | null>(null);
-  useEffect(() => {
-    const target = refocus.current;
-    if (!target) return;
-    const element = {
-      upload: uploadButtonRef,
-      choose: chooseButtonRef,
-      make: makeKitButtonRef,
-    }[target].current;
-    if (!element) return;
-    refocus.current = null;
-    if (!document.activeElement || document.activeElement === document.body)
-      element.focus();
+  // Each finished import's products, for its row: drafts stand on it too.
+  const [details, setDetails] = useState<
+    ReadonlyMap<string, ProductVideoImportResponse>
+  >(() => new Map());
+  const onDetail = useCallback(
+    (importId: string, detail: ProductVideoImportResponse | null) => {
+      setDetails(current => {
+        if (!detail) {
+          if (!current.has(importId)) return current;
+          const next = new Map(current);
+          next.delete(importId);
+          return next;
+        }
+        if (current.get(importId) === detail) return current;
+        return new Map(current).set(importId, detail);
+      });
+    },
+    []
+  );
+
+  // The one video on the stage: an upload from this page, else the first
+  // import running, else the first that failed with products to check. Others
+  // running are rows; a ready one collapses into its print, its products
+  // standing on the shelf as a row.
+  const upload = useProductVideoUpload(workspaceId, (importId, preview) => {
+    setPreviews(current => ({ ...current, [importId]: preview }));
+    // Shown as waiting right away, rather than after the next list.
+    void refreshImports(
+      current => ({
+        imports: [
+          {
+            id: importId,
+            status: "queued",
+            stage: null,
+            productTotal: 0,
+            photoTotal: 0,
+            photoDone: 0,
+            errorCode: null,
+            photosStopped: null,
+            draftsLeft: false,
+            presenter: null,
+            createdAt: new Date().toISOString(),
+            finishedAt: null,
+          },
+          ...(current?.imports ?? []).filter(entry => entry.id !== importId),
+        ],
+      }),
+      { revalidate: true }
+    );
   });
+  const uploading = upload.state.phase !== "idle";
+  const sending = uploading && upload.state.phase !== "failed";
+  const running = useMemo(() => imports.filter(isImportRunning), [imports]);
+  const hero = uploading
+    ? null
+    : pickHero(imports.filter(record => record.status !== "ready"));
+  // Cards above the shelf: other imports running, and finished ones that
+  // stand on no row (nothing found), failed, or stopped making photos, which
+  // say why.
+  const cards = imports.filter(
+    record =>
+      record !== hero &&
+      (isImportRunning(record) ||
+        record.status === "failed" ||
+        record.productTotal === 0 ||
+        record.photosStopped !== null)
+  );
+  // The videos the shelf has rows for: the finished ones the list shows
+  // (with drafts left), and every video a shelf product came from, which
+  // the list leaves out once all its products were checked. The newest
+  // first; past ROW_IMPORTS_MAX their products stand on the plain row.
+  const rowImports = useMemo(() => {
+    const ids: string[] = [];
+    const add = (id: string | null | undefined) => {
+      if (!id || ids.includes(id) || id === hero?.id) return;
+      if (running.some(record => record.id === id)) return;
+      ids.push(id);
+    };
+    for (const record of imports)
+      if (!isImportRunning(record) && record.productTotal > 0) add(record.id);
+    for (const product of published) add(product.importId);
+    return ids.slice(0, ROW_IMPORTS_MAX);
+  }, [imports, published, hero, running]);
+
+  // The shelf's rows: each video's products, newest first, in the order
+  // they were named; the products of no video (or of an old one) on a last,
+  // plain row.
+  const { rows, shelfProducts, frames, draftImports, doubts } = useMemo(() => {
+    const byId = new Map(published.map(product => [product.id, product]));
+    const listedImports = new Map(imports.map(record => [record.id, record]));
+    const placed = new Set<string>();
+    const frameOf = new Map<string, string>();
+    const draftOf = new Map<string, string>();
+    const doubtful = new Set<string>();
+    const built: Array<{ at: string; row: ShelfRowModel }> = [];
+    for (const importId of rowImports) {
+      const detail = details.get(importId) ?? null;
+      const record = listedImports.get(importId) ?? detail?.import ?? null;
+      const info =
+        detail && record
+          ? draftShelfInfo(detail.products, record)
+          : new Map<string, DraftShelfInfo>();
+      const bays: ShelfRowBay[] = [];
+      const listedHere = (detail?.products ?? []) as DraftProductRecord[];
+      for (const product of listedHere) {
+        const option = product.options[product.featuredOption] ?? null;
+        if (option?.originalUrl) frameOf.set(product.id, option.originalUrl);
+        if (product.status === "draft") {
+          const shelfInfo = info.get(product.id) ?? null;
+          bays.push({ product, draft: true, info: shelfInfo });
+          draftOf.set(product.id, importId);
+          if (shelfInfo?.priceDoubt) doubtful.add(product.id);
+          placed.add(product.id);
+        } else if (product.status === "published" && byId.has(product.id)) {
+          bays.push({
+            product: byId.get(product.id)!,
+            draft: false,
+            info: null,
+          });
+          placed.add(product.id);
+        }
+      }
+      // Shelf products of this video its own list didn't name (yet).
+      for (const product of published)
+        if (product.importId === importId && !placed.has(product.id)) {
+          bays.push({ product, draft: false, info: null });
+          placed.add(product.id);
+        }
+      if (bays.length === 0) continue;
+      const first = listedHere[0];
+      built.push({
+        at: record?.createdAt ?? "",
+        row: {
+          key: importId,
+          importId,
+          when: whenOf(record?.createdAt ?? null),
+          print: {
+            frame:
+              record?.presenter?.originalUrl ??
+              first?.options[first.featuredOption]?.originalUrl ??
+              null,
+            video: previews[importId] ?? null,
+          },
+          bays,
+          draftsLeft: bays.some(bay => bay.draft),
+        },
+      });
+    }
+    // Newest first; a video whose date isn't known yet keeps its place.
+    built.sort((a, b) => (a.at && b.at ? b.at.localeCompare(a.at) : 0));
+    const rest = published.filter(product => !placed.has(product.id));
+    const rowsOut = built.map(entry => entry.row);
+    if (rest.length > 0)
+      rowsOut.push({
+        key: "shelf",
+        importId: null,
+        when: null,
+        print: null,
+        bays: rest.map(product => ({ product, draft: false, info: null })),
+        draftsLeft: false,
+      });
+    return {
+      rows: rowsOut,
+      shelfProducts: rowsOut.flatMap(row => row.bays.map(bay => bay.product)),
+      frames: frameOf as ReadonlyMap<string, string>,
+      draftImports: draftOf as ReadonlyMap<string, string>,
+      doubts: doubtful as ReadonlySet<string>,
+    };
+  }, [rowImports, imports, details, published, previews]);
 
   const searchParams = useSearchParams();
+  const [startAd, setStartAd] = useState(() => addressAd(searchParams));
+  const selection = useProductSelection(shelfProducts, () =>
+    addressPicks(searchParams)
+  );
+  // Whether the owner (or the address) set the picks: the page then never
+  // picks for them.
+  const touched = useRef(selection.picks.length > 0 || startAd !== null);
+
   const [view, setView] = useState<ProductsView>(() =>
     productsViewIn(searchParams)
   );
-  // How many views this page opened on top of the shelf's own entry in the
+  // Each move in the browser's history, so the entry it lands on gets the picks.
+  const [moves, setMoves] = useState(0);
+
+  // The picks live in the address, so a reload keeps them; back from the
+  // review, the page's own entry learns the picks made there.
+  const picksParam = selection.picks.join(",");
+  useEffect(() => {
+    const want = picksParam || null;
+    const params = new URLSearchParams(window.location.search);
+    const legacy = LEGACY_PARAMS.some(name => params.has(name));
+    if (params.get("picks") === want && !legacy) return;
+    window.history.replaceState(
+      window.history.state,
+      "",
+      pageAddress({ picks: want })
+    );
+    // searchParams: Next's router writes back the address it last heard of
+    // (the review's close, from before the picks changed); the picks are
+    // put back in when it does.
+  }, [picksParam, view.kind, moves, searchParams]);
+
+  // Picks for the owner: once the shelf shows, the newest video's first 3,
+  // so every tile shows real products at once; and a video that finishes
+  // while nothing is picked has its first 3 picked. A tap changes them.
+  const wasRunning = useRef<ReadonlySet<string>>(new Set());
+  const justFinished = useRef<string | null>(null);
+  useEffect(() => {
+    const now = new Set(running.map(record => record.id));
+    for (const id of wasRunning.current)
+      if (!now.has(id)) justFinished.current = id;
+    wasRunning.current = now;
+  }, [running]);
+  const { set: setPicks } = selection;
+  useEffect(() => {
+    if (selection.picks.length > 0) {
+      justFinished.current = null;
+      return;
+    }
+    const row =
+      (justFinished.current
+        ? rows.find(entry => entry.importId === justFinished.current)
+        : null) ?? (!touched.current ? rows[0] : null);
+    if (!row || row.bays.length === 0) return;
+    // In the order the owner named them, once the video's own list is in.
+    if (row.importId && !details.has(row.importId)) return;
+    justFinished.current = null;
+    touched.current = true;
+    setPicks(row.bays.slice(0, AD_MAX_PRODUCTS).map(bay => bay.product.id));
+  }, [rows, details, selection.picks.length, setPicks]);
+
+  // How many views this page opened on top of its own entry in the
   // browser's history: closing a view goes back that far, so Back after it
   // doesn't open it again.
   const depth = useRef(0);
@@ -226,132 +699,440 @@ export function ProductsPage({
   useEffect(() => {
     depth.current = depthOf(window.history.state);
     const onPop = () => {
+      setMoves(count => count + 1);
       const next = productsViewIn(new URLSearchParams(window.location.search));
       if (closing.current) {
         closing.current = false;
         depth.current = 0;
-        // The first entry was a view's own address, opened from a link.
-        if (next.kind !== "shelf")
-          window.history.replaceState(null, "", viewAddress(SHELF));
-        setView(SHELF);
+        // The first entry was the review's own address, opened from a link.
+        if (next.kind !== "page")
+          window.history.replaceState(null, "", pageAddress({ review: null }));
+        setView(PAGE);
         return;
       }
       depth.current = depthOf(window.history.state);
-      if (next.kind === "shelf") refocus.current = "upload";
       setView(next);
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  const viewRoot = useRef<HTMLDivElement>(null);
-  const viewKey =
-    view.kind === "review"
-      ? `review:${view.importId}`
-      : view.kind === "make"
-        ? `make:${view.productIds.join(",")}`
-        : view.kind === "ad-new"
-          ? `ad-new:${view.productIds.join(",")}`
-          : view.kind === "ad"
-            ? `ad:${view.adId}`
-            : "shelf";
-  // A view opens at the top of the page, with the keyboard's focus in it;
-  // the review takes the focus itself, for its keys. Back on the shelf, the
-  // page is where the owner left it, with what they chose.
-  const lastViewKey = useRef(viewKey);
   const pageRoot = useRef<HTMLElement>(null);
-  const onShelf = useRef(view.kind === "shelf");
-  const shelfScroll = useRef<number | null>(null);
+  const pageScroll = useRef<number | null>(null);
+  const viewKey = view.kind === "review" ? `review:${view.importId}` : "page";
+  const lastViewKey = useRef(viewKey);
   useEffect(() => {
-    onShelf.current = view.kind === "shelf";
     if (lastViewKey.current === viewKey) return;
     lastViewKey.current = viewKey;
     const column = scrollColumnOf(pageRoot.current);
-    if (view.kind === "shelf") {
-      if (column && shelfScroll.current !== null)
-        column.scrollTop = shelfScroll.current;
-      shelfScroll.current = null;
+    if (view.kind === "page") {
+      if (column && pageScroll.current !== null)
+        column.scrollTop = pageScroll.current;
+      pageScroll.current = null;
       return;
     }
     if (column) column.scrollTop = 0;
-    if (view.kind !== "review")
-      viewRoot.current?.focus({ preventScroll: true });
   }, [viewKey, view.kind]);
 
-  const openView = useCallback((next: ProductsView) => {
-    // Where the shelf was, to come back to.
-    if (onShelf.current)
-      shelfScroll.current = scrollColumnOf(pageRoot.current)?.scrollTop ?? null;
+  const openReview = useCallback((importId: string, productId?: string) => {
+    if (lastViewKey.current === "page")
+      pageScroll.current = scrollColumnOf(pageRoot.current)?.scrollTop ?? null;
     const level = depth.current + 1;
-    window.history.pushState({ productsDepth: level }, "", viewAddress(next));
-    depth.current = level;
-    setView(next);
-  }, []);
-  const replaceView = useCallback((next: ProductsView) => {
-    window.history.replaceState(
-      { productsDepth: depth.current },
+    window.history.pushState(
+      { productsDepth: level },
       "",
-      viewAddress(next)
+      pageAddress({
+        review: importId,
+        reviewProduct: productId ?? null,
+        ad: null,
+      })
     );
-    setView(next);
+    depth.current = level;
+    setView({ kind: "review", importId, ...(productId ? { productId } : {}) });
   }, []);
-  /** Back to the shelf, from any view, however deep. */
-  const closeView = useCallback(() => {
+  /** Back to the page from the review, however deep. */
+  const closeReview = useCallback(() => {
     const level = depth.current;
     depth.current = 0;
     if (level > 0) {
       closing.current = true;
       window.history.go(-level);
     } else {
-      window.history.replaceState(null, "", viewAddress(SHELF));
+      window.history.replaceState(null, "", pageAddress({ review: null }));
     }
-    setView(SHELF);
+    setView(PAGE);
   }, []);
 
-  const openReview = useCallback(
-    (importId: string) => openView({ kind: "review", importId }),
-    [openView]
-  );
-  const closeToShelf = () => {
-    refocus.current = selection.choosing ? "make" : "upload";
-    closeView();
-  };
-  // "Change" in what to make: the shelf's Choose mode, with these chosen.
-  const chooseAgain = (productIds: string[]) => {
-    refocus.current = "make";
-    closeView();
-    selection.start(productIds);
-  };
-  const makeAd = (productIds: string[]) => {
-    const chosen = productIds.slice(0, AD_MAX_PRODUCTS);
-    if (chosen.length > 0) openView({ kind: "ad-new", productIds: chosen });
-  };
-  const makeKit = (productIds: string[]) => {
-    const chosen = productIds.slice(0, MAKE_MAX_PRODUCTS);
-    if (chosen.length > 0) openView({ kind: "make", productIds: chosen });
-  };
-  const stopChoosing = () => {
-    refocus.current = "choose";
-    selection.stop();
-  };
+  // ------------------------------------------------------------ the make
 
-  // Escape closes the make and ad views, or leaves Choose mode; the review
-  // has its own. Not while a field or an open popover takes it.
+  const ads = made.data?.ads;
+  const madeAds = useMemo(() => ads ?? [], [ads]);
+  const picked = selection.picked;
+  const adPicks = useMemo(
+    () => picked.filter(canGoInAd).slice(0, AD_MAX_PRODUCTS),
+    [picked]
+  );
+  const adPickIds = useMemo(
+    () => adPicks.map(product => product.id),
+    [adPicks]
+  );
+  // Ads made on this visit, by their products, before the made list has them.
+  const [madeHere, setMadeHere] = useState<ReadonlyMap<string, string>>(
+    () => new Map()
+  );
+  const listedAd = adForPicks(madeAds, adPickIds);
+  const currentAdId =
+    listedAd?.id ?? madeHere.get(productsKey(adPickIds)) ?? null;
+
+  const [open, setOpen] = useState<OpenBench | null>(null);
+  const makes = useRef(0);
+  const openAdId = open?.subject.kind === "ad" ? open.subject.adId : null;
+
+  // A motion change asked for while the ad's video was being made: sent
+  // once it's ready (409 ad_not_ready means a run is going).
+  const [waitingMotion, setWaitingMotion] = useState<{
+    adId: string;
+    motion: ProductAdMotion;
+  } | null>(null);
+
+  // The ad these picks made, as the workbench reads it: its stills and its
+  // stamps. The same request as the workbench's, so it's asked for once.
+  const watchedAdId = openAdId ?? startAd ?? currentAdId;
+  const { data: watchedAd, error: watchedError } = useSWR<ProductAdRecord>(
+    watchedAdId ? productAdUrl(workspaceId, watchedAdId) : null,
+    fetchProductAd,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      refreshInterval: waitingMotion ? 3000 : 0,
+    }
+  );
+  // The picks' ad as its own read, with its stills: the made list's read
+  // leaves them out. The same request as the workbench's when it's open on
+  // this ad, so it's asked for once.
+  const { data: pickedAdRead } = useSWR<ProductAdRecord>(
+    currentAdId ? productAdUrl(workspaceId, currentAdId) : null,
+    fetchProductAd,
+    { revalidateOnFocus: false, shouldRetryOnError: false }
+  );
+  const currentRead =
+    currentAdId !== null && pickedAdRead?.id === currentAdId
+      ? pickedAdRead
+      : null;
+  const currentAd =
+    currentAdId === null ? null : (currentRead ?? listedAd ?? null);
+
+  const kits = made.data?.kits;
+  const kitPickIds = useMemo(
+    () =>
+      productTemplatePicks(
+        productTemplate("chat_kit")!,
+        picked.map(product => product.id)
+      ),
+    [picked]
+  );
+  const currentKit = useMemo(
+    () =>
+      (kits ?? []).find(
+        kit => productsKey(kit.productIds) === productsKey(kitPickIds)
+      ) ?? null,
+    [kits, kitPickIds]
+  );
+  const stamps = useMemo(
+    () => templateStamps(currentAd, currentKit),
+    [currentAd, currentKit]
+  );
+
+  // AI off for the company: tiles that need a new ad lock; an ad that
+  // exists, and what it puts out on Meta, still work.
+  const { data: readiness } = useSWR(
+    productsMetaUrl(workspaceId),
+    fetchMetaReadiness,
+    { revalidateOnFocus: false, shouldRetryOnError: false }
+  );
+  const locked =
+    readiness?.ai?.blocked === "ai_disabled"
+      ? PRODUCTS_COPY.gallery.aiOff
+      : null;
+
+  const [lastAdKey, setLastAdKey] = useState<string | null>(null);
+  const newPicks =
+    lastAdKey !== null &&
+    adPickIds.length > 0 &&
+    lastAdKey !== productsKey(adPickIds) &&
+    currentAdId === null;
+
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    setHint(!hintDismissed());
+  }, []);
+
+  /** Puts drafts among these products on the shelf: a make is the owner's swipe right. */
+  const publishDrafts = useCallback(
+    async (products: readonly WorkspaceProductRecord[]) => {
+      const byImport = new Map<string, string[]>();
+      for (const product of products) {
+        const importId = draftImports.get(product.id);
+        if (!importId) continue;
+        byImport.set(importId, [...(byImport.get(importId) ?? []), product.id]);
+      }
+      if (byImport.size === 0) return;
+      for (const [importId, ids] of byImport)
+        await reviewProducts(workspaceId, importId, ids, "published");
+      await Promise.all([
+        mutate(),
+        ...[...byImport.keys()].map(importId =>
+          mutateKey(productImportUrl(workspaceId, importId))
+        ),
+        refreshImports(),
+      ]);
+    },
+    [draftImports, workspaceId, mutate, mutateKey, refreshImports]
+  );
+
+  const sendMotion = useCallback(
+    async (adId: string, motion: ProductAdMotion) => {
+      try {
+        const ad = await updateProductAd(workspaceId, adId, { motion });
+        setWaitingMotion(current => (current?.adId === adId ? null : current));
+        await mutateKey(productAdUrl(workspaceId, adId), ad, {
+          revalidate: false,
+        });
+        void mutateKey(productsMadeUrl(workspaceId));
+      } catch (failure) {
+        // A run is going: the change waits for it, as the workbench's own
+        // changes do, and goes when the video is ready.
+        if (codeOf(failure) === "ad_not_ready")
+          setWaitingMotion({ adId, motion });
+        else
+          setWaitingMotion(current =>
+            current?.adId === adId ? null : current
+          );
+      }
+    },
+    [workspaceId, mutateKey]
+  );
+  useEffect(() => {
+    if (!waitingMotion || watchedAd?.id !== waitingMotion.adId) return;
+    if (watchedAd.status !== "ready") return;
+    if (productAdMotionOf(watchedAd.motion) === waitingMotion.motion) {
+      setWaitingMotion(null);
+      return;
+    }
+    void sendMotion(waitingMotion.adId, waitingMotion.motion);
+  }, [waitingMotion, watchedAd, sendMotion]);
+
+  // The press being made, so trying again sends the same id: under it the
+  // server answers with the ad it already saved.
+  const press = useRef<{ key: string; id: string } | null>(null);
+
+  const make = useCallback(
+    async (template: ProductTemplate) => {
+      const number = ++makes.current;
+      if (hint) {
+        setHint(false);
+        dismissHint();
+      }
+      const still = () => makes.current === number;
+      if (template.makes === "kit") {
+        const kitPicks = productTemplatePicks(template, picked);
+        // Opening a kit must not count as confirming a price flagged by the
+        // import: publishing it here would also remove the shelf's red tag.
+        if (kitPicks.some(product => doubts.has(product.id))) {
+          setOpen({
+            templateId: template.id,
+            subject: { kind: "ad-pending", error: "price_to_check" },
+            picks: kitPicks,
+            make: number,
+          });
+          return;
+        }
+        const importIds = new Set(
+          kitPicks.map(
+            product => draftImports.get(product.id) ?? product.importId ?? null
+          )
+        );
+        const [onlyImport] = [...importIds];
+        setOpen({
+          templateId: template.id,
+          subject: {
+            kind: "kit",
+            productIds: kitPicks.map(product => product.id),
+            importId: importIds.size === 1 ? (onlyImport ?? null) : null,
+          },
+          picks: kitPicks,
+          make: number,
+        });
+        // The kit is made of shelf products: drafts among the picks go on
+        // the shelf first.
+        try {
+          await publishDrafts(kitPicks);
+        } catch {
+          // The kit's own make says what it couldn't use.
+        }
+        return;
+      }
+
+      const tilePicks = productTemplatePicks(template, adPicks);
+      if (tilePicks.length === 0) return;
+      const ids = tilePicks.map(product => product.id);
+      const key = productsKey(ids);
+      setLastAdKey(key);
+      const opened = (subject: ProductWorkbenchSubject) =>
+        setOpen({
+          templateId: template.id,
+          subject,
+          picks: tilePicks,
+          make: number,
+        });
+
+      if (tilePicks.some(product => doubts.has(product.id))) {
+        opened({ kind: "ad-pending", error: "price_to_check" });
+        return;
+      }
+      const existing =
+        adForPicks(madeAds, ids)?.id ?? madeHere.get(key) ?? null;
+      if (existing) {
+        opened({ kind: "ad", adId: existing });
+        const known =
+          watchedAd?.id === existing
+            ? watchedAd
+            : (madeAds.find(ad => ad.id === existing) ?? null);
+        if (
+          template.renderer === "motion" &&
+          template.motion &&
+          known &&
+          productAdMotionOf(known.motion) !== template.motion
+        )
+          void sendMotion(existing, template.motion);
+        return;
+      }
+
+      opened({ kind: "ad-pending", error: null });
+      const motion =
+        template.renderer === "motion" ? template.motion : undefined;
+      const pressKey = `${key}|${motion ?? "shelf"}`;
+      const id =
+        press.current?.key === pressKey ? press.current.id : adRequestId();
+      press.current = { key: pressKey, id };
+      try {
+        await publishDrafts(tilePicks);
+        const brief = await fetchProductAdBrief(
+          productAdBriefUrl(workspaceId, ids)
+        );
+        if (brief.blocked) throw new ProductDraftError(brief.blocked);
+        if (
+          brief.products.length === 0 ||
+          brief.products.some(product => product.problem !== null)
+        )
+          throw new ProductDraftError("not_enough_products");
+        const ad = await createProductAd(workspaceId, {
+          requestId: id,
+          productIds: ids,
+          idea: { kind: "new" },
+          // The owner's own recording when the video has them saying a price.
+          voice: brief.products.some(product => product.hasVoice)
+            ? "own"
+            : "none",
+          presenter: { use: false, consent: false },
+          ...(motion ? { motion } : {}),
+        });
+        press.current = null;
+        await mutateKey(productAdUrl(workspaceId, ad.id), ad, {
+          revalidate: false,
+        });
+        void mutateKey(productsMadeUrl(workspaceId));
+        setMadeHere(current => new Map(current).set(key, ad.id));
+        if (still())
+          setOpen(current =>
+            current?.make === number
+              ? { ...current, subject: { kind: "ad", adId: ad.id } }
+              : current
+          );
+      } catch (failure) {
+        const code = codeOf(failure);
+        if (REFUSED_BEFORE_WRITING.has(code)) press.current = null;
+        if (still())
+          setOpen(current =>
+            current?.make === number
+              ? { ...current, subject: { kind: "ad-pending", error: code } }
+              : current
+          );
+      }
+    },
+    [
+      hint,
+      picked,
+      adPicks,
+      draftImports,
+      doubts,
+      madeAds,
+      madeHere,
+      watchedAd,
+      publishDrafts,
+      sendMotion,
+      workspaceId,
+      mutateKey,
+    ]
+  );
+
+  // ?ad=<id>: that ad's workbench, on its last tile, with its products
+  // picked. An ad that can't be read opens nothing.
+  useEffect(() => {
+    if (startAd && watchedError && watchedAdId === startAd) setStartAd(null);
+  }, [startAd, watchedError, watchedAdId]);
+  useEffect(() => {
+    if (!startAd || watchedAd?.id !== startAd) return;
+    setStartAd(null);
+    const ids = watchedAd.products.map(product => product.productId);
+    if (selection.picks.length === 0) setPicks(ids);
+    const template = templateOfAd(watchedAd);
+    setLastAdKey(productsKey(ids));
+    setMadeHere(current => new Map(current).set(productsKey(ids), startAd));
+    setOpen({
+      templateId: template.id,
+      subject: { kind: "ad", adId: startAd },
+      picks: [],
+      make: ++makes.current,
+    });
+  }, [startAd, watchedAd, selection.picks.length, setPicks]);
+
+  // The open ad's workbench keeps its address (?ad=<id>), so a reload
+  // returns to it.
+  useEffect(() => {
+    if (view.kind !== "page") return;
+    const want = openAdId;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("ad") === want || (!want && !params.has("ad"))) return;
+    if (!want && startAd) return;
+    window.history.replaceState(
+      window.history.state,
+      "",
+      pageAddress({ ad: want })
+    );
+  }, [openAdId, view.kind, startAd]);
+
+  const closeBench = useCallback(() => {
+    const tileId = open ? galleryTileId(tilePrefix, open.templateId) : null;
+    setOpen(null);
+    if (tileId)
+      requestAnimationFrame(() => document.getElementById(tileId)?.focus());
+  }, [open, tilePrefix]);
+
+  // Escape closes the workbench from anywhere on the page, but not from a
+  // field, nor while an open popover takes it.
   const onKey = useEffectEvent((event: KeyboardEvent) => {
     if (
       event.key !== "Escape" ||
       event.defaultPrevented ||
       event.isComposing ||
-      typedInField(event)
+      typedInField(event) ||
+      view.kind !== "page" ||
+      !open
     )
       return;
-    if (view.kind === "make" || view.kind === "ad-new" || view.kind === "ad") {
-      event.preventDefault();
-      closeToShelf();
-    } else if (view.kind === "shelf" && selection.choosing) {
-      event.preventDefault();
-      stopChoosing();
-    }
+    event.preventDefault();
+    closeBench();
   });
   useEffect(() => {
     const listener = (event: KeyboardEvent) => onKey(event);
@@ -359,91 +1140,70 @@ export function ProductsPage({
     return () => window.removeEventListener("keydown", listener);
   }, []);
 
-  const onStarted = useCallback(
-    (importId: string, preview: string) => {
-      refocus.current = "upload";
-      setPreviews(current => ({ ...current, [importId]: preview }));
-      // Shown as waiting right away, rather than after the next list.
-      void refreshImports(
-        current => ({
-          imports: [
-            {
-              id: importId,
-              status: "queued",
-              stage: null,
-              productTotal: 0,
-              photoTotal: 0,
-              photoDone: 0,
-              errorCode: null,
-              photosStopped: null,
-              draftsLeft: false,
-              presenter: null,
-              createdAt: new Date().toISOString(),
-              finishedAt: null,
-            },
-            ...(current?.imports ?? []).filter(entry => entry.id !== importId),
-          ],
-        }),
-        { revalidate: true }
-      );
+  // ------------------------------------------------------------ the drag
+
+  const pickedCount = useRef(0);
+  pickedCount.current = picked.length;
+  const carried = useCallback(() => pickedCount.current, []);
+  const { pick, toggle } = selection;
+  const drag = useProductDrag({
+    carried,
+    onCarry: useCallback(
+      (productId: string) => {
+        touched.current = true;
+        pick(productId);
+      },
+      [pick]
+    ),
+    onDrop: make,
+  });
+  const onToggle = useCallback(
+    (productId: string) => {
+      if (drag.justDropped()) return;
+      touched.current = true;
+      toggle(productId);
     },
-    [refreshImports]
+    [drag, toggle]
   );
-  const upload = useProductVideoUpload(workspaceId, onStarted);
-  const uploading = upload.state.phase !== "idle";
-  const sending = uploading && upload.state.phase !== "failed";
+
+  // ------------------------------------------------------------ the page
+
+  // Where the keyboard's focus goes once the control it was on has gone:
+  // the "+" bay, as a video's upload card or row leaves.
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const refocusAdd = useRef(false);
+  useEffect(() => {
+    if (!refocusAdd.current) return;
+    const element = addButtonRef.current;
+    if (!element) return;
+    refocusAdd.current = false;
+    if (!document.activeElement || document.activeElement === document.body)
+      element.focus();
+  });
 
   const fileInput = useRef<HTMLInputElement>(null);
   const chooseVideo = () => fileInput.current?.click();
-  const [dragging, setDragging] = useState(false);
+  const [draggingFile, setDraggingFile] = useState(false);
+  const inReview = view.kind === "review";
 
   const stopUpload = () => {
-    refocus.current = "upload";
+    refocusAdd.current = true;
     upload.cancel();
   };
   const dismissRow = (importId: string) => {
-    refocus.current = "upload";
+    refocusAdd.current = true;
     setDismissed(current => new Set(current).add(importId));
   };
 
-  const inView = view.kind !== "shelf";
-
-  // The empty shelf has its own upload button; otherwise the page head's is
-  // the one way to choose a video, once there is something to show beside
-  // it. While a video is sent, the upload's card takes the buttons' place.
   const emptyShelf =
     data !== undefined &&
-    products.length === 0 &&
+    published.length === 0 &&
+    rows.length === 0 &&
     !uploading &&
     imports.length === 0;
-  const pageButtons =
-    !emptyShelf &&
-    !sending &&
-    (data !== undefined || uploading || imports.length > 0);
-  // One video plays on the stage: an upload from this page, else the first
-  // import running, else the first with products to check. Others are rows.
-  const hero = uploading ? null : pickHero(imports);
-  const rows = imports.filter(record => record !== hero);
   const videos = new Set(
-    products.flatMap(product => (product.importId ? [product.importId] : []))
+    published.flatMap(product => (product.importId ? [product.importId] : []))
   ).size;
-
-  // An import moving between the stage and the rows is drawn anew in its new
-  // place, and the keyboard's focus in its old one would fall to the page:
-  // it follows the import instead.
-  const focusedImport = useRef<{ id: string; element: Element } | null>(null);
-  const heroId = hero?.id ?? null;
-  useEffect(() => {
-    const focused = focusedImport.current;
-    if (!focused || focused.element.isConnected) return;
-    focusedImport.current = null;
-    if (document.activeElement && document.activeElement !== document.body)
-      return;
-    Array.from(document.querySelectorAll<HTMLElement>("[data-import]"))
-      .find(element => element.dataset.import === focused.id)
-      ?.querySelector<HTMLElement>("button")
-      ?.focus();
-  }, [heroId]);
 
   const whatsappButton = (className: string) =>
     whatsappNumber ? (
@@ -454,7 +1214,18 @@ export function ProductsPage({
       />
     ) : null;
 
-  let shelf: ReactNode;
+  const addBay = (
+    <AddVideoBay
+      onChoose={chooseVideo}
+      buttonRef={addButtonRef}
+      disabled={sending}
+      extra={whatsappButton(
+        "h-auto min-h-7 w-full justify-center gap-1 whitespace-normal px-1 py-1 text-[11px] leading-[13px] [&_svg]:size-3.5"
+      )}
+    />
+  );
+
+  let shelf: ReactNode = null;
   if (!data) {
     shelf =
       error && !isValidating ? (
@@ -477,61 +1248,8 @@ export function ProductsPage({
       ) : (
         <ProductShelfSkeleton />
       );
-  } else if (products.length > 0 && !madeSettled) {
+  } else if (rows.length > 0 && !madeSettled) {
     shelf = <ProductShelfSkeleton />;
-  } else if (products.length > 0) {
-    shelf = (
-      <div className="min-w-0">
-        <ShelfHeading
-          id={shelfId}
-          title={PRODUCTS_COPY.yourShelf}
-          count={products.length}
-          note={selection.choosing ? PRODUCTS_COPY.choose.note : null}
-          action={
-            <Button
-              ref={chooseButtonRef}
-              variant={selection.choosing ? "outline" : "ghost"}
-              size="sm"
-              className="shrink-0"
-              onClick={() =>
-                selection.choosing ? stopChoosing() : selection.start()
-              }
-            >
-              {selection.choosing ? (
-                PRODUCTS_COPY.choose.done
-              ) : (
-                <>
-                  <ListChecks aria-hidden="true" />
-                  {PRODUCTS_COPY.choose.start}
-                </>
-              )}
-            </Button>
-          }
-        />
-        <ProductShelf
-          products={products}
-          labelledBy={shelfId}
-          choose={
-            selection.choosing
-              ? { chosen: selection.chosen, onToggle: selection.toggle }
-              : null
-          }
-        />
-        {selection.choosing ? (
-          <ProductChooseBar
-            chosen={selection.chosenProducts}
-            adReady={selection.adReady}
-            makeKitRef={makeKitButtonRef}
-            onClear={() => {
-              refocus.current = "choose";
-              selection.clear();
-            }}
-            onMakeAd={() => makeAd(selection.chosenIds)}
-            onMakeKit={() => makeKit(selection.chosenIds)}
-          />
-        ) : null}
-      </div>
-    );
   } else if (emptyShelf) {
     shelf = (
       <EmptyShelf>
@@ -544,7 +1262,7 @@ export function ProductsPage({
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
           {/* Stacked and full width on a phone. */}
           <Button
-            ref={uploadButtonRef}
+            ref={addButtonRef}
             className={theme.fillOnPhone}
             onClick={chooseVideo}
           >
@@ -558,110 +1276,90 @@ export function ProductsPage({
         </p>
       </EmptyShelf>
     );
-  }
-  // While an upload or import is under way, the empty shelf says nothing.
-
-  let content: ReactNode = null;
-  if (view.kind === "review") {
-    content = (
-      <ProductReview
-        key={view.importId}
-        workspaceId={workspaceId}
-        importId={view.importId}
-        onClose={closeToShelf}
-        onChangeProducts={chooseAgain}
-        onMakeAd={makeAd}
-      />
-    );
-  } else if (view.kind !== "shelf") {
-    content = (
-      <div
-        ref={viewRoot}
-        key={viewKey}
-        tabIndex={-1}
-        className={cn(theme.enter, "flex min-w-0 flex-col gap-6 outline-none")}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-2 self-start"
-          onClick={closeToShelf}
-        >
-          <ArrowLeft aria-hidden="true" />
-          {PRODUCTS_COPY.page.back}
-        </Button>
-        {view.kind === "make" ? (
-          <MakeOutputs
-            workspaceId={workspaceId}
-            productIds={view.productIds}
-            importId={null}
-            onChangeProducts={chooseAgain}
-            onMakeAd={makeAd}
-          />
-        ) : (
-          <AdStudio
-            workspaceId={workspaceId}
-            view={
-              view.kind === "ad"
-                ? { kind: "ad", adId: view.adId }
-                : { kind: "new", productIds: view.productIds }
-            }
-            // Only while the brief it was made from is still the view: an
-            // owner who left it while the ad started stays where they went.
-            onCreated={adId => {
-              if (lastViewKey.current === viewKey)
-                replaceView({ kind: "ad", adId });
-            }}
-            onChangeProducts={chooseAgain}
-            onClose={closeToShelf}
-          />
-        )}
+  } else {
+    shelf = (
+      <div className="min-w-0">
+        <h2 id={shelfId} className="sr-only">
+          {ROWS.label}
+        </h2>
+        <ShelfRows
+          rows={rows}
+          numbers={selection.numbers}
+          labelledBy={shelfId}
+          addBay={addBay}
+          onToggle={onToggle}
+          onCheckOneByOne={openReview}
+          onFixPrice={(bay, importId) => {
+            if (importId) openReview(importId, bay.product.id);
+          }}
+        />
+        <p aria-live="polite" className="sr-only">
+          {ROWS.picked(picked.length)}
+        </p>
       </div>
     );
   }
 
+  const openTemplate = open ? productTemplate(open.templateId) : null;
+  const workbench =
+    open && openTemplate ? (
+      <ProductWorkbench
+        key={open.templateId}
+        workspaceId={workspaceId}
+        template={openTemplate}
+        subject={open.subject}
+        picks={open.picks.length > 0 ? open.picks : adPicks}
+        priceToCheck={(open.picks.length > 0 ? open.picks : adPicks).some(
+          product => doubts.has(product.id)
+        )}
+        tileId={galleryTileId(tilePrefix, open.templateId)}
+        onClose={closeBench}
+        onRetryMake={() => void make(openTemplate)}
+        onCheckOneByOne={openReview}
+        onCheckPrice={() => {
+          const product = (open.picks.length > 0 ? open.picks : adPicks).find(
+            pick => doubts.has(pick.id)
+          );
+          if (!product) return;
+          const importId = draftImports.get(product.id) ?? product.importId;
+          if (importId) openReview(importId, product.id);
+        }}
+        onChanged={() => {
+          void mutateKey(productsMadeUrl(workspaceId));
+        }}
+      />
+    ) : null;
+
+  const showGallery = data !== undefined && rows.length > 0 && madeSettled;
+  const carriedProducts = drag.carrying ? picked : [];
+
   return (
     <section
       ref={pageRoot}
-      className="relative flex min-w-0 flex-col gap-12 max-sm:gap-9"
+      className="relative flex min-w-0 flex-col gap-10 max-sm:gap-8"
       // A file dropped on the page is always caught: left to the browser, it
       // would open the file in place of the page, and stop an upload. During
-      // an upload or a view, a drop does nothing.
+      // an upload or the review, a drop does nothing.
       onDragEnter={event => {
         if (!carriesFiles(event)) return;
         event.preventDefault();
-        if (!sending && !inView) setDragging(true);
+        if (!sending && !inReview) setDraggingFile(true);
       }}
       onDragOver={event => {
         if (!carriesFiles(event)) return;
         event.preventDefault();
-        event.dataTransfer.dropEffect = sending || inView ? "none" : "copy";
+        event.dataTransfer.dropEffect = sending || inReview ? "none" : "copy";
       }}
       onDragLeave={event => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null))
-          setDragging(false);
+          setDraggingFile(false);
       }}
       onDrop={event => {
         if (!carriesFiles(event)) return;
         event.preventDefault();
-        setDragging(false);
+        setDraggingFile(false);
         const file = event.dataTransfer.files[0];
-        if (file && !sending && !inView) upload.start(file);
-      }}
-      onFocusCapture={event => {
-        const target = event.target as Element;
-        const id = target.closest("[data-import]")?.getAttribute("data-import");
-        focusedImport.current = id ? { id, element: target } : null;
-      }}
-      onBlurCapture={event => {
-        if (event.relatedTarget) return;
-        // Focus left for nothing: a click away from any control, which
-        // forgets it, or its element going with the import's old place.
-        const left = event.target as Element;
-        queueMicrotask(() => {
-          if (left.isConnected && focusedImport.current?.element === left)
-            focusedImport.current = null;
-        });
+        if (file && !sending && !inReview) upload.start(file);
       }}
     >
       {/* Opened by the upload buttons, which are what assistive tech meets. */}
@@ -680,44 +1378,49 @@ export function ProductsPage({
           if (file) upload.start(file);
         }}
       />
-      {inView ? (
+      {rowImports.map(importId => (
+        <ImportProbe
+          key={importId}
+          workspaceId={workspaceId}
+          importId={importId}
+          running={false}
+          onData={onDetail}
+        />
+      ))}
+      {view.kind === "review" ? (
         <>
-          {/* The page's title stays for assistive tech while a view shows. */}
+          {/* The page's title stays for assistive tech while the review shows. */}
           <h1 className="sr-only">{PRODUCTS_COPY.title}</h1>
-          {content}
+          <ProductReview
+            key={`${view.importId}:${view.productId ?? ""}`}
+            workspaceId={workspaceId}
+            importId={view.importId}
+            initialProductId={view.productId}
+            onClose={closeReview}
+            // Back from a finished check: what was added is picked.
+            onChangeProducts={ids => {
+              touched.current = true;
+              setPicks(ids.slice(0, PRODUCT_PICKS_MAX));
+              closeReview();
+            }}
+          />
         </>
       ) : (
         <>
-          <header className="flex items-end justify-between gap-6 max-sm:flex-col max-sm:items-stretch max-sm:gap-4">
-            <div className="flex min-w-0 flex-col">
-              <h1 className={theme.displayXl}>{PRODUCTS_COPY.title}</h1>
-              {data && products.length > 0 ? (
-                <p className="mt-1 text-[15px] leading-[22px] text-(--p-ink-2) tabular-nums">
-                  {PRODUCTS_COPY.page.onShelf(products.length, videos)}
-                </p>
+          <header className="flex min-w-0 flex-col">
+            <h1 className={theme.displayXl}>
+              {PRODUCTS_COPY.title}
+              {data && published.length > 0 ? (
+                <span className="mt-1 block font-sans text-[15px] leading-[22px] font-medium tracking-normal text-(--p-ink-2) tabular-nums sm:mt-0 sm:ml-2.5 sm:inline sm:align-middle sm:text-[17px]">
+                  <span className="sr-only">: </span>
+                  {PRODUCTS_COPY.page.onShelf(published.length, videos)}
+                </span>
               ) : null}
-              {/* The section is new: judges and owners see so, under the title. */}
-              <p className="mt-1.5 text-[13px] leading-[18px] text-(--p-ink-2)">
-                {PRODUCTS_COPY.hackathonNote}
-              </p>
-            </div>
-            {pageButtons ? (
-              // On a phone the pair shares the column's width.
-              <div className="flex shrink-0 gap-2 max-sm:grid max-sm:auto-cols-fr max-sm:grid-flow-col">
-                {whatsappButton(
-                  "h-9 px-4 text-sm max-sm:h-10 max-sm:gap-1.5 max-sm:px-2 max-sm:text-[13px]"
-                )}
-                <Button
-                  ref={uploadButtonRef}
-                  variant="outline"
-                  className="max-sm:h-10 max-sm:gap-1.5 max-sm:px-2 max-sm:text-[13px]"
-                  onClick={chooseVideo}
-                >
-                  <Upload aria-hidden="true" />
-                  {PRODUCTS_COPY.uploadVideo}
-                </Button>
-              </div>
-            ) : null}
+            </h1>
+            {/* The section is new: judges and owners see so, under the title. */}
+            <p className="mt-1.5 text-[13px] leading-[18px] text-(--p-ink-2)">
+              {PRODUCTS_COPY.hackathonNote}
+            </p>
           </header>
           {upload.state.phase !== "idle" ? (
             <UploadProgress
@@ -736,12 +1439,12 @@ export function ProductsPage({
               onReview={openReview}
             />
           ) : null}
-          {rows.length > 0 ? (
+          {cards.length > 0 ? (
             <ul
               aria-label={PRODUCTS_COPY.stage.otherVideos}
-              className="flex flex-col gap-6"
+              className="flex flex-col gap-4"
             >
-              {rows.map(record => (
+              {cards.map(record => (
                 <li key={record.id}>
                   <ImportProgress
                     workspaceId={workspaceId}
@@ -749,8 +1452,6 @@ export function ProductsPage({
                     preview={previews[record.id] ?? null}
                     variant="row"
                     onReview={openReview}
-                    // Another video, as the page's upload buttons choose
-                    // one; not while one is being sent.
                     onUploadAgain={sending ? undefined : chooseVideo}
                     onDismiss={dismissRow}
                   />
@@ -758,16 +1459,87 @@ export function ProductsPage({
               ))}
             </ul>
           ) : null}
-          {/* Things are made from the shelf: until it holds something, there
-              is nothing to list, nor to ask for. */}
-          {products.length > 0 ? (
+          <DndContext
+            sensors={drag.sensors}
+            accessibility={drag.accessibility}
+            {...drag.events}
+          >
+            {shelf}
+            {showGallery ? (
+              <div className="flex min-w-0 flex-col gap-5">
+                <h2 id={galleryId} className="sr-only">
+                  {PRODUCTS_COPY.gallery.label}
+                </h2>
+                <ProductGallery
+                  idPrefix={tilePrefix}
+                  picks={picked}
+                  adPicks={adPicks}
+                  frames={frames}
+                  ad={currentAd}
+                  adStillsRead={currentRead !== null}
+                  stamps={stamps}
+                  locked={locked}
+                  newPicks={newPicks}
+                  openId={open?.templateId ?? null}
+                  workbench={workbench}
+                  carrying={drag.carrying !== null}
+                  onMake={template => void make(template)}
+                />
+                {hint && !open ? <GalleryHint /> : null}
+              </div>
+            ) : null}
+            <DragOverlay dropAnimation={null}>
+              {carriedProducts.length > 0 ? (
+                <CarriedStack products={carriedProducts} />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+          {/* What went out on Meta, once the shelf holds something. */}
+          {published.length > 0 ? (
             <MadeList
               workspaceId={workspaceId}
-              onOpenAd={adId => openView({ kind: "ad", adId })}
-              onMakeAd={makeAd}
+              // A receipt opens its ad's workbench on the tile it went out
+              // from, else on the ad's last tile, with its products picked.
+              onOpenAd={(adId, templateId) => {
+                const ad = madeAds.find(entry => entry.id === adId);
+                if (!ad) return;
+                const ids = ad.products.map(product => product.productId);
+                const from = productTemplate(templateId);
+                touched.current = true;
+                setPicks(ids);
+                setLastAdKey(productsKey(ids));
+                setOpen({
+                  templateId:
+                    from?.shipped && from.makes === "ad"
+                      ? from.id
+                      : templateOfAd(ad).id,
+                  subject: { kind: "ad", adId },
+                  picks: [],
+                  make: ++makes.current,
+                });
+              }}
+              // A WhatsApp chat receipt: the chat tile, with its products picked.
+              onOpenKit={kit => {
+                touched.current = true;
+                setPicks(kit.productIds);
+                setOpen({
+                  templateId: "chat_kit",
+                  subject: {
+                    kind: "kit",
+                    productIds: kit.productIds,
+                    importId: kit.importId,
+                  },
+                  picks: kit.productIds.flatMap(id => {
+                    const product = shelfProducts.find(
+                      entry => entry.id === id
+                    );
+                    return product ? [product] : [];
+                  }),
+                  make: ++makes.current,
+                });
+              }}
             />
           ) : null}
-          {shelf}
         </>
       )}
       <div
@@ -777,7 +1549,7 @@ export function ProductsPage({
           // makes the page scroll sideways; above the stage, which has its
           // own layers.
           "pointer-events-none absolute -inset-2 z-50 flex items-center justify-center rounded-2xl border-2 border-dashed border-(--p-line-strong) bg-[color-mix(in_oklab,var(--p-paper)_85%,transparent)] text-[15px] font-medium text-(--p-ink) transition-opacity duration-200",
-          dragging ? "opacity-100" : "opacity-0"
+          draggingFile ? "opacity-100" : "opacity-0"
         )}
       >
         {PRODUCTS_COPY.dropVideo}

@@ -20,7 +20,17 @@ import {
 // them); scenes cross-fade in 0.35 s. The graph is drawn at the output's
 // size, so the 720x1280 fallback and the tests' 270x480 render run the same
 // filters. Every filter here exists in Debian's ffmpeg 5.1: format, scale,
-// zoompan, setsar, loop, setpts, fade, overlay, trim, xfade, anullsrc, atrim.
+// zoompan, setsar, loop, setpts, fade, overlay, trim, xfade, anullsrc, atrim,
+// boxblur.
+//
+// The motions (studio v3) change only the product scenes:
+// - Filmed → Sold: the scene opens on the product as filmed, then the made
+//   scene wipes in (xfade circleopen on the first, wiperight after);
+// - Float: the exact cut-out is its own layer over the wall, bobbing on a
+//   2 s sine (overlay's y), its shadow breathing with it (zoompan);
+// - Pop: the scene blurred behind (boxblur) and the cut-out over it scaling
+//   1.00 → 1.08 in 0.6 s (zoompan on the padded cut-out, so its size and
+//   place never change and overlay needs no per-frame size).
 
 export const AD_VIDEO_SIZE: Size = { width: 1080, height: 1920 };
 export const AD_SMALL_VIDEO_SIZE: Size = { width: 720, height: 1280 };
@@ -77,6 +87,21 @@ export type RenderScene = {
   /** How this scene hands over to the next; null for the last. */
   transition: "fade" | "slideleft" | null;
   /**
+   * Filmed → Sold: the scene first shows the product as the owner filmed it
+   * (`background`, at 1080x1920) for `seconds` (whole frames), then
+   * `transition` brings the made scene in over AD_TRANSITION_SECONDS. The
+   * words wait for it; the sticker doesn't. Absent or null: no opening.
+   */
+  opening?: RenderOpening | null;
+  /**
+   * Float and Pop: the product's own cut-out, a layer of its own over the
+   * background ("float" bobs it, with `shadow` under it breathing in step;
+   * "pop" scales it up once). Absent or null: the product is in the picture.
+   */
+  subject?: RenderSubject | null;
+  /** Pop: the background's blur radius at 1080 px wide; absent or 0 for none. */
+  blur?: number;
+  /**
    * The voice-over in this product scene, as the voice track places it:
    * from `at` (seconds into the video) for `seconds`; with "Your voice, new
    * words" or "Airi voices", the line it reads (`line`), else null. Absent
@@ -85,6 +110,40 @@ export type RenderScene = {
    */
   voice?: { line: string | null; at: number; seconds: number } | null;
 };
+
+export type RenderOpening = {
+  background: string;
+  seconds: number;
+  transition: "circleopen" | "wiperight";
+};
+
+/** A layer whose size the graph needs (zoompan's output is sized). */
+export type SizedRenderLayer = RenderLayer & { width: number; height: number };
+
+export type RenderSubject = {
+  motion: "float" | "pop";
+  /** The cut-out (for pop, padded so its growth stays inside the layer). */
+  layer: SizedRenderLayer;
+  /** Float's contact shadow under the product; null for pop (its shadow is in the layer). */
+  shadow: SizedRenderLayer | null;
+};
+
+/** A sized layer's size at the output's scale, even, as zoompan's `s`. */
+function shadowSize(layer: SizedRenderLayer, scale: number): string {
+  const even = (value: number) =>
+    Math.max(2, Math.round((value * scale) / 2) * 2);
+  return `${even(layer.width)}x${even(layer.height)}`;
+}
+
+/** Float: how far the product rises and sinks (px at 1080 wide), and one bob's length. */
+export const AD_FLOAT_AMPLITUDE = 10;
+export const AD_FLOAT_PERIOD_SECONDS = 2;
+/** Float: the shadow's breathing around its drawn size (zoompan only zooms in). */
+const FLOAT_SHADOW_ZOOM = { mid: 1.07, swing: 0.07 };
+/** Pop: the cut-out's growth, when it starts and how long it takes. */
+export const AD_POP_SCALE = 1.08;
+export const AD_POP_START_SECONDS = 0.2;
+export const AD_POP_SECONDS = 0.6;
 
 export type RenderPlan = {
   scenes: RenderScene[];
@@ -133,22 +192,118 @@ export function renderArgs(
   const graph: string[] = [];
   const px = (value: number) => Math.round(value * scale);
 
-  plan.scenes.forEach((scene, index) => {
-    const frames = Math.max(1, Math.round(scene.seconds * AD_FPS));
-    const bg = addImage(scene.background);
-    const zoom = scene.zoomTo - 1;
-    const fx = fixed(Math.min(1, Math.max(0, scene.focus.x)), 4);
-    const fy = fixed(Math.min(1, Math.max(0, scene.focus.y)), 4);
+  /** A still picture pushed in on `focus` over `frames` (or held, with no zoom). */
+  const pushIn = (
+    path: string,
+    frames: number,
+    zoomTo: number,
+    focus: { x: number; y: number },
+    out: string,
+    blur = 0,
+  ) => {
+    const input = addImage(path);
+    const zoom = zoomTo - 1;
+    const fx = fixed(Math.min(1, Math.max(0, focus.x)), 4);
+    const fy = fixed(Math.min(1, Math.max(0, focus.y)), 4);
+    // boxblur's radius stays under the chroma plane's half side at any size.
+    const radius = Math.min(
+      Math.round(blur * scale),
+      Math.floor(Math.min(width, height) / 4) - 1,
+    );
+    const blurred = radius > 0 ? `boxblur=${radius}:2,` : "";
     graph.push(
       zoom > 0
-        ? `[${bg}:v]format=rgb24,scale=${width * 2}:${height * 2}:flags=lanczos,` +
+        ? `[${input}:v]format=rgb24,scale=${width * 2}:${height * 2}:flags=lanczos,` +
             `zoompan=z='1+${fixed(zoom, 4)}*on/${frames}':` +
             `x='max(0,min(iw-iw/zoom,${fx}*iw-iw/zoom/2))':y='max(0,min(ih-ih/zoom,${fy}*ih-ih/zoom/2))':` +
-            `d=${frames}:s=${width}x${height}:fps=${AD_FPS},setsar=1,format=yuv420p[bg${index}]`
-        : `[${bg}:v]format=rgb24,scale=${width}:${height}:flags=lanczos,` +
-            `zoompan=z=1:x=0:y=0:d=${frames}:s=${width}x${height}:fps=${AD_FPS},setsar=1,format=yuv420p[bg${index}]`,
+            `d=${frames}:s=${width}x${height}:fps=${AD_FPS},${blurred}setsar=1,format=yuv420p[${out}]`
+        : `[${input}:v]format=rgb24,scale=${width}:${height}:flags=lanczos,` +
+            `zoompan=z=1:x=0:y=0:d=${frames}:s=${width}x${height}:fps=${AD_FPS},${blurred}setsar=1,format=yuv420p[${out}]`,
     );
+  };
+  const centred = `x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2'`;
+
+  plan.scenes.forEach((scene, index) => {
+    const frames = Math.max(1, Math.round(scene.seconds * AD_FPS));
+    const opening = scene.opening ?? null;
+    const openFrames = opening
+      ? Math.min(frames - 1, Math.max(1, Math.round(opening.seconds * AD_FPS)))
+      : 0;
+    if (opening) {
+      // The filmed frame, held a little longer than its time so the wipe
+      // has both pictures, then the made scene from where the wipe starts.
+      const transitionFrames = Math.round(AD_TRANSITION_SECONDS * AD_FPS);
+      pushIn(
+        opening.background,
+        openFrames + transitionFrames,
+        1.03,
+        { x: 0.5, y: 0.5 },
+        `open${index}`,
+      );
+      pushIn(
+        scene.background,
+        frames - openFrames,
+        scene.zoomTo,
+        scene.focus,
+        `made${index}`,
+        scene.blur ?? 0,
+      );
+      graph.push(
+        `[open${index}][made${index}]xfade=transition=${opening.transition}:` +
+          `duration=${fixed(AD_TRANSITION_SECONDS)}:offset=${fixed(openFrames / AD_FPS, 4)}[bg${index}]`,
+      );
+    } else {
+      pushIn(
+        scene.background,
+        frames,
+        scene.zoomTo,
+        scene.focus,
+        `bg${index}`,
+        scene.blur ?? 0,
+      );
+    }
     let base = `bg${index}`;
+    const subject = scene.subject ?? null;
+    if (subject?.shadow) {
+      // Float's shadow: widest as the product sinks lowest, in step with it.
+      const shadow = subject.shadow;
+      const input = addImage(shadow.path);
+      graph.push(
+        `[${input}:v]format=yuva444p,` +
+          `zoompan=z='${FLOAT_SHADOW_ZOOM.mid}+${FLOAT_SHADOW_ZOOM.swing}*sin(2*PI*on/${AD_FLOAT_PERIOD_SECONDS * AD_FPS})':` +
+          `${centred}:d=${frames}:s=${shadowSize(shadow, scale)}:fps=${AD_FPS},format=yuva444p[shadow${index}]`,
+      );
+      graph.push(
+        `[${base}][shadow${index}]overlay=x=${px(shadow.x)}:y=${px(shadow.y)}:format=auto[shadowon${index}]`,
+      );
+      base = `shadowon${index}`;
+    }
+    if (subject) {
+      const placed = subject.layer;
+      const input = addImage(placed.path);
+      if (subject.motion === "float") {
+        graph.push(
+          `[${input}:v]format=rgba,${scale !== 1 ? `scale=iw*${fixed(scale, 4)}:ih*${fixed(scale, 4)}:flags=lanczos,` : ""}` +
+            `loop=loop=${frames - 1}:size=1:start=0,setpts=N/${AD_FPS}/TB[subject${index}]`,
+        );
+        graph.push(
+          `[${base}][subject${index}]overlay=x=${px(placed.x)}:` +
+            `y='${px(placed.y)}+${fixed(AD_FLOAT_AMPLITUDE * scale, 3)}*sin(2*PI*t/${AD_FLOAT_PERIOD_SECONDS})':format=auto[subjecton${index}]`,
+        );
+      } else {
+        const start = Math.round(AD_POP_START_SECONDS * AD_FPS);
+        const span = Math.max(1, Math.round(AD_POP_SECONDS * AD_FPS));
+        graph.push(
+          `[${input}:v]format=yuva444p,` +
+            `zoompan=z='1+${fixed(AD_POP_SCALE - 1, 4)}*(1-pow(1-min(1,max(0,(on-${start})/${span})),2))':` +
+            `${centred}:d=${frames}:s=${shadowSize(placed, scale)}:fps=${AD_FPS},format=yuva444p[subject${index}]`,
+        );
+        graph.push(
+          `[${base}][subject${index}]overlay=x=${px(placed.x)}:y=${px(placed.y)}:format=auto[subjecton${index}]`,
+        );
+      }
+      base = `subjecton${index}`;
+    }
     const layer = (
       name: string,
       placed: RenderLayer,
@@ -165,8 +320,13 @@ export function renderArgs(
       );
       base = `${name}on${index}`;
     };
-    const labelIn = scene.sticker ? AFTER_STICKER : LABEL_IN;
-    const tagIn = scene.sticker ? AFTER_STICKER + (TAG_IN - LABEL_IN) : TAG_IN;
+    // The words come in on the made scene: after the sticker, and after a
+    // filmed opening's wipe.
+    const wordsAt = opening
+      ? openFrames / AD_FPS + AD_TRANSITION_SECONDS + LABEL_IN
+      : LABEL_IN;
+    const labelIn = Math.max(scene.sticker ? AFTER_STICKER : LABEL_IN, wordsAt);
+    const tagIn = labelIn + (TAG_IN - LABEL_IN);
     if (scene.sticker)
       layer(
         "sticker",

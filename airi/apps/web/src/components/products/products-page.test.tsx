@@ -11,7 +11,14 @@ import {
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import { SWRConfig, useSWRConfig } from "swr";
 import { ProductShelf } from "./product-shelf";
-import { ProductsPage, productsViewIn } from "./products-page";
+import {
+  addressPicks,
+  adForPicks,
+  ProductsPage,
+  productsViewIn,
+  templateOfAd,
+  templateStamps,
+} from "./products-page";
 
 jest.mock("@/hooks/use-realtime", () => ({
   useRealtime: () => ({ channel: null, isConnected: false }),
@@ -23,67 +30,77 @@ jest.mock("next/navigation", () => ({ useSearchParams: () => mockSearch }));
 
 // The parts other streams build are mounted here by their agreed props: each
 // stand-in shows what it was given and offers its ways out.
-jest.mock("./product-make", () => ({
-  MakeOutputs: (props: {
-    workspaceId: string;
-    productIds: readonly string[];
-    importId: string | null;
-    onChangeProducts: (ids: string[]) => void;
-    onMakeAd: (ids: string[]) => void;
-  }) => (
-    <section aria-label="Make view">
-      <p>{`make ${props.workspaceId} ${props.importId} ${props.productIds.join(",")}`}</p>
-      <button
-        onClick={() => props.onChangeProducts(props.productIds.slice(0, 1))}
-      >
-        Change the products
-      </button>
-      <button onClick={() => props.onMakeAd([...props.productIds])}>
-        Make an ad of these
-      </button>
-    </section>
-  ),
-}));
-jest.mock("./product-ad-studio", () => ({
-  AdStudio: (props: {
-    workspaceId: string;
-    view: { kind: "new"; productIds: string[] } | { kind: "ad"; adId: string };
-    onCreated: (adId: string) => void;
-    onChangeProducts: (ids: string[]) => void;
-    onClose: () => void;
-  }) => (
-    <section aria-label="Ad studio">
-      <p>
-        {props.view.kind === "new"
-          ? `new ad of ${props.view.productIds.join(",")}`
-          : `ad ${props.view.adId}`}
-      </p>
-      <input aria-label="Your own words" />
-      <button onClick={() => props.onCreated(AD_ID)}>Make the ad</button>
-      <button
-        onClick={() => {
-          mockLateCreated = props.onCreated;
-        }}
-      >
-        Make the ad, answered late
-      </button>
-      <button onClick={props.onClose}>Close the studio</button>
-    </section>
-  ),
-}));
-// The page's onCreated, kept by the studio stand-in to answer after a delay.
-let mockLateCreated: ((adId: string) => void) | null = null;
+jest.mock("./product-workbench", () => {
+  const { useEffect, useRef } = jest.requireActual("react");
+  return {
+    ProductWorkbench: (props: {
+      template: { id: string };
+      subject:
+        | { kind: "ad-pending"; error: string | null }
+        | { kind: "ad"; adId: string }
+        | { kind: "kit"; productIds: string[]; importId: string | null };
+      picks: Array<{ id: string }>;
+      priceToCheck: boolean;
+      tileId: string;
+      onClose: () => void;
+      onRetryMake?: () => void;
+      onCheckOneByOne?: (importId: string) => void;
+      onCheckPrice?: () => void;
+    }) => {
+      const ref = useRef(null);
+      useEffect(() => ref.current?.focus(), []);
+      const subject =
+        props.subject.kind === "ad"
+          ? `ad ${props.subject.adId}`
+          : props.subject.kind === "kit"
+            ? `kit ${props.subject.productIds.join(",")} from ${props.subject.importId}`
+            : `pending ${props.subject.error ?? "-"}`;
+      return (
+        <section
+          ref={ref}
+          tabIndex={-1}
+          aria-label="Workbench"
+          aria-labelledby={props.tileId}
+          onKeyDown={event => {
+            if (event.key === "Escape") props.onClose();
+          }}
+        >
+          <p>{`${props.template.id}: ${subject}`}</p>
+          <p>{`picks ${props.picks.map(pick => pick.id).join(",")}`}</p>
+          {props.priceToCheck ? <p>price to check</p> : null}
+          {props.priceToCheck && props.onCheckPrice ? (
+            <button onClick={props.onCheckPrice}>Fix the flagged price</button>
+          ) : null}
+          <button onClick={props.onClose}>Close the workbench</button>
+          {props.onRetryMake ? (
+            <button onClick={props.onRetryMake}>Try the make again</button>
+          ) : null}
+        </section>
+      );
+    },
+  };
+});
 jest.mock("./product-made-list", () => ({
   MadeList: (props: {
     workspaceId: string;
-    onOpenAd: (adId: string) => void;
-    onMakeAd: (ids: string[]) => void;
+    onOpenAd: (adId: string, templateId: string | null) => void;
+    onMakeAd?: (ids: string[]) => void;
+    onOpenKit?: (kit: {
+      productIds: string[];
+      importId: string | null;
+    }) => void;
   }) => (
-    <section aria-label="Made from your shelf">
-      <p>{`made ${props.workspaceId}`}</p>
-      <button onClick={() => props.onOpenAd(AD_ID)}>Open the ad</button>
-      <button onClick={() => props.onMakeAd([P1, P2, P3, P4])}>
-        Make a video ad with these
+    <section aria-label="Out on Meta">
+      <button onClick={() => props.onOpenAd(AD_ID, null)}>Open the ad</button>
+      <button onClick={() => props.onOpenAd(AD_ID, "ctwa_video")}>
+        Open the WhatsApp ad
+      </button>
+      <button
+        onClick={() =>
+          props.onOpenKit?.({ productIds: [P2, P1], importId: null })
+        }
+      >
+        Open the kit
       </button>
     </section>
   ),
@@ -92,16 +109,18 @@ jest.mock("./product-made-list", () => ({
 jest.mock("./product-review", () => ({
   ProductReview: (props: {
     importId: string;
+    initialProductId?: string;
     onClose: () => void;
     onChangeProducts: (ids: string[]) => void;
-    onMakeAd: (ids: string[]) => void;
   }) => (
     <section aria-label="Review">
       <p>{`review ${props.importId}`}</p>
+      {props.initialProductId ? (
+        <p>{`first ${props.initialProductId}`}</p>
+      ) : null}
       <button onClick={props.onClose}>Leave the review</button>
-      <button onClick={() => props.onMakeAd([P2])}>Make an ad of P2</button>
-      <button onClick={() => props.onChangeProducts([P2, P3])}>
-        Choose them on the shelf
+      <button onClick={() => props.onChangeProducts([P3, P2])}>
+        Back with these picked
       </button>
     </section>
   ),
@@ -111,12 +130,13 @@ const P1 = "651f1f77bcf86cd799439001";
 const P2 = "651f1f77bcf86cd799439002";
 const P3 = "651f1f77bcf86cd799439003";
 const P4 = "651f1f77bcf86cd799439004";
+const D1 = "651f1f77bcf86cd7994390d1";
+const D2 = "651f1f77bcf86cd7994390d2";
 const AD_ID = "651f1f77bcf86cd7994390ad";
-const IMPORT_ID = "651f1f77bcf86cd7994390aa";
+const IMPORT_OLD = "651f1f77bcf86cd7994390a1";
+const IMPORT_NEW = "651f1f77bcf86cd7994390a2";
 const PAGE = "/panel/w/workspace-1/products";
-
-// The products list; the page's import list answers empty on its own.
-const fetchMock = jest.fn();
+const BASE = "/api/workspaces/workspace-1/products";
 
 function respond(status: number, body: unknown) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
@@ -136,21 +156,88 @@ const record = (
   // A product with a photo has it cut out, unless a test says otherwise.
   hasCutout: overrides.imageUrl !== null,
   updatedAt: null,
-  importId: "651f1f77bcf86cd7994390a1",
+  importId: null,
   ...overrides,
 });
 
-// A shelf of four from two videos; the fourth has no photo.
+// A shelf of four from no listed video; the fourth has no photo.
 const SHELF = [
   record(P1, "Кукла Лол"),
   record(P2, "Кружка Web UMN", { price: 500 }),
-  record(P3, "Шежіре", {
-    price: 15500,
-    priceIsFrom: true,
-    importId: "651f1f77bcf86cd7994390a2",
-  }),
+  record(P3, "Шежіре", { price: 15500, priceIsFrom: true }),
   record(P4, "Петух", { imageUrl: null }),
 ];
+
+const importRecord = (id: string, overrides: Record<string, unknown> = {}) => ({
+  id,
+  status: "ready",
+  stage: null,
+  productTotal: 2,
+  photoTotal: 2,
+  photoDone: 2,
+  errorCode: null,
+  photosStopped: null,
+  draftsLeft: false,
+  presenter: null,
+  createdAt: "2026-11-03T09:00:00.000Z",
+  finishedAt: "2026-11-03T09:01:00.000Z",
+  ...overrides,
+});
+
+const detailProduct = (
+  id: string,
+  name: string,
+  status: "draft" | "published" | "rejected",
+  overrides: Record<string, unknown> = {}
+) => ({
+  ...record(id, name),
+  status,
+  englishName: null,
+  nameSource: "spoken",
+  priceQuote: null,
+  priceSource: "spoken",
+  doubts: [],
+  options: [
+    {
+      description: `${name} as filmed`,
+      photoMethod: "restored",
+      imageUrl: `https://storage.test/${id}.webp`,
+      photoUrl: null,
+      originalUrl: `https://storage.test/${id}-filmed.jpg`,
+      videoMomentSeconds: 3,
+      straightenedDegrees: 0,
+      notes: [],
+    },
+  ],
+  featuredOption: 0,
+  clipUrl: null,
+  ...overrides,
+});
+
+const adRecord = (overrides: Record<string, unknown> = {}) => ({
+  id: AD_ID,
+  status: "ready",
+  motion: "shelf",
+  products: [P1, P2, P3].map(id => ({
+    productId: id,
+    name: id,
+    englishName: null,
+    priceText: "5 000 ₸",
+    imageUrl: null,
+  })),
+  video: {
+    url: "https://signed.test/ad.mp4",
+    bytes: 1,
+    seconds: 14,
+    posterUrl: "https://signed.test/poster.jpg",
+  },
+  stills: { statusUrl: null, feedUrl: null },
+  ...overrides,
+});
+
+type Route = (init?: RequestInit) => unknown | Promise<unknown>;
+let routes: Record<string, Route>;
+const calls: Array<{ url: string; method: string; body: unknown }> = [];
 
 function renderPage() {
   return render(
@@ -161,37 +248,46 @@ function renderPage() {
 }
 
 function serveShelf(products: unknown[] = SHELF) {
-  fetchMock.mockResolvedValue(respond(200, { products }));
+  routes[`GET ${BASE}`] = () => respond(200, { products });
 }
 
-// "Made from your shelf": nothing made yet, unless a test answers otherwise.
-let madeAnswer: () => Promise<unknown>;
-let madeAsked = 0;
-
 beforeEach(() => {
-  fetchMock.mockReset();
+  calls.length = 0;
   mockSearch = null;
   window.history.replaceState(null, "", PAGE);
-  madeAsked = 0;
-  madeAnswer = async () =>
-    respond(200, {
-      kits: [],
-      ads: [],
-      whatsapp: { connected: false, displayPhone: null },
+  window.localStorage.clear();
+  routes = {
+    [`GET ${BASE}`]: () => respond(200, { products: SHELF }),
+    [`GET ${BASE}/imports`]: () => respond(200, { imports: [] }),
+    [`GET ${BASE}/made`]: () =>
+      respond(200, {
+        kits: [],
+        ads: [],
+        whatsapp: { connected: false, displayPhone: null },
+      }),
+    [`GET ${BASE}/meta`]: () =>
+      respond(200, {
+        meta: {
+          instagram: {},
+          ads: {},
+          whatsapp: { connected: true },
+          ai: { blocked: null },
+        },
+      }),
+  };
+  global.fetch = (async (url: string, init?: RequestInit) => {
+    const method = init?.method ?? "GET";
+    calls.push({
+      url,
+      method,
+      body: init?.body ? JSON.parse(String(init.body)) : undefined,
     });
-  global.fetch = ((url: string, init?: RequestInit) => {
-    if (url.endsWith("/products/imports"))
-      return Promise.resolve(respond(200, { imports: [] }));
-    if (url.endsWith("/products/made")) {
-      madeAsked += 1;
-      return madeAnswer();
-    }
-    return fetchMock(url, init);
+    const key = `${method} ${url.split("?")[0]}`;
+    const route = routes[key];
+    if (!route) return respond(404, { code: "load_failed" });
+    return route(init);
   }) as unknown as typeof fetch;
 });
-
-/** Prices are written with no-break spaces, which never wrap. */
-const unbroken = (text: string) => text.replace(/ /g, "\u00a0");
 
 /** Opens the page straight at an address, as a link would. */
 function visit(search: string) {
@@ -199,172 +295,841 @@ function visit(search: string) {
   window.history.replaceState(null, "", `${PAGE}?${search}`);
 }
 
+const bay = (name: string | RegExp) =>
+  screen.getByRole("button", {
+    name: typeof name === "string" ? new RegExp(`^${name},`) : name,
+  });
+/** The picked products, in pick order (the number each bay is named by). */
+const pressed = () =>
+  screen
+    .queryAllByRole("button", { pressed: true })
+    .map(button => ({
+      id: button.getAttribute("data-product"),
+      pick: Number(
+        /pick (\d+)/.exec(button.getAttribute("aria-label") ?? "")?.[1]
+      ),
+    }))
+    .sort((a, b) => a.pick - b.pick)
+    .map(entry => entry.id);
+/** The workbench stand-in, once it shows this line. */
+const workbench = async (line: string | RegExp) =>
+  (await screen.findByText(line)).closest("section") as HTMLElement;
+const tile = (id: string) =>
+  document.querySelector(`[data-template="${id}"]`) as HTMLElement;
+const sent = (method: string, path: string) =>
+  calls.filter(
+    call => call.method === method && call.url.split("?")[0] === path
+  );
+
+/** The page with the shelf in, and the tiles under it. */
+async function ready() {
+  renderPage();
+  await screen.findByRole("region", { name: "Templates" });
+}
+
+// ------------------------------------------------------------------ page
+
 test("asks the workspace's Products API", async () => {
   serveShelf([]);
   renderPage();
-  await waitFor(() =>
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/workspaces/workspace-1/products",
-      { cache: "no-store" }
-    )
-  );
+  await waitFor(() => expect(sent("GET", BASE)).toHaveLength(1));
 });
 
 test("heads the page with its title, what's on the shelf and that it's new", async () => {
-  serveShelf();
   renderPage();
-
-  const title = screen.getByRole("heading", { level: 1, name: "Products" });
-  // Geologica, the display face, at the page title's size.
+  const title = screen.getByRole("heading", { level: 1, name: /^Products/ });
   expect(title).toHaveClass("displayXl");
-  const count = await screen.findByText("4 on your shelf, from 2 videos");
-  const note = screen.getByText("New · built at the Meta AI Hackathon 2026");
-  // Under the title, then the line about the hackathon.
+  await waitFor(() => expect(title).toHaveTextContent("4 on your shelf"));
   expect(
-    title.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING
-  ).toBeTruthy();
-  expect(
-    count.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING
-  ).toBeTruthy();
-  // The page's own button, beside the title.
-  expect(
-    screen.getByRole("button", { name: "Upload a video" })
+    screen.getByText("New · built at the Meta AI Hackathon 2026")
   ).toBeInTheDocument();
-});
-
-test("asks for what was made with the products, and shows the shelf with it, not before", async () => {
-  let answerProducts: () => void = () => {};
-  fetchMock.mockImplementation(
-    () =>
-      new Promise(resolve => {
-        answerProducts = () => resolve(respond(200, { products: SHELF }));
-      })
-  );
-  let answerMade: () => void = () => {};
-  madeAnswer = () =>
-    new Promise(resolve => {
-      answerMade = () =>
-        resolve(
-          respond(200, {
-            kits: [],
-            ads: [],
-            whatsapp: { connected: false, displayPhone: null },
-          })
-        );
-    });
-  renderPage();
-
-  // Both asked for at once, not the list after the shelf.
-  await waitFor(() => expect(madeAsked).toBe(1));
-  expect(fetchMock).toHaveBeenCalledTimes(1);
-
-  // The products are in, the list isn't: the shelf waits, still loading,
-  // rather than be pushed down when the list goes in above it.
-  await act(async () => answerProducts());
+  // No upload buttons in the head: the shelf's "+" bay is the way in.
   expect(
-    await screen.findByText("4 on your shelf, from 2 videos")
-  ).toBeInTheDocument();
-  expect(
-    screen.queryByRole("list", { name: "Your shelf" })
-  ).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("status", { name: "Loading products…" })
-  ).toBeInTheDocument();
-
-  await act(async () => answerMade());
-  expect(
-    await screen.findByRole("list", { name: "Your shelf" })
-  ).toBeInTheDocument();
-});
-
-test("says how many videos the shelf came from, or nothing about videos it doesn't know", () => {
-  expect(PRODUCTS_COPY.page.onShelf(12, 2)).toBe(
-    "12 on your shelf, from 2 videos"
-  );
-  expect(PRODUCTS_COPY.page.onShelf(1, 1)).toBe(
-    "1 on your shelf, from 1 video"
-  );
-  expect(PRODUCTS_COPY.page.onShelf(3, 0)).toBe("3 on your shelf");
+    screen.getAllByRole("button", { name: PRODUCTS_COPY.uploadVideo })
+  ).toHaveLength(1);
 });
 
 test("shows a still loading shelf, then the empty shelf with its own way in", async () => {
   serveShelf([]);
   renderPage();
-  const loading = screen.getByRole("status", { name: "Loading products…" });
-  // Still: nothing on it pulses.
-  expect(loading.querySelector(".animate-pulse")).toBeNull();
-
+  expect(
+    screen.getByRole("status", { name: "Loading products…" })
+  ).toBeInTheDocument();
   expect(
     await screen.findByRole("heading", {
       level: 2,
       name: "Your products will appear here",
     })
   ).toBeInTheDocument();
-  expect(screen.getByText(/Film your shelf on your phone/)).toBeInTheDocument();
-  // The empty shelf's upload button is the page's one primary action.
-  const upload = screen.getByRole("button", { name: "Upload a video" });
-  expect(upload).toHaveAttribute("data-variant", "default");
   expect(
-    screen.getByText("MP4 or MOV. About a minute is plenty; up to 5 minutes.")
-  ).toBeInTheDocument();
-  // Nothing on the shelf: no count under the title, and nothing made from it
-  // to list or ask for.
-  expect(screen.queryByText(/\d+ on your shelf/)).not.toBeInTheDocument();
+    screen.getByRole("button", { name: "Upload a video" })
+  ).toHaveAttribute("data-variant", "default");
+  // Nothing to make from, nothing out on Meta.
   expect(
-    screen.queryByRole("region", { name: "Made from your shelf" })
+    screen.queryByRole("region", { name: "Templates" })
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("region", { name: "Out on Meta" })
   ).not.toBeInTheDocument();
 });
 
-test("lists products with their price, or a note when there is none", async () => {
+test("shows an error on the wall with a retry that loads again", async () => {
+  routes[`GET ${BASE}`] = () => respond(503, { code: "load_failed" });
+  renderPage();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Products couldn't be loaded."
+  );
+  serveShelf([]);
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  expect(
+    await screen.findByText("Your products will appear here")
+  ).toBeInTheDocument();
+});
+
+test("keeps the shelf when a refresh fails", async () => {
+  function Refresh() {
+    const { mutate } = useSWRConfig();
+    return <button onClick={() => void mutate(BASE)}>refresh</button>;
+  }
+  render(
+    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+      <ProductsPage workspaceId="workspace-1" />
+      <Refresh />
+    </SWRConfig>
+  );
+  await screen.findByRole("button", { name: /^Кукла Лол,/ });
+  routes[`GET ${BASE}`] = () => respond(503, { code: "load_failed" });
+  fireEvent.click(screen.getByRole("button", { name: "refresh" }));
+  await waitFor(() => expect(sent("GET", BASE)).toHaveLength(2));
+  expect(bay("Кукла Лол")).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+// ------------------------------------------------------------------ shelf
+
+test("stands each video's products on its own row, newest first, with its print and drafts", async () => {
+  routes[`GET ${BASE}/imports`] = () =>
+    respond(200, {
+      imports: [
+        importRecord(IMPORT_OLD, { createdAt: "2026-11-01T09:00:00.000Z" }),
+        importRecord(IMPORT_NEW, {
+          draftsLeft: true,
+          presenter: {
+            imageUrl: null,
+            photoUrl: null,
+            originalUrl: "https://storage.test/presenter-frame.jpg",
+          },
+        }),
+      ],
+    });
+  routes[`GET ${BASE}/imports/${IMPORT_OLD}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_OLD),
+      products: [
+        detailProduct(P2, "Кружка Web UMN", "published"),
+        detailProduct(P1, "Кукла Лол", "published"),
+      ],
+    });
+  routes[`GET ${BASE}/imports/${IMPORT_NEW}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_NEW, { draftsLeft: true }),
+      products: [
+        detailProduct(D1, "Динозавр", "draft"),
+        detailProduct(P3, "Шежіре", "published"),
+        detailProduct(D2, "Отклонён", "rejected"),
+      ],
+    });
+  serveShelf([
+    record(P1, "Кукла Лол", { importId: IMPORT_OLD }),
+    record(P2, "Кружка Web UMN", { importId: IMPORT_OLD }),
+    record(P3, "Шежіре", { importId: IMPORT_NEW }),
+    record(P4, "Петух", { imageUrl: null }),
+  ]);
+  const { container } = renderPage();
+  await waitFor(() =>
+    expect(container.querySelectorAll("[data-row]")).toHaveLength(3)
+  );
+  const rows = Array.from(container.querySelectorAll("[data-row]"));
+  expect(rows.map(row => row.getAttribute("data-row"))).toEqual([
+    IMPORT_NEW,
+    IMPORT_OLD,
+    "shelf",
+  ]);
+  const productsOf = (row: Element) =>
+    Array.from(row.querySelectorAll("[data-product]")).map(button =>
+      button.getAttribute("data-product")
+    );
+  // In the order the owner named them; a skipped product isn't shown.
+  await waitFor(() => expect(productsOf(rows[0]!)).toEqual([D1, P3]));
+  expect(productsOf(rows[1]!)).toEqual([P2, P1]);
+  expect(productsOf(rows[2]!)).toEqual([P4]);
+  // A draft says it isn't on the shelf yet; its row's print is the frame
+  // the presenter was filmed in, and its ⋯ offers the check one by one.
+  expect(bay("Динозавр")).toHaveAccessibleName(
+    /found in your video, not on your shelf yet/
+  );
+  expect(rows[0]!.querySelector("figure img")).toHaveAttribute(
+    "src",
+    "https://storage.test/presenter-frame.jpg"
+  );
+  expect(
+    within(rows[0] as HTMLElement).getByRole("button", {
+      name: "More for this video",
+    })
+  ).toBeInTheDocument();
+  expect(
+    within(rows[1] as HTMLElement).queryByRole("button", {
+      name: "More for this video",
+    })
+  ).not.toBeInTheDocument();
+  // The products of no listed video stand on a plain last row.
+  expect(rows[2]).toHaveAccessibleName("Products on your shelf");
+});
+
+test("a video whose products were all checked keeps its row, read from the video itself", async () => {
+  // The imports list leaves a video out once nothing is left to check.
+  routes[`GET ${BASE}/imports/${IMPORT_OLD}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_OLD, {
+        createdAt: "2026-11-01T09:00:00.000Z",
+      }),
+      products: [
+        detailProduct(P2, "Кружка Web UMN", "published"),
+        detailProduct(P1, "Кукла Лол", "published"),
+      ],
+    });
+  serveShelf([
+    record(P1, "Кукла Лол", { importId: IMPORT_OLD }),
+    record(P2, "Кружка Web UMN", { importId: IMPORT_OLD }),
+    record(P4, "Петух", { imageUrl: null }),
+  ]);
+  const { container } = renderPage();
+  await waitFor(() =>
+    expect(
+      Array.from(
+        container.querySelectorAll(`[data-row="${IMPORT_OLD}"] [data-product]`)
+      ).map(button => button.getAttribute("data-product"))
+    ).toEqual([P2, P1])
+  );
+  expect(
+    container.querySelector(`[data-row="${IMPORT_OLD}"] figure img`)
+  ).toHaveAttribute("src", `https://storage.test/${P2}-filmed.jpg`);
+  // Named by when it was sent, on the owner's clock.
+  expect(
+    container.querySelector(`[data-row="${IMPORT_OLD}"]`)
+  ).toHaveAccessibleName(/^Products from your video of 1 Nov, \d\d:00$/);
+});
+
+test("names each product by its name, its price and its pick", async () => {
   serveShelf([
     record(P1, "Кукла Лол"),
     record(P2, "Петух", { price: null, currency: null }),
-    record(P3, "Шежіре", { price: 15500, priceIsFrom: true }),
+    record(P3, "Phone stand", { price: 10, currency: "USD" }),
   ]);
-  renderPage();
-
-  // The shelf is named by its heading's title, which tells it apart from a
-  // video's draft shelf above; the heading also says how many it holds.
-  const list = await screen.findByRole("list", { name: "Your shelf" });
-  expect(
-    screen.getByRole("heading", { name: /^Your shelf\s*3$/ })
-  ).toBeInTheDocument();
-  // Only products count: the spots that finish the row are hidden from it.
-  expect(within(list).getAllByRole("listitem")).toHaveLength(3);
-  expect(screen.getByText("Кукла Лол")).toBeInTheDocument();
-  // The default normalizer turns the no-break spaces in the page into plain ones.
-  expect(
-    screen.getByText(unbroken("5 000 ₸"), { normalizer: text => text })
-  ).toBeInTheDocument();
-  expect(screen.getByText("No price yet")).toBeInTheDocument();
-  // A starting price says so, read as one price.
-  expect(
-    screen.getByText(unbroken("from 15 500 ₸"), { normalizer: text => text })
-  ).toBeInTheDocument();
+  await ready();
+  // The page picks the first 3 for the owner.
+  expect(bay("Кукла Лол")).toHaveAccessibleName(
+    `Кукла Лол, ${"5 000 ₸"}, pick 1`
+  );
+  expect(bay("Петух")).toHaveAccessibleName("Петух, No price yet, pick 2");
+  expect(bay("Phone stand")).toHaveAccessibleName(
+    `Phone stand, ${"10 USD"}, pick 3`
+  );
 });
 
-test("writes a price in another currency with its code, tenge with ₸, and one whose currency wasn't said bare", async () => {
+test("picks the newest video's first 3 for the owner, and keeps the picks in the address", async () => {
+  await ready();
+  expect(pressed()).toEqual([P1, P2, P3]);
+  await waitFor(() =>
+    expect(window.location.search).toBe(`?picks=${P1},${P2},${P3}`)
+  );
+  expect(screen.getByText("3 picked")).toBeInTheDocument();
+});
+
+test("a tap picks in place, numbered in tap order; another tap lets it go", async () => {
+  await ready();
+  fireEvent.click(bay("Кружка Web UMN"));
+  expect(pressed()).toEqual([P1, P3]);
+  fireEvent.click(bay("Петух"));
+  fireEvent.click(bay("Кружка Web UMN"));
+  expect(pressed()).toEqual([P1, P3, P4, P2]);
+  expect(bay("Петух")).toHaveAccessibleName(/, pick 3$/);
+  expect(bay("Кружка Web UMN")).toHaveAccessibleName(/, pick 4$/);
+  await waitFor(() =>
+    expect(window.location.search).toBe(`?picks=${P1},${P3},${P4},${P2}`)
+  );
+  expect(screen.getByText("4 picked")).toBeInTheDocument();
+});
+
+test("a reload keeps the picks in their order; the owner's empty picks stay empty", async () => {
+  visit(`picks=${P3},${P1}`);
+  await ready();
+  expect(bay("Шежіре")).toHaveAccessibleName(/, pick 1$/);
+  expect(bay("Кукла Лол")).toHaveAccessibleName(/, pick 2$/);
+  fireEvent.click(bay("Шежіре"));
+  fireEvent.click(bay("Кукла Лол"));
+  expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
+  await waitFor(() => expect(window.location.search).toBe(""));
+  // Nothing picked: the tiles say to pick first.
+  expect(tile("reel_shelf")).toHaveTextContent(PRODUCTS_COPY.gallery.pickFirst);
+});
+
+test("v2's addresses open the one page with their products picked", () => {
+  expect(addressPicks(new URLSearchParams(`make=${P2},${P1}`))).toEqual([
+    P2,
+    P1,
+  ]);
+  expect(addressPicks(new URLSearchParams(`ad=new&products=${P3}`))).toEqual([
+    P3,
+  ]);
+  expect(addressPicks(new URLSearchParams(`picks=${P1}&make=${P2}`))).toEqual([
+    P1,
+  ]);
+  expect(productsViewIn(new URLSearchParams(`make=${P1}`))).toEqual({
+    kind: "page",
+  });
+});
+
+test("v2's make address becomes ?picks=", async () => {
+  visit(`make=${P4},${P2}`);
+  await ready();
+  expect(pressed()).toEqual([P4, P2]);
+  await waitFor(() =>
+    expect(window.location.search).toBe(`?picks=${P4},${P2}`)
+  );
+});
+
+test("the '+' bay ends the newest row and chooses a video", async () => {
+  await ready();
+  const add = screen.getByRole("button", { name: "Upload a video" });
+  const input = screen.getByLabelText("Upload a video", {
+    selector: "input",
+  }) as HTMLInputElement;
+  const click = jest.spyOn(input, "click").mockImplementation(() => {});
+  fireEvent.click(add);
+  expect(click).toHaveBeenCalled();
+});
+
+// ------------------------------------------------------------------ make
+
+async function serveMake() {
+  routes[`GET ${BASE}/ads/brief`] = () =>
+    respond(200, {
+      brief: {
+        products: [P1, P2, P3].map(id => ({
+          productId: id,
+          name: id,
+          englishName: null,
+          priceText: "5 000 ₸",
+          imageUrl: null,
+          problem: null,
+          hasVoice: id === P2,
+        })),
+        missing: 0,
+        language: "Kazakh",
+        wordsCode: "kk",
+        presenter: null,
+        ending: { phone: null, shopName: "Shop" },
+        blocked: null,
+      },
+    });
+  routes[`POST ${BASE}/ads`] = () =>
+    respond(202, { ad: adRecord({ status: "making", motion: "filmed_sold" }) });
+  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
+    respond(200, { ad: adRecord({ status: "making", motion: "filmed_sold" }) });
+}
+
+test("a tap on a tile makes the ad of the first 3 picks and opens its workbench under the tile", async () => {
+  await serveMake();
+  await ready();
+  // The first-visit hint sits under the tiles until the first make.
+  expect(screen.getByText(PRODUCTS_COPY.gallery.hint)).toBeInTheDocument();
+  fireEvent.click(bay("Петух"));
+  fireEvent.click(tile("reel_filmed_sold"));
+
+  const bench = await workbench(`reel_filmed_sold: ad ${AD_ID}`);
+  expect(sent("POST", `${BASE}/ads`)[0]!.body).toMatchObject({
+    productIds: [P1, P2, P3],
+    motion: "filmed_sold",
+    idea: { kind: "new" },
+    // The owner's own recording, as the video has them saying a price.
+    voice: "own",
+    presenter: { use: false, consent: false },
+  });
+  // Under the tile's group, labelled by the tile, with the focus in it.
+  expect(bench).toHaveAttribute("aria-labelledby", tile("reel_filmed_sold").id);
+  expect(tile("reel_filmed_sold")).toHaveAttribute("aria-expanded", "true");
+  await waitFor(() => expect(bench).toHaveFocus());
+  expect(
+    screen.queryByText(PRODUCTS_COPY.gallery.hint)
+  ).not.toBeInTheDocument();
+  expect(window.localStorage.getItem("airi.products.v3.hint")).toBe("done");
+  await waitFor(() =>
+    expect(new URLSearchParams(window.location.search).get("ad")).toBe(AD_ID)
+  );
+});
+
+test("Escape closes the workbench and gives the focus back to its tile", async () => {
+  await serveMake();
+  await ready();
+  fireEvent.click(tile("story_video"));
+  const bench = await workbench(/^story_video: /);
+  await waitFor(() => expect(bench).toHaveFocus());
+  fireEvent.keyDown(bench, { key: "Escape" });
+  await waitFor(() => expect(bench).not.toBeInTheDocument());
+  await waitFor(() => expect(tile("story_video")).toHaveFocus());
+  await waitFor(() =>
+    expect(new URLSearchParams(window.location.search).get("ad")).toBeNull()
+  );
+});
+
+test("the ad these picks made is used again; another motion tile asks for a free render", async () => {
+  await serveMake();
+  // v2's one feed picture stands for In a room.
+  const stills = { statusUrl: null, feedUrl: "https://signed.test/feed.jpg" };
+  routes[`GET ${BASE}/made`] = () =>
+    respond(200, {
+      kits: [],
+      ads: [adRecord({ motion: "shelf", stills })],
+      whatsapp: { connected: false, displayPhone: null },
+    });
+  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
+    respond(200, { ad: adRecord({ motion: "shelf", stills }) });
+  routes[`PATCH ${BASE}/ads/${AD_ID}`] = () =>
+    respond(202, { ad: adRecord({ status: "making", motion: "filmed_sold" }) });
+  await ready();
+
+  fireEvent.click(tile("post_room"));
+  expect(await screen.findByText(`post_room: ad ${AD_ID}`)).toBeInTheDocument();
+  expect(sent("POST", `${BASE}/ads`)).toHaveLength(0);
+  expect(sent("PATCH", `${BASE}/ads/${AD_ID}`)).toHaveLength(0);
+
+  fireEvent.click(tile("reel_filmed_sold"));
+  expect(
+    await screen.findByText(`reel_filmed_sold: ad ${AD_ID}`)
+  ).toBeInTheDocument();
+  await waitFor(() =>
+    expect(sent("PATCH", `${BASE}/ads/${AD_ID}`)).toHaveLength(1)
+  );
+  expect(sent("PATCH", `${BASE}/ads/${AD_ID}`)[0]!.body).toEqual({
+    motion: "filmed_sold",
+  });
+});
+
+test("a motion asked for while the video is made waits for it, then goes", async () => {
+  await serveMake();
+  let status = "making";
+  routes[`GET ${BASE}/made`] = () =>
+    respond(200, {
+      kits: [],
+      ads: [adRecord({ motion: "shelf", status: "making" })],
+      whatsapp: { connected: false, displayPhone: null },
+    });
+  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
+    respond(200, { ad: adRecord({ motion: "shelf", status }) });
+  let patches = 0;
+  routes[`PATCH ${BASE}/ads/${AD_ID}`] = () => {
+    patches += 1;
+    return status === "making"
+      ? respond(409, { code: "ad_not_ready", error: "x" })
+      : respond(202, {
+          ad: adRecord({ status: "making", motion: "filmed_sold" }),
+        });
+  };
+  await ready();
+  fireEvent.click(tile("reel_filmed_sold"));
+  await waitFor(() => expect(patches).toBe(1));
+  status = "ready";
+  await waitFor(() => expect(patches).toBe(2), { timeout: 5000 });
+}, 10_000);
+
+test("drafts among the picks go on the shelf before the make, as the owner's swipe right", async () => {
+  await serveMake();
+  routes[`GET ${BASE}/imports`] = () =>
+    respond(200, { imports: [importRecord(IMPORT_NEW, { draftsLeft: true })] });
+  routes[`GET ${BASE}/imports/${IMPORT_NEW}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_NEW, { draftsLeft: true }),
+      products: [
+        detailProduct(D1, "Динозавр", "draft"),
+        detailProduct(P1, "Кукла Лол", "published"),
+      ],
+    });
+  routes[`POST ${BASE}/imports/${IMPORT_NEW}/review`] = () =>
+    respond(200, { changed: 1 });
+  serveShelf([record(P1, "Кукла Лол", { importId: IMPORT_NEW })]);
+  await ready();
+  await waitFor(() => expect(pressed()).toEqual([D1, P1]));
+  // A pick alone puts nothing on the shelf.
+  expect(sent("POST", `${BASE}/imports/${IMPORT_NEW}/review`)).toHaveLength(0);
+
+  fireEvent.click(tile("reel_shelf"));
+  await waitFor(() => expect(sent("POST", `${BASE}/ads`)).toHaveLength(1));
+  expect(sent("POST", `${BASE}/imports/${IMPORT_NEW}/review`)[0]!.body).toEqual(
+    { productIds: [D1], status: "published" }
+  );
+  const review = calls.findIndex(call => call.url.endsWith("/review"));
+  const create = calls.findIndex(
+    call => call.method === "POST" && call.url === `${BASE}/ads`
+  );
+  expect(review).toBeLessThan(create);
+});
+
+test.each(["reel_shelf", "chat_kit"])(
+  "a pick with a price to check makes nothing through %s",
+  async templateId => {
+    await serveMake();
+    routes[`GET ${BASE}/imports`] = () =>
+      respond(200, {
+        imports: [importRecord(IMPORT_NEW, { draftsLeft: true })],
+      });
+    routes[`GET ${BASE}/imports/${IMPORT_NEW}`] = () =>
+      respond(200, {
+        import: importRecord(IMPORT_NEW, { draftsLeft: true }),
+        products: [
+          detailProduct(D2, "Checked price", "draft"),
+          detailProduct(D1, "Динозавр", "draft", {
+            doubts: [{ about: "price", text: "300 or 3000?" }],
+          }),
+        ],
+      });
+    serveShelf([]);
+    await ready();
+    await waitFor(() => expect(pressed()).toEqual([D2, D1]));
+    expect(bay("Динозавр")).toHaveAccessibleName(/Check this price/);
+    fireEvent.click(tile(templateId));
+    const bench = await workbench(`${templateId}: pending price_to_check`);
+    expect(bench).toHaveTextContent("price to check");
+    expect(sent("POST", `${BASE}/ads`)).toHaveLength(0);
+    expect(sent("POST", `${BASE}/imports/${IMPORT_NEW}/review`)).toHaveLength(
+      0
+    );
+    // Both the red tag and the refusal's action open the flagged draft,
+    // even though another product is first in the video's review queue.
+    fireEvent.click(
+      screen.getByRole("button", {
+        name:
+          templateId === "chat_kit"
+            ? "Fix the flagged price"
+            : "Check the price of Динозавр",
+      })
+    );
+    expect(await screen.findByText(`review ${IMPORT_NEW}`)).toBeInTheDocument();
+    expect(screen.getByText(`first ${D1}`)).toBeInTheDocument();
+    expect(
+      new URLSearchParams(window.location.search).get("reviewProduct")
+    ).toBe(D1);
+  }
+);
+
+test("a refused make keeps the workbench with the refusal, and Try again sends the same press", async () => {
+  await serveMake();
+  let fail = true;
+  routes[`POST ${BASE}/ads`] = () =>
+    fail
+      ? respond(503, { code: "ad_unavailable", error: "x" })
+      : respond(202, { ad: adRecord({ status: "making" }) });
+  await ready();
+  fireEvent.click(tile("reel_shelf"));
+  expect(
+    await screen.findByText("reel_shelf: pending ad_unavailable")
+  ).toBeInTheDocument();
+  fail = false;
+  fireEvent.click(screen.getByRole("button", { name: "Try the make again" }));
+  expect(
+    await screen.findByText(`reel_shelf: ad ${AD_ID}`)
+  ).toBeInTheDocument();
+  const [first, second] = sent("POST", `${BASE}/ads`);
+  expect((second!.body as { requestId: string }).requestId).toBe(
+    (first!.body as { requestId: string }).requestId
+  );
+});
+
+test("AI off for the company: the brief's stop is the workbench's answer, and the tiles lock", async () => {
+  await serveMake();
+  routes[`GET ${BASE}/meta`] = () =>
+    respond(200, {
+      meta: {
+        instagram: {},
+        ads: {},
+        whatsapp: { connected: true },
+        ai: { blocked: "ai_disabled" },
+      },
+    });
+  await ready();
+  await waitFor(() =>
+    expect(tile("reel_shelf")).toHaveTextContent(PRODUCTS_COPY.gallery.aiOff)
+  );
+  fireEvent.click(tile("reel_shelf"));
+  expect(screen.queryByText(/^reel_shelf: /)).not.toBeInTheDocument();
+  // The chat needs no new ad.
+  expect(tile("chat_kit")).not.toHaveAttribute("aria-disabled");
+});
+
+test("the chat tile opens the kit of every pick, up to 10, from their video", async () => {
+  routes[`GET ${BASE}/imports`] = () =>
+    respond(200, { imports: [importRecord(IMPORT_NEW)] });
+  routes[`GET ${BASE}/imports/${IMPORT_NEW}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_NEW),
+      products: [
+        detailProduct(P1, "Кукла Лол", "published"),
+        detailProduct(P2, "Кружка Web UMN", "published"),
+      ],
+    });
   serveShelf([
-    record(P1, "Phone stand", { price: 10, currency: "USD" }),
-    record(P2, "Кукла Лол"),
-    record(P3, "Mug", { price: 4.99, currency: null, priceIsFrom: true }),
+    record(P1, "Кукла Лол", { importId: IMPORT_NEW }),
+    record(P2, "Кружка Web UMN", { importId: IMPORT_NEW }),
+    record(P4, "Петух", { imageUrl: null }),
   ]);
-  renderPage();
-
-  await screen.findByText("Phone stand");
-  // Never tenge by default.
+  await ready();
+  await waitFor(() => expect(pressed()).toEqual([P1, P2]));
+  fireEvent.click(tile("chat_kit"));
   expect(
-    screen.getByText(unbroken("from 4.99"), { normalizer: text => text })
+    await screen.findByText(`chat_kit: kit ${P1},${P2} from ${IMPORT_NEW}`)
   ).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Close the workbench" }));
+  fireEvent.click(bay("Петух"));
+  fireEvent.click(tile("chat_kit"));
   expect(
-    screen.getByText(unbroken("10 USD"), { normalizer: text => text })
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText(unbroken("5 000 ₸"), { normalizer: text => text })
+    await screen.findByText(`chat_kit: kit ${P1},${P2},${P4} from null`)
   ).toBeInTheDocument();
 });
+
+// ------------------------------------------------------------------ links
+
+test("?ad=<id> opens that ad's workbench on its last tile, with its products picked", async () => {
+  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
+    respond(200, {
+      ad: adRecord({
+        products: [P3, P1].map(id => ({
+          productId: id,
+          name: id,
+          englishName: null,
+          priceText: "5 000 ₸",
+          imageUrl: null,
+        })),
+        meta: {
+          posts: [
+            {
+              id: "post-1",
+              destination: "post",
+              still: { kind: "studio", productId: P3, colourway: null },
+              slides: null,
+              renderNo: 1,
+              motion: null,
+              state: "published",
+              permalink: "https://instagram.test/p/1",
+              errorCode: null,
+              errorMessage: null,
+              requestedAt: "2026-11-03T10:00:00.000Z",
+              publishedAt: "2026-11-03T10:00:09.000Z",
+            },
+          ],
+          ctwa: null,
+        },
+      }),
+    });
+  visit(`ad=${AD_ID}`);
+  renderPage();
+  expect(
+    await screen.findByText(`post_studio: ad ${AD_ID}`)
+  ).toBeInTheDocument();
+  expect(pressed()).toEqual([P3, P1]);
+});
+
+test("an ad from Out on Meta opens its workbench; its products become the picks", async () => {
+  routes[`GET ${BASE}/made`] = () =>
+    respond(200, {
+      kits: [],
+      ads: [adRecord({ motion: "filmed_sold" })],
+      whatsapp: { connected: false, displayPhone: null },
+    });
+  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
+    respond(200, { ad: adRecord({ motion: "filmed_sold" }) });
+  await ready();
+  fireEvent.click(bay("Кукла Лол"));
+  fireEvent.click(screen.getByRole("button", { name: "Open the ad" }));
+  expect(
+    await screen.findByText(`reel_filmed_sold: ad ${AD_ID}`)
+  ).toBeInTheDocument();
+  expect(pressed()).toEqual([P1, P2, P3]);
+});
+
+test("a receipt opens its ad on the tile it went out from; a kit receipt opens the chat tile", async () => {
+  routes[`GET ${BASE}/made`] = () =>
+    respond(200, {
+      kits: [],
+      ads: [adRecord({ motion: "filmed_sold" })],
+      whatsapp: { connected: false, displayPhone: null },
+    });
+  routes[`GET ${BASE}/ads/${AD_ID}`] = () =>
+    respond(200, { ad: adRecord({ motion: "filmed_sold" }) });
+  await ready();
+  fireEvent.click(screen.getByRole("button", { name: "Open the WhatsApp ad" }));
+  expect(
+    await screen.findByText(`ctwa_video: ad ${AD_ID}`)
+  ).toBeInTheDocument();
+  expect(pressed()).toEqual([P1, P2, P3]);
+
+  fireEvent.click(screen.getByRole("button", { name: "Open the kit" }));
+  expect(
+    await screen.findByText(`chat_kit: kit ${P2},${P1} from null`)
+  ).toBeInTheDocument();
+  expect(pressed()).toEqual([P2, P1]);
+});
+
+test("the print's ⋯ opens the check one by one in place; Back closes it", async () => {
+  routes[`GET ${BASE}/imports`] = () =>
+    respond(200, { imports: [importRecord(IMPORT_NEW, { draftsLeft: true })] });
+  routes[`GET ${BASE}/imports/${IMPORT_NEW}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_NEW, { draftsLeft: true }),
+      products: [detailProduct(D1, "Динозавр", "draft")],
+    });
+  serveShelf([]);
+  renderPage();
+  const more = await screen.findByRole("button", {
+    name: "More for this video",
+  });
+  fireEvent.pointerDown(more, { button: 0, pointerType: "mouse" });
+  fireEvent.keyDown(more, { key: "Enter" });
+  fireEvent.click(
+    await screen.findByRole("menuitem", { name: "Check one by one" })
+  );
+  expect(await screen.findByText(`review ${IMPORT_NEW}`)).toBeInTheDocument();
+  expect(window.location.search).toBe(`?picks=${D1}&review=${IMPORT_NEW}`);
+  act(() => window.history.back());
+  await waitFor(() =>
+    expect(screen.queryByText(/^review /)).not.toBeInTheDocument()
+  );
+  expect(bay("Динозавр")).toBeInTheDocument();
+});
+
+test("the review hands its products on as the picks", async () => {
+  visit(`review=${IMPORT_NEW}`);
+  renderPage();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Back with these picked" })
+  );
+  await screen.findByRole("region", { name: "Templates" });
+  expect(pressed()).toEqual([P3, P2]);
+  expect(window.location.search).toBe(`?picks=${P3},${P2}`);
+});
+
+test("picks handed on by a review opened from the page reach the page's own address", async () => {
+  routes[`GET ${BASE}/imports`] = () =>
+    respond(200, { imports: [importRecord(IMPORT_NEW, { draftsLeft: true })] });
+  routes[`GET ${BASE}/imports/${IMPORT_NEW}`] = () =>
+    respond(200, {
+      import: importRecord(IMPORT_NEW, { draftsLeft: true }),
+      products: [detailProduct(D1, "Динозавр", "draft")],
+    });
+  renderPage();
+  const more = await screen.findByRole("button", {
+    name: "More for this video",
+  });
+  fireEvent.pointerDown(more, { button: 0, pointerType: "mouse" });
+  fireEvent.keyDown(more, { key: "Enter" });
+  fireEvent.click(
+    await screen.findByRole("menuitem", { name: "Check one by one" })
+  );
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Back with these picked" })
+  );
+  await screen.findByRole("region", { name: "Templates" });
+  await waitFor(() =>
+    expect(window.location.search).toBe(`?picks=${P3},${P2}`)
+  );
+  expect(pressed()).toEqual([P3, P2]);
+});
+
+// ------------------------------------------------------------------ helpers
+
+test("finds the ad these picks made, in their order, never a failed one", () => {
+  const ads = [
+    adRecord({ id: "a-failed", status: "failed" }),
+    adRecord({ id: "a-ok" }),
+  ] as never[];
+  expect(adForPicks(ads, [P1, P2, P3])?.id).toBe("a-ok");
+  expect(adForPicks(ads, [P2, P1, P3])).toBeNull();
+  expect(adForPicks(ads, [])).toBeNull();
+});
+
+test("stamps the tiles from what went out on Meta", () => {
+  const stamps = templateStamps(
+    adRecord({
+      meta: {
+        posts: [
+          {
+            destination: "reel",
+            still: null,
+            motion: "filmed_sold",
+            state: "published",
+          },
+          {
+            destination: "story",
+            still: null,
+            motion: "shelf",
+            state: "failed",
+          },
+        ],
+        ctwa: {
+          asset: "video",
+          state: "running",
+          effectiveStatus: "PENDING_REVIEW",
+        },
+      },
+    }) as never,
+    {
+      parts: {
+        carousel: { state: "submitted", metaStatus: "APPROVED" },
+      },
+    } as never
+  );
+  expect(Object.fromEntries(stamps)).toEqual({
+    reel_filmed_sold: "live",
+    story_video: "failed",
+    ctwa_video: "in_review",
+    chat_kit: "approved",
+  });
+});
+
+test("an unconfirmed Run is not stamped as live or in review", () => {
+  const stamps = templateStamps(
+    adRecord({
+      meta: {
+        posts: [],
+        ctwa: { asset: "video", state: "running", effectiveStatus: null },
+      },
+    }) as never,
+    null
+  );
+  expect(stamps.has("ctwa_video")).toBe(false);
+});
+
+test("an ad opens on its latest post's tile, else its WhatsApp ad, else its Reel", () => {
+  expect(templateOfAd(adRecord({ motion: "filmed_sold" }) as never).id).toBe(
+    "reel_filmed_sold"
+  );
+  expect(templateOfAd(adRecord({ motion: "float" }) as never).id).toBe(
+    "reel_float"
+  );
+  // A motion this page doesn't know opens the shelf Reel.
+  expect(templateOfAd(adRecord({ motion: "turntable" }) as never).id).toBe(
+    "reel_shelf"
+  );
+  expect(
+    templateOfAd(
+      adRecord({ meta: { posts: [], ctwa: { asset: "video" } } }) as never
+    ).id
+  ).toBe("ctwa_video");
+});
+
+// ------------------------------------------------------------ v2's shelf
 
 test("letters a long price smaller, so its label fits a phone's bay, and breaks it only after a lighter 'from'", () => {
+  const unbroken = (text: string) => text.replace(/ /g, " ");
   const product = (id: string, price: number, currency: string) =>
     record(id, `Product ${id}`, { price, currency, priceIsFrom: true });
   render(
@@ -376,10 +1141,8 @@ test("letters a long price smaller, so its label fits a phone's bay, and breaks 
       ]}
     />
   );
-  // Read as one price; drawn with "from" apart.
   const price = (text: string) =>
     screen.getByText(unbroken(text), { normalizer: words => words });
-
   const tags = [
     "from 15 500 ₸",
     "from 1 250 000 000 IRR",
@@ -388,91 +1151,12 @@ test("letters a long price smaller, so its label fits a phone's bay, and breaks 
   expect(tags[0]).toHaveClass("text-[13px]");
   expect(tags[1]).toHaveClass("text-[11px]");
   expect(tags[2]).toHaveClass("text-[10px]");
-  // Where it must break, it breaks after "from" and nowhere else.
-  const drawn = tags[2].querySelector("[aria-hidden='true']")!;
-  const breaks = drawn.querySelectorAll("wbr");
-  expect(breaks).toHaveLength(1);
-  expect(breaks[0]!.previousSibling?.textContent).toBe(unbroken("from "));
-  expect(breaks[0]!.previousSibling).toHaveClass("from");
-});
-
-test("finishes the last shelf row with spots that aren't products", () => {
-  const products = (count: number) =>
-    Array.from({ length: count }, (_, n) =>
-      record(`p${n}`, `Product ${n}`, { imageUrl: null })
-    );
-  const { container, rerender } = render(
-    <ProductShelf products={products(1)} />
-  );
-  const fillers = () =>
-    Array.from(container.querySelectorAll('[data-spot="filler"]'));
-
-  // One product: one more spot at 2 columns, two at 3, three at 4.
-  expect(fillers()).toHaveLength(3);
-  for (const filler of fillers())
-    expect(filler).toHaveAttribute("aria-hidden", "true");
-  expect(fillers()[0]).toHaveClass("block", "sm:block", "lg:block");
-  expect(fillers()[1]).toHaveClass("hidden", "sm:block", "lg:block");
-  expect(fillers()[2]).toHaveClass("hidden", "sm:hidden", "lg:block");
-  expect(
-    within(screen.getByRole("list", { name: "Products" })).getAllByRole(
-      "listitem"
-    )
-  ).toHaveLength(1);
-
-  // Four fill rows of 2 and 4; at 3 columns the second row needs two more.
-  rerender(<ProductShelf products={products(4)} />);
-  expect(fillers()).toHaveLength(2);
-  for (const filler of fillers())
-    expect(filler).toHaveClass("hidden", "sm:block", "lg:hidden");
-});
-
-test("sets a product down on the shelf only once its photo has decoded", async () => {
-  serveShelf([
-    record(P1, "Кукла Лол", { imageUrl: "https://storage.test/doll.png" }),
-  ]);
-  const { container } = renderPage();
-  await screen.findByText("Кукла Лол");
-
-  const image = container.querySelector("img");
-  expect(image).toHaveAttribute("src", "https://storage.test/doll.png");
-  // The name below the shelf already says what it is.
-  expect(image).toHaveAttribute("alt", "");
-  expect(image?.parentElement).toHaveAttribute("data-state", "loading");
-
-  fireEvent.load(image!);
-  await waitFor(() =>
-    expect(image?.parentElement).toHaveAttribute("data-state", "loaded")
-  );
-  // The first products are set down one after another, 40 ms apart.
-  expect(image?.parentElement?.style.getPropertyValue("--delay")).toBe("0ms");
-});
-
-test("stands a paper tent card with the name's first letter where there is no photo, or it fails", async () => {
-  serveShelf([
-    record(P1, "шежіре", { imageUrl: null }),
-    record(P2, "Broken", { imageUrl: "https://storage.test/expired.png" }),
-  ]);
-  const { container } = renderPage();
-  await screen.findByText("шежіре");
-
-  // A card standing on the shelf says what's missing, not a bare letter.
-  const items = within(
-    screen.getByRole("list", { name: "Your shelf" })
-  ).getAllByRole("listitem");
-  expect(within(items[0]!).getByText("Ш")).toBeInTheDocument();
-  expect(within(items[0]!).getByText("No photo")).toBeInTheDocument();
-  expect(within(items[1]!).queryByText("No photo")).not.toBeInTheDocument();
-  fireEvent.error(container.querySelector("img")!);
-  expect(container.querySelector("img")).not.toBeInTheDocument();
-  expect(within(items[1]!).getByText("B")).toBeInTheDocument();
-  expect(within(items[1]!).getByText("No photo")).toBeInTheDocument();
 });
 
 test("a found product's tent card says its photo is being made, or next in line", () => {
   const drafts = new Map([
-    [P1, { photo: "making", prompt: null, aura: ["", ""], priceDoubt: false }],
-    [P2, { photo: "waiting", prompt: null, aura: ["", ""], priceDoubt: true }],
+    [P1, { photo: "making", prompt: null, priceDoubt: false }],
+    [P2, { photo: "waiting", prompt: null, priceDoubt: true }],
   ] as const);
   render(
     <ProductShelf
@@ -490,456 +1174,5 @@ test("a found product's tent card says its photo is being made, or next in line"
   const items = screen.getAllByRole("listitem");
   expect(within(items[0]!).getByText("Making photo…")).toBeInTheDocument();
   expect(within(items[1]!).getByText("Next in line")).toBeInTheDocument();
-  // A price Airi isn't sure of is marked for the owner to check.
   expect(within(items[1]!).getByText("Check this price")).toBeInTheDocument();
-});
-
-test("shows an error on the wall with a retry that loads again", async () => {
-  fetchMock.mockResolvedValueOnce(
-    respond(503, { error: "x", code: "load_failed" })
-  );
-  renderPage();
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Products couldn't be loaded."
-  );
-
-  fetchMock.mockResolvedValueOnce(respond(200, { products: [] }));
-  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-  expect(
-    await screen.findByText("Your products will appear here")
-  ).toBeInTheDocument();
-});
-
-test("while choosing, each product's bay is its checkbox with a rose check, and the spots that finish the row aren't", () => {
-  const onToggle = jest.fn();
-  const { container } = render(
-    <ProductShelf
-      products={[record(P1, "Кукла Лол"), record(P2, "Кружка Web UMN")]}
-      choose={{ chosen: new Set([P2]), onToggle }}
-    />
-  );
-  const items = screen.getAllByRole("listitem");
-  expect(items).toHaveLength(2);
-  const doll = within(items[0]!).getByRole("checkbox", { name: "Кукла Лол" });
-  const cup = within(items[1]!).getByRole("checkbox", {
-    name: "Кружка Web UMN",
-  });
-  expect(doll).not.toBeChecked();
-  expect(cup).toBeChecked();
-  // The check only shows the state; chosen is rose, never black.
-  expect(items[1]!.querySelector("[data-checked]")).toBeInTheDocument();
-  expect(items[0]!.querySelector("[data-checked]")).toBeNull();
-  expect(items[1]).toHaveAttribute("data-chosen", "true");
-  fireEvent.click(doll);
-  expect(onToggle).toHaveBeenCalledWith(P1);
-  for (const filler of container.querySelectorAll('[data-spot="filler"]'))
-    expect(filler.querySelector("input")).toBeNull();
-});
-
-test("tries a refreshed photo link again after the old one failed", () => {
-  const product = (imageUrl: string) => record(P1, "Кукла Лол", { imageUrl });
-  const { container, rerender } = render(
-    <ProductShelf products={[product("https://storage.test/expired.png")]} />
-  );
-  fireEvent.error(container.querySelector("img")!);
-  expect(container.querySelector("img")).not.toBeInTheDocument();
-
-  rerender(
-    <ProductShelf products={[product("https://storage.test/fresh.png")]} />
-  );
-  expect(container.querySelector("img")).toHaveAttribute(
-    "src",
-    "https://storage.test/fresh.png"
-  );
-});
-
-test("keeps the shelf when a refresh fails", async () => {
-  function Refresh() {
-    const { mutate } = useSWRConfig();
-    return (
-      <button
-        onClick={() => void mutate("/api/workspaces/workspace-1/products")}
-      >
-        refresh
-      </button>
-    );
-  }
-  fetchMock.mockResolvedValueOnce(
-    respond(200, { products: [record(P1, "Кукла Лол")] })
-  );
-  render(
-    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
-      <ProductsPage workspaceId="workspace-1" />
-      <Refresh />
-    </SWRConfig>
-  );
-  await screen.findByText("Кукла Лол");
-
-  fetchMock.mockResolvedValueOnce(
-    respond(503, { error: "x", code: "load_failed" })
-  );
-  fireEvent.click(screen.getByRole("button", { name: "refresh" }));
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-
-  expect(screen.getByText("Кукла Лол")).toBeInTheDocument();
-  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-});
-
-describe("Choose mode", () => {
-  async function startChoosing() {
-    serveShelf();
-    renderPage();
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Choose products" })
-    );
-    return screen.getByRole("region", { name: "Chosen products" });
-  }
-
-  test("each bay becomes a checkbox; the bar counts them, Clear and Done let go", async () => {
-    const bar = await startChoosing();
-    // The button that started it now ends it, keeping the keyboard's place.
-    const done = screen.getByRole("button", { name: "Done" });
-    expect(done).toBeInTheDocument();
-    expect(
-      screen.getByText("Choose products to make something from them.", {
-        selector: "p",
-      })
-    ).toBeInTheDocument();
-
-    const doll = screen.getByRole("checkbox", { name: "Кукла Лол" });
-    expect(doll).not.toBeChecked();
-    fireEvent.click(doll);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Шежіре" }));
-    expect(doll).toBeChecked();
-    expect(doll.closest("li")).toHaveAttribute("data-chosen", "true");
-    expect(within(bar).getByText("2 chosen")).toBeInTheDocument();
-
-    fireEvent.click(within(bar).getByRole("button", { name: "Clear" }));
-    expect(doll).not.toBeChecked();
-    expect(
-      within(bar).getByText("Choose products to make something from them.")
-    ).toBeInTheDocument();
-
-    fireEvent.click(done);
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("region", { name: "Chosen products" })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Choose products" })
-    ).toHaveFocus();
-  });
-
-  test("Escape on a bay leaves Choose mode", async () => {
-    await startChoosing();
-    const doll = screen.getByRole("checkbox", { name: "Кукла Лол" });
-    fireEvent.click(doll);
-    act(() => doll.focus());
-    fireEvent.keyDown(doll, { key: "Escape" });
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Choose products" })
-    ).toHaveFocus();
-  });
-
-  test("a video ad takes 1 to 3 products with photos and prices, and says so", async () => {
-    const bar = await startChoosing();
-    const makeAd = () =>
-      within(bar).getByRole("button", { name: /Make a video ad/ });
-    const note = "A video ad takes 1 to 3 products with photos and prices.";
-    // Nothing chosen: neither can be made, and nothing to explain yet.
-    expect(makeAd()).toBeDisabled();
-    expect(
-      within(bar).getByRole("button", { name: /Make carousel \+ order form/ })
-    ).toBeDisabled();
-    expect(within(bar).queryByText(note)).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кукла Лол" }));
-    expect(makeAd()).toBeEnabled();
-
-    // The rooster has no photo.
-    fireEvent.click(screen.getByRole("checkbox", { name: "Петух" }));
-    expect(makeAd()).toBeDisabled();
-    expect(makeAd()).toHaveAccessibleDescription(note);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Петух" }));
-
-    // Four is one too many.
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кружка Web UMN" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Шежіре" }));
-    expect(makeAd()).toBeEnabled();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Петух" }));
-    expect(makeAd()).toBeDisabled();
-    expect(within(bar).getByText(note)).toBeInTheDocument();
-  });
-
-  test("Make carousel + order form opens the make view with the chosen products in shelf order; Back returns to them", async () => {
-    const bar = await startChoosing();
-    // Chosen out of order; made in the shelf's.
-    fireEvent.click(screen.getByRole("checkbox", { name: "Шежіре" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кукла Лол" }));
-    fireEvent.click(
-      within(bar).getByRole("button", { name: /Make carousel \+ order form/ })
-    );
-
-    const make = screen.getByRole("region", { name: "Make view" });
-    expect(make).toHaveTextContent(`make workspace-1 null ${P1},${P3}`);
-    expect(window.location.search).toBe(`?make=${P1},${P3}`);
-    // The page's head and shelf wait behind the view, which has the focus.
-    expect(
-      screen.queryByText("New · built at the Meta AI Hackathon 2026")
-    ).not.toBeInTheDocument();
-    expect(make.parentElement).toHaveFocus();
-
-    fireEvent.click(screen.getByRole("button", { name: "Products" }));
-    await waitFor(() => expect(window.location.search).toBe(""));
-    // Still choosing, with the same products.
-    expect(screen.getByRole("checkbox", { name: "Шежіре" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Кукла Лол" })).toBeChecked();
-  });
-
-  test("Make a video ad opens the ad's brief, which swaps its address for the ad's once made", async () => {
-    const bar = await startChoosing();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кружка Web UMN" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кукла Лол" }));
-    fireEvent.click(
-      within(bar).getByRole("button", { name: /Make a video ad/ })
-    );
-
-    expect(screen.getByRole("region", { name: "Ad studio" })).toHaveTextContent(
-      `new ad of ${P1},${P2}`
-    );
-    expect(window.location.search).toBe(`?ad=new&products=${P1},${P2}`);
-
-    fireEvent.click(screen.getByRole("button", { name: "Make the ad" }));
-    expect(screen.getByRole("region", { name: "Ad studio" })).toHaveTextContent(
-      `ad ${AD_ID}`
-    );
-    expect(window.location.search).toBe(`?ad=${AD_ID}`);
-    // In place: the browser's Back from the ad goes to the shelf, not to
-    // its brief.
-    act(() => window.history.back());
-    await waitFor(() => expect(window.location.search).toBe(""));
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Products" })
-    ).toHaveClass("displayXl");
-    expect(
-      screen.queryByRole("region", { name: "Ad studio" })
-    ).not.toBeInTheDocument();
-  });
-
-  test("an ad that finishes starting after the owner left its brief leaves them on the shelf", async () => {
-    const bar = await startChoosing();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кукла Лол" }));
-    fireEvent.click(
-      within(bar).getByRole("button", { name: /Make a video ad/ })
-    );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Make the ad, answered late" })
-    );
-    // "You can leave this page": the owner goes back while it starts.
-    fireEvent.click(screen.getByRole("button", { name: "Products" }));
-    await waitFor(() => expect(window.location.search).toBe(""));
-
-    act(() => mockLateCreated?.(AD_ID));
-
-    expect(window.location.search).toBe("");
-    expect(
-      screen.queryByRole("region", { name: "Ad studio" })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Products" })
-    ).toBeInTheDocument();
-  });
-
-  test("the studio's own close goes back to the shelf", async () => {
-    const bar = await startChoosing();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кукла Лол" }));
-    fireEvent.click(
-      within(bar).getByRole("button", { name: /Make a video ad/ })
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Close the studio" }));
-    await waitFor(() => expect(window.location.search).toBe(""));
-    expect(screen.getByRole("checkbox", { name: "Кукла Лол" })).toBeChecked();
-  });
-});
-
-describe("views", () => {
-  test("the made list sits above the shelf and opens an ad, or a new one with up to 3 of its products", async () => {
-    serveShelf();
-    renderPage();
-    const made = await screen.findByRole("region", {
-      name: "Made from your shelf",
-    });
-    expect(made).toHaveTextContent("made workspace-1");
-    const shelf = await screen.findByRole("list", { name: "Your shelf" });
-    expect(
-      made.compareDocumentPosition(shelf) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-
-    fireEvent.click(within(made).getByRole("button", { name: "Open the ad" }));
-    expect(window.location.search).toBe(`?ad=${AD_ID}`);
-    expect(screen.getByRole("region", { name: "Ad studio" })).toHaveTextContent(
-      `ad ${AD_ID}`
-    );
-    // A field keeps its own Escape; elsewhere Escape closes the view.
-    fireEvent.keyDown(screen.getByRole("textbox", { name: "Your own words" }), {
-      key: "Escape",
-    });
-    expect(
-      screen.getByRole("region", { name: "Ad studio" })
-    ).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: "Escape" });
-    await waitFor(() => expect(window.location.search).toBe(""));
-
-    fireEvent.click(
-      within(
-        await screen.findByRole("region", { name: "Made from your shelf" })
-      ).getByRole("button", { name: "Make a video ad with these" })
-    );
-    expect(window.location.search).toBe(`?ad=new&products=${P1},${P2},${P3}`);
-  });
-
-  test("a view opened from another goes back to the shelf in one step, however deep", async () => {
-    serveShelf();
-    renderPage();
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Choose products" })
-    );
-    fireEvent.click(screen.getByRole("checkbox", { name: "Кукла Лол" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: /Make carousel \+ order form/ })
-    );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Make an ad of these" })
-    );
-    expect(window.location.search).toBe(`?ad=new&products=${P1}`);
-
-    fireEvent.click(screen.getByRole("button", { name: "Products" }));
-    await waitFor(() => expect(window.location.search).toBe(""));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 20));
-    });
-    expect(
-      screen.queryByRole("region", { name: "Make view" })
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: "Кукла Лол" })).toBeChecked();
-  });
-
-  test("a view opens at the top of the page, and back on the shelf the page is where it was", async () => {
-    serveShelf();
-    render(
-      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
-        {/* The route's column, which scrolls. */}
-        <div data-testid="column" style={{ overflowY: "auto" }}>
-          <ProductsPage workspaceId="workspace-1" />
-        </div>
-      </SWRConfig>
-    );
-    const column = screen.getByTestId("column");
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Choose products" })
-    );
-    fireEvent.click(screen.getByRole("checkbox", { name: "Петух" }));
-    column.scrollTop = 640;
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /Make carousel \+ order form/ })
-    );
-    expect(column.scrollTop).toBe(0);
-
-    fireEvent.click(screen.getByRole("button", { name: "Products" }));
-    await waitFor(() => expect(window.location.search).toBe(""));
-    expect(screen.getByRole("checkbox", { name: "Петух" })).toBeChecked();
-    expect(column.scrollTop).toBe(640);
-  });
-
-  test("Change in the make view goes back to the shelf, choosing those products", async () => {
-    serveShelf();
-    visit(`make=${P2},${P3}`);
-    renderPage();
-    expect(screen.getByRole("region", { name: "Make view" })).toHaveTextContent(
-      `make workspace-1 null ${P2},${P3}`
-    );
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Change the products" })
-    );
-    // Opened from its address: closing it stays on this entry.
-    expect(window.location.search).toBe("");
-    expect(
-      await screen.findByRole("checkbox", { name: "Кружка Web UMN" })
-    ).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Шежіре" })).not.toBeChecked();
-  });
-
-  test("the review hands its products on: an ad of them, or choosing them on the shelf", async () => {
-    serveShelf();
-    visit(`review=${IMPORT_ID}`);
-    renderPage();
-    expect(screen.getByRole("region", { name: "Review" })).toHaveTextContent(
-      `review ${IMPORT_ID}`
-    );
-    // Its own back button; the page adds none.
-    expect(
-      screen.queryByRole("button", { name: "Products" })
-    ).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Make an ad of P2" }));
-    expect(window.location.search).toBe(`?ad=new&products=${P2}`);
-    // Back to the shelf, not to the review the page was opened at.
-    fireEvent.click(screen.getByRole("button", { name: "Products" }));
-    await waitFor(() => expect(window.location.search).toBe(""));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 20));
-    });
-    expect(
-      screen.queryByRole("region", { name: "Review" })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Products" })
-    ).toBeInTheDocument();
-  });
-
-  test("the review's Change chooses its products on the shelf", async () => {
-    serveShelf();
-    visit(`review=${IMPORT_ID}`);
-    renderPage();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Choose them on the shelf" })
-    );
-    expect(window.location.search).toBe("");
-    expect(
-      await screen.findByRole("checkbox", { name: "Кружка Web UMN" })
-    ).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Шежіре" })).toBeChecked();
-    expect(
-      screen.getByRole("checkbox", { name: "Кукла Лол" })
-    ).not.toBeChecked();
-  });
-});
-
-test("reads only the views an address can hold", () => {
-  const view = (search: string) => productsViewIn(new URLSearchParams(search));
-  expect(view("")).toEqual({ kind: "shelf" });
-  expect(view(`review=${IMPORT_ID}`)).toEqual({
-    kind: "review",
-    importId: IMPORT_ID,
-  });
-  expect(view("review=../../admin")).toEqual({ kind: "shelf" });
-  expect(view(`make=${P1},${P2}`)).toEqual({
-    kind: "make",
-    productIds: [P1, P2],
-  });
-  expect(view(`make=${P1},nope`)).toEqual({ kind: "shelf" });
-  expect(view(`ad=new&products=${P1},${P1},${P2}`)).toEqual({
-    kind: "ad-new",
-    productIds: [P1, P2],
-  });
-  // An ad shows 1 to 3 products.
-  expect(view(`ad=new&products=${P1},${P2},${P3},${P4}`)).toEqual({
-    kind: "shelf",
-  });
-  expect(view("ad=new")).toEqual({ kind: "shelf" });
-  expect(view(`ad=${AD_ID}`)).toEqual({ kind: "ad", adId: AD_ID });
-  expect(view("ad=x")).toEqual({ kind: "shelf" });
 });

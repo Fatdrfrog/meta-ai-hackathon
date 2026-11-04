@@ -341,7 +341,7 @@ test("stops an upload when cancelled", async () => {
   expect(screen.getByRole("button", { name: "Upload a video" })).toHaveFocus();
 });
 
-test("the page's buttons give way to the upload card while a video is sent", async () => {
+test("the shelf's '+' waits while a video is sent, and the upload card says how far it is", async () => {
   serveUpload();
   routes["PUT https://storage.test/session"] = () => new Promise(() => {});
   routes[`GET ${BASE}/products`] = () =>
@@ -358,15 +358,14 @@ test("the page's buttons give way to the upload card while a video is sent", asy
       ],
     });
   const { container } = renderPage();
-  await screen.findByRole("button", { name: "Upload a video" });
+  const add = await screen.findByRole("button", { name: "Upload a video" });
+  expect(add).toBeEnabled();
 
   chooseVideo(shelfVideo());
   await screen.findByRole("button", { name: "Cancel" });
 
-  // The upload card takes the buttons' place: nothing is left blank above it.
-  expect(
-    screen.queryByRole("button", { name: "Upload a video" })
-  ).not.toBeInTheDocument();
+  // One video at a time: the "+" waits for this one.
+  expect(screen.getByRole("button", { name: "Upload a video" })).toBeDisabled();
   const card = container.querySelector<HTMLElement>('[data-canvas="upload"]')!;
   expect(
     within(card).getByRole("heading", { name: "Uploading your video" })
@@ -711,29 +710,6 @@ test("a running import says how long it has been going", async () => {
   ).toBeInTheDocument();
 });
 
-test("a finished import says how long it took", async () => {
-  const ready = record({
-    status: "ready",
-    stage: null,
-    photoDone: 3,
-    createdAt: "2026-10-28T09:00:00.000Z",
-    finishedAt: "2026-10-28T09:03:12.000Z",
-  });
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [ready] });
-  routes[`GET ${BASE}/products/imports/import-1`] = () =>
-    respond(200, {
-      import: ready,
-      products: [draft("p1", "Шежіре", restored("shezhire"))],
-    });
-  const { container } = renderPage();
-
-  await screen.findByRole("button", { name: "Check products" });
-  const stage = container.querySelector<HTMLElement>("[data-canvas]")!;
-  expect(within(stage).getByText("Took 3:12")).toBeInTheDocument();
-  expect(within(stage).queryByText(/leave this page/)).not.toBeInTheDocument();
-});
-
 test.each([
   ["preparing", "Prepare"],
   ["listening", "Listen"],
@@ -766,25 +742,7 @@ test.each([
   );
 });
 
-test("a ready import's rail is at the owner's check", async () => {
-  const ready = record({ status: "ready", stage: null, photoDone: 3 });
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [ready] });
-  routes[`GET ${BASE}/products/imports/import-1`] = () =>
-    respond(200, {
-      import: ready,
-      products: [draft("p1", "Шежіре", restored("shezhire"))],
-    });
-  renderPage();
-
-  // The owner's step: offered, never pressed for them.
-  const check = await screen.findByRole("button", { name: "Check products" });
-  expect(check).not.toHaveFocus();
-  expect(railStep()).toHaveTextContent("Check");
-  expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-});
-
-test("a ready import shows the photos it found, beside the frame its presenter was filmed in", async () => {
+test("a ready import collapses into its print: what it found stands on its row, waiting for the owner", async () => {
   const ready = record({
     status: "ready",
     stage: null,
@@ -807,74 +765,35 @@ test("a ready import shows the photos it found, beside the frame its presenter w
     });
   const { container } = renderPage();
 
-  await screen.findByRole("button", { name: "Check products" });
-  const stage = container.querySelector<HTMLElement>("[data-canvas]")!;
-  expect(
-    within(stage).getByRole("heading", { name: "2 products found" })
-  ).toBeInTheDocument();
-  expect(
-    within(stage).getByText("Check them before they go on your shelf.")
-  ).toBeInTheDocument();
-  // A video sent another way: the frame its presenter was cut from.
-  expect(
-    stage.querySelector(
-      '[data-film="frame"] img[src="https://storage.test/presenter-frame.jpg"]'
-    )
-  ).not.toBeNull();
-  // The photos it found, in the order filmed, on the strip above the check.
+  const row = await waitFor(() => {
+    const element = container.querySelector<HTMLElement>(
+      '[data-row="import-1"]'
+    );
+    expect(element).not.toBeNull();
+    return element!;
+  });
+  // No stage: the video is a print at the head of its row, the frame its
+  // presenter was cut from.
+  expect(container.querySelector("[data-canvas]")).toBeNull();
+  expect(row.querySelector("figure img")).toHaveAttribute(
+    "src",
+    "https://storage.test/presenter-frame.jpg"
+  );
+  // Its products, in the order filmed, as drafts the owner can pick.
   await waitFor(() =>
     expect(
-      [...stage.querySelectorAll("ul[aria-hidden] img")].map(image =>
-        image.getAttribute("src")
+      [...row.querySelectorAll("[data-product]")].map(button =>
+        button.getAttribute("data-product")
       )
-    ).toEqual([
-      "https://storage.test/shezhire.webp",
-      "https://storage.test/medal.webp",
-    ])
+    ).toEqual(["p1", "p2"])
   );
-  // The steps say what each came to.
-  const steps = within(
-    screen.getByRole("list", {
-      name: "How Airi turns your video into products",
-    })
-  );
-  expect(steps.getByText("2 products found")).toBeInTheDocument();
-  expect(steps.getByText("3 of 3")).toBeInTheDocument();
-});
-
-test("without a frame, the stage shows the newest photo made on a wall tile", async () => {
-  const ready = record({
-    status: "ready",
-    stage: null,
-    photoDone: 3,
-    presenter: {
-      imageUrl: "https://storage.test/presenter.webp",
-      photoUrl: null,
-      originalUrl: null,
-    },
-  });
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [ready] });
-  routes[`GET ${BASE}/products/imports/import-1`] = () =>
-    respond(200, {
-      import: ready,
-      products: [
-        draft("p1", "Шежіре", restored("shezhire")),
-        draft("p2", "Медаль ілгіш", restored("medal")),
-      ],
-    });
-  const { container } = renderPage();
-
-  const stage = await waitFor(() => {
-    const canvas = container.querySelector<HTMLElement>("[data-canvas]");
-    expect(
-      canvas?.querySelector(
-        '[data-film="still"] img[src="https://storage.test/medal.webp"]'
-      )
-    ).toBeInstanceOf(HTMLImageElement);
-    return canvas!;
-  });
-  expect(stage.querySelector('[data-film="frame"]')).toBeNull();
+  expect(
+    within(row).getByRole("button", { name: /^Шежіре,.*not on your shelf yet/ })
+  ).toBeInTheDocument();
+  // The check one by one is the print's.
+  expect(
+    within(row).getByRole("button", { name: "More for this video" })
+  ).toBeInTheDocument();
 });
 
 // The owner's first production run: five products found, two photos made
@@ -1047,7 +966,7 @@ test("a failed import offers the products it found, whatever stopped it", async 
   expect(window.location.search).toBe("?review=import-1");
 });
 
-test("an import that stopped making photos says why, and shows which weren't made", async () => {
+test("an import that stopped making photos says why, and its row shows which weren't made", async () => {
   const stopped = record({
     status: "ready",
     stage: null,
@@ -1064,42 +983,23 @@ test("an import that stopped making photos says why, and shows which weren't mad
         draft("p2", "Медаль ілгіш", pending),
       ],
     });
-  renderPage();
+  const { container } = renderPage();
 
+  // Said on its card, above the shelf.
   expect(
     await screen.findByText(
-      "2 photos weren't made because your plan's included AI actions are used up."
+      /2 photos weren't made because your plan's included AI actions are used up\./
     )
   ).toBeInTheDocument();
-  expect(
-    screen.getByRole("heading", { name: "2 products found" })
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText("Check them before they go on your shelf.")
-  ).toBeInTheDocument();
-  const found = await screen.findByRole("list", {
-    name: "Found in your video",
+  const row = await waitFor(() => {
+    const element = container.querySelector<HTMLElement>(
+      '[data-row="import-1"]'
+    );
+    expect(element?.querySelectorAll("[data-product]")).toHaveLength(2);
+    return element!;
   });
-  const items = within(found).getAllByRole("listitem");
-  expect(items[1]).toHaveAttribute("data-photo", "unmade");
-  const rows = await heardRows();
-  expect(rows[1]).toHaveTextContent("No photo");
-  // The photo that wasn't made has no tile on the strip.
-  expect(
-    document.querySelectorAll("[data-canvas] ul[aria-hidden] img")
-  ).toHaveLength(1);
-  // Still the stage's one push: what was found is ready to check.
-  expect(
-    screen.getByRole("button", { name: "Check products" })
-  ).toHaveAttribute("data-variant", "default");
-  // Where photos stopped, and what they came to.
-  const steps = within(
-    screen.getByRole("list", {
-      name: "How Airi turns your video into products",
-    })
-  );
-  expect(steps.getByText("Stopped here")).toBeInTheDocument();
-  expect(steps.getByText("1 of 3")).toBeInTheDocument();
+  const medal = within(row).getByRole("button", { name: /^Медаль ілгіш,/ });
+  expect(within(medal).getByText("No photo")).toBeInTheDocument();
 });
 
 test("asks for an import's products again when the list says it ended, with no event", async () => {
@@ -1188,7 +1088,7 @@ test("asks for every shown import's products again when the connection returns",
   await waitFor(() => expect(detailRequests("import-2")).toBe(2));
 });
 
-test("plays one import on the stage; the others are rows", async () => {
+test("plays a running import on the stage; a ready one stands on its row", async () => {
   routes[`GET ${BASE}/products/imports`] = () =>
     respond(200, {
       imports: [
@@ -1197,6 +1097,7 @@ test("plays one import on the stage; the others are rows", async () => {
           status: "ready",
           stage: null,
           productTotal: 1,
+          createdAt: "2026-10-28T10:00:00.000Z",
         }),
         record(),
       ],
@@ -1210,112 +1111,25 @@ test("plays one import on the stage; the others are rows", async () => {
     });
   const { container } = renderPage();
 
-  const rows = await screen.findByRole("list", { name: "Other videos" });
   // The running import leads, though the ready one is newer.
-  const stages = container.querySelectorAll('[data-variant="stage"]');
-  expect(stages).toHaveLength(1);
-  expect(stages[0]).toHaveAttribute("data-import", "import-1");
+  await waitFor(() =>
+    expect(container.querySelector('[data-variant="stage"]')).toHaveAttribute(
+      "data-import",
+      "import-1"
+    )
+  );
   expect(container.querySelectorAll("[data-canvas]")).toHaveLength(1);
-  expect(within(rows).getAllByRole("listitem")).toHaveLength(1);
-  expect(await within(rows).findByText("1 product found")).toBeInTheDocument();
   expect(
-    within(rows).getByText("Check it before it goes on your shelf.")
-  ).toBeInTheDocument();
-  const check = within(rows).getByRole("button", { name: "Check products" });
-  // Described by its row's line, as on the stage.
-  expect(check).toHaveAccessibleDescription("1 product found");
-  // Rows don't show their products; only the stage's shelf does. Its thumb
-  // is the newest photo, standing on the wall.
-  expect(screen.queryByText("Кукла Лол")).not.toBeInTheDocument();
-  await waitFor(() =>
-    expect(
-      within(rows)
-        .getByRole("listitem")
-        .querySelector('[data-film="still"] img')
-    ).toHaveAttribute("src", "https://storage.test/doll.webp")
-  );
-  // The running import's stage says what it's making, and its row would
-  // only say how far.
+    screen.queryByRole("list", { name: "Other videos" })
+  ).not.toBeInTheDocument();
+  const doll = await screen.findByRole("button", { name: /^Кукла Лол,/ });
+  expect(doll.closest("[data-row]")).toHaveAttribute("data-row", "import-2");
+  // The running import's stage says what it's making.
   expect(
-    within(stages[0] as HTMLElement).getByRole("heading", {
-      name: "Making photos",
-    })
+    within(
+      container.querySelector('[data-variant="stage"]') as HTMLElement
+    ).getByRole("heading", { name: "Making photos" })
   ).toBeInTheDocument();
-});
-
-test("the keyboard's focus follows an import from the stage to the rows", async () => {
-  const ready = record({ status: "ready", stage: null, photoDone: 3 });
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [ready] });
-  routes[`GET ${BASE}/products/imports/import-1`] = () =>
-    respond(200, {
-      import: ready,
-      products: [draft("p1", "Шежіре", restored("shezhire"))],
-    });
-  const { container } = renderPage();
-  const check = await screen.findByRole("button", { name: "Check products" });
-  check.focus();
-
-  // Another video starts reading, and takes the stage.
-  const running = record({
-    id: "import-2",
-    stage: "preparing",
-    productTotal: 0,
-    photoTotal: 0,
-    photoDone: 0,
-  });
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [running, ready] });
-  routes[`GET ${BASE}/products/imports/import-2`] = () =>
-    respond(200, { import: running, products: [] });
-  fireEvent.click(screen.getByRole("button", { name: "Refresh the list" }));
-
-  await waitFor(() =>
-    expect(container.querySelector('[data-variant="stage"]')).toHaveAttribute(
-      "data-import",
-      "import-2"
-    )
-  );
-  const row = container.querySelector<HTMLElement>(
-    '[data-variant="row"][data-import="import-1"]'
-  )!;
-  await waitFor(() =>
-    expect(
-      within(row).getByRole("button", { name: "Check products" })
-    ).toHaveFocus()
-  );
-});
-
-test("focus moved away from an import stays where it was put when the import moves", async () => {
-  const ready = record({ status: "ready", stage: null, photoDone: 3 });
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [ready] });
-  routes[`GET ${BASE}/products/imports/import-1`] = () =>
-    respond(200, {
-      import: ready,
-      products: [draft("p1", "Шежіре", restored("shezhire"))],
-    });
-  const { container } = renderPage();
-  const check = await screen.findByRole("button", { name: "Check products" });
-  check.focus();
-  // A click on the page itself, away from any control.
-  check.blur();
-  await act(async () => undefined);
-
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, { imports: [record({ id: "import-2" }), ready] });
-  routes[`GET ${BASE}/products/imports/import-2`] = () =>
-    respond(200, { import: record({ id: "import-2" }), products: [] });
-  fireEvent.click(screen.getByRole("button", { name: "Refresh the list" }));
-
-  await waitFor(() =>
-    expect(container.querySelector('[data-variant="stage"]')).toHaveAttribute(
-      "data-import",
-      "import-2"
-    )
-  );
-  await screen.findByRole("button", { name: "Check products" });
-  expect(document.body).toHaveFocus();
 });
 
 test("a video being uploaded takes the stage, and a running import becomes a row", async () => {
@@ -1458,7 +1272,7 @@ test("putting away the only video, which gave nothing, leaves the empty shelf", 
   ).toBeInTheDocument();
 });
 
-test("says what a finished import found, or that it found nothing", async () => {
+test("says that a finished import found nothing; one that found products is their row", async () => {
   routes[`GET ${BASE}/products/imports`] = () =>
     respond(200, {
       imports: [
@@ -1481,60 +1295,17 @@ test("says what a finished import found, or that it found nothing", async () => 
     });
   routes[`GET ${BASE}/products/imports/import-2`] = () =>
     respond(200, { import: record({ status: "ready" }), products: [] });
-  renderPage();
+  const { container } = renderPage();
 
   expect(
-    await screen.findByRole("heading", { name: "2 products found" })
+    await screen.findByText(/No products were found in this video/)
   ).toBeInTheDocument();
-  expect(
-    screen.getByText("Check them before they go on your shelf.")
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText(/No products were found in this video/)
-  ).toBeInTheDocument();
-});
-
-test("a finished import offers its check, which opens in place and Back closes", async () => {
-  routes[`GET ${BASE}/products/imports`] = () =>
-    respond(200, {
-      imports: [
-        record({ status: "ready", stage: null, photoDone: 3, photoTotal: 3 }),
-      ],
-    });
-  routes[`GET ${BASE}/products/imports/import-1`] = () =>
-    respond(200, {
-      import: record({ status: "ready", stage: null }),
-      products: [
-        draft("p1", "Шежіре", { method: "restored", imageUrl: null }),
-        draft("p2", "Медаль ілгіш", { method: "restored", imageUrl: null }),
-      ],
-    });
-  renderPage();
-
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Check products" })
+  await waitFor(() =>
+    expect(
+      container.querySelectorAll('[data-row="import-1"] [data-product]')
+    ).toHaveLength(2)
   );
-
-  expect(
-    screen.getByRole("heading", { name: "Check your products" })
-  ).toBeInTheDocument();
-  expect(
-    await screen.findByRole("article", { name: "Шежіре" })
-  ).toBeInTheDocument();
-  expect(window.location.search).toBe("?review=import-1");
-  // The page's own controls wait behind the review.
-  expect(
-    screen.queryByRole("button", { name: "Upload a video" })
-  ).not.toBeInTheDocument();
-
-  fireEvent.click(screen.getByRole("button", { name: "Products" }));
-  expect(
-    screen.queryByRole("heading", { name: "Check your products" })
-  ).not.toBeInTheDocument();
-  expect(
-    await screen.findByRole("button", { name: "Check products" })
-  ).toBeInTheDocument();
-  await waitFor(() => expect(window.location.search).toBe(""));
+  expect(container.querySelector('[data-row="import-2"]')).toBeNull();
 });
 
 test("opens the review straight from its address, and closing leaves the page", async () => {

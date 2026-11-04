@@ -1,103 +1,216 @@
 "use client";
 
-// "Made from your shelf": every kit and video ad the owner made, newest
-// first, with Meta's status and each one's next step. It sits above the
-// shelf, and shows nothing until something has been made.
+// "Out on Meta" (studio v3; it replaces v2's "Made from your shelf"): one
+// row of receipts for what actually exists at Meta, newest first. An
+// Instagram post that went live, the Click-to-WhatsApp ad once it's made
+// (paused or running), and a WhatsApp carousel and order form once they
+// reached Meta. Each has its picture, what it is, where it went, the time,
+// its status and its link. A receipt opens its tile's workbench. Ads that
+// never went out stay reachable by opening their tile again. It shows
+// nothing while nothing is out.
 
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
+import {
+  productTemplateOfCtwa,
+  productTemplateOfPost,
+  type ProductTemplateStamp,
+} from "@/lib/products/templates";
 import type {
   ProductAdRecord,
-  ProductKitPart,
+  ProductAdPostRecord,
   ProductKitRecord,
-  ProductsListResponse,
   ProductsMadeResponse,
-  WorkspaceProductRecord,
 } from "@/lib/products/types";
-import { Clapperboard, RotateCcw } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import useSWR from "swr";
-import { retryProductKitPart } from "./kits-client";
-import { ProductChip } from "./product-controls";
-import {
-  kitPartViews,
-  kitRequestErrorLine,
-  kitTitle,
-  retryBusy,
-} from "./product-kit-status";
+import { ExternalLink, Globe, MessageCircle } from "lucide-react";
+import { useId, useMemo } from "react";
+import { templateHref, whatsAppFlowsHref } from "./kit-links";
+import { ctwaRunState } from "./product-ctwa-panel";
 import styles from "./product-made-list.module.css";
-import theme from "./product-theme.module.css";
-import {
-  fetchProducts,
-  ProductDraftError,
-  productsApiUrl,
-} from "./products-client";
-import {
-  formatElapsed,
-  madeWhen,
-  useNow,
-  useProductsMade,
-} from "./use-product-kits";
-import { AD_MAX_PRODUCTS, canGoInAd } from "./use-product-selection";
+import { useProductsMade } from "./use-product-kits";
 
-const COPY = PRODUCTS_COPY.made;
-/** Rows shown before "Show all". */
-const FIRST_ROWS = 3;
+const COPY = PRODUCTS_COPY.outOnMeta;
+const STAMPS = PRODUCTS_COPY.gallery.stamps;
 
-/** What the page gives the list. */
+/** What the page gives the row. */
 export type MadeListProps = {
   workspaceId: string;
-  /** An ad row's Open: the ad's studio (?ad=<adId>). */
-  onOpenAd: (adId: string) => void;
-  /** A kit row's "Make a video ad with these": the ad's brief with its products. */
-  onMakeAd: (productIds: string[]) => void;
+  /**
+   * A receipt of an ad's post or WhatsApp ad: that ad's workbench
+   * (?ad=<adId>), on the tile it went out from when that's known.
+   */
+  onOpenAd: (adId: string, templateId: string | null) => void;
+  /** Kept from v2's list for the page's mount; Out on Meta makes nothing itself. */
+  onMakeAd?: (productIds: string[]) => void;
+  /** A kit's receipt: the WhatsApp chat tile with its products. */
+  onOpenKit?: (kit: ProductKitRecord) => void;
 };
 
-type MadeRow =
-  | { kind: "kit"; at: number; kit: ProductKitRecord }
-  | { kind: "ad"; at: number; ad: ProductAdRecord };
+/** One thing out on Meta. */
+export type OutOnMetaReceipt = {
+  key: string;
+  /** What it is: Reel, Story, Post, Carousel, WhatsApp ad, Carousel + form. */
+  what: string;
+  /** Where it went: Instagram, Facebook, WhatsApp. */
+  where: string;
+  at: string;
+  stamp: ProductTemplateStamp;
+  statusLabel?: string;
+  /** The tile it went out from, for the page's stamps. */
+  templateId: string | null;
+  thumb: string | null;
+  href: string | null;
+  /** Its link opens airi's own page, not Meta's. */
+  internal: boolean;
+  open: { kind: "ad"; adId: string } | { kind: "kit"; kit: ProductKitRecord };
+};
 
-/** Kits and ads together, newest first. */
-export function madeRows(made: ProductsMadeResponse): MadeRow[] {
-  return [
-    ...made.kits.map(kit => ({
-      kind: "kit" as const,
-      at: Date.parse(kit.createdAt),
-      kit,
-    })),
-    ...made.ads.map(ad => ({
-      kind: "ad" as const,
-      at: Date.parse(ad.createdAt),
-      ad,
-    })),
-  ].sort((a, b) => b.at - a.at);
+const posterOf = (ad: ProductAdRecord) =>
+  ad.video?.posterUrl ??
+  ad.stills.statusUrl ??
+  ad.products[0]?.imageUrl ??
+  null;
+
+const pictureOf = (
+  ad: ProductAdRecord,
+  post: Pick<ProductAdPostRecord, "destination" | "still" | "slides">
+) => {
+  const choice = post.still ?? post.slides[0];
+  if (!choice) return posterOf(ad);
+  const format = post.destination === "story" ? "story" : "feed";
+  return (
+    ad.stills.templates?.find(
+      still =>
+        still.kind === choice.kind &&
+        still.format === format &&
+        still.productId === choice.productId &&
+        (!choice.colourway || still.colourway === choice.colourway)
+    )?.url ??
+    (choice.kind === "room" &&
+    format === "feed" &&
+    choice.productId === ad.products[0]?.productId
+      ? ad.stills.feedUrl
+      : null) ??
+    ad.products.find(product => product.productId === choice.productId)
+      ?.imageUrl ??
+    ad.products[0]?.imageUrl ??
+    null
+  );
+};
+
+/** The stamp of a WhatsApp carousel and order form, from Meta's verdict. */
+function kitStamp(kit: ProductKitRecord): ProductTemplateStamp | null {
+  const carousel = kit.parts.carousel;
+  if (carousel?.state === "submitted") {
+    const status = carousel.metaStatus ?? "";
+    if (status === "APPROVED") return "approved";
+    if (["REJECTED", "PAUSED", "DISABLED"].includes(status)) return "failed";
+    return "in_review";
+  }
+  if (kit.parts.orderForm?.state === "ready") return "live";
+  return null;
 }
 
-/** The list. It shows nothing while nothing has been made. */
-export function MadeList({ workspaceId, onOpenAd, onMakeAd }: MadeListProps) {
+/** Everything out on Meta, newest first. */
+export function outOnMeta(
+  workspaceId: string,
+  made: Pick<ProductsMadeResponse, "ads" | "kits">
+): OutOnMetaReceipt[] {
+  const receipts: OutOnMetaReceipt[] = [];
+  for (const ad of made.ads) {
+    for (const post of ad.meta?.posts ?? []) {
+      if (post.state !== "published") continue;
+      receipts.push({
+        key: `post-${ad.id}-${post.id}`,
+        what: COPY.kinds[post.destination],
+        where: COPY.places.instagram,
+        at: post.publishedAt ?? post.requestedAt,
+        stamp: "live",
+        templateId: productTemplateOfPost(post)?.id ?? null,
+        thumb:
+          post.still || post.slides.length > 0
+            ? pictureOf(ad, post)
+            : posterOf(ad),
+        href: post.permalink,
+        internal: false,
+        open: { kind: "ad", adId: ad.id },
+      });
+    }
+    const ctwa = ad.meta?.ctwa ?? null;
+    if (ctwa && (ctwa.state === "paused" || ctwa.state === "running")) {
+      const run = ctwaRunState(ctwa);
+      receipts.push({
+        key: `ctwa-${ad.id}-${ctwa.attempt}`,
+        what: COPY.kinds.ctwa,
+        where: COPY.places.facebook,
+        at: ad.requestedAt,
+        stamp:
+          run === "running"
+            ? "live"
+            : run === "in_review" || run === "unknown"
+              ? "in_review"
+              : run === "disapproved"
+                ? "failed"
+                : "paused",
+        templateId: productTemplateOfCtwa(ctwa).id,
+        ...(run === "unknown"
+          ? { statusLabel: PRODUCTS_COPY.ctwa.checkingMeta }
+          : {}),
+        thumb:
+          ctwa.asset === "picture"
+            ? pictureOf(ad, {
+                destination: "post",
+                still: {
+                  kind: "room",
+                  productId: ad.products[0]?.productId ?? null,
+                },
+                slides: [],
+              })
+            : posterOf(ad),
+        href: ctwa.adsManagerUrl,
+        internal: false,
+        open: { kind: "ad", adId: ad.id },
+      });
+    }
+  }
+  for (const kit of made.kits) {
+    const stamp = kitStamp(kit);
+    if (!stamp) continue;
+    const template = kit.parts.carousel?.templateName ?? null;
+    receipts.push({
+      key: `kit-${kit.id}`,
+      what: COPY.kinds.kit,
+      where: COPY.places.whatsapp,
+      at: kit.createdAt,
+      stamp,
+      templateId: "chat_kit",
+      thumb: null,
+      href:
+        kit.parts.carousel?.state === "submitted"
+          ? templateHref(workspaceId, template)
+          : whatsAppFlowsHref(workspaceId),
+      internal: true,
+      open: { kind: "kit", kit },
+    });
+  }
+  return receipts.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+const TONES: Record<ProductTemplateStamp, string> = {
+  live: "ok",
+  approved: "ok",
+  in_review: "neutral",
+  paused: "neutral",
+  failed: "danger",
+};
+
+/** The row. It shows nothing while nothing is out on Meta. */
+export function MadeList({ workspaceId, onOpenAd, onOpenKit }: MadeListProps) {
   const titleId = useId();
   const made = useProductsMade(workspaceId);
-  // The shelf the page already lists, for each kit's pictures and prices.
-  const shelf = useSWR<ProductsListResponse>(
-    made.data?.kits.length ? productsApiUrl(workspaceId) : null,
-    fetchProducts,
-    { revalidateOnFocus: false }
-  );
-  const [showAll, setShowAll] = useState(false);
-  const rows = useMemo(
-    () => (made.data ? madeRows(made.data) : []),
-    [made.data]
-  );
-  const now = useNow(
-    made.data?.ads.some(ad => ad.status === "making") ?? false
-  );
-  const products = useMemo(
-    () =>
-      new Map(
-        (shelf.data?.products ?? []).map(product => [product.id, product])
-      ),
-    [shelf.data]
+  const receipts = useMemo(
+    () => (made.data ? outOnMeta(workspaceId, made.data) : []),
+    [made.data, workspaceId]
   );
 
   if (!made.data) {
@@ -111,261 +224,77 @@ export function MadeList({ workspaceId, onOpenAd, onMakeAd }: MadeListProps) {
       </div>
     );
   }
-  if (rows.length === 0) return null;
+  if (receipts.length === 0) return null;
 
-  const visible = showAll ? rows : rows.slice(0, FIRST_ROWS);
   return (
-    <section aria-labelledby={titleId} className={styles.made}>
-      <header className={styles.head}>
-        <h2 id={titleId} className={theme.displayM}>
-          {COPY.title}
-        </h2>
-        <p className={styles.about}>{COPY.about}</p>
-      </header>
-      <ul className={styles.rows}>
-        {visible.map(row =>
-          row.kind === "kit" ? (
-            <KitRow
-              key={`kit-${row.kit.id}`}
-              workspaceId={workspaceId}
-              kit={row.kit}
-              products={products}
-              onMakeAd={onMakeAd}
-              onChanged={next =>
-                void made.mutate(
-                  current =>
-                    current && {
-                      ...current,
-                      kits: current.kits.map(kit =>
-                        kit.id === next.id ? next : kit
-                      ),
-                    },
-                  { revalidate: true }
-                )
-              }
-            />
-          ) : (
-            <AdRow
-              key={`ad-${row.ad.id}`}
-              ad={row.ad}
-              now={now}
-              onOpenAd={onOpenAd}
-            />
-          )
-        )}
+    <section aria-labelledby={titleId} className={styles.out}>
+      <h2 id={titleId} className={styles.title}>
+        <Globe aria-hidden="true" />
+        {COPY.title}
+      </h2>
+      <ul className={styles.receipts}>
+        {receipts.map(receipt => {
+          const name = `${receipt.what} · ${receipt.where}`;
+          const canOpen = receipt.open.kind === "ad" || onOpenKit !== undefined;
+          const body = (
+            <>
+              <span className={styles.thumb} aria-hidden="true">
+                {receipt.thumb ? (
+                  // Signed storage links; next/image would need every bucket host.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={receipt.thumb} alt="" draggable={false} />
+                ) : receipt.open.kind === "kit" ? (
+                  <MessageCircle />
+                ) : null}
+              </span>
+              <span className={styles.what}>
+                <strong>{receipt.what}</strong>
+                <span className={styles.where}>
+                  {` · ${receipt.where} · ${COPY.clock(receipt.at)}`}
+                </span>
+              </span>
+            </>
+          );
+          return (
+            <li key={receipt.key} className={styles.receipt}>
+              {canOpen ? (
+                <button
+                  type="button"
+                  className={styles.open}
+                  aria-label={COPY.open(name)}
+                  onClick={() => {
+                    if (receipt.open.kind === "ad")
+                      onOpenAd(receipt.open.adId, receipt.templateId);
+                    else onOpenKit?.(receipt.open.kit);
+                  }}
+                >
+                  {body}
+                </button>
+              ) : (
+                <span className={styles.open}>{body}</span>
+              )}
+              <span className={styles.stamp} data-tone={TONES[receipt.stamp]}>
+                {receipt.statusLabel ?? STAMPS[receipt.stamp]}
+              </span>
+              {receipt.href ? (
+                <a
+                  className={styles.link}
+                  href={receipt.href}
+                  {...(receipt.internal
+                    ? {}
+                    : { target: "_blank", rel: "noopener noreferrer" })}
+                  aria-label={COPY.link(name)}
+                >
+                  <ExternalLink aria-hidden="true" />
+                </a>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
-      {rows.length > FIRST_ROWS ? (
-        <Button
-          size="sm"
-          variant="ghost"
-          aria-expanded={showAll}
-          onClick={() => setShowAll(current => !current)}
-        >
-          {showAll ? COPY.showFewer : COPY.showAll(rows.length)}
-        </Button>
-      ) : null}
     </section>
   );
 }
 
-/** A picture of a product as its card shows it: the cut-out on white. */
-function WhiteCard({ product }: { product: WorkspaceProductRecord }) {
-  return (
-    <span className={styles.whiteCard}>
-      {product.imageUrl ? (
-        // Signed storage links; next/image would need every bucket host.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={product.imageUrl} alt="" draggable={false} />
-      ) : null}
-    </span>
-  );
-}
-
-/** A kit: its products, what each part is, and each part's next step. */
-function KitRow({
-  workspaceId,
-  kit,
-  products,
-  onMakeAd,
-  onChanged,
-}: {
-  workspaceId: string;
-  kit: ProductKitRecord;
-  products: ReadonlyMap<string, WorkspaceProductRecord>;
-  onMakeAd: (productIds: string[]) => void;
-  /** The kit as making a part again left it. */
-  onChanged: (kit: ProductKitRecord) => void;
-}) {
-  const [remaking, setRemaking] = useState<ProductKitPart | null>(null);
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const views = kitPartViews(workspaceId, kit, remaking);
-  // A part made again may take its Try again, and the focus, away: the
-  // row's title takes the focus that fell to the page.
-  const titleRef = useRef<HTMLParagraphElement>(null);
-  const settled = useRef(false);
-  useEffect(() => {
-    if (!settled.current || remaking !== null) return;
-    settled.current = false;
-    const active = document.activeElement;
-    if (!active || active === document.body)
-      titleRef.current?.focus({ preventScroll: true });
-  });
-  const onShelf = kit.productIds.flatMap(id => {
-    const product = products.get(id);
-    return product ? [product] : [];
-  });
-  const forAd = onShelf.filter(canGoInAd).slice(0, AD_MAX_PRODUCTS);
-  const attention =
-    kit.status === "needs_attention" &&
-    !views.some(view => view.listChip.tone === "danger");
-
-  const remake = async (part: ProductKitPart) => {
-    setRemaking(part);
-    setRefusal(null);
-    try {
-      onChanged(await retryProductKitPart(workspaceId, kit.id, part));
-    } catch (error) {
-      setRefusal(
-        kitRequestErrorLine(
-          error instanceof ProductDraftError ? error.code : "failed"
-        )
-      );
-    } finally {
-      settled.current = true;
-      setRemaking(null);
-    }
-  };
-
-  return (
-    <li className={styles.row}>
-      <span aria-hidden="true" className={styles.stack}>
-        {onShelf.slice(0, 3).map(product => (
-          <WhiteCard key={product.id} product={product} />
-        ))}
-      </span>
-      <div className={styles.rowBody}>
-        <p ref={titleRef} tabIndex={-1} className={styles.rowTitle}>
-          {kitTitle(kit)}
-        </p>
-        <p className={styles.rowMeta}>
-          {COPY.kitMeta(
-            kit.productIds.length,
-            madeWhen(kit.createdAt, new Date(), COPY)
-          )}
-        </p>
-        <p className={styles.chips} aria-live="polite">
-          {views.map(view => (
-            <ProductChip key={view.part} tone={view.listChip.tone}>
-              {view.listChip.label}
-            </ProductChip>
-          ))}
-          {attention ? (
-            <ProductChip tone="danger">{COPY.chips.needsAttention}</ProductChip>
-          ) : null}
-          {kit.pricesChanged ? (
-            <ProductChip>{COPY.chips.pricesChanged}</ProductChip>
-          ) : null}
-        </p>
-        {refusal ? (
-          <p role="alert" className={styles.refusal}>
-            {refusal}
-          </p>
-        ) : null}
-      </div>
-      <div className={styles.rowActions}>
-        {views.flatMap(view =>
-          view.actions.map(action =>
-            action.kind === "link" ? (
-              <Button
-                key={`${view.part}-${action.label}`}
-                asChild
-                size="sm"
-                variant="outline"
-              >
-                <Link href={action.href}>{action.label}</Link>
-              </Button>
-            ) : (
-              <Button
-                key={`${view.part}-${action.label}`}
-                size="sm"
-                variant="outline"
-                {...retryBusy(remaking !== null)}
-                onClick={() => {
-                  if (remaking === null) void remake(action.part);
-                }}
-              >
-                <RotateCcw aria-hidden="true" />
-                {COPY.remake[action.part]}
-              </Button>
-            )
-          )
-        )}
-        {forAd.length > 0 ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onMakeAd(forAd.map(product => product.id))}
-          >
-            {COPY.makeAd}
-          </Button>
-        ) : null}
-      </div>
-    </li>
-  );
-}
-
-/** A video ad: its poster, products and length, and Open. */
-function AdRow({
-  ad,
-  now,
-  onOpenAd,
-}: {
-  ad: ProductAdRecord;
-  now: number;
-  onOpenAd: (adId: string) => void;
-}) {
-  const poster =
-    ad.video?.posterUrl ?? ad.stills.statusUrl ?? ad.products[0]?.imageUrl;
-  const first = ad.products[0]?.name ?? COPY.adTitle;
-  const products = COPY.adProducts(first, Math.max(0, ad.products.length - 1));
-  const length = ad.video ? formatElapsed(ad.video.seconds * 1_000) : null;
-  return (
-    <li className={styles.row}>
-      <span aria-hidden="true" className={styles.poster}>
-        {poster ? (
-          // Signed storage links; next/image would need every bucket host.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={poster} alt="" draggable={false} />
-        ) : (
-          <Clapperboard />
-        )}
-      </span>
-      <div className={styles.rowBody}>
-        <p className={styles.rowTitle}>{COPY.adTitle}</p>
-        <p className={styles.rowMeta}>
-          {length ? `${products} · ${length}` : products}
-        </p>
-        <p className={styles.chips}>
-          {ad.status === "making" ? (
-            <ProductChip tone="accent">
-              {/* The current run's time, as the studio counts it: an edit
-                  or a retry starts the clock again. */}
-              {COPY.chips.adMaking(
-                formatElapsed(now - Date.parse(ad.requestedAt))
-              )}
-            </ProductChip>
-          ) : ad.status === "ready" ? (
-            <ProductChip tone="ok">{COPY.chips.adReady}</ProductChip>
-          ) : (
-            <ProductChip tone="danger">{COPY.chips.adFailed}</ProductChip>
-          )}
-        </p>
-      </div>
-      <div className={styles.rowActions}>
-        <Button size="sm" variant="outline" onClick={() => onOpenAd(ad.id)}>
-          {COPY.open}
-        </Button>
-      </div>
-    </li>
-  );
-}
+/** "Out on Meta" by its v3 name. */
+export const OutOnMeta = MadeList;

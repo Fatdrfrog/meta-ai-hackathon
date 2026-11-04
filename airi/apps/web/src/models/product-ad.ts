@@ -6,6 +6,7 @@ import {
   PRODUCT_AD_IDEA_MAX_LENGTH,
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MIN_PRODUCTS,
+  PRODUCT_AD_MOTIONS,
   PRODUCT_AD_OPENING_KINDS,
   PRODUCT_AD_PICTURES_KEPT,
   PRODUCT_AD_PLACE_WORDS_MAX,
@@ -15,19 +16,37 @@ import {
   PRODUCT_AD_SETTINGS,
   PRODUCT_AD_STATUSES,
   PRODUCT_AD_STEPS,
+  PRODUCT_AD_STILL_FORMATS,
+  PRODUCT_AD_STILL_KINDS,
+  PRODUCT_AD_STILL_SET_MAX,
+  PRODUCT_AD_STUDIO_COLOURWAYS,
   PRODUCT_AD_TEXT_ZONES,
   PRODUCT_AD_VOICE_FALLBACKS,
   PRODUCT_AD_VOICE_MODES,
+  PRODUCT_AD_CTWA_ASSETS,
+  PRODUCT_AD_CTWA_STATES,
+  PRODUCT_AD_POST_DESTINATIONS,
+  PRODUCT_AD_POST_STATES,
+  PRODUCT_AD_CAPTION_MAX,
+  PRODUCT_AD_CAROUSEL_MAX_SLIDES,
   PRODUCT_SHOP_WORDS_CODES,
+  PRODUCTS_META_FAILURE_CODES,
+  type ProductAdCtwaAsset,
+  type ProductAdCtwaState,
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
+  type ProductAdMotion,
+  type ProductAdPostDestination,
+  type ProductAdPostState,
   type ProductAdRunKind,
   type ProductAdScript,
   type ProductAdStatus,
   type ProductAdStep,
+  type ProductAdStillChoice,
   type ProductAdVoiceMode,
   type ProductAdVoiceResult,
   type ProductShopWordsCode,
+  type ProductsMetaFailureCode,
 } from "@/lib/products/types";
 import type {
   ProductAdBox,
@@ -40,6 +59,8 @@ import type {
   ProductAdSceneRedo,
   ProductAdStepTiming,
   ProductAdStills,
+  ProductAdStillSet,
+  ProductAdStillSetItem,
   ProductAdStoredProduct,
   ProductAdStoredScene,
   ProductAdTextOverlap,
@@ -54,6 +75,81 @@ import type {
 export type ProductAdSnapshot = ProductAdStoredProduct & {
   thumb: ProductAdFileRef | null;
 };
+
+/**
+ * One Instagram post of the ad (studio v3), as stored: the record's fields
+ * (types-meta.ts ProductAdPostRecord) plus what only the server reads. Graph
+ * ids are kept so a lost answer is looked up, never posted twice.
+ */
+export type ProductAdStoredPost = {
+  id: string;
+  /** The press's id: a repeat answers this post. */
+  requestId: string;
+  destination: ProductAdPostDestination;
+  still: ProductAdStillChoice | null;
+  slides: ProductAdStillChoice[];
+  renderNo: number;
+  /** The posted video's motion; null for pictures. */
+  motion: ProductAdMotion | null;
+  /** The caption sent, after the confirm sheet's edit. */
+  caption: string;
+  state: ProductAdPostState;
+  /** Instagram's media container: the post's, or the carousel's parent. */
+  containerId: string | null;
+  /** A carousel's item containers, in order. */
+  childIds: string[];
+  /** The published media's id. */
+  mediaId: string | null;
+  permalink: string | null;
+  errorCode: ProductsMetaFailureCode | null;
+  errorMessage: string | null;
+  requestedAt: Date;
+  publishedAt: Date | null;
+  /** While a poll advances the post; another poll leaves it alone until then. */
+  leaseUntil: Date | null;
+};
+
+/**
+ * The ad's Click-to-WhatsApp ad (studio v3), as stored: the record's fields
+ * (types-meta.ts ProductAdCtwaRecord) plus the Marketing API ids, each saved
+ * before the next step, so a retry resumes and a lost answer is looked up by
+ * its deterministic name (airi-products-<adId>-<attempt>-<step>).
+ */
+export type ProductAdStoredCtwa = {
+  requestId: string;
+  attempt: number;
+  asset: ProductAdCtwaAsset;
+  state: ProductAdCtwaState;
+  videoId: string | null;
+  imageHash: string | null;
+  campaignId: string | null;
+  adSetId: string | null;
+  creativeId: string | null;
+  adId: string | null;
+  effectiveStatus: string | null;
+  dailyBudgetCents: number | null;
+  endsAt: Date | null;
+  errorCode: ProductsMetaFailureCode | null;
+  errorMessage: string | null;
+  requestedAt: Date;
+  leaseUntil: Date | null;
+  /** The ad account ("act_…") and Facebook Page the attempt is made in, kept so a resume stays in them. */
+  adAccountId?: string | null;
+  pageId?: string | null;
+  /** The ad's render whose video or still the attempt shows. */
+  renderNo?: number | null;
+  /** When Meta's review state was last read. */
+  checkedAt?: Date | null;
+};
+
+/** What went out on Meta from the ad (studio v3); absent until something was asked. */
+export type ProductAdStoredMeta = {
+  posts: ProductAdStoredPost[];
+  ctwa: ProductAdStoredCtwa | null;
+};
+
+/** Posts one ad keeps; far above what an owner posts from one ad. */
+export const PRODUCT_AD_POSTS_MAX = 50;
 
 /**
  * A video ad (Products): 1 to 3 shelf products in a 9:16 video, with its
@@ -117,6 +213,18 @@ export interface IProductAd {
   script: ProductAdScript | null;
   scenes: ProductAdStoredScene[];
   stills: ProductAdStills;
+  /**
+   * How the video moves (studio v3); absent on ads from before motions,
+   * which read as "shelf" (productAdMotionOf).
+   */
+  motion?: ProductAdMotion;
+  /**
+   * Studio v3's template stills of one render, written by the worker once
+   * they all landed; absent when no worker from v3 rendered the ad.
+   */
+  stillSet?: ProductAdStillSet | null;
+  /** What went out on Meta from it (studio v3's web routes only; the worker never writes it). */
+  meta?: ProductAdStoredMeta | null;
   /** The render being made or last made: 1 for the first video. */
   renderNo: number;
   render: ProductAdRender | null;
@@ -392,6 +500,137 @@ const VoiceResultSchema = new mongoose.Schema<ProductAdVoiceResult>(
   { _id: false }
 );
 
+// Studio v3: template stills and Meta actions. Every field is optional, so
+// ads from before validate as they are.
+
+const StillSetItemSchema = new mongoose.Schema<ProductAdStillSetItem>(
+  {
+    kind: { type: String, required: true, enum: PRODUCT_AD_STILL_KINDS },
+    format: { type: String, required: true, enum: PRODUCT_AD_STILL_FORMATS },
+    productId: { type: String, maxlength: 64, default: null },
+    colourway: {
+      type: String,
+      enum: [...PRODUCT_AD_STUDIO_COLOURWAYS, null],
+      default: null,
+    },
+    ref: { type: FileRefSchema, required: true },
+  },
+  { _id: false }
+);
+
+const StillSetSchema = new mongoose.Schema<ProductAdStillSet>(
+  {
+    renderNo: { type: Number, required: true, min: 1 },
+    items: {
+      type: [StillSetItemSchema],
+      default: [],
+      validate: {
+        validator: (items: unknown[]) =>
+          items.length <= PRODUCT_AD_STILL_SET_MAX,
+        message: `A render draws at most ${PRODUCT_AD_STILL_SET_MAX} stills`,
+      },
+    },
+  },
+  { _id: false }
+);
+
+const StillChoiceSchema = new mongoose.Schema<ProductAdStillChoice>(
+  {
+    kind: { type: String, required: true, enum: PRODUCT_AD_STILL_KINDS },
+    productId: { type: String, maxlength: 64, default: null },
+    colourway: {
+      type: String,
+      enum: [...PRODUCT_AD_STUDIO_COLOURWAYS, null],
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
+const META_FAILURES = [...PRODUCTS_META_FAILURE_CODES, null];
+
+const StoredPostSchema = new mongoose.Schema<ProductAdStoredPost>(
+  {
+    id: { type: String, required: true, maxlength: 64 },
+    requestId: { type: String, required: true, maxlength: 64 },
+    destination: {
+      type: String,
+      required: true,
+      enum: PRODUCT_AD_POST_DESTINATIONS,
+    },
+    still: { type: StillChoiceSchema, default: null },
+    slides: {
+      type: [StillChoiceSchema],
+      default: [],
+      validate: {
+        validator: (slides: unknown[]) =>
+          slides.length <= PRODUCT_AD_CAROUSEL_MAX_SLIDES,
+        message: `A carousel has at most ${PRODUCT_AD_CAROUSEL_MAX_SLIDES} slides`,
+      },
+    },
+    renderNo: { type: Number, required: true, min: 1 },
+    motion: {
+      type: String,
+      enum: [...PRODUCT_AD_MOTIONS, null],
+      default: null,
+    },
+    caption: { type: String, maxlength: PRODUCT_AD_CAPTION_MAX, default: "" },
+    state: { type: String, required: true, enum: PRODUCT_AD_POST_STATES },
+    containerId: { type: String, maxlength: 64, default: null },
+    childIds: { type: [{ type: String, maxlength: 64 }], default: [] },
+    mediaId: { type: String, maxlength: 64, default: null },
+    permalink: { type: String, maxlength: 500, default: null },
+    errorCode: { type: String, enum: META_FAILURES, default: null },
+    errorMessage: { type: String, maxlength: 500, default: null },
+    requestedAt: { type: Date, required: true },
+    publishedAt: { type: Date, default: null },
+    leaseUntil: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const StoredCtwaSchema = new mongoose.Schema<ProductAdStoredCtwa>(
+  {
+    requestId: { type: String, required: true, maxlength: 64 },
+    attempt: { type: Number, required: true, min: 1, default: 1 },
+    asset: { type: String, required: true, enum: PRODUCT_AD_CTWA_ASSETS },
+    state: { type: String, required: true, enum: PRODUCT_AD_CTWA_STATES },
+    videoId: { type: String, maxlength: 64, default: null },
+    imageHash: { type: String, maxlength: 128, default: null },
+    campaignId: { type: String, maxlength: 64, default: null },
+    adSetId: { type: String, maxlength: 64, default: null },
+    creativeId: { type: String, maxlength: 64, default: null },
+    adId: { type: String, maxlength: 64, default: null },
+    effectiveStatus: { type: String, maxlength: 64, default: null },
+    dailyBudgetCents: { type: Number, min: 0, default: null },
+    endsAt: { type: Date, default: null },
+    errorCode: { type: String, enum: META_FAILURES, default: null },
+    errorMessage: { type: String, maxlength: 500, default: null },
+    requestedAt: { type: Date, required: true },
+    leaseUntil: { type: Date, default: null },
+    adAccountId: { type: String, maxlength: 64, default: null },
+    pageId: { type: String, maxlength: 64, default: null },
+    renderNo: { type: Number, min: 1, default: null },
+    checkedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const StoredMetaSchema = new mongoose.Schema<ProductAdStoredMeta>(
+  {
+    posts: {
+      type: [StoredPostSchema],
+      default: [],
+      validate: {
+        validator: (posts: unknown[]) => posts.length <= PRODUCT_AD_POSTS_MAX,
+        message: `An ad keeps at most ${PRODUCT_AD_POSTS_MAX} posts`,
+      },
+    },
+    ctwa: { type: StoredCtwaSchema, default: null },
+  },
+  { _id: false }
+);
+
 const StepTimingSchema = new mongoose.Schema<ProductAdStepTiming>(
   {
     startedAt: { type: Date, required: true },
@@ -471,6 +710,10 @@ const ProductAdSchema = new mongoose.Schema<IProductAd>(
       status: { type: FileRefSchema, default: null },
       feed: { type: FileRefSchema, default: null },
     },
+    // Studio v3: absent on ads from before.
+    motion: { type: String, enum: PRODUCT_AD_MOTIONS, default: undefined },
+    stillSet: { type: StillSetSchema, default: undefined },
+    meta: { type: StoredMetaSchema, default: undefined },
     renderNo: { type: Number, default: 1, min: 1 },
     render: { type: RenderSchema, default: null },
     actionId: { type: String, required: true, maxlength: 128 },

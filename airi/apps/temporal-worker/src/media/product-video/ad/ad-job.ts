@@ -12,15 +12,18 @@ import { getWorkspaceAiRequiredDetails } from "@icecore/shared/lib/workspace-ai-
 import {
   PRODUCT_AD_PLACE_MAX_COST_MICROS,
   PRODUCT_AD_REDO_ATTEMPTS,
+  productAdMotionOf,
   productAdShopName,
   type ProductAdBox,
   type ProductAdErrorCode,
   type ProductAdFileRef,
   type ProductAdIdeaKind,
   type ProductAdMode,
+  type ProductAdMotion,
   type ProductAdRedoOutcome,
   type ProductAdRunKind,
   type ProductAdScenePlace,
+  type ProductAdStillSetItem,
   type ProductAdScript,
   type ProductAdSetting,
   type ProductAdStatus,
@@ -52,7 +55,13 @@ import {
 } from "./layers";
 import { AD_FRAME } from "./layout";
 import { readPlace, type PlaceReading } from "./place";
-import { AdTooBigError, posterFrame, renderAd } from "./render";
+import { drawAdStills, stillFileName } from "./stills";
+import {
+  AD_POSTER_SECONDS,
+  AdTooBigError,
+  posterFrame,
+  renderAd,
+} from "./render";
 import {
   adScriptSchema,
   fallbackAdScript,
@@ -173,6 +182,11 @@ export type AdRecord = {
   scenes: ProductAdStoredScene[];
   stills: ProductAdStills;
   costMicros: number;
+  /**
+   * How the video moves (studio v3); read with productAdMotionOf, so an ad
+   * from before motions, or one this worker doesn't know, renders as "shelf".
+   */
+  motion?: ProductAdMotion;
 };
 
 /** What a run reads about each product beyond the ad's snapshot. */
@@ -241,6 +255,8 @@ export type AdJobPorts = {
   sceneDeps?: SceneDeps;
   /** The putting together and the render; the tests' fakes. */
   compose?: typeof composeAd;
+  /** The stills drawn beside the video (stills.ts); the tests' fake. */
+  stills?: typeof drawAdStills;
   render?: typeof renderAd;
   poster?: typeof posterFrame;
 };
@@ -435,27 +451,30 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
   const { voices, lines } = await adVoices(ports, ad, script, paid, update);
   const pictures = await scenePictures(ports, products, scenes, saveScenes);
   const presenter = await presenterPhoto(ports, ad);
+  const composeProducts = products.map(({ product, cutout, original }) => {
+    const scene = scenes.get(product.productId)!;
+    const picture = pictures.get(product.productId)!;
+    return {
+      productId: product.productId,
+      name: product.name,
+      priceText: product.priceText,
+      cutout,
+      picture: picture.image,
+      box: picture.box,
+      made: picture.made,
+      original,
+      caption:
+        script!.scenes.find((entry) => entry.productId === product.productId)
+          ?.caption ?? "",
+      voice: voices.get(product.productId) ?? null,
+      spoken: lines.get(product.productId) ?? null,
+      textZone: scene.textZone ?? "auto",
+    };
+  });
+  const motion = productAdMotionOf(ad.motion);
   const composed = await (ports.compose ?? composeAd)(
     {
-      products: products.map(({ product, cutout }) => {
-        const scene = scenes.get(product.productId)!;
-        const picture = pictures.get(product.productId)!;
-        return {
-          productId: product.productId,
-          name: product.name,
-          priceText: product.priceText,
-          cutout,
-          picture: picture.image,
-          box: picture.box,
-          caption:
-            script!.scenes.find(
-              (entry) => entry.productId === product.productId,
-            )?.caption ?? "",
-          voice: voices.get(product.productId) ?? null,
-          spoken: lines.get(product.productId) ?? null,
-          textZone: scene.textZone ?? "auto",
-        };
-      }),
+      products: composeProducts,
       sticker: script.sticker,
       priceCardTitle: script.priceCardTitle,
       ending: script.ending,
@@ -463,19 +482,60 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
       phone: ad.ending.phone,
       presenter,
       workDir: ports.workDir,
+      motion,
     },
     { signal: ports.signal, pulse: ports.pulse },
   );
   const videoPath = join(ports.workDir, "ad.mp4");
-  const rendered = await (ports.render ?? renderAd)(composed.plan, videoPath, {
-    signal: ports.signal,
-    pulse: ports.pulse,
-  });
+  // The stills are drawn while ffmpeg renders. They're extras: one that
+  // can't be drawn never fails the video, the ad then keeps no stillSet for
+  // this render (the page hides the tiles that need it).
+  const [rendered, drawn] = await Promise.all([
+    (ports.render ?? renderAd)(composed.plan, videoPath, {
+      signal: ports.signal,
+      pulse: ports.pulse,
+    }),
+    (ports.stills ?? drawAdStills)({
+      products: composeProducts,
+      sticker: script.sticker,
+      priceCardTitle: script.priceCardTitle,
+      ending: script.ending,
+      shopName: ad.ending.shopName,
+      phone: ad.ending.phone,
+    }).catch((error: unknown) => {
+      ports.log?.("products.ad_stills_failed", { error: messageOf(error) });
+      return null;
+    }),
+  ]);
   const posterPath = join(ports.workDir, "poster.jpg");
-  await (ports.poster ?? posterFrame)(videoPath, posterPath, {
-    signal: ports.signal,
-  });
+  await (ports.poster ?? posterFrame)(
+    videoPath,
+    posterPath,
+    { signal: ports.signal },
+    composed.posterSeconds ?? AD_POSTER_SECONDS,
+  );
   const r = `r${ports.renderNo}`;
+  const stillSet = drawn?.length
+    ? {
+        renderNo: ports.renderNo,
+        items: await Promise.all(
+          drawn.map(
+            async (still): Promise<ProductAdStillSetItem> => ({
+              kind: still.kind,
+              format: still.format,
+              productId: still.productId,
+              colourway: still.colourway,
+              ref: await ports.storage.save({
+                buffer: still.image,
+                mimeType: "image/jpeg",
+                fileName: stillFileName(ports.renderNo, still),
+                kind: "image",
+              }),
+            }),
+          ),
+        ),
+      }
+    : null;
   const [video, poster, status, feed] = await Promise.all([
     ports.storage.save({
       buffer: await readFile(videoPath),
@@ -531,6 +591,9 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
       ms: rendered.ms,
     },
     stills: { status, feed },
+    // Top-level, never inside `stills` (written whole just above), and
+    // with this render's number: the page shows them only with its video.
+    ...(stillSet ? { stillSet } : {}),
     "timings.video.finishedAt": now(),
     status: "ready",
     step: null,
@@ -1228,10 +1291,12 @@ async function scenePictures(
   products: Loaded[],
   scenes: Map<string, ProductAdStoredScene>,
   saveScenes: () => Promise<void>,
-): Promise<Map<string, { image: Buffer; box: ProductAdBox | null }>> {
+): Promise<
+  Map<string, { image: Buffer; box: ProductAdBox | null; made: boolean }>
+> {
   const pictures = new Map<
     string,
-    { image: Buffer; box: ProductAdBox | null }
+    { image: Buffer; box: ProductAdBox | null; made: boolean }
   >();
   let changed = false;
   for (const [index, { product, cutout }] of products.entries()) {
@@ -1263,6 +1328,7 @@ async function scenePictures(
       pictures.set(product.productId, {
         image: await readFile(path),
         box: ref === muse ? scene!.box : (scene!.exactBox ?? null),
+        made: ref === muse,
       });
       break;
     }
@@ -1286,7 +1352,11 @@ async function scenePictures(
       attempts: scene?.attempts ?? 0,
     };
     scenes.set(product.productId, scene);
-    pictures.set(product.productId, { image: exact.image, box: exact.box });
+    pictures.set(product.productId, {
+      image: exact.image,
+      box: exact.box,
+      made: false,
+    });
     changed = true;
   }
   if (changed) await saveScenes();

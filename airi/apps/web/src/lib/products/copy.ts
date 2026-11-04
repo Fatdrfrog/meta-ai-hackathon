@@ -6,15 +6,19 @@
 // Each part of the section keeps its copy in its own file: copy-shelf.ts (the
 // page, its shelf and the review), copy-stage.ts (adding products from a
 // video), copy-make.ts (what the owner makes for WhatsApp, editing it, and
-// the list of what was made), copy-ad.ts (video ads) and copy-voice.ts (the
-// ad's voices). PRODUCTS_COPY joins them, and a key in two parts fails the
-// type check rather than replacing the other.
+// the list of what was made), copy-ad.ts (video ads), copy-voice.ts (the
+// ad's voices), copy-gallery.ts (studio v3's template tiles) and
+// copy-workbench.ts (studio v3's workbench, confirm sheets and "Out on
+// Meta"). PRODUCTS_COPY joins them, and a key in two parts fails the type
+// check rather than replacing the other.
 
 import { AD_COPY } from "./copy-ad";
+import { GALLERY_COPY } from "./copy-gallery";
 import { MAKE_COPY } from "./copy-make";
 import { SHELF_COPY } from "./copy-shelf";
 import { STAGE_COPY } from "./copy-stage";
 import { VOICE_COPY } from "./copy-voice";
+import { WORKBENCH_COPY } from "./copy-workbench";
 
 const BASE_COPY = {
   navLabel: "Products",
@@ -94,25 +98,31 @@ export const PRODUCTS_COPY = {
   ...MAKE_COPY,
   ...AD_COPY,
   ...VOICE_COPY,
+  ...GALLERY_COPY,
+  ...WORKBENCH_COPY,
 } as const;
 
-type Overlap<A, B> = Extract<keyof A, keyof B>;
-type SharedKeys =
-  | Overlap<typeof BASE_COPY, typeof SHELF_COPY>
-  | Overlap<typeof BASE_COPY, typeof STAGE_COPY>
-  | Overlap<typeof BASE_COPY, typeof MAKE_COPY>
-  | Overlap<typeof BASE_COPY, typeof AD_COPY>
-  | Overlap<typeof BASE_COPY, typeof VOICE_COPY>
-  | Overlap<typeof SHELF_COPY, typeof STAGE_COPY>
-  | Overlap<typeof SHELF_COPY, typeof MAKE_COPY>
-  | Overlap<typeof SHELF_COPY, typeof AD_COPY>
-  | Overlap<typeof SHELF_COPY, typeof VOICE_COPY>
-  | Overlap<typeof STAGE_COPY, typeof MAKE_COPY>
-  | Overlap<typeof STAGE_COPY, typeof AD_COPY>
-  | Overlap<typeof STAGE_COPY, typeof VOICE_COPY>
-  | Overlap<typeof MAKE_COPY, typeof AD_COPY>
-  | Overlap<typeof MAKE_COPY, typeof VOICE_COPY>
-  | Overlap<typeof AD_COPY, typeof VOICE_COPY>;
+/** Every part, so each pair's shared keys are found below. Add a new part here too. */
+type CopyParts = [
+  typeof BASE_COPY,
+  typeof SHELF_COPY,
+  typeof STAGE_COPY,
+  typeof MAKE_COPY,
+  typeof AD_COPY,
+  typeof VOICE_COPY,
+  typeof GALLERY_COPY,
+  typeof WORKBENCH_COPY,
+];
+/** The keys of every member of a union, rather than the keys they share. */
+type KeysOfEach<U> = U extends object ? keyof U : never;
+/** The keys any part shares with a part after it. */
+type SharedAcross<Parts extends readonly object[]> = Parts extends readonly [
+  infer Head,
+  ...infer Rest extends readonly object[],
+]
+  ? Extract<keyof Head, KeysOfEach<Rest[number]>> | SharedAcross<Rest>
+  : never;
+type SharedKeys = SharedAcross<CopyParts>;
 type OnlyTrue<T extends true> = T;
 /**
  * A key in two parts would silently replace the earlier part's: the type

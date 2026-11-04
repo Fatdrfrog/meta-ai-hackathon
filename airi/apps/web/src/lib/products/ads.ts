@@ -10,7 +10,9 @@ import {
   sameAdScenes,
   sameAdWords,
 } from "@/lib/products/ad-request";
+import { toCtwaRecord } from "@/lib/products/ctwa-record";
 import { productImportSpend } from "@/lib/products/import-spend";
+import { toAdPostRecord } from "@/lib/products/meta-records";
 import {
   productPhotoUrl,
   withProductPhotoUrls,
@@ -25,11 +27,13 @@ import {
   PRODUCT_AD_NEW_PICTURE_MAX_MICROS,
   PRODUCT_AD_STEPS,
   productAdLettersSupported,
+  productAdMotionOf,
   type ProductAdAdmissionStop,
   type ProductAdBrief,
   type ProductAdCreateRequest,
   type ProductAdProductProblem,
   type ProductAdRecord,
+  type ProductAdRecordStill,
   type ProductAdRunKind,
   type ProductAdSceneRequest,
   type ProductAdUpdateRequest,
@@ -429,6 +433,52 @@ const settingOf = (script: IProductAd["script"], productId: string) =>
  */
 type AdLinks = "ad" | "list";
 
+/**
+ * Studio v3's stills of the video shown, signed, in stored order (a
+ * product's default studio colourway first); undefined (the key left out)
+ * when the render that made the video drew none: a worker from before v3,
+ * or a run whose stills haven't landed. A still that can't be signed is
+ * left out.
+ */
+async function adTemplateStills(
+  workspaceId: string,
+  doc: IProductAd
+): Promise<ProductAdRecordStill[] | undefined> {
+  const set = doc.stillSet;
+  if (!set || !doc.render || set.renderNo !== doc.render.renderNo)
+    return undefined;
+  const stills = await Promise.all(
+    (set.items ?? []).map(
+      async (item): Promise<ProductAdRecordStill | null> => {
+        const url = await productPhotoUrl(workspaceId, item.ref);
+        return url
+          ? {
+              kind: item.kind,
+              format: item.format,
+              productId: item.productId ?? null,
+              colourway: item.colourway ?? null,
+              url,
+            }
+          : null;
+      }
+    )
+  );
+  return stills.filter((still): still is ProductAdRecordStill => !!still);
+}
+
+/**
+ * What went out on Meta from the ad (studio v3): its Instagram posts and its
+ * Click-to-WhatsApp ad. Undefined (the key left out) before anything was
+ * asked for. The made list carries it too: Out on Meta reads it there.
+ */
+function adMetaRecord(doc: IProductAd): ProductAdRecord["meta"] {
+  if (!doc.meta) return undefined;
+  return {
+    posts: (doc.meta.posts ?? []).map(toAdPostRecord),
+    ctwa: toCtwaRecord(doc.meta.ctwa),
+  };
+}
+
 /** The ad as the page reads it; call inside withProductPhotoUrls. */
 async function toAdRecord(
   workspaceId: string,
@@ -455,6 +505,7 @@ async function toAdRecord(
     statusUrl,
     feedUrl,
     presenterUrl,
+    templates,
   ] = await Promise.all([
     Promise.all(
       doc.products.map(async product => ({
@@ -528,8 +579,10 @@ async function toAdRecord(
     doc.presenter?.use
       ? sign(doc.presenter.thumb ?? doc.presenter.photo)
       : null,
+    full ? adTemplateStills(workspaceId, doc) : undefined,
   ]);
   const script = doc.script;
+  const meta = adMetaRecord(doc);
   return {
     id: String(doc._id),
     status: doc.status,
@@ -546,6 +599,7 @@ async function toAdRecord(
     language: doc.language ?? null,
     timings,
     idea: { kind: doc.idea.kind, text: doc.idea.text ?? null },
+    motion: productAdMotionOf(doc.motion),
     voice: doc.voice,
     stockVoiceId: doc.stockVoiceId ?? null,
     voiceResult: doc.voiceResult
@@ -596,7 +650,9 @@ async function toAdRecord(
             renderNo: render.renderNo,
           }
         : null,
-    stills: { statusUrl, feedUrl },
+    stills: templates
+      ? { statusUrl, feedUrl, templates }
+      : { statusUrl, feedUrl },
     post: script
       ? {
           text: adPostText({ ...doc, wordsCode: doc.wordsCode ?? null }) ?? "",
@@ -612,6 +668,7 @@ async function toAdRecord(
       : null,
     presenter: presenterUrl ? { imageUrl: presenterUrl } : null,
     costUsd: Math.max(0, doc.costMicros ?? 0) / 1_000_000,
+    ...(meta ? { meta } : {}),
   };
 }
 
@@ -1099,6 +1156,8 @@ export async function createProductAd(params: {
       voice: request.voice,
       stockVoiceId:
         request.voice === "stock" ? (request.stockVoiceId ?? null) : null,
+      // Studio v3's Reel tile; absent reads as "shelf".
+      ...(request.motion ? { motion: request.motion } : {}),
       presenter,
       ending,
       products,
@@ -1161,6 +1220,7 @@ const adChangesIssues = (doc: IProductAd, changes: ProductAdUpdateRequest) => [
 const restoredBeforeRun = (doc: IProductAd) => ({
   script: doc.script,
   scenes: doc.scenes,
+  motion: productAdMotionOf(doc.motion),
   runKind: doc.runKind ?? runKindOf(doc),
   status: doc.status,
   step: doc.step ?? null,
@@ -1200,7 +1260,10 @@ export async function updateProductAdWords(params: {
   const scenes = applyAdSceneChanges(doc.scenes ?? [], changes.scenes);
   const wordsSame = sameAdWords(doc.script, script);
   const scenesSame = sameAdScenes(doc.scenes ?? [], scenes);
-  if (wordsSame && scenesSame)
+  // Studio v3: another Reel tile's motion is a free render too.
+  const motion = changes.motion ?? productAdMotionOf(doc.motion);
+  const motionSame = motion === productAdMotionOf(doc.motion);
+  if (wordsSame && scenesSame && motionSame)
     return { ad: await adRecord(workspaceId, doc), started: false };
   const renderNo = doc.renderNo + 1;
   const now = params.now ?? new Date();
@@ -1211,6 +1274,7 @@ export async function updateProductAdWords(params: {
         // Words left as they were stay unmarked as edited.
         script: wordsSame ? doc.script : script,
         scenes,
+        ...(motionSame ? {} : { motion }),
         runKind: "render",
         status: "making",
         step: "video",
@@ -1366,6 +1430,8 @@ export async function redoProductAdScene(params: {
       $set: {
         script,
         scenes,
+        // A pending motion change rides along, as the words do.
+        ...(changes.motion ? { motion: changes.motion } : {}),
         runKind: "scene",
         status: "making",
         step: "pictures",

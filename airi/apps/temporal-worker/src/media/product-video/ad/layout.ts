@@ -351,30 +351,44 @@ const frames = (seconds: number) => Math.round(seconds * AD_FPS);
 const onFrames = (seconds: number) => frames(seconds) / AD_FPS;
 
 /**
+ * Filmed → Sold (motion "filmed_sold"): how long a product's scene opens on
+ * its filmed frame before the made scene wipes in. The scene grows by as
+ * much (planTimeline's `leadSeconds`), so its words stay on screen as long
+ * as a shelf scene's.
+ */
+export const AD_FILMED_LEAD_SECONDS = 1.2;
+
+/**
  * How long each scene lasts: a product's scene as long as the owner's words
  * for it (3 to 6 s), or 3.5 s without them; the price card and the ending
  * 3 s each; cross-faded by 0.35 s. The whole ad is 10 to 20 s: longer
  * product scenes give back time (the longest first, never below 3 s, their
  * words then cut short), and an ad too short lengthens its product scenes.
- * Durations fall on whole frames, so the cross-fades land exactly.
+ * A product with `leadSeconds` (Filmed → Sold's filmed frame) has that much
+ * more on top, which the 20 s cap never takes back. Durations fall on whole
+ * frames, so the cross-fades land exactly.
  */
 export function planTimeline(
-  products: Array<{ voiceSeconds: number | null }>,
+  products: Array<{ voiceSeconds: number | null; leadSeconds?: number }>,
 ): Timeline {
-  const wanted = products.map(({ voiceSeconds }, index) =>
-    Math.max(
-      voiceSeconds !== null && voiceSeconds > 0
-        ? Math.min(
-            MAX_PRODUCT_SECONDS,
-            Math.max(
-              MIN_PRODUCT_SECONDS,
-              voiceSeconds + AD_VOICE_LEAD_SECONDS + VOICE_TAIL_SECONDS,
-            ),
-          )
-        : SILENT_PRODUCT_SECONDS,
-      index === 0 ? FIRST_PRODUCT_MIN_SECONDS : 0,
-    ),
+  const leads = products.map(({ leadSeconds }) =>
+    Math.max(0, leadSeconds ?? 0),
   );
+  /** A product scene's length from its own part: the lead on top, and the first scene's floor. */
+  const withLead = (base: number, index: number) =>
+    Math.max(base + leads[index]!, index === 0 ? FIRST_PRODUCT_MIN_SECONDS : 0);
+  const bases = products.map(({ voiceSeconds }) =>
+    voiceSeconds !== null && voiceSeconds > 0
+      ? Math.min(
+          MAX_PRODUCT_SECONDS,
+          Math.max(
+            MIN_PRODUCT_SECONDS,
+            voiceSeconds + AD_VOICE_LEAD_SECONDS + VOICE_TAIL_SECONDS,
+          ),
+        )
+      : SILENT_PRODUCT_SECONDS,
+  );
+  const wanted = bases.map(withLead);
   const fixed =
     PRICE_CARD_SECONDS +
     ENDING_SECONDS -
@@ -387,10 +401,9 @@ export function planTimeline(
   // margin keeps rounding to whole frames inside the limits.
   // The first scene never gives back the time its words wait for the sticker.
   const capped = (cap: number) =>
-    wanted.map((s, index) =>
-      Math.min(s, index === 0 ? Math.max(cap, FIRST_PRODUCT_MIN_SECONDS) : cap),
-    );
-  const floored = (floor: number) => wanted.map((s) => Math.max(s, floor));
+    bases.map((base, index) => withLead(Math.min(base, cap), index));
+  const floored = (floor: number) =>
+    bases.map((base, index) => withLead(Math.max(base, floor), index));
   let lengths = wanted;
   if (total(lengths) > MAX_TOTAL_SECONDS) {
     let low = MIN_PRODUCT_SECONDS;

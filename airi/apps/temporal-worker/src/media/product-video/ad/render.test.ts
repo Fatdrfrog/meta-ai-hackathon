@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test, { type TestContext } from "node:test";
@@ -428,4 +428,315 @@ test("a 270x480 smoke render on the local ffmpeg: the real layers, words and sil
   const feed = await sharp(composed.feed).metadata();
   assert.deepEqual([status.width, status.height], [1080, 1920]);
   assert.deepEqual([feed.width, feed.height], [1080, 1350]);
+});
+
+// ---------------------------------------------------------------------------
+// Studio v3: the motions.
+
+/** Every filter the motions' graphs may use: all in Debian's ffmpeg 5.1. */
+const FFMPEG_51_FILTERS = [
+  "format",
+  "scale",
+  "zoompan",
+  "setsar",
+  "loop",
+  "setpts",
+  "fade",
+  "overlay",
+  "trim",
+  "xfade",
+  "anullsrc",
+  "atrim",
+  "boxblur",
+];
+
+const filtersOf = (graph: string[]) =>
+  new Set(
+    graph.flatMap((line) =>
+      line
+        .replace(/'[^']*'/g, "")
+        .replace(/\[[^\]]*\]/g, ",")
+        .split(",")
+        .map((part) => part.split("=")[0]!.trim())
+        .filter((name) => /^[a-z]+$/.test(name)),
+    ),
+  );
+
+test("Filmed → Sold: the filmed frame circles or wipes to the made scene, and the words wait for it", () => {
+  const p = plan([null, null], false);
+  p.scenes[0] = {
+    ...p.scenes[0]!,
+    opening: {
+      background: "scene-0-filmed.png",
+      seconds: 1.2,
+      transition: "circleopen",
+    },
+  };
+  p.scenes[1] = {
+    ...p.scenes[1]!,
+    opening: {
+      background: "scene-1-filmed.png",
+      seconds: 1.2,
+      transition: "wiperight",
+    },
+  };
+  const args = renderArgs(p, "ad.mp4", FULL);
+  const graph = graphOf(args);
+  const frames0 = Math.round(p.scenes[0]!.seconds * 30);
+  // The filmed frame is held through the wipe (36 + 11 frames), pushed in a little.
+  assert.equal(
+    graph[0],
+    "[0:v]format=rgb24,scale=2160:3840:flags=lanczos,zoompan=z='1+0.03*on/47':x='max(0,min(iw-iw/zoom,0.5*iw-iw/zoom/2))':y='max(0,min(ih-ih/zoom,0.5*ih-ih/zoom/2))':d=47:s=1080x1920:fps=30,setsar=1,format=yuv420p[open0]",
+  );
+  // The made scene runs from the wipe's start to the scene's end.
+  assert.match(
+    graph[1]!,
+    new RegExp(`d=${frames0 - 36}:s=1080x1920.*\\[made0\\]$`),
+  );
+  assert.equal(
+    graph[2],
+    "[open0][made0]xfade=transition=circleopen:duration=0.35:offset=1.2[bg0]",
+  );
+  assert.ok(
+    graph.includes(
+      "[open1][made1]xfade=transition=wiperight:duration=0.35:offset=1.2[bg1]",
+    ),
+  );
+  // The sticker shows over the filmed frame; the first scene's words still
+  // come after it, the second's after the wipe (1.2 + 0.35 + 0.3).
+  assert.ok(
+    graph.some((line) =>
+      line.includes("fade=t=in:st=0.2:d=0.2:alpha=1,fade=t=out"),
+    ),
+  );
+  assert.ok(
+    graph.some((line) =>
+      line.endsWith("fade=t=in:st=1.9:d=0.35:alpha=1[label0]"),
+    ),
+  );
+  assert.ok(
+    graph.some((line) =>
+      line.endsWith("fade=t=in:st=1.85:d=0.35:alpha=1[label1]"),
+    ),
+  );
+  assert.ok(
+    graph.some((line) =>
+      line.endsWith("fade=t=in:st=2.15:d=0.3:alpha=1[tag1]"),
+    ),
+  );
+  // Each scene still lasts its own time.
+  assert.ok(
+    graph.includes(
+      `[tagon0]trim=duration=${Number((frames0 / 30).toFixed(4))},setpts=PTS-STARTPTS,format=yuv420p[scene0]`,
+    ),
+  );
+  // Every input, the filmed frames too, is a local file read by its demuxer.
+  const inputs = args.filter((arg, i) => args[i - 1] === "-i");
+  assert.ok(
+    inputs.includes("scene-0-filmed.png") &&
+      inputs.includes("scene-1-filmed.png"),
+  );
+  assert.equal(
+    args.filter((arg) => arg === "-protocol_whitelist").length,
+    inputs.length,
+  );
+  for (const name of filtersOf(graph))
+    assert.ok(FFMPEG_51_FILTERS.includes(name), name);
+});
+
+test("Float: the cut-out bobs ±10 px on a 2 s sine over a still wall, its shadow breathing in step", () => {
+  const p = plan([null], false);
+  p.scenes[0] = {
+    ...p.scenes[0]!,
+    zoomTo: 1,
+    subject: {
+      motion: "float",
+      layer: {
+        path: "scene-0-subject.png",
+        x: 300,
+        y: 640,
+        width: 480,
+        height: 560,
+      },
+      shadow: {
+        path: "scene-0-shadow.png",
+        x: 330,
+        y: 1190,
+        width: 424,
+        height: 43,
+      },
+    },
+  };
+  const graph = graphOf(renderArgs(p, "ad.mp4", FULL));
+  const frames = Math.round(p.scenes[0]!.seconds * 30);
+  // The wall holds still under the floating product.
+  assert.match(graph[0]!, /zoompan=z=1:x=0:y=0/);
+  assert.equal(
+    graph[1],
+    `[1:v]format=yuva444p,zoompan=z='1.07+0.07*sin(2*PI*on/60)':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=${frames}:s=424x44:fps=30,format=yuva444p[shadow0]`,
+  );
+  assert.equal(
+    graph[2],
+    "[bg0][shadow0]overlay=x=330:y=1190:format=auto[shadowon0]",
+  );
+  assert.equal(
+    graph[3],
+    `[2:v]format=rgba,loop=loop=${frames - 1}:size=1:start=0,setpts=N/30/TB[subject0]`,
+  );
+  assert.equal(
+    graph[4],
+    "[shadowon0][subject0]overlay=x=300:y='640+10*sin(2*PI*t/2)':format=auto[subjecton0]",
+  );
+  // The words go over the product, as in a shelf scene.
+  assert.ok(graph[5]!.endsWith("[sticker0]"));
+  assert.ok(graph[6]!.startsWith("[subjecton0][sticker0]overlay"));
+  for (const name of filtersOf(graph))
+    assert.ok(FFMPEG_51_FILTERS.includes(name), name);
+});
+
+test("Pop: the scene blurred behind, the cut-out growing 1.00 → 1.08 from 0.2 s over 0.6 s", () => {
+  const p = plan([null], false);
+  p.scenes[0] = {
+    ...p.scenes[0]!,
+    zoomTo: 1.03,
+    blur: 26,
+    subject: {
+      motion: "pop",
+      layer: {
+        path: "scene-0-subject.png",
+        x: 250,
+        y: 500,
+        width: 581,
+        height: 901,
+      },
+      shadow: null,
+    },
+  };
+  const graph = graphOf(renderArgs(p, "ad.mp4", FULL));
+  const frames = Math.round(p.scenes[0]!.seconds * 30);
+  assert.match(
+    graph[0]!,
+    /zoompan=z='1\+0\.03\*on\/\d+'.*fps=30,boxblur=26:2,setsar=1,format=yuv420p\[bg0\]$/,
+  );
+  assert.equal(
+    graph[1],
+    `[1:v]format=yuva444p,zoompan=z='1+0.08*(1-pow(1-min(1,max(0,(on-6)/18)),2))':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=${frames}:s=582x902:fps=30,format=yuva444p[subject0]`,
+  );
+  assert.equal(
+    graph[2],
+    "[bg0][subject0]overlay=x=250:y=500:format=auto[subjecton0]",
+  );
+  assert.ok(!graph.some((line) => line.includes("[shadow0]")));
+  for (const name of filtersOf(graph))
+    assert.ok(FFMPEG_51_FILTERS.includes(name), name);
+});
+
+test("the motions are drawn at the output's size too: the 720p fallback scales the bob, the blur and the layers", () => {
+  const p = plan([null], false);
+  p.scenes[0] = {
+    ...p.scenes[0]!,
+    blur: 26,
+    subject: {
+      motion: "float",
+      layer: { path: "s.png", x: 300, y: 640, width: 480, height: 560 },
+      shadow: { path: "sh.png", x: 330, y: 1190, width: 424, height: 43 },
+    },
+  };
+  const graph = graphOf(
+    renderArgs(p, "ad.mp4", { size: { width: 720, height: 1280 }, crf: 25 }),
+  );
+  assert.match(graph[0]!, /boxblur=17:2,/);
+  assert.match(graph[1]!, /s=282x28:/);
+  assert.match(graph[3]!, /scale=iw\*0\.6667:ih\*0\.6667/);
+  assert.match(graph[4]!, /overlay=x=200:y='427\+6\.667\*sin\(2\*PI\*t\/2\)'/);
+});
+
+test("a 270x480 smoke render of each motion on the local ffmpeg: Filmed → Sold, Float and Pop", async (t) => {
+  if (!hasFfmpeg()) return t.skip("ffmpeg is not installed");
+  const dir = await mkdtemp(join(tmpdir(), "product-ad-motions-"));
+  t.after(() => rm(dir, { recursive: true, force: true, maxRetries: 5 }));
+  const doll = await cutout("#3b82f6", 400, 640);
+  const panel = await cutout("#8b5e34", 700, 900);
+  const filmed = await sharp({
+    create: { width: 300, height: 520, channels: 3, background: "#7a6a5a" },
+  })
+    .jpeg()
+    .toBuffer();
+  const products = await Promise.all(
+    [
+      {
+        id: "doll",
+        name: "Кукла Лол",
+        price: "5 000 ₸",
+        cut: doll,
+        made: true,
+      },
+      {
+        id: "panel",
+        name: "Шежіре",
+        price: "15 500 ₸ бастап",
+        cut: panel,
+        made: false,
+      },
+    ].map(async (product) => {
+      const exact = await exactScene(product.cut);
+      return {
+        productId: product.id,
+        name: product.name,
+        priceText: product.price,
+        cutout: product.cut,
+        picture: exact.image,
+        box: exact.box,
+        caption: "Әғқңөұүһі сыйлық",
+        voice: null,
+        original: product.id === "doll" ? filmed : null,
+        made: product.made,
+      };
+    }),
+  );
+  for (const motion of ["filmed_sold", "float", "pop"] as const) {
+    const workDir = join(dir, motion);
+    await mkdir(workDir);
+    const composed = await composeAd({
+      products,
+      sticker: "Сөремізде жаңа тауар",
+      priceCardTitle: "Біздің бағалар",
+      ending: "Тапсырыс беру үшін жазыңыз",
+      shopName: "Demo Shop",
+      phone: null,
+      presenter: null,
+      workDir,
+      motion,
+    });
+    const out = join(workDir, "ad.mp4");
+    await renderAd(composed.plan, out, {}, [
+      { size: { width: 270, height: 480 }, crf: 30 },
+    ]);
+    const duration = Number(
+      execFileSync("ffprobe", [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "csv=p=0",
+        out,
+      ])
+        .toString()
+        .trim(),
+    );
+    assert.ok(
+      Math.abs(duration - composed.timeline.totalSeconds) < 0.1,
+      `${motion}: ${duration} s, planned ${composed.timeline.totalSeconds}`,
+    );
+    const poster = join(workDir, "poster.jpg");
+    await posterFrame(out, poster, {}, composed.posterSeconds);
+    assert.deepEqual(
+      [
+        (await sharp(poster).metadata()).width,
+        (await sharp(poster).metadata()).height,
+      ],
+      [270, 480],
+    );
+  }
 });

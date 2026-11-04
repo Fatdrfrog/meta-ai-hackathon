@@ -61,7 +61,11 @@ function withLocalChanges(
  * the review is open, so a refresh landing mid-save doesn't take one back on
  * screen. A change that can't be saved is undone, and `failed` says so.
  */
-export function useProductReview(workspaceId: string, importId: string) {
+export function useProductReview(
+  workspaceId: string,
+  importId: string,
+  initialProductId?: string
+) {
   const { data, error, isValidating, mutate } =
     useSWR<ProductVideoImportResponse>(
       productImportUrl(workspaceId, importId),
@@ -91,10 +95,12 @@ export function useProductReview(workspaceId: string, importId: string) {
       ),
     [data, statuses, edits]
   );
-  const queue = useMemo(
-    () => products.filter(product => product.status === "draft"),
-    [products]
-  );
+  const queue = useMemo(() => {
+    const drafts = products.filter(product => product.status === "draft");
+    const first = drafts.findIndex(product => product.id === initialProductId);
+    if (first > 0) drafts.unshift(...drafts.splice(first, 1));
+    return drafts;
+  }, [products, initialProductId]);
 
   const setStatus = (ids: string[], status: WorkspaceProductStatus) =>
     setStatuses(current => ({

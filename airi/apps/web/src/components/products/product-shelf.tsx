@@ -8,14 +8,22 @@ import {
   productPriceParts,
   type WorkspaceProductRecord,
 } from "@/lib/products/types";
-import { CircleAlert } from "lucide-react";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useDraggable } from "@dnd-kit/core";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CircleAlert, Ellipsis, Plus } from "lucide-react";
+import { useState, type CSSProperties, type ReactNode, type Ref } from "react";
 import { ProductCheck } from "./product-controls";
 import type { DraftShelfInfo } from "./product-stage-model";
 import styles from "./product-shelf.module.css";
 import theme from "./product-theme.module.css";
 
 const COPY = PRODUCTS_COPY.page;
+const ROWS = PRODUCTS_COPY.rows;
 
 // Products stand on a real shelf, the way the owner filmed them, instead of
 // sitting in cards: each bay is a lit plaster wall, a birch plank with a
@@ -462,6 +470,419 @@ export function EmptyShelf({
           <span />
         </div>
       </Board>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ studio v3 rows
+
+/** A product on a row: on the shelf, or still a draft of the row's video. */
+export type ShelfRowBay = {
+  product: WorkspaceProductRecord;
+  /** Found in the row's video and not on the shelf yet. */
+  draft: boolean;
+  /** A draft's photo state and price doubt; null for a shelf product. */
+  info: DraftShelfInfo | null;
+};
+
+/** One row of the shelf: a video's products, headed by its print. */
+export type ShelfRowModel = {
+  key: string;
+  /** The video the products came from; null for the last, plain row. */
+  importId: string | null;
+  /** When the video was sent, for the row's name; null when unknown. */
+  when: string | null;
+  /** The video's print: a frame of it, or the file sent from this page. */
+  print: { frame: string | null; video: string | null } | null;
+  bays: ShelfRowBay[];
+  /** Whether products here are still drafts: "Check one by one" is offered. */
+  draftsLeft: boolean;
+};
+
+/**
+ * Studio v3's shelf: one row per video, newest first, each headed by the
+ * video's print, with products from no video on a last plain row. A tap on
+ * a product picks it, with its number in pick order; another lets it go.
+ * Each product can also be carried (dnd-kit's draggable) onto a tile.
+ */
+export function ShelfRows({
+  rows,
+  numbers,
+  labelledBy,
+  addBay = null,
+  onToggle,
+  onCheckOneByOne,
+  onFixPrice,
+}: {
+  rows: readonly ShelfRowModel[];
+  /** Each picked product's number, from 1, in pick order. */
+  numbers: ReadonlyMap<string, number>;
+  /** The heading that names the shelf. */
+  labelledBy?: string;
+  /** The "+" bay at the end of the newest row. */
+  addBay?: ReactNode;
+  onToggle: (productId: string) => void;
+  /** The print's ⋯ "Check one by one": the swipe review of that video. */
+  onCheckOneByOne?: (importId: string) => void;
+  /** A draft's red tag: where its price is put right. */
+  onFixPrice?: (bay: ShelfRowBay, importId: string | null) => void;
+}) {
+  // Where each row's products start in the shelf's order, so the first 8
+  // are set down one after another.
+  const starts = rows.map((_, index) =>
+    rows.slice(0, index).reduce((sum, row) => sum + row.bays.length, 0)
+  );
+  return (
+    <div
+      role="group"
+      aria-labelledby={labelledBy}
+      aria-label={labelledBy ? undefined : ROWS.label}
+      className={styles.rows}
+    >
+      {rows.map((row, index) => {
+        return (
+          <ShelfRowView
+            key={row.key}
+            row={row}
+            numbers={numbers}
+            firstIndex={starts[index] ?? 0}
+            add={index === 0 ? addBay : null}
+            onToggle={onToggle}
+            onCheckOneByOne={onCheckOneByOne}
+            onFixPrice={onFixPrice}
+          />
+        );
+      })}
+      {rows.length === 0 && addBay ? (
+        <div className={styles.row}>
+          <div className={styles.rowTrack}>
+            {addBay}
+            <RowRest />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ShelfRowView({
+  row,
+  numbers,
+  firstIndex,
+  add,
+  onToggle,
+  onCheckOneByOne,
+  onFixPrice,
+}: {
+  row: ShelfRowModel;
+  numbers: ReadonlyMap<string, number>;
+  firstIndex: number;
+  add: ReactNode;
+  onToggle: (productId: string) => void;
+  onCheckOneByOne?: (importId: string) => void;
+  onFixPrice?: (bay: ShelfRowBay, importId: string | null) => void;
+}) {
+  return (
+    <section
+      aria-label={row.importId ? ROWS.video(row.when) : ROWS.plainLabel}
+      data-row={row.importId ?? "shelf"}
+      className={styles.row}
+    >
+      <div className={styles.rowTrack}>
+        {row.importId ? (
+          <VideoPrint
+            importId={row.importId}
+            print={row.print}
+            draftsLeft={row.draftsLeft}
+            onCheckOneByOne={onCheckOneByOne}
+          />
+        ) : (
+          <div className={styles.slot} data-slot="plain">
+            <div className={styles.cWall}>
+              <span aria-hidden="true" className={styles.plainLabel}>
+                {ROWS.plain}
+              </span>
+            </div>
+            <RowBoard />
+          </div>
+        )}
+        <ul className={styles.rowBays}>
+          {row.bays.map((bay, index) => (
+            <RowBay
+              key={bay.product.id}
+              bay={bay}
+              index={firstIndex + index}
+              number={numbers.get(bay.product.id) ?? null}
+              onToggle={onToggle}
+              onFixPrice={
+                onFixPrice ? () => onFixPrice(bay, row.importId) : undefined
+              }
+            />
+          ))}
+        </ul>
+        {add}
+        <RowRest />
+      </div>
+    </section>
+  );
+}
+
+/** The plank under a slot of a row: its top and its ply edge. */
+function RowBoard({ children = null }: { children?: ReactNode }) {
+  return (
+    <>
+      <span aria-hidden="true" className={styles.cTop} />
+      <span aria-hidden={children ? undefined : true} className={styles.cLip}>
+        {children}
+      </span>
+    </>
+  );
+}
+
+/** The plank running on to the row's end. */
+function RowRest() {
+  return (
+    <div aria-hidden="true" className={cn(styles.slot, styles.rest)}>
+      <div className={styles.cWall} />
+      <RowBoard />
+    </div>
+  );
+}
+
+/** m:ss, for a print's length. */
+function formatPrintTime(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** A video's print at the head of its row: 9:16, with its length when known. */
+function VideoPrint({
+  importId,
+  print,
+  draftsLeft,
+  onCheckOneByOne,
+}: {
+  importId: string;
+  print: ShelfRowModel["print"];
+  draftsLeft: boolean;
+  onCheckOneByOne?: (importId: string) => void;
+}) {
+  const [broken, setBroken] = useState<ReadonlySet<string>>(() => new Set());
+  const [length, setLength] = useState<number | null>(null);
+  const breaks = (url: string) => () =>
+    setBroken(current => new Set(current).add(url));
+  const video = print?.video && !broken.has(print.video) ? print.video : null;
+  const frame =
+    !video && print?.frame && !broken.has(print.frame) ? print.frame : null;
+  return (
+    <div className={styles.slot} data-slot="print">
+      <div className={styles.cWall}>
+        <figure className={styles.print}>
+          {video ? (
+            // Paused on its first frame: nothing on the shelf plays by itself.
+            <video
+              key={video}
+              src={`${video}#t=0.1`}
+              muted
+              playsInline
+              preload="metadata"
+              tabIndex={-1}
+              aria-hidden="true"
+              onLoadedMetadata={event => {
+                const { duration } = event.currentTarget;
+                if (Number.isFinite(duration)) setLength(duration);
+              }}
+              onError={breaks(video)}
+            />
+          ) : frame ? (
+            // Signed storage URLs; next/image would need every bucket host configured.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={frame}
+              src={frame}
+              alt=""
+              decoding="async"
+              draggable={false}
+              onError={breaks(frame)}
+            />
+          ) : null}
+          <span aria-hidden="true" className={styles.printPlay} />
+          <figcaption className="sr-only">
+            {length !== null
+              ? `${ROWS.print}, ${ROWS.printLength(formatPrintTime(length))}`
+              : ROWS.print}
+          </figcaption>
+          {length !== null ? (
+            <span aria-hidden="true" className={styles.printTime}>
+              {formatPrintTime(length)}
+            </span>
+          ) : null}
+        </figure>
+        {draftsLeft && onCheckOneByOne ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={ROWS.more}
+                className={styles.printMore}
+              >
+                <Ellipsis aria-hidden="true" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              className={cn(theme.theme, theme.popover)}
+            >
+              <DropdownMenuItem onSelect={() => onCheckOneByOne(importId)}>
+                {ROWS.checkOneByOne}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+      </div>
+      <RowBoard />
+    </div>
+  );
+}
+
+function RowBay({
+  bay,
+  index,
+  number,
+  onToggle,
+  onFixPrice,
+}: {
+  bay: ShelfRowBay;
+  index: number;
+  number: number | null;
+  onToggle: (productId: string) => void;
+  onFixPrice?: () => void;
+}) {
+  const { product, draft, info } = bay;
+  const { setNodeRef, listeners, isDragging } = useDraggable({
+    id: product.id,
+    data: { productId: product.id },
+  });
+  const doubt = info?.priceDoubt ?? false;
+  const price =
+    product.price === null
+      ? PRODUCTS_COPY.noPrice
+      : formatProductPrice(product.price, {
+          from: product.priceIsFrom,
+          currency: product.currency,
+        });
+  const label = [
+    ROWS.bay(product.name, price, number),
+    doubt ? COPY.checkPrice : null,
+    draft ? ROWS.draft : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const photo = info?.photo ?? (product.imageUrl ? "photo" : "initial");
+  const url = product.imageUrl;
+  let content: ReactNode;
+  if ((photo === "photo" || photo === "print") && url) {
+    content = (
+      <ShelfPhoto
+        key={url}
+        url={url}
+        name={product.name}
+        index={index}
+        print={photo === "print" || product.hasCutout === false}
+        placeholder={null}
+      />
+    );
+  } else if (photo === "making") {
+    content = <TentCard name={product.name} words={COPY.makingPhoto} />;
+  } else if (photo === "waiting") {
+    content = <TentCard name={product.name} words={COPY.nextInLine} />;
+  } else {
+    content = <TentCard name={product.name} words={COPY.noPhoto} />;
+  }
+
+  return (
+    <li
+      data-picked={number !== null || undefined}
+      data-draft={draft || undefined}
+      data-dragging={isDragging || undefined}
+      data-price-length={productPriceLength(price)}
+      className={cn(styles.slot, styles.rowBay, draft && styles.draft)}
+    >
+      <button
+        ref={setNodeRef}
+        type="button"
+        aria-pressed={number !== null}
+        aria-label={label}
+        data-product={product.id}
+        {...listeners}
+        onClick={() => onToggle(product.id)}
+        className={styles.bayButton}
+      >
+        <span className={styles.cWall}>
+          <span className={styles.cStand}>{content}</span>
+        </span>
+        <RowBoard>
+          <PriceTag
+            price={product.price}
+            currency={product.currency}
+            from={product.priceIsFrom}
+            doubt={doubt}
+          />
+        </RowBoard>
+        <span dir="auto" title={product.name} className={styles.cName}>
+          {product.name}
+        </span>
+        {number !== null ? (
+          <span aria-hidden="true" className={styles.pickNo}>
+            {number}
+          </span>
+        ) : null}
+      </button>
+      {doubt && onFixPrice ? (
+        <button
+          type="button"
+          aria-label={ROWS.fixPrice(product.name)}
+          title={COPY.checkPrice}
+          onClick={onFixPrice}
+          className={styles.tagFix}
+        />
+      ) : null}
+    </li>
+  );
+}
+
+/** The "+" bay that ends the newest row: another video, from here or WhatsApp. */
+export function AddVideoBay({
+  onChoose,
+  buttonRef,
+  disabled = false,
+  extra = null,
+}: {
+  onChoose: () => void;
+  buttonRef?: Ref<HTMLButtonElement>;
+  disabled?: boolean;
+  /** Under the "+": the WhatsApp intake link, when it's set up. */
+  extra?: ReactNode;
+}) {
+  return (
+    <div className={cn(styles.slot, styles.addSlot)} data-slot="add">
+      <div className={styles.cWall}>
+        <div className={styles.addBox}>
+          <button
+            ref={buttonRef}
+            type="button"
+            disabled={disabled}
+            onClick={onChoose}
+            className={styles.addButton}
+          >
+            <Plus aria-hidden="true" />
+            <span>{PRODUCTS_COPY.uploadVideo}</span>
+          </button>
+          {extra}
+        </div>
+      </div>
+      <RowBoard />
     </div>
   );
 }

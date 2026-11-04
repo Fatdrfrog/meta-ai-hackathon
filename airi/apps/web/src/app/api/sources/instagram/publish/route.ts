@@ -1,13 +1,22 @@
 import { decryptMaybeString } from "@/lib/crypto";
+import {
+  GraphApiError,
+  createContainerForAccount,
+  grantedPermissions as parseGrantedPermissions,
+  isGraphIdUnavailableError,
+  isGraphMediaIdNotAvailableError,
+  isGraphPermissionError,
+  permalinkOf,
+  publishContainer,
+  resolveGraphApiBase,
+  resolveInstagramAccountIdCandidates,
+  resolvePublishPermission,
+  waitForContainerReady,
+} from "@/lib/instagram/publish";
 import { fetchSourceWithCredentials } from "@/lib/sources/utils";
 import { createClient } from "@/lib/supabase/server";
-import { resolveInstagramGraphBase } from "@icecore/shared/lib/meta/graph-version";
 import { NextRequest, NextResponse } from "next/server";
 import { checkUserWorkspaceAccess } from "@/lib/supabase/queries";
-import {
-  readTrimmedString as normalizeIdentifier,
-  readUniqueStringArray,
-} from "@icecore/shared/lib/value-utils";
 
 export const maxDuration = 180;
 export const dynamic = "force-dynamic";
@@ -22,106 +31,6 @@ type PublishRequestBody = {
 };
 
 const IG_MAX_CAPTION_LENGTH = 2200;
-
-type GraphErrorPayload = {
-  error?: {
-    message?: string;
-    type?: string;
-    code?: number | string;
-    error_subcode?: number | string;
-    fbtrace_id?: string;
-  };
-};
-
-class GraphApiError extends Error {
-  status: number;
-  graphCode?: number;
-  graphType?: string;
-  graphSubcode?: number;
-  graphTraceId?: string;
-
-  constructor(
-    status: number,
-    message: string,
-    options?: {
-      graphCode?: number;
-      graphType?: string;
-      graphSubcode?: number;
-      graphTraceId?: string;
-    }
-  ) {
-    super(message);
-    this.name = "GraphApiError";
-    this.status = status;
-    this.graphCode = options?.graphCode;
-    this.graphType = options?.graphType;
-    this.graphSubcode = options?.graphSubcode;
-    this.graphTraceId = options?.graphTraceId;
-  }
-}
-
-function toOptionalNumber(value: unknown): number | undefined {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return undefined;
-}
-
-function toGraphApiError(
-  status: number,
-  json: Record<string, unknown>,
-  fallbackMessage: string
-): GraphApiError {
-  const payload = json as GraphErrorPayload;
-  const graphError = payload.error || {};
-  const message =
-    typeof graphError.message === "string" && graphError.message.trim()
-      ? graphError.message.trim()
-      : fallbackMessage;
-
-  return new GraphApiError(status, message, {
-    graphCode: toOptionalNumber(graphError.code),
-    graphType:
-      typeof graphError.type === "string" ? graphError.type.trim() : undefined,
-    graphSubcode: toOptionalNumber(graphError.error_subcode),
-    graphTraceId:
-      typeof graphError.fbtrace_id === "string"
-        ? graphError.fbtrace_id.trim()
-        : undefined,
-  });
-}
-
-function isGraphPermissionError(error: GraphApiError): boolean {
-  const message = error.message.toLowerCase();
-  return (
-    error.graphCode === 10 ||
-    error.graphCode === 200 ||
-    message.includes("permission") ||
-    message.includes("not authorized")
-  );
-}
-
-function isGraphIdUnavailableError(error: unknown): boolean {
-  if (!(error instanceof GraphApiError)) return false;
-  if (![400, 403, 404].includes(error.status)) return false;
-
-  const message = error.message.toLowerCase();
-  return (
-    message.includes("unsupported post request") ||
-    message.includes("object with id") ||
-    message.includes("does not exist") ||
-    message.includes("invalid user id") ||
-    message.includes("cannot be loaded due to missing permissions")
-  );
-}
-
-function isGraphMediaIdNotAvailableError(error: unknown): boolean {
-  if (!(error instanceof GraphApiError)) return false;
-  const message = error.message.toLowerCase();
-  return message.includes("media id") && message.includes("not available");
-}
 
 function mapGraphErrorStatus(error: GraphApiError): number {
   if (isGraphIdUnavailableError(error)) return 400;
@@ -144,45 +53,8 @@ function mapGraphErrorMessage(error: GraphApiError): string {
   return error.message || "Graph API request failed";
 }
 
-function parseGrantedPermissions(raw: unknown): Set<string> {
-  if (typeof raw !== "string") return new Set();
-  return new Set(
-    raw
-      .split(/[,\s]+/)
-      .map(v => v.trim())
-      .filter(Boolean)
-  );
-}
-
 function resolveAccessToken(value: unknown): string {
   return decryptMaybeString(value);
-}
-
-function resolvePublishPermission(authMethod: string): string {
-  return authMethod === "instagram_business_login"
-    ? "instagram_business_content_publish"
-    : "instagram_content_publish";
-}
-
-function resolveInstagramAccountIdCandidates(
-  credentials: Record<string, unknown>
-): string[] {
-  const authMethod = String(credentials.auth_method || "");
-  const businessId = normalizeIdentifier(
-    credentials.instagram_business_account_id
-  );
-  const scopedId = normalizeIdentifier(credentials.instagram_scoped_id);
-  const pageId = normalizeIdentifier(credentials.page_id);
-
-  if (authMethod === "instagram_business_login") {
-    return readUniqueStringArray([businessId, scopedId, pageId]);
-  }
-
-  return readUniqueStringArray([businessId, scopedId, pageId]);
-}
-
-function resolveGraphApiBase(authMethod: string): string {
-  return resolveInstagramGraphBase(authMethod);
 }
 
 /**
@@ -205,93 +77,6 @@ function assertValidUrl(raw: string): string {
   } catch {
     throw new Error("mediaUrl must be a valid HTTP(S) URL");
   }
-}
-
-async function graphPost(
-  url: string,
-  body: URLSearchParams
-): Promise<Record<string, unknown>> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-    cache: "no-store",
-  });
-
-  const json = (await response.json().catch(() => ({}))) as Record<
-    string,
-    unknown
-  >;
-
-  if (!response.ok) {
-    throw toGraphApiError(
-      response.status,
-      json,
-      `Graph API request failed (${response.status})`
-    );
-  }
-
-  return json;
-}
-
-async function graphGet(url: string): Promise<Record<string, unknown>> {
-  const response = await fetch(url, { method: "GET", cache: "no-store" });
-  const json = (await response.json().catch(() => ({}))) as Record<
-    string,
-    unknown
-  >;
-
-  if (!response.ok) {
-    throw toGraphApiError(
-      response.status,
-      json,
-      `Graph API request failed (${response.status})`
-    );
-  }
-
-  return json;
-}
-
-async function waitForVideoContainerReady(
-  graphBase: string,
-  creationId: string,
-  accessToken: string
-) {
-  const maxAttempts = 48;
-  const delayMs = 2500;
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const statusUrl = new URL(`${graphBase}/${encodeURIComponent(creationId)}`);
-    statusUrl.searchParams.set("fields", "status_code,status");
-    statusUrl.searchParams.set("access_token", accessToken);
-
-    const statusJson = await graphGet(statusUrl.toString());
-    const statusCode = String(
-      statusJson.status_code || statusJson.status || ""
-    ).toUpperCase();
-
-    if (statusCode === "FINISHED" || statusCode === "PUBLISHED") {
-      return;
-    }
-
-    if (
-      statusCode === "ERROR" ||
-      statusCode === "FAILED" ||
-      statusCode === "EXPIRED"
-    ) {
-      throw new Error(
-        `Instagram video processing failed with status: ${statusCode}`
-      );
-    }
-
-    if (attempt < maxAttempts - 1) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-  }
-
-  throw new Error(
-    "Instagram video or Reel is still processing. Try again in 1-2 minutes; some videos take longer to process."
-  );
 }
 
 export async function POST(request: NextRequest) {
@@ -418,52 +203,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const graphBase = resolveGraphApiBase(authMethod);
-
-    const createBodyTemplate = new URLSearchParams();
-    createBodyTemplate.set("access_token", accessToken);
-    createBodyTemplate.set("caption", caption);
-    if (mediaType === "reels") {
-      createBodyTemplate.set("media_type", "REELS");
-      createBodyTemplate.set("video_url", mediaUrl);
-      createBodyTemplate.set("share_to_feed", "true");
-    } else {
-      createBodyTemplate.set("image_url", mediaUrl);
-    }
+    const access = {
+      graphBase: resolveGraphApiBase(authMethod),
+      accessToken,
+    };
 
     let instagramAccountId = "";
     let creationId = "";
-    let lastCreateError: unknown = null;
-
-    for (const candidateAccountId of instagramAccountCandidates) {
-      try {
-        const createResponse = await graphPost(
-          `${graphBase}/${encodeURIComponent(candidateAccountId)}/media`,
-          new URLSearchParams(createBodyTemplate)
-        );
-
-        const candidateCreationId = String(createResponse.id || "");
-        if (!candidateCreationId) {
-          throw new Error("Failed to create Instagram media container");
-        }
-
-        instagramAccountId = candidateAccountId;
-        creationId = candidateCreationId;
-        break;
-      } catch (error) {
-        lastCreateError = error;
-        if (isGraphIdUnavailableError(error)) {
-          continue;
-        }
-        throw error;
-      }
-    }
-
-    if (!instagramAccountId || !creationId) {
-      if (
-        lastCreateError instanceof GraphApiError &&
-        isGraphIdUnavailableError(lastCreateError)
-      ) {
+    try {
+      const created = await createContainerForAccount(
+        access,
+        instagramAccountCandidates,
+        mediaType === "reels"
+          ? { kind: "reel", videoUrl: mediaUrl, caption, shareToFeed: true }
+          : { kind: "image", imageUrl: mediaUrl, caption }
+      );
+      instagramAccountId = created.accountId;
+      creationId = created.containerId;
+    } catch (error) {
+      if (error instanceof GraphApiError && isGraphIdUnavailableError(error)) {
         return NextResponse.json(
           {
             error:
@@ -473,29 +231,16 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      if (lastCreateError) {
-        throw lastCreateError;
-      }
-      return NextResponse.json(
-        { error: "Failed to create Instagram media container" },
-        { status: 500 }
-      );
+      throw error;
     }
 
     if (mediaType === "reels") {
-      await waitForVideoContainerReady(graphBase, creationId, accessToken);
+      await waitForContainerReady(access, creationId);
     }
 
-    const publishBody = new URLSearchParams();
-    publishBody.set("access_token", accessToken);
-    publishBody.set("creation_id", creationId);
+    const { mediaId: publishedMediaId, response: publishResponse } =
+      await publishContainer(access, instagramAccountId, creationId);
 
-    const publishResponse = await graphPost(
-      `${graphBase}/${encodeURIComponent(instagramAccountId)}/media_publish`,
-      publishBody
-    );
-
-    const publishedMediaId = String(publishResponse.id || "");
     if (!publishedMediaId) {
       const graphError = (publishResponse as { error?: { message?: string } })
         .error?.message;
@@ -513,18 +258,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let permalink = "";
-    try {
-      const permalinkUrl = new URL(
-        `${graphBase}/${encodeURIComponent(publishedMediaId)}`
-      );
-      permalinkUrl.searchParams.set("fields", "id,permalink,media_type");
-      permalinkUrl.searchParams.set("access_token", accessToken);
-      const permalinkResponse = await graphGet(permalinkUrl.toString());
-      permalink = String(permalinkResponse.permalink || "");
-    } catch {
-      // Non-fatal if permalink fetch fails.
-    }
+    // Non-fatal if the permalink can't be read.
+    const permalink = await permalinkOf(access, publishedMediaId);
 
     return NextResponse.json({
       ok: true,

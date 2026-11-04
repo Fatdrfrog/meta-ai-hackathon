@@ -43,6 +43,39 @@ export const SHELF_COPY = {
     back: "Products",
   },
 
+  // Studio v3's shelf: one row per video, newest first, headed by its print;
+  // a tap on a product picks it, with its number in pick order.
+  rows: {
+    label: "Your shelf",
+    /** A row's name, for its list: the video it came from, and when. */
+    video: (when: string | null) =>
+      when ? `Products from your video of ${when}` : "Products from a video",
+    /** The last row: products from no video still listed. */
+    plain: "Shelf",
+    plainLabel: "Products on your shelf",
+    print: "Your video",
+    printLength: (time: string) => `${time} long`,
+    more: "More for this video",
+    checkOneByOne: "Check one by one",
+    // A bay's name for assistive tech: the product, its price, its pick.
+    bay: (name: string, price: string, pick: number | null) =>
+      pick === null ? `${name}, ${price}` : `${name}, ${price}, pick ${pick}`,
+    draft: "found in your video, not on your shelf yet",
+    picked: (count: number) =>
+      count === 0
+        ? "Nothing picked"
+        : count === 1
+          ? "1 picked"
+          : `${count} picked`,
+    fixPrice: (name: string) => `Check the price of ${name}`,
+    /** How a product is carried to a tile, for assistive tech. */
+    dragHelp:
+      "Press and hold a product to carry your picks, then drop them on a template.",
+    /** The stack carried in a drag, for assistive tech. */
+    carrying: (count: number) =>
+      count === 1 ? "Carrying 1 product" : `Carrying ${count} products`,
+  },
+
   // Choosing products on the shelf to make something with them.
   choose: {
     start: "Choose products",

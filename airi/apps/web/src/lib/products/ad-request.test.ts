@@ -14,6 +14,7 @@ import {
   parseProductAdUpdateRequest,
   sameAdScenes,
   sameAdWords,
+  parseProductAdPublishRequest,
 } from "./ad-request";
 import type { ProductAdScript } from "./types";
 import type { ProductAdStoredScene } from "@icecore/temporal";
@@ -117,6 +118,32 @@ describe("what the ad API takes", () => {
       brief({ presenter: { use: "yes", consent: true } }),
     ])
       expect(parseProductAdCreateRequest(bad)).toBeNull();
+  });
+
+  it("takes the Reel tile's motion with a brief and as an edit, and nothing it doesn't know", () => {
+    expect(
+      parseProductAdCreateRequest(brief({ motion: "filmed_sold" }))?.motion
+    ).toBe("filmed_sold");
+    // Absent reads as the shelf ad, as v2's briefs were.
+    expect(parseProductAdCreateRequest(brief())).not.toHaveProperty("motion");
+    expect(parseProductAdCreateRequest(brief({ motion: "turntable" }))).toBe(
+      null
+    );
+    expect(parseProductAdUpdateRequest({ motion: "float" })).toEqual({
+      motion: "float",
+    });
+    expect(
+      parseProductAdUpdateRequest({ motion: "pop", sticker: " Жаңа " })
+    ).toEqual({ motion: "pop", sticker: "Жаңа" });
+    for (const bad of [{ motion: "spin" }, { motion: null }, { motion: 1 }])
+      expect(parseProductAdUpdateRequest(bad)).toBeNull();
+    expect(
+      parseProductAdSceneRequest({
+        requestId: "press-2",
+        setting: "linen_shelf",
+        changes: { motion: "filmed_sold" },
+      })?.changes
+    ).toEqual({ motion: "filmed_sold" });
   });
 
   it("takes the owner's edits in one line each, and nothing that changes nothing", () => {
@@ -387,5 +414,91 @@ describe("comparing the words on screen", () => {
         })
       )
     ).toBe(false);
+  });
+});
+
+// Studio v3: posting the ad on Instagram.
+describe("the Instagram press, checked", () => {
+  it("takes each destination's shape", () => {
+    expect(
+      parseProductAdPublishRequest({ requestId: " r-1 ", destination: "reel" })
+    ).toEqual({ request: { requestId: "r-1", destination: "reel" } });
+    expect(
+      parseProductAdPublishRequest({
+        requestId: "r-2",
+        destination: "post",
+        still: {
+          kind: "studio",
+          productId: DOLL.toUpperCase(),
+          colourway: "night",
+        },
+        caption: "  Hi  ",
+      })
+    ).toEqual({
+      request: {
+        requestId: "r-2",
+        destination: "post",
+        still: { kind: "studio", productId: DOLL, colourway: "night" },
+        caption: "Hi",
+      },
+    });
+    expect(
+      parseProductAdPublishRequest({
+        requestId: "r-3",
+        destination: "carousel",
+        slides: [
+          { kind: "collection", productId: null },
+          { kind: "room", productId: DOLL },
+        ],
+      })
+    ).toMatchObject({
+      request: { slides: [{ kind: "collection" }, { kind: "room" }] },
+    });
+  });
+
+  it("refuses what doesn't fit", () => {
+    const issues = (body: unknown) =>
+      "issues" in parseProductAdPublishRequest(body)
+        ? (parseProductAdPublishRequest(body) as { issues: string[] }).issues
+        : [];
+    expect(issues(null)).toHaveLength(1);
+    expect(issues({ requestId: "", destination: "reel" })).toEqual([
+      "requestId: 1 to 64 characters",
+    ]);
+    expect(issues({ requestId: "r", destination: "facebook" })).toHaveLength(1);
+    expect(issues({ requestId: "r", destination: "post" })).toEqual([
+      "still: a post needs its picture",
+    ]);
+    expect(
+      issues({
+        requestId: "r",
+        destination: "reel",
+        still: { kind: "room", productId: DOLL },
+      })
+    ).toEqual(["still: a reel takes no single picture"]);
+    expect(
+      issues({
+        requestId: "r",
+        destination: "carousel",
+        slides: [{ kind: "room", productId: DOLL }],
+      })
+    ).toEqual(["slides: 2 to 4 pictures"]);
+    expect(
+      issues({
+        requestId: "r",
+        destination: "post",
+        still: { kind: "room", productId: "x" },
+      })
+    ).toHaveLength(1);
+    expect(
+      issues({ requestId: "r", destination: "reel", caption: "x".repeat(2201) })
+    ).toEqual(["caption: at most 2200 characters"]);
+    expect(
+      issues({
+        requestId: "r",
+        destination: "reel",
+        caption: Array.from({ length: 31 }, (_, i) => `#tag${i}`).join(" "),
+      })
+    ).toEqual(["caption: at most 30 hashtags"]);
   });
 });

@@ -52,6 +52,19 @@ const ERROR_MESSAGES: Record<ProductsErrorCode, string> = {
   voice_consent_required: "A voice is cloned only with the speaker's agreement",
   voice_not_found: "This workspace has no cloned voice",
   voice_unavailable: "Voices aren't available right now",
+  instagram_not_connected:
+    "No Instagram account is connected to this workspace",
+  instagram_quota: "Instagram's daily posting limit is reached",
+  post_busy: "This ad is already being posted there",
+  post_failed: "Instagram didn't publish the post. Nothing was posted",
+  post_not_found: "That post wasn't found",
+  ads_not_connected: "Meta Ads isn't connected to this workspace",
+  page_whatsapp_missing:
+    "The Facebook Page has no WhatsApp number linked. Link it in Business Suite",
+  ctwa_failed: "Meta didn't create the ad. Nothing was spent",
+  budget_refused: "That budget is above what this ad may spend",
+  run_disabled: "Running ads isn't turned on",
+  price_to_check: "A product's price needs checking first",
 };
 
 export const productsJson = (data: unknown, status = 200) =>

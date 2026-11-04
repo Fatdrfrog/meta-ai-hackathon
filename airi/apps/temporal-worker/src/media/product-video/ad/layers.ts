@@ -1,7 +1,10 @@
 import {
+  PRODUCT_AD_STUDIO_COLOURWAYS,
+  PRODUCT_AD_STUDIO_SWEEPS,
   productAdLines,
   productAdShopName,
   type ProductAdBox,
+  type ProductAdStudioColourway,
   type ProductAdTextZone,
 } from "@icecore/temporal";
 import sharp, { type OverlayOptions } from "sharp";
@@ -48,7 +51,8 @@ export const AD_COLORS = {
   sandLow: "#ece1d2",
 } as const;
 /** The warm shade every shadow is drawn in. */
-const SHADE = "35,25,15";
+export const AD_SHADE = "35,25,15";
+const SHADE = AD_SHADE;
 
 export type Layer = { image: Buffer; width: number; height: number };
 
@@ -259,10 +263,11 @@ export function amountLayer(
   amount: string,
   amountPx: number,
   maxWidth: number,
+  color?: string,
 ): Promise<Layer & { px: number }> {
   return sizeToFit(
     [amount],
-    { face: "display", weight: "semibold", px: amountPx },
+    { face: "display", weight: "semibold", px: amountPx, color },
     maxWidth,
     Math.min(amountPx, AMOUNT_MIN_PX),
   );
@@ -273,19 +278,20 @@ export function amountLayer(
  * "from" words small in Inter on their own line above or below it, so the
  * tag stays narrow. The amount shrinks to fit `maxWidth`, and is never cut.
  */
-async function priceLayer(
+export async function priceLayer(
   priceText: string,
   amountPx: number,
   maxWidth: number,
+  colors: { ink?: string; ink2?: string } = {},
 ): Promise<Layer> {
   const { before, amount, after } = splitPrice(priceText);
-  const drawn = await amountLayer(amount, amountPx, maxWidth);
+  const drawn = await amountLayer(amount, amountPx, maxWidth, colors.ink);
   const wordsPx = Math.max(18, Math.round(drawn.px * 0.44));
   const wordsStyle: TextStyle = {
     face: "text",
     weight: "medium",
     px: wordsPx,
-    color: AD_COLORS.ink2,
+    color: colors.ink2 ?? AD_COLORS.ink2,
   };
   const above = before
     ? await fitTextLayer([before], wordsStyle, maxWidth, 16)
@@ -337,7 +343,7 @@ const roundedRect = (
  * A paper card holding `content`, with its warm shadow: the image is larger
  * than the card by the shadow's reach, and `card` says where the card is.
  */
-async function paperCard(
+export async function paperCard(
   size: Size,
   content: Array<{ layer: Layer; left: number; top: number }>,
   options: { radius?: number; shadow?: Shadow; hole?: boolean } = {},
@@ -511,7 +517,7 @@ export async function stickerLayer(text: string): Promise<Layer> {
 }
 
 /** A product's small tag on the price card: its name over its price. */
-async function shelfTagLayer(
+export async function shelfTagLayer(
   name: string,
   priceText: string,
   maxWidth: number,
@@ -548,7 +554,11 @@ const PLANK_TOP_SCENE = 1200;
 const PLANK_TOP_CARD = 1030;
 
 /** The shelf's wall, with window light, and a birch plank whose top is at `plankTop`. */
-function wallSvg(size: Size, plankTop: number | null, extra = ""): Buffer {
+export function wallSvg(
+  size: Size,
+  plankTop: number | null,
+  extra = "",
+): Buffer {
   const { width, height } = size;
   const plank =
     plankTop === null
@@ -604,7 +614,7 @@ function wallSvg(size: Size, plankTop: number | null, extra = ""): Buffer {
 }
 
 /** The contact and ambient shadows under a product standing at `rect`. */
-const groundShadows = (rect: Rect) => {
+export const groundShadows = (rect: Rect) => {
   const cx = rect.x + rect.w / 2;
   const base = rect.y + rect.h;
   return (
@@ -645,7 +655,7 @@ export async function alphaBox(png: Buffer): Promise<{
 }
 
 /** A cut-out trimmed to its opaque part. */
-async function trimmedCutout(
+export async function trimmedCutout(
   png: Buffer,
 ): Promise<{ image: Buffer; size: Size }> {
   const box = await alphaBox(png);
@@ -654,7 +664,7 @@ async function trimmedCutout(
   return { image, size: { width: box.width, height: box.height } };
 }
 
-async function placedCutout(
+export async function placedCutout(
   image: Buffer,
   rect: Rect,
 ): Promise<OverlayOptions> {
@@ -689,7 +699,7 @@ export async function exactScene(
 }
 
 /** Where the exact still stands a product of `size` (its opaque part). */
-function exactRect(size: Size): Rect {
+export function exactRect(size: Size): Rect {
   return shelfRow([size], { x: 110, w: 860 }, PLANK_TOP_SCENE + 6, 640)[0]!;
 }
 
@@ -793,29 +803,49 @@ export type PriceCardProduct = {
   priceText: string;
 };
 
+/** Where a shelf card is drawn: the frame, its safe band, the plank's top and the products' height. */
+export type ShelfCardFrame = {
+  size: Size;
+  safe: Rect;
+  plankTop: number;
+  maxHeight: number;
+};
+
+/** The price card's frame: the 9:16 video and Status picture. */
+export const PRICE_CARD_FRAME: ShelfCardFrame = {
+  size: AD_FRAME,
+  safe: REELS_SAFE,
+  plankTop: PLANK_TOP_CARD,
+  // As tall as the room under a one-line title allows (the paid gate found
+  // 480 px left the Status picture's products small, the wall empty).
+  maxHeight: 600,
+};
+
 /**
  * The price card: every product's exact cut-out on the plank, the title at
  * the top of the safe band, and each product's tag hanging from the plank's
  * lip, inside the band. The background, the title and the tags are separate
- * layers, for the video to animate.
+ * layers, for the video to animate. `frame` draws the same card in another
+ * frame (the 4:5 Collection picture); the price card's by default.
  */
 export async function priceCardLayers(input: {
   title: string;
   products: PriceCardProduct[];
+  frame?: ShelfCardFrame;
 }): Promise<{ background: Buffer; title: PlacedLayer; tags: PlacedLayer }> {
+  const frame = input.frame ?? PRICE_CARD_FRAME;
+  const safe = frame.safe;
   const products = await Promise.all(
     input.products.map((product) => trimmedCutout(product.cutout)),
   );
-  // As tall as the room under a one-line title allows (the paid gate found
-  // 480 px left the Status picture's products small, the wall empty).
   const rects = shelfRow(
     products.map((product) => product.size),
-    { x: 90, w: 900 },
-    PLANK_TOP_CARD + 6,
-    600,
+    { x: 90, w: frame.size.width - 180 },
+    frame.plankTop + 6,
+    frame.maxHeight,
   );
   const background = await sharp(
-    wallSvg(AD_FRAME, PLANK_TOP_CARD, rects.map(groundShadows).join("")),
+    wallSvg(frame.size, frame.plankTop, rects.map(groundShadows).join("")),
   )
     .composite(
       await Promise.all(
@@ -830,12 +860,12 @@ export async function priceCardLayers(input: {
   const title = await fitTextLayer(
     [input.title],
     { face: "display", weight: "semibold", px: 84, align: "centre" },
-    REELS_SAFE.w - 40,
+    safe.w - 40,
     48,
   );
   const titleRect = {
-    x: Math.round(AD_FRAME.width / 2 - title.width / 2),
-    y: REELS_SAFE.y + 24,
+    x: Math.round(frame.size.width / 2 - title.width / 2),
+    y: safe.y + 24,
     w: title.width,
     h: title.height,
   };
@@ -843,7 +873,7 @@ export async function priceCardLayers(input: {
   // The tags hang under the lip, one under each product, in a row that
   // stays inside the safe band's sides and bottom.
   const slot = Math.floor(
-    (REELS_SAFE.w - 20 * (input.products.length - 1)) / input.products.length,
+    (safe.w - 20 * (input.products.length - 1)) / input.products.length,
   );
   const tags = await Promise.all(
     input.products.map((product, index) =>
@@ -855,7 +885,7 @@ export async function priceCardLayers(input: {
       ),
     ),
   );
-  const tagTop = PLANK_TOP_CARD + 72 + 6;
+  const tagTop = frame.plankTop + 72 + 6;
   const tagHeight = Math.max(...tags.map((tag) => tag.height));
   const lanes = tags.map((tag, index) => {
     const centre = rects[index]!.x + rects[index]!.w / 2;
@@ -863,13 +893,13 @@ export async function priceCardLayers(input: {
   });
   // Keep the row inside the band and the tags apart.
   for (let i = 0; i < lanes.length; i++) {
-    const min = i === 0 ? REELS_SAFE.x : lanes[i - 1]! + tags[i - 1]!.width + 8;
+    const min = i === 0 ? safe.x : lanes[i - 1]! + tags[i - 1]!.width + 8;
     lanes[i] = Math.max(lanes[i]!, min);
   }
   for (let i = lanes.length - 1; i >= 0; i--) {
     const max =
       i === lanes.length - 1
-        ? REELS_SAFE.x + REELS_SAFE.w - tags[i]!.width
+        ? safe.x + safe.w - tags[i]!.width
         : lanes[i + 1]! - tags[i]!.width - 8;
     lanes[i] = Math.min(lanes[i]!, max);
   }
@@ -892,7 +922,7 @@ export async function priceCardLayers(input: {
     )
     .png()
     .toBuffer();
-  const top = Math.min(tagTop, REELS_SAFE.y + REELS_SAFE.h - tagHeight);
+  const top = Math.min(tagTop, safe.y + safe.h - tagHeight);
   return {
     background,
     title: { layer: title, rect: titleRect },
@@ -1099,35 +1129,9 @@ export async function endingLayers(input: {
     h: wordsHeight,
   };
 
-  const contact = input.phone
-    ? `WhatsApp · ${input.phone}`
-    : shopName || "WhatsApp";
-  const pillText = await fitTextLayer(
-    [contact],
-    { face: "text", weight: "semibold", px: 44 },
-    maxWidth - 150,
-    30,
-  );
-  const icon = await sharp(Buffer.from(CHAT_ICON(52, AD_COLORS.ink)))
-    .png()
-    .toBuffer();
-  const pillHeight = 104;
-  const pillWidth = pillText.width + 52 + 22 + 92;
-  const pillCard = await paperCard(
-    { width: pillWidth, height: pillHeight },
-    [
-      {
-        layer: { image: icon, width: 52, height: 52 },
-        left: 46,
-        top: (pillHeight - 52) / 2,
-      },
-      {
-        layer: pillText,
-        left: 46 + 52 + 22,
-        top: (pillHeight - pillText.height) / 2,
-      },
-    ],
-    { radius: pillHeight / 2, shadow: { dy: 8, sigma: 9, alpha: 0.2 } },
+  const pillCard = await contactPill(
+    { phone: input.phone, shopName: input.shopName },
+    maxWidth,
   );
   const pillRect = {
     x: Math.round(AD_FRAME.width / 2 - pillCard.width / 2),
@@ -1146,6 +1150,48 @@ export async function endingLayers(input: {
     },
     pill: { layer: pillCard, rect: pillRect },
   };
+}
+
+/**
+ * The ending's WhatsApp pill: the chat icon and the connected number, or
+ * the shop's name without one (left out when the fonts can't draw it: then
+ * "WhatsApp"), on a paper pill at most `maxWidth` wide.
+ */
+export async function contactPill(
+  input: { phone: string | null; shopName: string },
+  maxWidth: number,
+): Promise<Layer & { card: Rect }> {
+  const shopName = productAdShopName(input.shopName);
+  const contact = input.phone
+    ? `WhatsApp · ${input.phone}`
+    : shopName || "WhatsApp";
+  const pillText = await fitTextLayer(
+    [contact],
+    { face: "text", weight: "semibold", px: 44 },
+    maxWidth - 150,
+    30,
+  );
+  const icon = await sharp(Buffer.from(CHAT_ICON(52, AD_COLORS.ink)))
+    .png()
+    .toBuffer();
+  const pillHeight = 104;
+  const pillWidth = pillText.width + 52 + 22 + 92;
+  return paperCard(
+    { width: pillWidth, height: pillHeight },
+    [
+      {
+        layer: { image: icon, width: 52, height: 52 },
+        left: 46,
+        top: (pillHeight - 52) / 2,
+      },
+      {
+        layer: pillText,
+        left: 46 + 52 + 22,
+        top: (pillHeight - pillText.height) / 2,
+      },
+    ],
+    { radius: pillHeight / 2, shadow: { dy: 8, sigma: 9, alpha: 0.2 } },
+  );
 }
 
 /** A picture with layers laid on it, as a JPEG the owner downloads. */
@@ -1196,4 +1242,293 @@ export async function feedStill(input: {
     zone: input.zone,
   });
   return composeStill(image, [words.label, words.tag], AD_FEED_FRAME);
+}
+
+// ---------------------------------------------------------------------------
+// Studio v3: the studio sweep, and the cut-out as a layer of its own for the
+// Float and Pop motions. Code only, like everything here.
+
+/**
+ * A studio sweep in one of the Paper colourways: the wall's colour easing
+ * into the floor's like a photo cove, with a little window light (less on
+ * "night", a warm evening shop that is never black), and `extra` SVG drawn
+ * on it (ground shadows: the defs `ambient` and `contact` are here).
+ */
+export function studioSweepSvg(
+  size: Size,
+  colourway: ProductAdStudioColourway,
+  extra = "",
+): Buffer {
+  const sweep = PRODUCT_AD_STUDIO_SWEEPS[colourway];
+  const { width, height } = size;
+  const light = colourway === "night" ? 0.07 : 0.4;
+  const shade = colourway === "night" ? "10,6,3" : SHADE;
+  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+  <defs>
+    <linearGradient id="sweep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${sweep.top}"/>
+      <stop offset="0.52" stop-color="${sweep.top}"/>
+      <stop offset="0.82" stop-color="${sweep.bottom}"/>
+      <stop offset="1" stop-color="${sweep.bottom}"/>
+    </linearGradient>
+    <radialGradient id="light" cx="0.2" cy="0" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="${light}"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="contact">
+      <stop offset="0" stop-color="rgb(${shade})" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="rgb(${shade})" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ambient">
+      <stop offset="0" stop-color="rgb(${shade})" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="rgb(${shade})" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${width}" height="${height}" fill="url(#sweep)"/>
+  <rect width="${width}" height="${height}" fill="url(#light)"/>
+  ${extra}
+</svg>`);
+}
+
+type Lab = [number, number, number];
+
+/** sRGB (0-255) to CIE L*a*b* (D65). */
+function labOfRgb([r, g, b]: [number, number, number]): Lab {
+  const linear = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const [lr, lg, lb] = [linear(r), linear(g), linear(b)];
+  const x = (lr * 0.4124 + lg * 0.3576 + lb * 0.1805) / 0.95047;
+  const y = lr * 0.2126 + lg * 0.7152 + lb * 0.0722;
+  const z = (lr * 0.0193 + lg * 0.1192 + lb * 0.9505) / 1.08883;
+  const f = (t: number) =>
+    t > 216 / 24389 ? Math.cbrt(t) : (t * 24389) / 27 / 116 + 16 / 116;
+  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+}
+
+const labOfHex = (hex: string): Lab => {
+  const value = Number.parseInt(hex.replace("#", ""), 16);
+  return labOfRgb([(value >> 16) & 255, (value >> 8) & 255, value & 255]);
+};
+
+/** "night" stands out from nearly anything: it wins only for a pale product. */
+const NIGHT_WEIGHT = 0.7;
+
+/**
+ * The colourway a product stands out on best: the one whose sweep is
+ * farthest from the product's own average colour (CIE76 ΔE), with "night"
+ * held back so it's the pick for pale products only. "white" for an empty
+ * cut-out.
+ */
+export async function studioColourwayFor(
+  cutout: Buffer,
+): Promise<ProductAdStudioColourway> {
+  const { data, info } = await sharp(cutout)
+    .ensureAlpha()
+    .resize(64, 64, { fit: "inside" })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const sum = [0, 0, 0];
+  let count = 0;
+  for (let i = 0; i < info.width * info.height; i++) {
+    if (data[i * 4 + 3]! < 128) continue;
+    sum[0]! += data[i * 4]!;
+    sum[1]! += data[i * 4 + 1]!;
+    sum[2]! += data[i * 4 + 2]!;
+    count++;
+  }
+  if (count === 0) return "white";
+  const product = labOfRgb([sum[0]! / count, sum[1]! / count, sum[2]! / count]);
+  let best: ProductAdStudioColourway = "white";
+  let bestScore = -1;
+  for (const colourway of PRODUCT_AD_STUDIO_COLOURWAYS) {
+    const sweep = PRODUCT_AD_STUDIO_SWEEPS[colourway];
+    const top = labOfHex(sweep.top);
+    const low = labOfHex(sweep.bottom);
+    const distance = Math.hypot(
+      ...top.map((value, i) => (value + low[i]!) / 2 - product[i]!),
+    );
+    const score = distance * (colourway === "night" ? NIGHT_WEIGHT : 1);
+    if (score > bestScore) {
+      best = colourway;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/**
+ * A soft shadow cast by a cut-out: its own shape in the warm shade at
+ * `alpha`, blurred by `sigma`, on a canvas grown by the blur's reach
+ * (`margin` on each side).
+ */
+export async function silhouetteShadow(
+  image: Buffer,
+  options: { alpha: number; sigma: number },
+): Promise<Layer & { margin: number }> {
+  const meta = await sharp(image).metadata();
+  const width = meta.width ?? 1;
+  const height = meta.height ?? 1;
+  const margin = Math.ceil(options.sigma * 2.5);
+  const [r, g, b] = SHADE.split(",").map(Number) as [number, number, number];
+  const shape = await sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: { r, g, b, alpha: options.alpha },
+    },
+  })
+    .composite([{ input: image, blend: "dest-in" }])
+    .png()
+    .toBuffer();
+  const grown = await sharp({
+    create: {
+      width: width + margin * 2,
+      height: height + margin * 2,
+      channels: 4,
+      background: TRANSPARENT,
+    },
+  })
+    .composite([{ input: shape, left: margin, top: margin }])
+    .png()
+    .toBuffer();
+  return {
+    image: await sharp(grown).blur(options.sigma).png().toBuffer(),
+    width: width + margin * 2,
+    height: height + margin * 2,
+    margin,
+  };
+}
+
+export type FrameLayer = Layer & { rect: Rect };
+
+/** Float: how high above the plank the product hangs at the middle of its bob. */
+const FLOAT_LIFT = 16;
+
+/**
+ * Float's scene: the wall and plank with the ambient shadow (the picture
+ * under everything), the product's exact cut-out as a layer of its own,
+ * hanging FLOAT_LIFT px above where the exact still stands it (render.ts
+ * bobs it), and the contact shadow on the plank at its smallest, for the
+ * render to breathe. `product` is where the product stands, for the words.
+ */
+export async function floatSceneLayers(cutout: Buffer): Promise<{
+  background: Buffer;
+  subject: FrameLayer;
+  shadow: FrameLayer;
+  product: Rect;
+}> {
+  const product = await trimmedCutout(cutout);
+  const stand = exactRect(product.size);
+  const cx = stand.x + stand.w / 2;
+  const base = stand.y + stand.h;
+  const ambient = `<ellipse cx="${cx}" cy="${base + 21}" rx="${(stand.w * 1.04) / 2}" ry="33" fill="url(#ambient)"/>`;
+  const background = await sharp(wallSvg(AD_FRAME, PLANK_TOP_SCENE, ambient))
+    .png({ compressionLevel: 1 })
+    .toBuffer();
+  const subject = await sharp(product.image)
+    .resize(stand.w, stand.h, { fit: "fill", kernel: "lanczos3" })
+    .png()
+    .toBuffer();
+  // The ellipse at its smallest fills 3/4 of its layer, so zooming in by
+  // the swing never cuts it.
+  const rx = Math.max(8, Math.round(stand.w * 0.33));
+  const ry = 13;
+  const shadowWidth = Math.round(rx * 2 * 1.34);
+  const shadowHeight = Math.round(ry * 2 * 1.34) + 8;
+  const shadow = await sharp(
+    Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${shadowWidth}" height="${shadowHeight}">` +
+        `<defs><radialGradient id="c"><stop offset="0" stop-color="rgb(${SHADE})" stop-opacity="0.36"/>` +
+        `<stop offset="1" stop-color="rgb(${SHADE})" stop-opacity="0"/></radialGradient></defs>` +
+        `<ellipse cx="${shadowWidth / 2}" cy="${shadowHeight / 2}" rx="${rx}" ry="${ry}" fill="url(#c)"/></svg>`,
+    ),
+  )
+    .png()
+    .toBuffer();
+  return {
+    background,
+    subject: {
+      image: subject,
+      width: stand.w,
+      height: stand.h,
+      rect: { ...stand, y: stand.y - FLOAT_LIFT },
+    },
+    shadow: {
+      image: shadow,
+      width: shadowWidth,
+      height: shadowHeight,
+      rect: {
+        x: Math.round(cx - shadowWidth / 2),
+        y: Math.round(base - shadowHeight / 2),
+        w: shadowWidth,
+        h: shadowHeight,
+      },
+    },
+    product: stand,
+  };
+}
+
+/** Pop: the room around the cut-out, so growing by 8% never cuts it or its shadow. */
+const POP_PAD = 0.1;
+
+/**
+ * Pop's cut-out: the product's exact cut-out fitted into `rect` (where SAM
+ * found it in its scene, or where the exact still stands it), centred,
+ * with a soft shadow under it, on a padded transparent layer centred on the
+ * product: render.ts grows it from there. `product` is the fitted product,
+ * for the words.
+ */
+export async function popSubjectLayer(
+  cutout: Buffer,
+  rect: Rect,
+): Promise<{ subject: FrameLayer; product: Rect }> {
+  const trimmed = await trimmedCutout(cutout);
+  const fit = Math.min(
+    rect.w / trimmed.size.width,
+    rect.h / trimmed.size.height,
+  );
+  const w = Math.max(2, Math.round(trimmed.size.width * fit));
+  const h = Math.max(2, Math.round(trimmed.size.height * fit));
+  const product = {
+    x: Math.round(rect.x + (rect.w - w) / 2),
+    y: Math.round(rect.y + (rect.h - h) / 2),
+    w,
+    h,
+  };
+  const image = await sharp(trimmed.image)
+    .resize(w, h, { fit: "fill", kernel: "lanczos3" })
+    .png()
+    .toBuffer();
+  const shadow = await silhouetteShadow(image, { alpha: 0.3, sigma: 12 });
+  const pad = Math.max(
+    shadow.margin + 18,
+    Math.round(Math.max(w, h) * POP_PAD),
+  );
+  const width = w + pad * 2;
+  const height = h + pad * 2;
+  const layer = await sharp({
+    create: { width, height, channels: 4, background: TRANSPARENT },
+  })
+    .composite([
+      {
+        input: shadow.image,
+        left: pad - shadow.margin,
+        top: pad - shadow.margin + 16,
+      },
+      { input: image, left: pad, top: pad },
+    ])
+    .png()
+    .toBuffer();
+  return {
+    subject: {
+      image: layer,
+      width,
+      height,
+      rect: { x: product.x - pad, y: product.y - pad, w: width, h: height },
+    },
+    product,
+  };
 }

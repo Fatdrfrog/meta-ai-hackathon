@@ -1,8 +1,16 @@
 import {
+  PRODUCT_AD_CAPTION_HASHTAGS_MAX,
+  PRODUCT_AD_CAPTION_MAX,
+  PRODUCT_AD_CAROUSEL_MAX_SLIDES,
+  PRODUCT_AD_CAROUSEL_MIN_SLIDES,
+  PRODUCT_AD_POST_DESTINATIONS,
+  PRODUCT_AD_STILL_KINDS,
+  PRODUCT_AD_STUDIO_COLOURWAYS,
   PRODUCT_AD_IDEA_KINDS,
   PRODUCT_AD_IDEA_MAX_LENGTH,
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MIN_PRODUCTS,
+  PRODUCT_AD_MOTIONS,
   PRODUCT_AD_PICTURES_KEPT,
   PRODUCT_AD_PLACE_WORDS_MAX,
   PRODUCT_AD_SETTINGS,
@@ -13,10 +21,13 @@ import {
   productAdTextIssues,
   type ProductAdCreateRequest,
   type ProductAdIdeaKind,
+  type ProductAdMotion,
+  type ProductAdPublishRequest,
   type ProductAdSceneChange,
   type ProductAdSceneRequest,
   type ProductAdScript,
   type ProductAdSetting,
+  type ProductAdStillChoice,
   type ProductAdTextZone,
   type ProductAdUpdateRequest,
   type ProductAdVoiceMode,
@@ -38,6 +49,10 @@ export const isAdObjectId = (value: unknown): value is string =>
 export const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
 
 const length = (text: string) => Array.from(text).length;
+
+/** Whether a value is one of the ad's motions (studio v3's Reel tiles). */
+const isAdMotion = (value: unknown): value is ProductAdMotion =>
+  (PRODUCT_AD_MOTIONS as readonly unknown[]).includes(value);
 
 /** The ids an ad is asked for: 1 to 3 distinct product ids; null otherwise. */
 export function parseAdProductIds(value: unknown): string[] | null {
@@ -93,6 +108,7 @@ export function parseProductAdCreateRequest(
     return null;
   // The person from the video appears only with the owner's word that they agreed.
   if (presenter.use && !presenter.consent) return null;
+  if (body.motion !== undefined && !isAdMotion(body.motion)) return null;
   return {
     requestId,
     productIds,
@@ -100,6 +116,7 @@ export function parseProductAdCreateRequest(
     voice,
     ...(voice === "stock" ? { stockVoiceId: body.stockVoiceId as string } : {}),
     presenter: { use: presenter.use, consent: presenter.consent },
+    ...(body.motion === undefined ? {} : { motion: body.motion }),
   };
 }
 
@@ -109,6 +126,7 @@ const UPDATE_KEYS: ReadonlySet<string> = new Set([
   ...WORD_FIELDS,
   "captions",
   "scenes",
+  "motion",
 ]);
 
 const SCENE_CHANGE_KEYS: ReadonlySet<string> = new Set([
@@ -211,6 +229,10 @@ export function parseProductAdUpdateRequest(
     if (new Set(parsed.map(entry => entry.productId)).size !== parsed.length)
       return null;
     changes.scenes = parsed;
+  }
+  if (body.motion !== undefined) {
+    if (!isAdMotion(body.motion)) return null;
+    changes.motion = body.motion;
   }
   return Object.keys(changes).length > 0 ? changes : null;
 }
@@ -420,3 +442,107 @@ export const sameAdWords = (a: ProductAdScript, b: ProductAdScript) =>
   a.priceCardTitle === b.priceCardTitle &&
   a.ending === b.ending &&
   a.scenes.every((scene, index) => scene.caption === b.scenes[index]?.caption);
+
+// ---------------------------------------------------------------------------
+// Posting the ad on Instagram (studio v3): the press, checked.
+
+const HASHTAG = /#[\p{L}\p{N}_]+/gu;
+
+const isOneOf = <T extends string>(
+  values: readonly T[],
+  value: unknown
+): value is T => (values as readonly unknown[]).includes(value);
+
+function parseStillChoice(value: unknown): ProductAdStillChoice | null {
+  if (!isRecord(value)) return null;
+  if (!isOneOf(PRODUCT_AD_STILL_KINDS, value.kind)) return null;
+  const productId =
+    value.productId === null || value.productId === undefined
+      ? null
+      : isAdObjectId(value.productId)
+        ? value.productId.toLowerCase()
+        : undefined;
+  if (productId === undefined) return null;
+  const colourway =
+    value.colourway === null || value.colourway === undefined
+      ? null
+      : isOneOf(PRODUCT_AD_STUDIO_COLOURWAYS, value.colourway)
+        ? value.colourway
+        : undefined;
+  if (colourway === undefined) return null;
+  return { kind: value.kind, productId, colourway };
+}
+
+/** Why a caption can't be posted: too long, or too many hashtags. */
+export function captionIssues(caption: string): string[] {
+  const issues: string[] = [];
+  if (caption.length > PRODUCT_AD_CAPTION_MAX)
+    issues.push(`caption: at most ${PRODUCT_AD_CAPTION_MAX} characters`);
+  if ((caption.match(HASHTAG) ?? []).length > PRODUCT_AD_CAPTION_HASHTAGS_MAX)
+    issues.push(`caption: at most ${PRODUCT_AD_CAPTION_HASHTAGS_MAX} hashtags`);
+  return issues;
+}
+
+/**
+ * The body of POST /products/ads/[adId]/publish, checked: the press, or why
+ * it isn't one. A Reel takes no picture, a Story at most one, a post exactly
+ * one, a carousel 2 to 4 (or none: the default slides).
+ */
+export function parseProductAdPublishRequest(
+  body: unknown
+): { request: ProductAdPublishRequest } | { issues: string[] } {
+  if (!isRecord(body)) return { issues: ["body: an object"] };
+  const issues: string[] = [];
+  const requestId =
+    typeof body.requestId === "string" ? body.requestId.trim() : "";
+  if (!requestId || requestId.length > 64)
+    issues.push("requestId: 1 to 64 characters");
+  const destination = body.destination;
+  if (!isOneOf(PRODUCT_AD_POST_DESTINATIONS, destination)) {
+    issues.push(
+      `destination: one of ${PRODUCT_AD_POST_DESTINATIONS.join(", ")}`
+    );
+    return { issues };
+  }
+  const request: ProductAdPublishRequest = { requestId, destination };
+
+  if (body.still !== undefined && body.still !== null) {
+    const still = parseStillChoice(body.still);
+    if (!still) issues.push("still: a kind, a product id or null, a colourway");
+    else if (destination === "story" || destination === "post")
+      request.still = still;
+    else issues.push(`still: a ${destination} takes no single picture`);
+  } else if (destination === "post") {
+    issues.push("still: a post needs its picture");
+  }
+
+  if (body.slides !== undefined && body.slides !== null) {
+    if (destination !== "carousel") {
+      issues.push(`slides: only a carousel has slides`);
+    } else if (
+      !Array.isArray(body.slides) ||
+      body.slides.length < PRODUCT_AD_CAROUSEL_MIN_SLIDES ||
+      body.slides.length > PRODUCT_AD_CAROUSEL_MAX_SLIDES
+    ) {
+      issues.push(
+        `slides: ${PRODUCT_AD_CAROUSEL_MIN_SLIDES} to ${PRODUCT_AD_CAROUSEL_MAX_SLIDES} pictures`
+      );
+    } else {
+      const slides = body.slides.map(parseStillChoice);
+      if (slides.some(slide => slide === null))
+        issues.push("slides: each a kind, a product id or null, a colourway");
+      else request.slides = slides as ProductAdStillChoice[];
+    }
+  }
+
+  if (body.caption !== undefined && body.caption !== null) {
+    if (typeof body.caption !== "string") issues.push("caption: text");
+    else {
+      const caption = body.caption.trim();
+      issues.push(...captionIssues(caption));
+      request.caption = caption;
+    }
+  }
+
+  return issues.length ? { issues } : { request };
+}

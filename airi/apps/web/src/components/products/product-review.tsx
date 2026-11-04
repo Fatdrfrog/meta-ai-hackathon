@@ -46,7 +46,6 @@ import {
   type ReactNode,
 } from "react";
 import { ProductSegmented } from "./product-controls";
-import { MakeOutputs } from "./product-make";
 import {
   animateOnSpring,
   EASE_OUT,
@@ -121,19 +120,21 @@ function isUndoKey(event: KeyboardEvent): boolean {
 export function ProductReview({
   workspaceId,
   importId,
+  initialProductId,
   onClose,
   onChangeProducts,
-  onMakeAd,
 }: {
   workspaceId: string;
   importId: string;
+  /** A red price tag opens the draft that needs attention first. */
+  initialProductId?: string;
   onClose: () => void;
-  /** "Change" in what to make: the shelf's Choose mode, with these chosen. */
+  /** Back to the page once every product is checked, with what was added picked. */
   onChangeProducts: (productIds: string[]) => void;
-  /** "Make a video ad": the ad's brief with these products. */
-  onMakeAd: (productIds: string[]) => void;
+  /** v2's "Make a video ad" from the review; studio v3 makes on the page, so it's unused. */
+  onMakeAd?: (productIds: string[]) => void;
 }) {
-  const review = useProductReview(workspaceId, importId);
+  const review = useProductReview(workspaceId, importId, initialProductId);
   const { products, queue, lastMove } = review;
   const top = queue[0] ?? null;
   const [soundOn, setSoundOn] = useState(true);
@@ -259,14 +260,11 @@ export function ProductReview({
   } else if (!top) {
     content = (
       <ReviewDone
-        workspaceId={workspaceId}
-        importId={importId}
         products={products}
         canUndo={lastMove !== null}
         onUndo={undo}
         onClose={onClose}
-        onChangeProducts={onChangeProducts}
-        onMakeAd={onMakeAd}
+        onPick={onChangeProducts}
       />
     );
   } else {
@@ -1548,27 +1546,23 @@ function OptionPicker({
 }
 
 /**
- * Once every product is checked: a strip saying what went on the shelf, then
- * what to make with it (the carousel and order form, or a video ad).
+ * Once every product is checked: a strip saying what went on the shelf. Back
+ * on the page, what was added is picked (studio v3): its tiles are made from
+ * there, so nothing is made here.
  */
 function ReviewDone({
-  workspaceId,
-  importId,
   products,
   canUndo,
   onUndo,
   onClose,
-  onChangeProducts,
-  onMakeAd,
+  onPick,
 }: {
-  workspaceId: string;
-  importId: string;
   products: DraftProductRecord[];
   canUndo: boolean;
   onUndo: () => void;
   onClose: () => void;
-  onChangeProducts: (productIds: string[]) => void;
-  onMakeAd: (productIds: string[]) => void;
+  /** Back to the page with these products picked. */
+  onPick: (productIds: string[]) => void;
 }) {
   const added = products.filter(product => product.status === "published");
   const skipped = products.filter(
@@ -1605,7 +1599,15 @@ function ReviewDone({
           ) : null}
         </p>
         <div className="flex gap-1.5 max-sm:grid max-sm:w-full max-sm:grid-cols-[1fr_auto]">
-          <Button variant="outline" onClick={onClose} autoFocus>
+          <Button
+            variant={added.length > 0 ? "default" : "outline"}
+            onClick={() =>
+              added.length > 0
+                ? onPick(added.map(product => product.id))
+                : onClose()
+            }
+            autoFocus
+          >
             {COPY.backToProducts}
           </Button>
           {canUndo ? (
@@ -1616,15 +1618,6 @@ function ReviewDone({
           ) : null}
         </div>
       </div>
-      {added.length > 0 ? (
-        <MakeOutputs
-          workspaceId={workspaceId}
-          importId={importId}
-          productIds={added.map(product => product.id)}
-          onChangeProducts={onChangeProducts}
-          onMakeAd={onMakeAd}
-        />
-      ) : null}
     </div>
   );
 }

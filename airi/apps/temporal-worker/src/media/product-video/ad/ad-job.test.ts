@@ -130,6 +130,10 @@ type Harness = {
     place: number;
   };
   rendered: number;
+  /** What the stills were asked to draw, per run. */
+  stillsAsked: Array<Record<string, unknown>>;
+  /** When each poster was taken. */
+  posterAt: Array<number | undefined>;
 };
 
 async function harness(
@@ -198,6 +202,8 @@ async function harness(
     settled,
     muse,
     rendered: 0,
+    stillsAsked: [],
+    posterAt: [],
     ports: undefined as never,
   };
   h.ports = {
@@ -357,8 +363,36 @@ async function harness(
       await writeFile(outPath, Buffer.from("mp4"));
       return { bytes: 3, size: { width: 1080, height: 1920 }, crf: 21, ms: 5 };
     },
-    poster: async (_video, outPath) => {
+    poster: async (_video, outPath, _deps, atSeconds) => {
+      h.posterAt.push(atSeconds);
       await writeFile(outPath, Buffer.from("jpg"));
+    },
+    stills: async (input) => {
+      h.stillsAsked.push(input as unknown as Record<string, unknown>);
+      const image = Buffer.from("still");
+      return [
+        {
+          kind: "room",
+          format: "feed",
+          productId: "p1",
+          colourway: null,
+          image,
+        },
+        {
+          kind: "studio",
+          format: "feed",
+          productId: "p1",
+          colourway: "sage",
+          image,
+        },
+        {
+          kind: "collection",
+          format: "feed",
+          productId: null,
+          colourway: null,
+          image,
+        },
+      ];
     },
   };
   return h;
@@ -1198,4 +1232,168 @@ test("a voice run pays for no scene and no words, even a scene left without its 
   assert.equal(h.doc.scenes[1].method, "exact");
   assert.equal(h.doc.status, "ready");
   assert.equal(h.doc.lastRun.kind, "voice");
+});
+
+// ---------------------------------------------------------------------------
+// Studio v3: motions and stills.
+
+/** Wraps the harness's compose to keep what each run gave it. */
+function keepComposeInput(h: Harness) {
+  const inner = h.ports.compose!;
+  const given: Array<Parameters<typeof composeAd>[0]> = [];
+  h.ports.compose = async (input, deps) => {
+    given.push(input);
+    return inner(input, deps);
+  };
+  return given;
+}
+
+test("a run saves its stills by the contract's names and writes the stillSet top-level, with this render's number", async (t) => {
+  const h = await harness(t, {
+    ad: baseAd({ renderNo: 3, voice: "none" }),
+    renderNo: 3,
+  });
+  const result = await runProductAd(h.ports);
+  assert.deepEqual(result, { status: "ready" });
+  assert.equal(h.doc.stillSet.renderNo, 3);
+  assert.deepEqual(
+    h.doc.stillSet.items.map((item: Record<string, unknown>) => ({
+      ...item,
+      ref: {
+        ...(item.ref as object),
+        path: String((item.ref as { path: string }).path).replace(
+          /^saved\/\d+-/,
+          "",
+        ),
+      },
+    })),
+    [
+      {
+        kind: "room",
+        format: "feed",
+        productId: "p1",
+        colourway: null,
+        ref: { bucket: "b", path: "3-room-feed-p1-x.jpg" },
+      },
+      {
+        kind: "studio",
+        format: "feed",
+        productId: "p1",
+        colourway: "sage",
+        ref: { bucket: "b", path: "3-studio-feed-p1-sage.jpg" },
+      },
+      {
+        kind: "collection",
+        format: "feed",
+        productId: null,
+        colourway: null,
+        ref: { bucket: "b", path: "3-collection-feed-all-x.jpg" },
+      },
+    ],
+  );
+  for (const item of h.doc.stillSet.items)
+    assert.deepEqual(h.files.get(item.ref.path), Buffer.from("still"));
+  // v2's two pictures are written as before, whole, beside it.
+  assert.deepEqual(Object.keys(h.doc.stills).sort(), ["feed", "status"]);
+  assert.ok(h.doc.stills.status && h.doc.stills.feed);
+  // The stills are drawn from the same products and words as the video.
+  const asked = h.stillsAsked[0]!;
+  assert.equal(asked.sticker, GOOD_SCRIPT.sticker);
+  assert.equal(asked.priceCardTitle, GOOD_SCRIPT.priceCardTitle);
+  assert.equal(asked.ending, GOOD_SCRIPT.ending);
+  assert.equal(asked.shopName, "Demo Shop");
+  assert.deepEqual(
+    (asked.products as Array<{ productId: string; priceText: string }>).map(
+      (product) => [product.productId, product.priceText],
+    ),
+    h.doc.products.map((product: { productId: string; priceText: string }) => [
+      product.productId,
+      product.priceText,
+    ]),
+  );
+});
+
+test("the ad's motion, each product's filmed frame and whether its scene is made reach the video", async (t) => {
+  const h = await harness(t, {
+    ad: baseAd({ voice: "none", motion: "filmed_sold" }),
+  });
+  const given = keepComposeInput(h);
+  await runProductAd(h.ports);
+  const input = given[0]!;
+  assert.equal(input.motion, "filmed_sold");
+  for (const product of input.products) {
+    // The item as filmed, as the import saved it.
+    assert.ok(Buffer.isBuffer(product.original), product.productId);
+    // Muse Image's scene passed its check: the picture is made.
+    assert.equal(product.made, true, product.productId);
+  }
+  // The poster is taken where compose says, at 1.2 s when it doesn't say.
+  assert.deepEqual(h.posterAt, [1.2]);
+});
+
+test("an ad from before motions, or with one this worker doesn't know, renders as the shelf; an exact photo isn't made", async (t) => {
+  for (const motion of [undefined, "spin"]) {
+    const h = await harness(t, {
+      ad: baseAd({
+        voice: "none",
+        ...(motion ? { motion: motion as never } : {}),
+      }),
+      checks: { "blonde doll": [false, false, false, false] },
+      missing: ["p2/original.jpg"],
+    });
+    const given = keepComposeInput(h);
+    await runProductAd(h.ports);
+    const input = given[0]!;
+    assert.equal(input.motion, "shelf");
+    const [p1, p2] = input.products;
+    // The doll failed every check: its scene is the exact photo.
+    assert.equal(p1!.made, false);
+    assert.equal(p2!.made, true);
+    // The cup's filmed frame is gone from storage: it has none.
+    assert.equal(p2!.original, null);
+  }
+});
+
+test("compose's poster time is the one the poster is taken at", async (t) => {
+  const h = await harness(t, {
+    ad: baseAd({ voice: "none", motion: "filmed_sold" }),
+  });
+  const inner = h.ports.compose!;
+  h.ports.compose = async (input, deps) => ({
+    ...(await inner(input, deps)),
+    posterSeconds: 1.58,
+  });
+  await runProductAd(h.ports);
+  assert.deepEqual(h.posterAt, [1.58]);
+});
+
+test("stills that can't be drawn never fail the video: no stillSet, and the run says why", async (t) => {
+  const h = await harness(t, { ad: baseAd({ voice: "none" }) });
+  const logged: Array<[string, Record<string, unknown>]> = [];
+  h.ports.log = (event, fields) => logged.push([event, fields]);
+  h.ports.stills = async () => {
+    throw new Error("Pango is out of fonts");
+  };
+  const result = await runProductAd(h.ports);
+  assert.deepEqual(result, { status: "ready" });
+  assert.equal(h.doc.status, "ready");
+  assert.ok(h.doc.render?.video);
+  assert.equal(h.doc.stillSet, undefined);
+  assert.deepEqual(logged, [
+    ["products.ad_stills_failed", { error: "Pango is out of fonts" }],
+  ]);
+});
+
+test("no stills drawn leaves an earlier render's stillSet as it was: the page shows it with that render only", async (t) => {
+  const earlier = { renderNo: 1, items: [] };
+  const h = await harness(t, {
+    ad: {
+      ...baseAd({ voice: "none", renderNo: 2 }),
+      stillSet: earlier,
+    } as AdRecord,
+    renderNo: 2,
+  });
+  h.ports.stills = async () => [];
+  await runProductAd(h.ports);
+  assert.deepEqual(h.doc.stillSet, earlier);
 });

@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {
+  PRODUCT_AD_STUDIO_COLOURWAYS,
+  PRODUCT_AD_STUDIO_SWEEPS,
+} from "@icecore/temporal";
 import sharp from "sharp";
 
 import {
@@ -13,16 +17,26 @@ import {
   exactScene,
   exactSceneBox,
   feedStill,
+  floatSceneLayers,
   LABEL_MAX_WIDTH,
   labelLayer,
+  popSubjectLayer,
   presenterCircle,
   priceCardLayers,
   productSceneLayers,
   splitPrice,
+  studioColourwayFor,
+  studioSweepSvg,
   tagLayer,
   textLayer,
 } from "./layers";
-import { AD_FRAME, inside, REELS_SAFE } from "./layout";
+import {
+  AD_FEED_FRAME,
+  AD_FRAME,
+  FEED_SAFE,
+  inside,
+  REELS_SAFE,
+} from "./layout";
 
 const blob = async (width: number, height: number, color: string) =>
   sharp({
@@ -350,4 +364,156 @@ test("the owner's zone moves a scene's words, on the 4:5 picture too", async () 
     sticker: null,
   });
   assert.equal(auto.layout.zone, "top");
+});
+
+// ---------------------------------------------------------------------------
+// Studio v3.
+
+test("the studio colourway is the one the product stands out on: night for a pale one, never for a dark one", async () => {
+  assert.equal(
+    await studioColourwayFor(await blob(300, 500, "#f4f4f2")),
+    "night",
+  );
+  assert.equal(
+    await studioColourwayFor(await blob(300, 500, "#1d1d1f")),
+    "white",
+  );
+  // A colourful product gets a light sweep.
+  assert.notEqual(
+    await studioColourwayFor(await blob(300, 500, "#3b82f6")),
+    "night",
+  );
+  // Nothing opaque: the plain white sweep.
+  const empty = await sharp({
+    create: {
+      width: 40,
+      height: 40,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .png()
+    .toBuffer();
+  assert.equal(await studioColourwayFor(empty), "white");
+});
+
+test("the studio sweep is drawn in the colourway's own colours, the contract's for the page's tiles too", async () => {
+  for (const colourway of PRODUCT_AD_STUDIO_COLOURWAYS) {
+    const svg = studioSweepSvg(
+      { width: 1080, height: 1350 },
+      colourway,
+    ).toString();
+    assert.ok(svg.includes(PRODUCT_AD_STUDIO_SWEEPS[colourway].top), colourway);
+    assert.ok(
+      svg.includes(PRODUCT_AD_STUDIO_SWEEPS[colourway].bottom),
+      colourway,
+    );
+    const { data, info } = await sharp(
+      studioSweepSvg({ width: 1080, height: 1350 }, colourway),
+    )
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    assert.deepEqual([info.width, info.height], [1080, 1350]);
+    // "night" is a warm evening, never black.
+    const bottom = (info.height - 1) * info.width * info.channels;
+    assert.ok(
+      data[bottom]! + data[bottom + 1]! + data[bottom + 2]! > 40,
+      colourway,
+    );
+  }
+});
+
+test("Float's layers: the cut-out hangs above where the exact still stands it, the shadow under it on the plank", async () => {
+  const cut = await blob(400, 640, "#3b82f6");
+  const floated = await floatSceneLayers(cut);
+  const box = await exactSceneBox(cut);
+  // Where the exact still stands the product, lifted.
+  assert.ok(Math.abs(floated.product.x - box!.x * 1080) < 1);
+  assert.equal(floated.subject.rect.y, floated.product.y - 16);
+  assert.equal(floated.subject.rect.h, floated.product.h);
+  const subject = await sharp(floated.subject.image).metadata();
+  assert.deepEqual(
+    [subject.width, subject.height],
+    [floated.subject.width, floated.subject.height],
+  );
+  // The shadow: centred under the product's base, inside its layer at its smallest.
+  const base = floated.product.y + floated.product.h;
+  assert.ok(
+    Math.abs(floated.shadow.rect.y + floated.shadow.rect.h / 2 - base) <= 1,
+  );
+  assert.ok(
+    Math.abs(
+      floated.shadow.rect.x +
+        floated.shadow.rect.w / 2 -
+        (floated.product.x + floated.product.w / 2),
+    ) <= 1,
+  );
+  const wall = await sharp(floated.background).metadata();
+  assert.deepEqual([wall.width, wall.height], [1080, 1920]);
+});
+
+test("Pop's layer: the cut-out fitted in its box, centred, with room to grow 8% and a shadow under it", async () => {
+  const cut = await blob(400, 640, "#3b82f6");
+  const rect = { x: 300, y: 600, w: 480, h: 500 };
+  const { subject, product } = await popSubjectLayer(cut, rect);
+  assert.ok(inside(product, rect));
+  // Fitted: one side fills the box.
+  assert.ok(product.w === rect.w || Math.abs(product.h - rect.h) <= 1);
+  // The layer's centre is the product's, so the growth stays on it.
+  assert.ok(
+    Math.abs(
+      subject.rect.x + subject.rect.w / 2 - (product.x + product.w / 2),
+    ) <= 1,
+  );
+  assert.ok(
+    Math.abs(
+      subject.rect.y + subject.rect.h / 2 - (product.y + product.h / 2),
+    ) <= 1,
+  );
+  // 8% larger still fits the layer.
+  assert.ok(
+    product.w * 1.08 < subject.width && product.h * 1.08 < subject.height,
+  );
+  const meta = await sharp(subject.image).metadata();
+  assert.deepEqual([meta.width, meta.height], [subject.width, subject.height]);
+  // The corners are clear: nothing is cut at the layer's edge.
+  const ink = await alphaBox(subject.image);
+  assert.ok(ink!.left > 0 && ink!.top > 0);
+  assert.ok(
+    ink!.left + ink!.width < subject.width &&
+      ink!.top + ink!.height < subject.height,
+  );
+});
+
+test("the price card drawn at 4:5 (Collection) keeps its title and tags inside the picture's margins", async () => {
+  const card = await priceCardLayers({
+    title: "Қуыршақ іздеп жүрсіз бе?",
+    products: [
+      {
+        cutout: await blob(400, 640, "#3b82f6"),
+        name: "Кукла Лол",
+        priceText: "5 000 ₸",
+      },
+      {
+        cutout: await blob(500, 500, "#e5e7eb"),
+        name: "Кружка",
+        priceText: "500 ₸",
+      },
+      {
+        cutout: await blob(300, 600, "#ec4899"),
+        name: "Телефон",
+        priceText: "2 000 ₸ бастап",
+      },
+    ],
+    frame: {
+      size: AD_FEED_FRAME,
+      safe: FEED_SAFE,
+      plankTop: 900,
+      maxHeight: 560,
+    },
+  });
+  const meta = await sharp(card.background).metadata();
+  assert.deepEqual([meta.width, meta.height], [1080, 1350]);
+  assert.ok(inside(card.title.rect, FEED_SAFE));
+  assert.ok(inside(card.tags.rect, FEED_SAFE));
 });

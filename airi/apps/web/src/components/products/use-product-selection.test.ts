@@ -1,92 +1,111 @@
 /** @jest-environment jsdom */
 import { act, renderHook } from "@testing-library/react";
-import { useProductSelection } from "./use-product-selection";
+import { PRODUCT_PICKS_MAX } from "@/lib/products/templates";
+import {
+  canGoInAd,
+  cleanPicks,
+  picksIn,
+  useProductSelection,
+} from "./use-product-selection";
+
+const id = (n: number) => `651f1f77bcf86cd7994390${String(n).padStart(2, "0")}`;
 
 const product = (
-  id: string,
+  n: number,
   overrides: {
     imageUrl?: string | null;
     hasCutout?: boolean;
     price?: number | null;
   } = {}
 ) => ({
-  id,
-  name: `Product ${id}`,
+  id: id(n),
+  name: `Product ${n}`,
   price: 100,
   currency: "KZT",
   priceIsFrom: false,
-  imageUrl: `https://storage.test/${id}.webp`,
+  imageUrl: `https://storage.test/${n}.webp`,
   hasCutout: true,
   updatedAt: null,
   ...overrides,
 });
 
-const SHELF = [
-  product("a"),
-  product("b"),
-  product("c", { price: null }),
-  product("d"),
-  product("e", { imageUrl: null, hasCutout: false }),
-  // No clear view: its photo is the whole frame, not a cut-out.
-  product("f", { hasCutout: false }),
-];
+const SHELF = [product(1), product(2), product(3), product(4)];
 
-test("starts and stops choosing, forgetting the choice", () => {
+test("picks in tap order, numbered from 1, and a second tap lets one go", () => {
   const { result } = renderHook(() => useProductSelection(SHELF));
-  expect(result.current.choosing).toBe(false);
+  expect(result.current.picks).toEqual([]);
 
-  act(() => result.current.start(["b"]));
-  expect(result.current.choosing).toBe(true);
-  expect(result.current.chosenIds).toEqual(["b"]);
+  act(() => result.current.toggle(id(3)));
+  act(() => result.current.toggle(id(1)));
+  act(() => result.current.toggle(id(4)));
+  expect(result.current.picks).toEqual([id(3), id(1), id(4)]);
+  expect(result.current.picked.map(entry => entry.id)).toEqual([
+    id(3),
+    id(1),
+    id(4),
+  ]);
+  expect(result.current.numbers.get(id(3))).toBe(1);
+  expect(result.current.numbers.get(id(4))).toBe(3);
 
-  act(() => result.current.stop());
-  expect(result.current.choosing).toBe(false);
-  expect(result.current.chosenIds).toEqual([]);
+  act(() => result.current.toggle(id(1)));
+  expect(result.current.picks).toEqual([id(3), id(4)]);
+  // The numbers close up.
+  expect(result.current.numbers.get(id(4))).toBe(2);
+  expect(result.current.numbers.has(id(1))).toBe(false);
 });
 
-test("gives the chosen products in shelf order, whatever order they were chosen in", () => {
-  const { result } = renderHook(() => useProductSelection(SHELF));
-  act(() => result.current.start());
-  act(() => result.current.toggle("d"));
-  act(() => result.current.toggle("a"));
-  expect(result.current.chosenIds).toEqual(["a", "d"]);
-  act(() => result.current.toggle("d"));
-  expect(result.current.chosenIds).toEqual(["a"]);
-  act(() => result.current.clear());
-  expect(result.current.chosenIds).toEqual([]);
-  expect(result.current.choosing).toBe(true);
-});
-
-test("keeps a chosen product that isn't on the shelf yet, and gives it once it is", () => {
-  const { result, rerender } = renderHook(
-    ({ products }) => useProductSelection(products),
-    { initialProps: { products: SHELF.slice(0, 2) } }
+test("starts from the address's picks, and a drag's pick never lets one go", () => {
+  const { result } = renderHook(() =>
+    useProductSelection(SHELF, () => [id(2), "not-an-id", id(2), id(1)])
   );
-  act(() => result.current.start(["a", "d"]));
-  expect(result.current.chosenIds).toEqual(["a"]);
-  rerender({ products: SHELF });
-  expect(result.current.chosenIds).toEqual(["a", "d"]);
+  expect(result.current.picks).toEqual([id(2), id(1)]);
+
+  act(() => result.current.pick(id(2)));
+  expect(result.current.picks).toEqual([id(2), id(1)]);
+  act(() => result.current.pick(id(4)));
+  expect(result.current.picks).toEqual([id(2), id(1), id(4)]);
+
+  act(() => result.current.set([id(4), id(3)]));
+  expect(result.current.picks).toEqual([id(4), id(3)]);
+  act(() => result.current.clear());
+  expect(result.current.picks).toEqual([]);
 });
 
-test("a video ad takes 1 to 3 products, each with a photo and a price", () => {
-  const { result } = renderHook(() => useProductSelection(SHELF));
-  act(() => result.current.start());
-  expect(result.current.adReady).toBe(false);
-  act(() => result.current.start(["a"]));
-  expect(result.current.adReady).toBe(true);
-  act(() => result.current.start(["a", "b", "d"]));
-  expect(result.current.adReady).toBe(true);
-  act(() => result.current.start(["a", "b", "d", SHELF[0]!.id]));
-  // The same product twice is one.
-  expect(result.current.adReady).toBe(true);
-  act(() => result.current.start(["a", "b", "c"]));
-  expect(result.current.adReady).toBe(false);
-  act(() => result.current.start(["e"]));
-  expect(result.current.adReady).toBe(false);
-  act(() => result.current.start(["a", "b", "d", "e"]));
-  expect(result.current.adReady).toBe(false);
-  // A photo of the whole frame is shown on the shelf, but the ad's brief
-  // refuses it (no_photo): it isn't offered.
-  act(() => result.current.start(["a", "f"]));
-  expect(result.current.adReady).toBe(false);
+test("a pick that left the shelf stays picked but isn't given or numbered", () => {
+  const { result, rerender } = renderHook(
+    ({ products }) => useProductSelection(products, () => [id(1), id(2)]),
+    { initialProps: { products: SHELF } }
+  );
+  rerender({ products: [product(2), product(3)] });
+  expect(result.current.picks).toEqual([id(1), id(2)]);
+  expect(result.current.picked.map(entry => entry.id)).toEqual([id(2)]);
+  expect(result.current.numbers.get(id(2))).toBe(1);
+  rerender({ products: SHELF });
+  expect(result.current.picked.map(entry => entry.id)).toEqual([id(1), id(2)]);
+});
+
+test("keeps at most the page's limit of picks", () => {
+  const many = Array.from(
+    { length: PRODUCT_PICKS_MAX + 5 },
+    (_, n) => `${"a".repeat(20)}${String(n).padStart(4, "0")}`
+  );
+  expect(cleanPicks(many)).toHaveLength(PRODUCT_PICKS_MAX);
+  const { result } = renderHook(() => useProductSelection([], () => many));
+  expect(result.current.picks).toHaveLength(PRODUCT_PICKS_MAX);
+  act(() => result.current.toggle(id(1)));
+  expect(result.current.picks).not.toContain(id(1));
+});
+
+test("reads the picks from an address, in order, leaving out what isn't an id", () => {
+  expect(picksIn(null)).toEqual([]);
+  expect(picksIn(new URLSearchParams(""))).toEqual([]);
+  expect(
+    picksIn(new URLSearchParams(`picks=${id(3)},${id(1)},nope,${id(3)}`))
+  ).toEqual([id(3), id(1)]);
+});
+
+test("a video ad takes products with a cut-out photo and a price", () => {
+  expect(canGoInAd(product(1))).toBe(true);
+  expect(canGoInAd(product(2, { price: null }))).toBe(false);
+  expect(canGoInAd(product(3, { hasCutout: false }))).toBe(false);
 });

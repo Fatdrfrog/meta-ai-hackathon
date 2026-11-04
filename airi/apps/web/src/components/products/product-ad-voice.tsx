@@ -124,7 +124,7 @@ const isLive = (voice: ProductVoiceRecord | null | undefined) =>
   voice?.state === "pending" || voice?.state === "ready";
 
 /** The consent to copy the owner's voice, asked once per workspace. */
-function ConsentDialog({
+export function ConsentDialog({
   open,
   onOpenChange,
   workspaceId,
