@@ -43,8 +43,11 @@ Cut-outs keep the product's real pixels; SAM's mask only decides what becomes tr
 | OpenAI gpt-4o-transcribe | 3 of 3 | 2 runs good; 1 run collapsed "бес жүз" to "5"; garbled Kazakh spelling | 4 s |
 | Muse Spark Open (Baseten) | 2 of 2 | 4–5 of 7, missed both confirmed prices | 12–15 s |
 | Muse Spark 1.3 | 1 of 3 | Mostly nothing heard | 8–12 s |
+| Muse Voice Transcribe 1.0, on the English dub of the same video (it takes neither Kazakh nor Russian) | 1 of 1 | 6/7: the rooster's "four ninety-nine" came back as a bare "499"; one run, Nov 4, $0.003 | 16 s |
 
 Scribe also returns word timestamps, so each sentence ("[38.0] Кукла Лолдың бағасы бес мың теңге.") can be matched to the moment the product is on screen.
+
+Meta's own docs point the same way. Its model page says "Audio understanding in Muse Spark 1.3 is not fully supported" and warns that answers to requests with audio may be worse ([dev.meta.ai/docs/models](https://dev.meta.ai/docs/models), read Nov 4), and Muse Voice Transcribe, Meta's speech model, lists 25 languages without Russian or Kazakh ([dev.meta.ai/docs/speech-to-text](https://dev.meta.ai/docs/speech-to-text)). So on Nov 4 we tried it on the one recording of this video it can take: the synthetic English dub (below), sent once as a 24 kHz mono WAV, with no language set. It heard every price line and wrote 6 of the 7 prices right, in 16 s for 65 s of audio, for $0.003 ($0.18 an hour, billed by the second). It wrote the rooster's "four ninety-nine" as "499", losing the decimal point and the currency; it mixed shapes within the clip ("$12.50" and "$15" in digits, four prices in words); it doubled one word and added a stray "dollars."; and it gave times per phrase, not per word. Scribe v2 got all 7 on the same dub.
 
 ### The whole pipeline, one run
 
@@ -213,4 +216,55 @@ After the review, both ads were rendered again from the test's saved scenes, wor
 - Both ads had 2 products; an ad of 1 or 3 wasn't made.
 - The Kazakh words haven't been checked by a native speaker.
 - The 4:5 ad picture was compared with the test's byte for byte, not checked against its margins.
-- These were local runs. The studio has been live on airi.chat since Nov 3; no ad made there is reported here.
+- These were local runs. The ads made in production since the studio went live are under [Production, read on Nov 4](#production-read-on-nov-4).
+
+## Nov 3: studio v2's paid gate
+
+Studio v2 (airi.chat's pull request 511, live on Nov 3 and not yet ported to this repository) added new words, new pictures and new voices to the video ad. Before it went live, we ran each new paid step through the real ad code on a local worker with the hackathon's Meta and ElevenLabs keys, on the two test ads above, with the same harness standing in for airi's database, storage, AI spend ledger and Temporal. Every paid call was booked in the ad's one AI action. After each run, Scribe transcribed the ad's sound, and code checked that every spoken price matched the shelf. The whole gate cost $0.446: $0.253 of Meta calls and $0.193 of ElevenLabs.
+
+| Run | What it did | Cost | Time |
+| --- | --- | --- | --- |
+| Toy shelf, a full make | v2's words (3 openings and 3 endings to pick from), two Muse Image scenes, two checks, two SAM boxes, and the owner's own recording through the Voice Isolator | $0.078 | 73 s: words 22 s, pictures 30 s, framing 6 s, video 15 s |
+| Toy shelf, another opening and ending | a render, no model called | $0 | 11 s |
+| Toy shelf, "Your voice, new words" | 35.5 s of the owner's narration, cleaned by the Voice Isolator ($0.132), became an ElevenLabs Instant Voice Clone, which has no price of its own; text-to-speech then read a new Kazakh script in it ($0.007) | $0.139 | 32 s |
+| Toy shelf, after **Remove my voice** | the clone was deleted at ElevenLabs 2 minutes after it was made, and the next render used the owner's own recording | $0 | 13 s |
+| QazOner, a full make with an Airi stock voice | the words, two scenes, two checks, two boxes, and text-to-speech in a stock voice ($0.009); the words call ran in two attempts of the run, and each kept its whole $0.04 reservation, as a call that may have been billed does | $0.131 | not logged |
+| QazOner, new words | Muse Spark wrote a new Kazakh script, read in the same stock voice | $0.022 | 39 s |
+| QazOner, **New picture**, twice | Muse Image made a new scene in one of the tested places, Muse Spark checked it was the same product, and SAM 3.1 framed it | $0.021 and $0.022 | 58 s and 47 s |
+| QazOner, a described place | "a felt rug in a yurt": Muse Spark read the place first, then came a scene, its check and its box | $0.022 | 57 s |
+| QazOner, a refused place | a place with people in it: Muse Spark refused it, so no picture was made or paid for | $0.002 | 22 s |
+
+- **Every spoken price was right.** In all 9 checked renders, Scribe found the language to be Kazakh, and each of the ad's 2 spoken prices matched the shelf, in the owner's own words, the clone's and the stock voice's. Code writes a synthesised voice's prices out as words from the shelf; a model never does.
+- **The words stayed in the safe band.** In all 9, every inked layer sat inside the Reels safe band.
+
+## Nov 3–4: studio v3's motions and pictures, rendered
+
+Studio v3 (built in airi.chat's branch `claude/products-studio-v3`, **not live yet**) adds Reel motions and pictures that are code over what an ad already made. We rendered each motion from the two test ads' saved scenes, words and voices, render-only, with v3's worker code on a local worker. No model was called: 0 paid calls in every run. Each render also draws the ad's whole set of pictures for the Post, Story and carousel tiles: 26 for the toy shelf, which has 3 products here, and 18 for QazOner's 2.
+
+| Motion | Shipped | Toy shelf: whole run, its pictures, the video | QazOner: whole run, its pictures, the video |
+| --- | --- | --- | --- |
+| Shelf ad (v2's motion) | yes | 17.5 s, 4.0 s, 16.6 s long, 2.0 MB | 15.1 s, 3.6 s, 13.0 s long, 2.9 MB |
+| Filmed → Sold: each shot opens on the product as the owner filmed it, then wipes to the made scene | yes | 23.3 s, 4.2 s, 19.0 s long, 2.6 MB | 18.4 s, 4.2 s, 14.3 s long, 3.2 MB |
+| Float | no | 21.5 s, 4.9 s, 16.6 s long, 1.2 MB | 16.6 s, 4.4 s, 13.0 s long, 1.3 MB |
+| Pop | no | 29.0 s, 4.6 s, 16.6 s long, 1.6 MB | 22.4 s, 3.5 s, 13.0 s long, 2.0 MB |
+
+The Filmed → Sold, Float and Pop runs are from Nov 3, about 20:00 UTC; the Shelf ad runs were repeated on Nov 4 at about 03:00 UTC, after the last changes to the pictures. "Shipped" is the motion's tile in `lib/products/templates.ts` at the branch's head `282e469d1`; a tile that isn't shipped isn't shown. Every video is 1080×1920 H.264 at CRF 21, under WhatsApp's 16 MB.
+
+## Nov 3–4: Meta actions before going live
+
+- **One `validate_only` check.** On Nov 3 at 19:49 UTC, before any v3 deploy, we sent one Marketing API ad-set create with `execution_options=["validate_only"]` to our own ad account, shaped as v3 makes it: Kazakhstan, Facebook placements, Meta's Advantage audience, promoted for our Facebook Page. Meta answered `{"success": true}`, and nothing was created. It was the only Marketing API write before the deploy.
+- **Not measured yet:** the time from a Reel's container to its published post, the Graph steps of a Click-to-WhatsApp ad created paused on Facebook placements, and Meta's verdict on a carousel made since pull request 509. Studio v3 isn't live; this section gets them after the deploy.
+
+## Production, read on Nov 4
+
+Read-only aggregates of airi.chat's production database and AI spend ledger, on Nov 4 between 02:53 and 03:00 UTC: counts, states, times and costs only, with no names, phone numbers or ids. The `products` flag has been on in one workspace since Oct 29, our own Airi.chat, so every figure below is ours: no customer shop has used Products yet.
+
+| What | In production |
+| --- | --- |
+| Shelf videos imported | 2, both sent to Airi on WhatsApp, both narrated in Russian. **Oct 30:** stopped after 2 of 5 photos on the $0.50 cap on one AI action, the failure that made each photo its own action. **Nov 2:** 5 of 5 products, 5 of 5 photos restored by Muse Image and none fell back to the filmed photo, 192.5 s from arrival to ready, $0.276 of Meta calls ($0.278 with Scribe); the owner put 4 on the shelf and skipped 1 |
+| A restored photo | $0.045–0.053 of Meta calls, over the 7 photos made |
+| Video ads | 2, on Nov 3, 3 products each, 1080×1920, 16 s and 17 s long, in Russian. **Ad 1:** $0.076 in 95 s (words 23 s, pictures 33 s, framing 8 s, video 29 s), slower than the local test's 64–79 s. **Ad 2,** read by an Airi voice: $0.090, of which $0.080 Meta and $0.009 ElevenLabs text-to-speech; a later free render overwrote its first video's time |
+| What one ad's AI action paid for | 1 Muse Spark call for the words, 3 Muse Image scenes, 3 Muse Spark same-product checks and 3 SAM 3.1 boxes, plus the text-to-speech when a voice reads it |
+| WhatsApp kits | 1, on Nov 3: its order form was published as a WhatsApp Flow; its carousel failed on the old 10-second limit, before pull request 509, and was never sent to Meta. So Meta has approved no production carousel yet |
+| Instagram posts and Click-to-WhatsApp ads | 0 and 0: studio v3, which makes them, isn't live yet |
+| Cloned voices | 0 |
