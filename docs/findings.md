@@ -266,5 +266,5 @@ Read-only aggregates of airi.chat's production database and AI spend ledger, on 
 | Video ads | 2, on Nov 3, 3 products each, 1080×1920, 16 s and 17 s long, in Russian. **Ad 1:** $0.076 in 95 s (words 23 s, pictures 33 s, framing 8 s, video 29 s), slower than the local test's 64–79 s. **Ad 2,** read by an Airi voice: $0.090, of which $0.080 Meta and $0.009 ElevenLabs text-to-speech; a later free render overwrote its first video's time |
 | What one ad's AI action paid for | 1 Muse Spark call for the words, 3 Muse Image scenes, 3 Muse Spark same-product checks and 3 SAM 3.1 boxes, plus the text-to-speech when a voice reads it |
 | WhatsApp kits | 1, on Nov 3: its order form was published as a WhatsApp Flow; its carousel failed on the old 10-second limit, before pull request 509, and was never sent to Meta. So Meta has approved no production carousel yet |
-| Instagram posts and Click-to-WhatsApp ads | 0 and 0: studio v3, which makes them, isn't live yet |
+| Instagram posts, and Click-to-WhatsApp ads created paused on Facebook placements | 0 and 0: studio v3, which makes them, isn't live yet |
 | Cloned voices | 0 |
