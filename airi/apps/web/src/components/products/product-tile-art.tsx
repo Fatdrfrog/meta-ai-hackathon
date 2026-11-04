@@ -340,6 +340,40 @@ export function TileArt({
           </span>
         </Frame>
       );
+    case "story_spotlight":
+      return (
+        <Frame template={template} shots={1}>
+          <span className={styles.artSpotlight} style={sweepOf(rotation)}>
+            <span className={styles.artSpotlightName} dir="auto">
+              {one.name}
+            </span>
+            <span className={styles.artStand}>
+              <Cut product={one} />
+            </span>
+            <Tag product={one} className={styles.artTagLow} />
+          </span>
+        </Frame>
+      );
+    case "story_grid":
+    case "post_grid":
+      return (
+        <Frame template={template} shots={1}>
+          <span className={styles.artGrid}>
+            <span className={styles.artGridCells}>
+              {picks.slice(0, 3).map(product => (
+                <span key={product.id} className={styles.artGridCell}>
+                  <span className={styles.artGridCut}>
+                    <Cut product={product} />
+                  </span>
+                  <span className={styles.artGridPrice}>
+                    {tagText(product) || "—"}
+                  </span>
+                </span>
+              ))}
+            </span>
+          </span>
+        </Frame>
+      );
     case "post_room":
       return (
         <Frame template={template}>
@@ -350,6 +384,24 @@ export function TileArt({
             <span className={styles.artRoomLabel}>
               <span dir="auto">{one.name}</span>
               <Tag product={one} />
+            </span>
+          </span>
+        </Frame>
+      );
+    case "post_print":
+      return (
+        <Frame template={template}>
+          <span className={styles.artPrint}>
+            <span className={styles.artPrintCard}>
+              <span className={styles.artPrintPhoto}>
+                <span className={styles.artStand}>
+                  <Cut product={one} />
+                </span>
+              </span>
+              <span className={styles.artPrintMat}>
+                <span dir="auto">{one.name}</span>
+                <Tag product={one} />
+              </span>
             </span>
           </span>
         </Frame>

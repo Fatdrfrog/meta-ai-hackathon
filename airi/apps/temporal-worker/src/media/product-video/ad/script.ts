@@ -77,6 +77,13 @@ const SETTING_WORDS: Record<ProductAdSetting, string> = {
   stone_counter: "a pale stone counter",
   playroom_shelf: "a white shelf in a bright children's playroom",
   gift_table: "a table with soft wrapping paper and ribbon, set for a gift",
+  market_stall:
+    "a wooden stall at a sunny bazaar, woven baskets softly blurred behind",
+  marble_boutique: "a white marble counter in a bright, calm boutique",
+  festive_table:
+    "a festive table with a patterned tablecloth and warm string lights",
+  vanity_table: "a light vanity table with a round mirror in soft daylight",
+  kitchen_counter: "a bright kitchen counter with fresh green herbs",
 };
 
 /** Muse Image's words for a setting, which scenes.ts puts in its prompt. */

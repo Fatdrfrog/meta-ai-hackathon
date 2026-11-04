@@ -697,7 +697,10 @@ function lookOf(
   if (template.frame === "fb_ad") return { kind: "none" };
   if (template.renderer === "motion" || template.renderer === "video")
     return { kind: "scene" };
-  if (template.renderer === "still" && template.stillKind === "room")
+  if (
+    template.renderer === "still" &&
+    (template.stillKind === "room" || template.stillKind === "print")
+  )
     return { kind: "scene" };
   if (template.renderer === "still" && template.stillKind === "studio")
     return {

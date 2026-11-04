@@ -42,7 +42,10 @@ const still = (
 ): ProductAdRecordStill => ({
   kind,
   format,
-  productId: kind === "collection" || kind === "price_list" ? null : DOLL,
+  productId:
+    kind === "collection" || kind === "price_list" || kind === "grid"
+      ? null
+      : DOLL,
   colourway: kind === "studio" ? "sand" : null,
   url: `https://x/${kind}-${format}.jpg`,
 });
@@ -157,6 +160,34 @@ describe("the tile something went out from", () => {
         motion: null,
       })?.id
     ).toBe("post_studio");
+    expect(
+      productTemplateOfPost({
+        destination: "story",
+        still: { kind: "spotlight", productId: DOLL },
+        motion: null,
+      })?.id
+    ).toBe("story_spotlight");
+    expect(
+      productTemplateOfPost({
+        destination: "story",
+        still: { kind: "grid", productId: null },
+        motion: null,
+      })?.id
+    ).toBe("story_grid");
+    expect(
+      productTemplateOfPost({
+        destination: "post",
+        still: { kind: "print", productId: DOLL },
+        motion: null,
+      })?.id
+    ).toBe("post_print");
+    expect(
+      productTemplateOfPost({
+        destination: "post",
+        still: { kind: "grid", productId: null },
+        motion: null,
+      })?.id
+    ).toBe("post_grid");
     expect(
       productTemplateOfPost({
         destination: "carousel",

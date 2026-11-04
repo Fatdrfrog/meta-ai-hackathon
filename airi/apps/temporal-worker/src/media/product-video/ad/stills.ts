@@ -12,13 +12,17 @@ import {
 import sharp, { type OverlayOptions } from "sharp";
 import {
   AD_COLORS,
+  AD_SHADE,
   alphaBox,
   amountLayer,
   balancedLines,
+  captionLines,
   contactPill,
+  coverBackground,
   feedStill,
   fitTextLayer,
   groundShadows,
+  paperCard,
   priceCardLayers,
   priceLayer,
   shelfTagLayer,
@@ -26,6 +30,7 @@ import {
   splitPrice,
   studioColourwayFor,
   studioSweepSvg,
+  tagLayer,
   textLayer,
   trimmedCutout,
   type Layer,
@@ -53,7 +58,13 @@ import {
 // - collection (feed): every product on one plank with its tag, titled by
 //   the opening (the price card, at 4:5);
 // - price_list (story): every product with a dotted leader to its price,
-//   the shop's name, the ending and its WhatsApp line.
+//   the shop's name, the ending and its WhatsApp line;
+// - spotlight (story, per product): one product large on its studio sweep
+//   under its name and caption, with its paper price tag at the foot;
+// - print (feed, per product): the product's scene framed as a photo print
+//   on paper, with its name, caption and price in the bottom mat;
+// - grid (feed and story): every product in a catalog grid of paper cards
+//   under the opening, with the shop's WhatsApp pill at the foot.
 
 /**
  * Where a Story's words stay: Meta asks for the top and bottom 14% (about
@@ -613,6 +624,454 @@ async function priceListStill(
   );
 }
 
+export type SpotlightLayout = {
+  frame: Size;
+  name: Placed;
+  caption: Placed | null;
+  tag: Placed;
+  /** Where the product stands, between the words and the price tag. */
+  product: Rect;
+};
+
+/**
+ * Where Spotlight draws its pieces: the product's name and caption at the
+ * top of the Story safe band, its paper price tag at the foot, and the
+ * product standing large in the room between them.
+ */
+export async function spotlightLayout(
+  product: Pick<StillsProduct, "name" | "caption" | "priceText">,
+  cutout: Size,
+  ink: string,
+): Promise<SpotlightLayout> {
+  const frame = AD_FRAME;
+  const safe = STORY_SAFE;
+  const lines = captionLines(product.caption);
+  const [name, caption, tag] = await Promise.all([
+    fitTextLayer(
+      balancedLines(product.name, 2),
+      {
+        face: "display",
+        weight: "semibold",
+        px: 68,
+        color: ink,
+        align: "centre",
+      },
+      safe.w - 40,
+      38,
+    ),
+    lines.length
+      ? fitTextLayer(
+          lines,
+          {
+            face: "text",
+            weight: "medium",
+            px: 38,
+            color: ink,
+            align: "centre",
+          },
+          safe.w - 60,
+          24,
+        )
+      : null,
+    tagLayer(product.priceText),
+  ]);
+  const centre = (layer: Layer) => Math.round((frame.width - layer.width) / 2);
+  const nameTop = safe.y + 16;
+  const captionTop = nameTop + name.height + 16;
+  const wordsBottom = caption
+    ? captionTop + caption.height
+    : nameTop + name.height;
+  const tagTop = safe.y + safe.h - tag.height;
+  const floor = tagTop - 28;
+  const productTop = wordsBottom + 32;
+  const rect = shelfRow(
+    [cutout],
+    { x: 110, w: frame.width - 220 },
+    floor,
+    Math.max(120, Math.min(960, floor - productTop)),
+  )[0]!;
+  return {
+    frame,
+    name: { layer: name, left: centre(name), top: nameTop },
+    caption: caption
+      ? { layer: caption, left: centre(caption), top: captionTop }
+      : null,
+    tag: { layer: tag, left: centre(tag), top: tagTop },
+    product: rect,
+  };
+}
+
+/** Spotlight: one product large on its studio sweep, under its caption, with its price tag at the foot. */
+async function spotlightStill(
+  shared: Shared,
+  shopName: string,
+): Promise<Buffer> {
+  const { colourway, product } = shared;
+  const ink = PRODUCT_AD_STUDIO_SWEEPS[colourway].ink;
+  const [layout, mark] = await Promise.all([
+    spotlightLayout(product, shared.cutout.size, ink),
+    shopMark(shopName, ink),
+  ]);
+  return jpeg(
+    sharp(
+      studioSweepSvg(layout.frame, colourway, groundShadows(layout.product)),
+    ).composite([
+      {
+        input: layout.name.layer.image,
+        left: layout.name.left,
+        top: layout.name.top,
+      },
+      ...(layout.caption
+        ? [
+            {
+              input: layout.caption.layer.image,
+              left: layout.caption.left,
+              top: layout.caption.top,
+            },
+          ]
+        : []),
+      ...(await standing(shared.cutout, layout.product, {
+        alpha: 0.22,
+        sigma: 16,
+        dy: 20,
+      })),
+      {
+        input: layout.tag.layer.image,
+        left: layout.tag.left,
+        top: layout.tag.top,
+      },
+      ...(mark
+        ? [
+            {
+              input: mark.image,
+              left: STORY_SAFE.x + STORY_SAFE.w - mark.width,
+              top: STORY_SAFE.y + STORY_SAFE.h - mark.height,
+            },
+          ]
+        : []),
+    ]),
+  );
+}
+
+export type PrintLayout = {
+  frame: Size;
+  /** The paper print card in the 4:5 frame. */
+  card: Rect;
+  /** The scene photo window inside the card, in frame coordinates. */
+  photo: Rect;
+  name: Placed;
+  caption: Placed | null;
+  price: Placed;
+};
+
+/**
+ * Where Print draws its pieces: a white paper print card inside the 4:5 safe
+ * band, the scene photo framed at the top, and the product's name, caption
+ * and price in the bottom mat.
+ */
+export async function printLayout(
+  product: Pick<StillsProduct, "name" | "caption" | "priceText">,
+): Promise<PrintLayout> {
+  const frame = AD_FEED_FRAME;
+  const card: Rect = { x: 84, y: 80, w: 912, h: 1190 };
+  const border = 36;
+  const photo: Rect = {
+    x: card.x + border,
+    y: card.y + border,
+    w: card.w - border * 2,
+    h: 860,
+  };
+  const matLeft = photo.x;
+  const matRight = photo.x + photo.w;
+  const matTop = photo.y + photo.h + 24;
+  const matBottom = card.y + card.h - 24;
+  const price = await priceLayer(product.priceText, 60, 320);
+  const priceLeft = matRight - price.width;
+  const priceTop = Math.round(matTop + (matBottom - matTop - price.height) / 2);
+  const textWidth = Math.max(200, priceLeft - matLeft - 28);
+  const lines = captionLines(product.caption);
+  const [name, caption] = await Promise.all([
+    fitTextLayer(
+      balancedLines(product.name, 2),
+      { face: "display", weight: "semibold", px: 44, color: AD_COLORS.ink },
+      textWidth,
+      26,
+    ),
+    lines.length
+      ? fitTextLayer(
+          lines,
+          { face: "text", weight: "medium", px: 28, color: AD_COLORS.ink2 },
+          textWidth,
+          20,
+        )
+      : null,
+  ]);
+  const gap = 10;
+  const textHeight = name.height + (caption ? gap + caption.height : 0);
+  const nameTop = Math.round(matTop + (matBottom - matTop - textHeight) / 2);
+  return {
+    frame,
+    card,
+    photo,
+    name: { layer: name, left: matLeft, top: nameTop },
+    caption: caption
+      ? { layer: caption, left: matLeft, top: nameTop + name.height + gap }
+      : null,
+    price: { layer: price, left: priceLeft, top: priceTop },
+  };
+}
+
+/** Print: the product's scene framed as a photo print on paper, with its name, caption and price in the bottom mat. */
+async function printStill(product: StillsProduct): Promise<Buffer> {
+  const layout = await printLayout(product);
+  const cropped = await coverBackground(
+    product.picture,
+    { width: layout.photo.w, height: layout.photo.h },
+    product.box,
+  );
+  const card = await paperCard(
+    { width: layout.card.w, height: layout.card.h },
+    [
+      {
+        layer: {
+          image: cropped.image,
+          width: layout.photo.w,
+          height: layout.photo.h,
+        },
+        left: layout.photo.x - layout.card.x,
+        top: layout.photo.y - layout.card.y,
+      },
+      {
+        layer: layout.name.layer,
+        left: layout.name.left - layout.card.x,
+        top: layout.name.top - layout.card.y,
+      },
+      ...(layout.caption
+        ? [
+            {
+              layer: layout.caption.layer,
+              left: layout.caption.left - layout.card.x,
+              top: layout.caption.top - layout.card.y,
+            },
+          ]
+        : []),
+      {
+        layer: layout.price.layer,
+        left: layout.price.left - layout.card.x,
+        top: layout.price.top - layout.card.y,
+      },
+    ],
+    { radius: 12, shadow: { dy: 12, sigma: 14, alpha: 0.22 } },
+  );
+  return jpeg(
+    sharp(studioSweepSvg(layout.frame, "sand")).composite([
+      {
+        input: card.image,
+        left: layout.card.x - card.card.x,
+        top: layout.card.y - card.card.y,
+      },
+    ]),
+  );
+}
+
+export type GridCell = {
+  productId: string;
+  /** The paper card for this product, in frame coordinates. */
+  card: Rect;
+  /** Where the cut-out is drawn inside the card. */
+  thumb: Rect;
+  name: Placed;
+  price: Placed;
+};
+
+export type GridLayout = {
+  frame: Size;
+  title: Placed;
+  pill: Placed;
+  /** Where the cells sit: under the title, over the WhatsApp pill. */
+  band: { top: number; bottom: number };
+  cells: GridCell[];
+};
+
+/**
+ * Where Catalog grid draws its pieces: the opening at the top, the WhatsApp
+ * pill at the foot, and the products in a centered grid of paper cards
+ * between them (1 card alone, 2 side by side, 3 as 2 over 1).
+ */
+export async function gridLayout(
+  input: Pick<
+    StillsInput,
+    "products" | "sticker" | "priceCardTitle" | "shopName" | "phone"
+  >,
+  cutouts: ReadonlyMap<string, Size>,
+  format: ProductAdStillFormat,
+): Promise<GridLayout> {
+  const frame = format === "feed" ? AD_FEED_FRAME : AD_FRAME;
+  const safe = format === "feed" ? FEED_SAFE : STORY_SAFE;
+  const heading = input.sticker.trim() || input.priceCardTitle;
+  const [title, pill] = await Promise.all([
+    fitTextLayer(
+      [heading],
+      {
+        face: "display",
+        weight: "semibold",
+        px: format === "feed" ? 72 : 80,
+        align: "centre",
+      },
+      safe.w - 40,
+      44,
+    ),
+    contactPill({ phone: input.phone, shopName: input.shopName }, safe.w - 60),
+  ]);
+  const centre = (layer: Layer) => Math.round((frame.width - layer.width) / 2);
+  const titleTop = safe.y + (format === "feed" ? 12 : 24);
+  const pillTop = safe.y + safe.h - pill.height;
+  const gap = 24;
+  const band = {
+    top: titleTop + title.height + (format === "feed" ? 28 : 40),
+    bottom: pillTop - (format === "feed" ? 28 : 40),
+  };
+  const count = Math.max(1, input.products.length);
+  const cols = count === 1 ? 1 : 2;
+  const rowCount = count <= 2 ? 1 : Math.ceil(count / 2);
+  const cellW =
+    cols === 1 ? Math.min(680, safe.w - 32) : Math.floor((safe.w - gap) / 2);
+  const availH = Math.max(
+    240,
+    Math.floor((band.bottom - band.top - gap * (rowCount - 1)) / rowCount),
+  );
+  const maxCellH = rowCount === 1 ? (format === "feed" ? 680 : 820) : availH;
+  const cellH = Math.max(240, Math.min(maxCellH, availH));
+  const gridH = cellH * rowCount + gap * (rowCount - 1);
+  const gridTop =
+    band.top + Math.max(0, Math.floor((band.bottom - band.top - gridH) / 2));
+
+  const cells = await Promise.all(
+    input.products.map(async (product, index): Promise<GridCell> => {
+      const row = Math.floor(index / cols);
+      const inRow = row === rowCount - 1 ? count - row * cols : cols;
+      const col = index - row * cols;
+      const rowW = inRow * cellW + (inRow - 1) * gap;
+      const rowLeft = Math.round((frame.width - rowW) / 2);
+      const card: Rect = {
+        x: rowLeft + col * (cellW + gap),
+        y: gridTop + row * (cellH + gap),
+        w: cellW,
+        h: cellH,
+      };
+      const pad = 22;
+      const innerW = card.w - pad * 2;
+      const [name, price] = await Promise.all([
+        fitTextLayer(
+          balancedLines(product.name, 2),
+          {
+            face: "text",
+            weight: "semibold",
+            px: rowCount === 1 ? 36 : 30,
+            color: AD_COLORS.ink,
+            align: "centre",
+          },
+          innerW,
+          20,
+        ),
+        priceLayer(product.priceText, rowCount === 1 ? 56 : 46, innerW),
+      ]);
+      const textGap = 8;
+      const priceTop = card.y + card.h - pad - price.height;
+      const nameTop = priceTop - textGap - name.height;
+      const thumbTop = card.y + pad;
+      const thumbH = Math.max(48, nameTop - 14 - thumbTop);
+      const size = cutouts.get(product.productId) ?? {
+        width: innerW,
+        height: thumbH,
+      };
+      const fit = Math.min(
+        innerW / Math.max(1, size.width),
+        thumbH / Math.max(1, size.height),
+      );
+      const w = Math.max(1, Math.round(size.width * fit));
+      const h = Math.max(1, Math.round(size.height * fit));
+      return {
+        productId: product.productId,
+        card,
+        thumb: {
+          x: Math.round(card.x + (card.w - w) / 2),
+          y: Math.round(thumbTop + (thumbH - h) / 2),
+          w,
+          h,
+        },
+        name: {
+          layer: name,
+          left: Math.round(card.x + (card.w - name.width) / 2),
+          top: nameTop,
+        },
+        price: {
+          layer: price,
+          left: Math.round(card.x + (card.w - price.width) / 2),
+          top: priceTop,
+        },
+      };
+    }),
+  );
+  return {
+    frame,
+    title: { layer: title, left: centre(title), top: titleTop },
+    pill: { layer: pill, left: centre(pill), top: pillTop },
+    band,
+    cells,
+  };
+}
+
+/** Catalog grid: every product in a grid of paper cards under the opening, with the shop's WhatsApp pill. */
+async function gridStill(
+  input: StillsInput,
+  cutouts: Map<string, { image: Buffer; size: Size }>,
+  format: ProductAdStillFormat,
+): Promise<Buffer> {
+  const layout = await gridLayout(
+    input,
+    new Map([...cutouts].map(([id, cutout]) => [id, cutout.size])),
+    format,
+  );
+  const at = ({ layer, left, top }: Placed): OverlayOptions => ({
+    input: layer.image,
+    left,
+    top,
+  });
+  const cardsSvg = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${layout.frame.width}" height="${layout.frame.height}">` +
+      layout.cells
+        .map(
+          ({ card }) =>
+            `<rect x="${card.x}" y="${card.y + 6}" width="${card.w}" height="${card.h}" rx="14" fill="rgba(${AD_SHADE},0.10)"/>` +
+            `<rect x="${card.x}" y="${card.y}" width="${card.w}" height="${card.h}" rx="14" fill="${AD_COLORS.paper}" stroke="rgba(${AD_SHADE},0.10)" stroke-width="1.5"/>`,
+        )
+        .join("") +
+      `</svg>`,
+  );
+  const cells = await Promise.all(
+    layout.cells.map(async (cell): Promise<OverlayOptions[]> => {
+      const cutout = cutouts.get(cell.productId);
+      const product = cutout
+        ? await standing(cutout, cell.thumb, {
+            alpha: 0.18,
+            sigma: 10,
+            dy: 10,
+          })
+        : [];
+      return [...product, at(cell.name), at(cell.price)];
+    }),
+  );
+  return jpeg(
+    sharp(studioSweepSvg(layout.frame, "sand")).composite([
+      at(layout.title),
+      { input: cardsSvg, left: 0, top: 0 },
+      ...cells.flat(),
+      at(layout.pill),
+    ]),
+  );
+}
+
 /** The studio colourways in a product's order: the one it stands out on first. */
 export function studioOrder(
   first: ProductAdStudioColourway,
@@ -623,7 +1082,8 @@ export function studioOrder(
 /**
  * Every still of the ad, in the order the stillSet keeps them: per product
  * (in the ad's order) room, studio (its best colourway first), big_price
- * feed and story; then collection and price_list.
+ * feed and story, spotlight, and print; then collection, price_list, and
+ * grid feed and story.
  */
 export async function drawAdStills(input: StillsInput): Promise<DrawnStill[]> {
   const kinds = new Set(input.kinds ?? PRODUCT_AD_STILL_KINDS);
@@ -693,8 +1153,31 @@ export async function drawAdStills(input: StillsInput): Promise<DrawnStill[]> {
               image,
             })),
           );
+      if (kinds.has("spotlight"))
+        jobs.push(
+          spotlightStill(one, input.shopName).then((image) => ({
+            kind: "spotlight",
+            format: "story",
+            productId: id,
+            colourway: null,
+            image,
+          })),
+        );
+      if (kinds.has("print"))
+        jobs.push(
+          printStill(product).then((image) => ({
+            kind: "print",
+            format: "feed",
+            productId: id,
+            colourway: null,
+            image,
+          })),
+        );
       return Promise.all(jobs);
     }),
+  );
+  const cutouts = new Map(
+    shared.map((one) => [one.product.productId, one.cutout]),
   );
   const all: Array<Promise<DrawnStill>> = [];
   if (kinds.has("collection"))
@@ -709,10 +1192,7 @@ export async function drawAdStills(input: StillsInput): Promise<DrawnStill[]> {
     );
   if (kinds.has("price_list"))
     all.push(
-      priceListStill(
-        input,
-        new Map(shared.map((one) => [one.product.productId, one.cutout])),
-      ).then((image) => ({
+      priceListStill(input, cutouts).then((image) => ({
         kind: "price_list",
         format: "story",
         productId: null,
@@ -720,6 +1200,17 @@ export async function drawAdStills(input: StillsInput): Promise<DrawnStill[]> {
         image,
       })),
     );
+  if (kinds.has("grid"))
+    for (const format of ["feed", "story"] as const)
+      all.push(
+        gridStill(input, cutouts, format).then((image) => ({
+          kind: "grid",
+          format,
+          productId: null,
+          colourway: null,
+          image,
+        })),
+      );
   return [...perProduct.flat(), ...(await Promise.all(all))];
 }
 

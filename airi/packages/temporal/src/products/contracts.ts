@@ -286,6 +286,11 @@ export const PRODUCT_AD_SETTINGS = [
   "stone_counter",
   "playroom_shelf",
   "gift_table",
+  "market_stall",
+  "marble_boutique",
+  "festive_table",
+  "vanity_table",
+  "kitchen_counter",
 ] as const;
 export type ProductAdSetting = (typeof PRODUCT_AD_SETTINGS)[number];
 
@@ -755,7 +760,11 @@ export function productAdMotionOf(value: unknown): ProductAdMotion {
  * code sweep, per product and colourway. big_price: the shelf price huge
  * behind the product, per product. collection: every product on one plank,
  * titled by the opening. price_list: every product with dotted leaders, the
- * shop name and the ending's contact line.
+ * shop name and the ending's contact line. spotlight: one product large on
+ * its sweep under its own caption, per product. print: the product's scene
+ * as a framed photo print on paper, with its caption and tag, per product.
+ * grid: every product in a catalog grid under the opening, with the shop's
+ * contact line.
  */
 export const PRODUCT_AD_STILL_KINDS = [
   "room",
@@ -763,6 +772,9 @@ export const PRODUCT_AD_STILL_KINDS = [
   "big_price",
   "collection",
   "price_list",
+  "spotlight",
+  "print",
+  "grid",
 ] as const;
 export type ProductAdStillKind = (typeof PRODUCT_AD_STILL_KINDS)[number];
 
@@ -811,6 +823,9 @@ export const PRODUCT_AD_STILL_SHAPES: Record<
   big_price: { formats: ["feed", "story"], perProduct: true },
   collection: { formats: ["feed"], perProduct: false },
   price_list: { formats: ["story"], perProduct: false },
+  spotlight: { formats: ["story"], perProduct: true },
+  print: { formats: ["feed"], perProduct: true },
+  grid: { formats: ["feed", "story"], perProduct: false },
 };
 
 /**
@@ -840,6 +855,6 @@ export type ProductAdStillSet = {
 
 /**
  * The most stills one render draws: 3 products x (room + 5 studio + 2
- * big_price) + collection + price_list = 26.
+ * big_price + spotlight + print) + collection + price_list + 2 grid = 34.
  */
-export const PRODUCT_AD_STILL_SET_MAX = 26;
+export const PRODUCT_AD_STILL_SET_MAX = 34;

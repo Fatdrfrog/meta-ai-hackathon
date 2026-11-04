@@ -12,9 +12,12 @@ import { exactScene, studioColourwayFor } from "./layers";
 import {
   bigPriceLayout,
   drawAdStills,
+  gridLayout,
   PRICE_LIST_NAME_MIN_PX,
   PRICE_LIST_NAME_PX,
   priceListLayout,
+  printLayout,
+  spotlightLayout,
   STORY_SAFE,
   stillFileName,
   studioOrder,
@@ -78,7 +81,7 @@ async function input(
   };
 }
 
-test("three products: all 26 stills, in the stillSet's order, each at its format's size as a JPEG", async () => {
+test("three products: all 34 stills, in the stillSet's order, each at its format's size as a JPEG", async () => {
   const stills = await drawAdStills(await input());
   assert.equal(stills.length, PRODUCT_AD_STILL_SET_MAX);
   const order = stills.map(
@@ -94,13 +97,17 @@ test("three products: all 26 stills, in the stillSet's order, each at its format
         ...Array(5).fill("studio/feed"),
         "big_price/feed",
         "big_price/story",
+        "spotlight/story",
+        "print/feed",
       ],
       id,
     );
   }
-  assert.deepEqual(order.slice(-2), [
+  assert.deepEqual(order.slice(-4), [
     "collection/feed/all",
     "price_list/story/all",
+    "grid/feed/all",
+    "grid/story/all",
   ]);
   for (const still of stills) {
     const meta = await sharp(still.image).metadata();
@@ -156,7 +163,7 @@ test("each product's studio stills: every colourway once, the one it stands out 
 test("only the default studio colourway, or only some kinds, when asked", async () => {
   const lazy = await drawAdStills(await input({ studio: "default" }));
   assert.equal(lazy.filter((still) => still.kind === "studio").length, 3);
-  assert.equal(lazy.length, 3 * (1 + 1 + 2) + 2);
+  assert.equal(lazy.length, 3 * (1 + 1 + 2 + 1 + 1) + 4);
   const rooms = await drawAdStills(
     await input({ kinds: ["room", "collection"] }),
   );
@@ -177,7 +184,7 @@ test("one product, a phone number and a shop name the fonts can't draw: still ev
     ...given,
     products: given.products.slice(0, 1),
   });
-  assert.equal(stills.length, 1 + 5 + 2 + 2);
+  assert.equal(stills.length, 1 + 5 + 2 + 1 + 1 + 4);
   assert.ok(stills.every((still) => still.image.length > 1000));
 });
 
@@ -389,4 +396,112 @@ test("price list: the dots are level with the amount, whether its words sit abov
   assert.ok(Math.abs(middle - bandMiddle) <= 2, `${middle} vs ${bandMiddle}`);
   // Alone, its picture is bigger than in a list of three.
   assert.ok(row.thumb.h > layout.rows[2]!.thumb.h);
+});
+
+test("spotlight: the product stands between its caption and its price tag inside the Story safe band", async () => {
+  for (const caption of ["Балаңызға керемет сыйлық", ""])
+    for (const cutout of [
+      { width: 1200, height: 700 },
+      { width: 400, height: 900 },
+    ]) {
+      const layout = await spotlightLayout(
+        {
+          name: "Шежіре ағашы үлкен өлшемді",
+          caption,
+          priceText: `15${NB}500${NB}₸ бастап`,
+        },
+        cutout,
+        "#241e1a",
+      );
+      const wordsBottom = layout.caption
+        ? layout.caption.top + layout.caption.layer.height
+        : layout.name.top + layout.name.layer.height;
+      assert.ok(layout.name.top >= STORY_SAFE.y);
+      if (caption) {
+        assert.ok(layout.caption);
+        assert.ok(
+          layout.caption.top >= layout.name.top + layout.name.layer.height,
+        );
+      } else {
+        assert.equal(layout.caption, null);
+      }
+      assert.ok(layout.product.y >= wordsBottom);
+      assert.ok(layout.product.y + layout.product.h <= layout.tag.top);
+      assert.ok(
+        layout.tag.top + layout.tag.layer.height <= STORY_SAFE.y + STORY_SAFE.h,
+      );
+    }
+});
+
+test("print: the photo and bottom mat words stay inside the paper print card without overlapping", async () => {
+  const layout = await printLayout({
+    name: "Балаларға арналған үлкен әдемі қуыршақ",
+    caption: "Көк көйлек киген сүйкімді сыйлық",
+    priceText: `15${NB}500${NB}₸ бастап`,
+  });
+  const cardRight = layout.card.x + layout.card.w;
+  const cardBottom = layout.card.y + layout.card.h;
+  assert.ok(layout.photo.x >= layout.card.x);
+  assert.ok(layout.photo.y >= layout.card.y);
+  assert.ok(layout.photo.x + layout.photo.w <= cardRight);
+  assert.ok(layout.name.top >= layout.photo.y + layout.photo.h);
+  assert.ok(layout.caption);
+  assert.ok(layout.caption.top >= layout.name.top + layout.name.layer.height);
+  assert.ok(layout.caption.top + layout.caption.layer.height <= cardBottom);
+  assert.ok(layout.name.left + layout.name.layer.width < layout.price.left);
+  assert.ok(
+    layout.caption.left + layout.caption.layer.width < layout.price.left,
+  );
+  assert.ok(layout.price.left + layout.price.layer.width <= cardRight);
+  assert.ok(layout.price.top + layout.price.layer.height <= cardBottom);
+});
+
+test("grid: 1, 2 or 3 products sit in non-overlapping paper cards between the title and WhatsApp pill", async () => {
+  for (const format of ["feed", "story"] as const)
+    for (const count of [1, 2, 3]) {
+      const layout = await gridLayout(
+        {
+          ...listInput(
+            [
+              {
+                productId: "p1",
+                name: "Шежіре ағашы үлкен өлшемді",
+                priceText: `15${NB}500${NB}₸ бастап`,
+              },
+              {
+                productId: "p2",
+                name: "Кукла Лол",
+                priceText: `от 5${NB}000${NB}₸`,
+              },
+              { productId: "p3", name: "Кружка", priceText: `500${NB}₸` },
+            ].slice(0, count),
+          ),
+          sticker: "Жаңа тауарлар",
+        },
+        listSizes,
+        format,
+      );
+      assert.equal(layout.cells.length, count);
+      assert.ok(
+        layout.band.top >= layout.title.top + layout.title.layer.height,
+      );
+      assert.ok(layout.pill.top >= layout.band.bottom);
+      for (const cell of layout.cells) {
+        assert.ok(cell.card.y >= layout.band.top);
+        assert.ok(cell.card.y + cell.card.h <= layout.band.bottom);
+        assert.ok(cell.thumb.y >= cell.card.y);
+        assert.ok(cell.name.top >= cell.thumb.y + cell.thumb.h);
+        assert.ok(cell.price.top >= cell.name.top + cell.name.layer.height);
+        assert.ok(
+          cell.price.top + cell.price.layer.height <= cell.card.y + cell.card.h,
+        );
+      }
+      if (count === 3) {
+        const [first, second, third] = layout.cells;
+        assert.equal(first!.card.y, second!.card.y);
+        assert.ok(second!.card.x >= first!.card.x + first!.card.w);
+        assert.ok(third!.card.y >= first!.card.y + first!.card.h);
+        assert.ok(third!.card.x > first!.card.x);
+      }
+    }
 });

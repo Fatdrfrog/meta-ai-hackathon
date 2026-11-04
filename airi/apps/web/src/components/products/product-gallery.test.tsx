@@ -112,7 +112,11 @@ test("groups the shipped tiles by where they end up, and hides the others", () =
   for (const id of [
     "story_price_list",
     "story_big_price",
+    "story_spotlight",
+    "story_grid",
     "post_big_price",
+    "post_print",
+    "post_grid",
     "ctwa_picture",
   ])
     expect(tile(id)).not.toBeNull();
@@ -133,14 +137,18 @@ test("single-product tiles show the first pick that their workbench opens", () =
   expect(art("reel_shelf")).toContain(PICKS[0]!.imageUrl);
   // The preview must match the workbench's initial product.
   expect(art("story_big_price")).toEqual([PICKS[0]!.imageUrl]);
+  expect(art("story_spotlight")).toEqual([PICKS[0]!.imageUrl]);
   expect(art("post_room")).toEqual([PICKS[0]!.imageUrl]);
   expect(art("post_studio")).toEqual([PICKS[0]!.imageUrl]);
   expect(art("post_big_price")).toEqual([PICKS[0]!.imageUrl]);
+  expect(art("post_print")).toEqual([PICKS[0]!.imageUrl]);
   // The WhatsApp picture ad is made of the first product's picture, so its
   // tile shows that product, not the next one in turn.
   expect(art("ctwa_picture")).toEqual([PICKS[0]!.imageUrl]);
-  // The collection and the WhatsApp chat show every pick they use.
+  // The collection, catalog grids and the WhatsApp chat show every pick they use.
+  expect(art("story_grid")).toEqual(PICKS.map(pick => pick.imageUrl));
   expect(art("post_collection")).toEqual(PICKS.map(pick => pick.imageUrl));
+  expect(art("post_grid")).toEqual(PICKS.map(pick => pick.imageUrl));
   expect(art("chat_kit")).toEqual(PICKS.map(pick => pick.imageUrl));
   // Prices are drawn by code.
   expect(tile("post_room").textContent).toContain(

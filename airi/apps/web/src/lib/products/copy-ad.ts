@@ -32,6 +32,11 @@ const settingsInline = {
   stone_counter: "a stone counter",
   playroom_shelf: "a playroom shelf",
   gift_table: "a gift table",
+  market_stall: "a bazaar stall",
+  marble_boutique: "a marble boutique counter",
+  festive_table: "a festive table",
+  vanity_table: "a vanity table",
+  kitchen_counter: "a kitchen counter",
 } satisfies Record<ProductAdSetting, string>;
 
 /** "1 new picture", "8 new pictures". */
@@ -341,6 +346,11 @@ export const AD_COPY = {
       stone_counter: "Stone counter",
       playroom_shelf: "Playroom shelf",
       gift_table: "Gift table",
+      market_stall: "Bazaar stall",
+      marble_boutique: "Marble boutique",
+      festive_table: "Festive table",
+      vanity_table: "Vanity table",
+      kitchen_counter: "Kitchen counter",
     } satisfies Record<ProductAdSetting, string>,
     describePlace: "Describe a place",
     placeNow: "now",
