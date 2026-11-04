@@ -94,6 +94,15 @@ export const WORKBENCH_COPY = {
     creditsLabel: "Made with Meta models",
     updating: "Updating",
     updatingNote: "Free · the video you see keeps playing",
+    /** The same, for a run that pays (a new voice, a new place). */
+    updatingNotePaid: "The video you see keeps playing",
+    /** The one press that makes the picks into a new video. */
+    update: {
+      button: "Update video",
+      buttonCost: (cents: number) => `Update video · ${dollars(cents)}`,
+      discard: "Discard",
+      waiting: "Pick as much as you like. Nothing is made until you update.",
+    },
     keepPicking: "You can keep picking.",
     loading: "Loading…",
     loadFailed: "This couldn't be loaded.",
@@ -152,7 +161,10 @@ export const WORKBENCH_COPY = {
       you: "You",
       youNew: "You · new",
       off: "Off",
-      make: (cents: number) => `Make · ${dollars(cents)}`,
+      picked: (cents: number) =>
+        cents > 0
+          ? `picked, ${dollars(cents)} on Update`
+          : "picked, free on Update",
       now: "In the video",
       running: "New voice…",
       fellBack: "The video kept another voice. Tap to try again.",
@@ -177,6 +189,7 @@ export const WORKBENCH_COPY = {
       stillProcessing: "Still processing at Instagram",
       waitForVideo: "Wait for the video",
       waitForUpdate: "Wait for the update",
+      updateFirst: "Update the video first, or discard your picks",
       noPicture: "This picture isn't made yet",
       checking: "Checking Meta…",
     },

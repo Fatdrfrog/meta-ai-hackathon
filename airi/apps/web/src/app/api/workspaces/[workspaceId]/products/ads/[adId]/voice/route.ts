@@ -18,11 +18,12 @@ type Context = { params: Promise<{ workspaceId: string; adId: string }> };
 
 /**
  * The finished ad read in another voice: 202 with the ad, a "voice" run
- * started that pays only for new words; 200 as it is when nothing changes,
- * or for a press repeated while its run goes. 409 ad_not_ready unless it's
- * ready with a video, voice_not_found for "Your voice, new words" without a
- * cloned voice, and the AI admission codes for new words the workspace
- * can't pay for now.
+ * started that pays only for new words, with any pending free changes in
+ * it; 200 as it is when nothing changes, or for a press repeated while its
+ * run goes. 400 for a body it can't read or changes that don't fit (with the
+ * first issues); 409 ad_not_ready unless it's ready with a video,
+ * voice_not_found for "Your voice, new words" without a cloned voice, and
+ * the AI admission codes for new words the workspace can't pay for now.
  */
 export async function POST(request: Request, { params }: Context) {
   const { workspaceId, adId } = await params;
@@ -40,11 +41,23 @@ export async function POST(request: Request, { params }: Context) {
       adId: adId.toLowerCase(),
       request: parsed,
     });
-    if ("refused" in result)
+    if ("refused" in result) {
+      if (result.refused === "invalid_request") {
+        logger.warn("[Products API] ad voice changes refused", {
+          event: "products.ad_voice_refused",
+          workspaceId,
+          adId,
+          issues: result.issues,
+        });
+        return productsFail("invalid_request", 400, {
+          issues: result.issues.slice(0, 3),
+        });
+      }
       return productsFail(
         result.refused,
         result.refused === "ad_not_found" ? 404 : 409
       );
+    }
     return productsJson(
       { ad: result.ad } satisfies ProductAdResponse,
       result.started ? 202 : 200

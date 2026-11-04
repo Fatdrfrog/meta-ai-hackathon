@@ -10,6 +10,8 @@ import {
 import { logger } from "@/lib/logger";
 import {
   adAdmissionStop,
+  adChangesIssues,
+  adChangesSet,
   loadProductAdRecord,
   startAdRun,
 } from "@/lib/products/ads";
@@ -18,6 +20,7 @@ import {
   PRODUCT_AD_STOCK_VOICES,
   PRODUCT_AD_VOICE_SAMPLE_TEXT,
   PRODUCT_VOICE_MIN_SPEECH_SECONDS,
+  productAdMotionOf,
   productAdRecordingIsPaid,
   productAdStockVoice,
   type ProductAdAdmissionStop,
@@ -436,13 +439,15 @@ export async function productVoiceSampleAudio(
  * "make" mode) that pays only for the new reading, when the new voice reads
  * new words. Only a ready ad with a video takes it. The same voice it has,
  * when it didn't fall back, starts nothing; a press repeated while its run
- * goes is answered as the ad is. When the run can't start, the ad goes back
- * to how it was and the error goes to the caller.
+ * goes is answered as the ad is. The workbench's pending free changes ride
+ * along, checked as PATCH checks them, so one press makes one video. When
+ * the run can't start, the ad goes back to how it was and the error goes to
+ * the caller.
  */
 export async function changeProductAdVoice(params: {
   workspaceId: string;
   adId: string;
-  request: Pick<ProductAdVoiceRequest, "voice" | "stockVoiceId">;
+  request: Pick<ProductAdVoiceRequest, "voice" | "stockVoiceId" | "changes">;
   now?: Date;
 }): Promise<
   | { ad: ProductAdRecord; started: boolean }
@@ -453,6 +458,7 @@ export async function changeProductAdVoice(params: {
         | "voice_not_found"
         | ProductAdAdmissionStop;
     }
+  | { refused: "invalid_request"; issues: string[] }
 > {
   const { workspaceId, adId, request } = params;
   const stockVoiceId =
@@ -481,6 +487,11 @@ export async function changeProductAdVoice(params: {
     doc.lastRun.outcome === "failed" &&
     doc.lastRun.renderNo === doc.renderNo;
   if (same && !doc.voiceResult?.fallback && !voiceRunFailed) return current();
+  const changes = request.changes ?? null;
+  if (changes) {
+    const issues = adChangesIssues(doc, changes);
+    if (issues.length > 0) return { refused: "invalid_request", issues };
+  }
   if (request.voice === "clone") {
     const live = await ProductVoice.exists({ workspaceId, ...LIVE });
     if (!live) return { refused: "voice_not_found" };
@@ -503,6 +514,7 @@ export async function changeProductAdVoice(params: {
     { _id: adId, workspaceId, status: "ready", renderNo: doc.renderNo },
     {
       $set: {
+        ...(changes ? adChangesSet(doc, changes) : {}),
         voice: request.voice,
         stockVoiceId,
         // The old fallback was the old voice's: the run writes the new
@@ -535,6 +547,13 @@ export async function changeProductAdVoice(params: {
       { _id: adId, workspaceId, renderNo },
       {
         $set: {
+          ...(changes
+            ? {
+                script: doc.script,
+                scenes: doc.scenes,
+                motion: productAdMotionOf(doc.motion),
+              }
+            : {}),
           voice: doc.voice,
           stockVoiceId: doc.stockVoiceId ?? null,
           voiceResult: doc.voiceResult ?? null,

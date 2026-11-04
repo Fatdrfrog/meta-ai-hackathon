@@ -37,21 +37,19 @@ import {
 import styles from "./product-workbench.module.css";
 import { ProductDraftError, productVoiceUrl } from "./products-client";
 import {
-  changeProductAdVoice,
   fetchProductVoice,
   fetchProductVoiceSamples,
   productVoiceSamplesUrl,
 } from "./voices-client";
-import { adRequestId } from "./product-ad-parts";
 
 // The workbench's picture rails, with no text fields: Shots (the products in
 // the ad, in ad order: which shot the Look edits, or which product a still
 // shows), Look (Wall, the shot's kept Muse Image pictures and a two-tap "New
 // place" for a video or In a room; the Studio still's colourways; In a room
 // or Studio for the carousel) and Voice (faces: the owner's recording, their
-// copied voice, Airi's voices, Off). Free picks queue a change the
-// workbench sends by itself; a paid one (New place, a voice that costs)
-// asks for a second tap, "Make · …", and never starts without it.
+// copied voice, Airi's voices, Off). Picks, a voice among them, wait for the
+// workbench's one Update press, which names the price when a voice costs;
+// New place asks for its own second tap, "Make · 1 picture".
 
 const COPY = PRODUCTS_COPY.workbench;
 
@@ -439,6 +437,19 @@ type Face = {
 const isLive = (voice: ProductVoiceRecord | null | undefined) =>
   voice?.state === "pending" || voice?.state === "ready";
 
+/** A voice picked on the rail, waiting for Update, with what it costs in cents. */
+export type VoicePick = {
+  key: string;
+  voice: ProductAdVoiceMode;
+  stockVoiceId: string | null;
+  cents: number;
+};
+
+/** The rail's key for the voice the ad's video has. */
+export const adVoiceKey = (
+  ad: Pick<ProductAdRecord, "voice" | "stockVoiceId">
+) => (ad.voice === "stock" ? `stock:${ad.stockVoiceId ?? ""}` : ad.voice);
+
 /** What a voice costs the ad in cents: 0 when it's free. */
 export function voiceCents(
   ad: ProductAdRecord,
@@ -455,19 +466,24 @@ export function voiceCents(
 export function VoiceRail({
   workspaceId,
   ad,
-  onAd,
+  pick,
+  onPick,
+  sending,
+  problem,
   blocked,
 }: {
   workspaceId: string;
   ad: ProductAdRecord;
-  /** The voice run's answer: the ad, its voice run started. */
-  onAd: (ad: ProductAdRecord) => void;
+  /** The voice picked for the next Update; null when it's the video's own. */
+  pick: VoicePick | null;
+  onPick: (pick: VoicePick | null) => void;
+  /** An Update is on its way. */
+  sending: boolean;
+  /** Why the last voice change was refused; null otherwise. */
+  problem: string | null;
   /** Why a voice that costs can't start now; null when it can. */
   blocked: string | null;
 }) {
-  const [armed, setArmed] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
   const [consentOpen, setConsentOpen] = useState(false);
   // Airi voices' samples, asked for the first time one is tapped; the
   // tapped one plays as soon as they're in.
@@ -541,36 +557,25 @@ export function VoiceRail({
     },
   ];
   const fellBack = ad.voiceResult?.fallback ? ad.voiceResult.used : null;
-  const nowKey =
-    ad.voice === "stock" ? `stock:${ad.stockVoiceId ?? ""}` : ad.voice;
+  const nowKey = adVoiceKey(ad);
+  const shownKey = pick?.key ?? nowKey;
   const running = ad.status === "making" && ad.runKind === "voice";
   const busy = ad.status !== "ready" || sending;
   const copying = copied.data?.state === "pending";
-
-  const apply = async (face: Face) => {
-    setSending(true);
-    setProblem(null);
-    try {
-      onAd(
-        await changeProductAdVoice(workspaceId, ad.id, {
-          requestId: adRequestId(),
-          voice: face.voice,
-          ...(face.stockVoiceId ? { stockVoiceId: face.stockVoiceId } : {}),
-        })
-      );
-    } catch (error) {
-      const code = error instanceof ProductDraftError ? error.code : "failed";
-      const refusals: Record<string, string> = PRODUCTS_COPY.adVoice.refusals;
-      setProblem(refusals[code] ?? COPY.voiceFailed);
-    } finally {
-      setSending(false);
-    }
-  };
+  const pickOf = (face: Face, copyingNow: boolean): VoicePick => ({
+    key: face.key,
+    voice: face.voice,
+    stockVoiceId: face.stockVoiceId,
+    cents: voiceCents(ad, face.voice, face.voice === "clone" && copyingNow),
+  });
 
   const tap = (face: Face) => {
-    setProblem(null);
-    const same = face.key === nowKey && !fellBack;
-    if (same || busy) return;
+    if (busy) return;
+    // The video's own voice puts the pick back, unless it fell back.
+    if (face.key === nowKey && !fellBack) {
+      onPick(null);
+      return;
+    }
     if (
       face.voice === "clone" &&
       copied.data !== undefined &&
@@ -584,16 +589,9 @@ export function VoiceRail({
       if (samples.data) playSample(samples.data, face.stockVoiceId);
       else setSamplesWanted(true);
     }
-    const cents = voiceCents(ad, face.voice, face.voice === "clone" && copying);
-    if (cents > 0) {
-      if (blocked) return;
-      if (armed !== face.key) {
-        setArmed(face.key);
-        return;
-      }
-    }
-    setArmed(null);
-    void apply(face);
+    const next = pickOf(face, copying);
+    if (next.cents > 0 && blocked) return;
+    onPick(next);
   };
 
   return (
@@ -617,8 +615,9 @@ export function VoiceRail({
       }
     >
       {faces.map(face => {
-        const on = face.key === nowKey;
-        const isArmed = armed === face.key;
+        const on = face.key === shownKey;
+        // Picked for the next Update, not in the video yet.
+        const picked = pick?.key === face.key;
         const cents = voiceCents(
           ad,
           face.voice,
@@ -632,12 +631,12 @@ export function VoiceRail({
             className={styles.face}
             aria-pressed={on}
             data-on={on || undefined}
-            data-armed={isArmed || undefined}
+            data-armed={picked || undefined}
             disabled={busy || locked}
             aria-label={
-              isArmed
-                ? `${face.label}: ${COPY.voice.make(cents)}`
-                : on
+              picked
+                ? `${face.label}, ${COPY.voice.picked(cents)}`
+                : face.key === nowKey
                   ? `${face.label}, ${COPY.voice.now}`
                   : face.label
             }
@@ -651,8 +650,9 @@ export function VoiceRail({
                 </span>
               ) : null}
             </span>
+            {/* The price is on the Update button; a face keeps its name. */}
             <span className={styles.faceName} aria-hidden="true">
-              {isArmed ? COPY.voice.make(cents) : face.label}
+              {face.label}
             </span>
           </button>
         );
@@ -666,8 +666,10 @@ export function VoiceRail({
         onAgreed={voice => {
           void copied.mutate(voice, { revalidate: false });
           setConsentOpen(false);
-          // The copy is made; the voice run still waits for its own tap.
-          if (isLive(voice)) setArmed("clone");
+          // The copy is made; the new voice is picked and waits for Update.
+          const clone = faces.find(face => face.voice === "clone");
+          if (clone && isLive(voice))
+            onPick(pickOf(clone, voice.state === "pending"));
         }}
       />
     </Rail>

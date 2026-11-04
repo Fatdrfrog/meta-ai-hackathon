@@ -376,6 +376,8 @@ export type ProductAdVoiceRequest = {
   voice: ProductAdVoiceMode;
   /** With voice "stock": one of PRODUCT_AD_STOCK_VOICES' ids. */
   stockVoiceId?: string;
+  /** The workbench's pending free changes, made in the same run as the new voice. */
+  changes?: ProductAdUpdateRequest;
 };
 
 export type ProductAdResponse = { ad: ProductAdRecord };

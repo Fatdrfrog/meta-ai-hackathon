@@ -26,6 +26,8 @@ const mockConfigured = jest.fn();
 const mockAdmission = jest.fn();
 const mockStart = jest.fn();
 const mockLoadAd = jest.fn();
+const mockChangesIssues = jest.fn((..._args: unknown[]): string[] => []);
+const mockChangesSet = jest.fn();
 const mockLoggerError = jest.fn();
 const mockAssertAiEnabled = jest.fn();
 
@@ -63,6 +65,8 @@ jest.mock("@icecore/airi-runtime/elevenlabs-tts", () => ({
 }));
 jest.mock("@/lib/products/ads", () => ({
   adAdmissionStop: (...args: unknown[]) => mockAdmission(...args),
+  adChangesIssues: (...args: unknown[]) => mockChangesIssues(...args),
+  adChangesSet: (...args: unknown[]) => mockChangesSet(...args),
   loadProductAdRecord: (...args: unknown[]) => mockLoadAd(...args),
   startAdRun: (...args: unknown[]) => mockStart(...args),
 }));
@@ -853,6 +857,70 @@ describe("reading an ad in another voice", () => {
     ).rejects.toThrow("Temporal down");
     expect(mockAdUpdateOne).toHaveBeenCalledWith(expect.anything(), {
       $set: expect.objectContaining({ voiceResult: fellBack }),
+    });
+  });
+
+  it("makes the workbench's picks in the same voice run, checked as PATCH checks them", async () => {
+    const changes = { scenes: [{ productId: "p1", useExact: true }] };
+    const saved = { script: { sticker: "s" }, scenes: [{ productId: "p1" }] };
+    mockChangesSet.mockReturnValue(saved);
+    expect(
+      await changeProductAdVoice({
+        workspaceId: WS,
+        adId: AD,
+        request: { voice: "stock", stockVoiceId: stock, changes },
+        now,
+      })
+    ).toEqual(expect.objectContaining({ started: true }));
+    expect(mockChangesIssues).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: AD }),
+      changes
+    );
+    expect(mockAdFindOneAndUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        $set: expect.objectContaining({
+          ...saved,
+          voice: "stock",
+          runKind: "voice",
+          renderNo: 4,
+        }),
+      },
+      { new: true }
+    );
+    expect(mockStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses picks that don't fit, and starts nothing", async () => {
+    mockChangesIssues.mockReturnValueOnce(["sticker: too long"]);
+    expect(
+      await changeProductAdVoice({
+        workspaceId: WS,
+        adId: AD,
+        request: { voice: "none", changes: { sticker: "x" } },
+      })
+    ).toEqual({ refused: "invalid_request", issues: ["sticker: too long"] });
+    expect(mockAdFindOneAndUpdate).not.toHaveBeenCalled();
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("puts the picks back with the voice when the run can't start", async () => {
+    mockChangesSet.mockReturnValue({ script: { sticker: "new" }, scenes: [] });
+    mockStart.mockRejectedValue(new Error("Temporal down"));
+    await expect(
+      changeProductAdVoice({
+        workspaceId: WS,
+        adId: AD,
+        request: { voice: "none", changes: { sticker: "new" } },
+      })
+    ).rejects.toThrow("Temporal down");
+    expect(mockAdUpdateOne).toHaveBeenCalledWith(expect.anything(), {
+      $set: expect.objectContaining({
+        script: { sticker: "s" },
+        motion: "shelf",
+        voice: "own",
+        status: "ready",
+      }),
     });
   });
 

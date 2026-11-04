@@ -450,7 +450,16 @@ export function ProductShelfSkeleton() {
   );
 }
 
-/** A message standing on an empty shelf, where products will be. */
+// What stands on the empty shelf, one to a bay: a bottle, a box, a jar and a
+// carton, drawn as dashed outlines. Two show on a phone, three from 640px and
+// four from 1024px, as many as the shelf's bays.
+const GHOSTS = ["bottle", "box", "jar", "carton"] as const;
+
+/**
+ * An empty wall shelf: the message on the wall, ghost products standing on
+ * the plank where products will be, each with a blank label on its edge, and
+ * the brackets that hold it.
+ */
 export function EmptyShelf({
   children,
   lit = true,
@@ -461,15 +470,27 @@ export function EmptyShelf({
 }) {
   return (
     <div className={styles.empty} data-light={lit ? undefined : "off"}>
-      <div className={styles.emptyWall}>{children}</div>
-      <Board>
-        <div className={styles.ghostTags}>
-          <span />
-          <span />
-          <span />
-          <span />
+      <div className={styles.emptyWall}>
+        <div className={styles.emptyMessage}>{children}</div>
+        <div aria-hidden="true" className={styles.ghostRow}>
+          {GHOSTS.map(shape => (
+            <span key={shape} className={styles.ghostBay}>
+              <span data-shape={shape} className={styles.ghost} />
+            </span>
+          ))}
         </div>
-      </Board>
+      </div>
+      <div aria-hidden="true" className={styles.top} />
+      <div aria-hidden="true" className={styles.lip}>
+        <div className={styles.ghostTags}>
+          {GHOSTS.map(shape => (
+            <span key={shape} className={styles.ghostBay}>
+              <span className={styles.ghostTag} />
+            </span>
+          ))}
+        </div>
+      </div>
+      <div aria-hidden="true" className={styles.emptyBelow} />
     </div>
   );
 }

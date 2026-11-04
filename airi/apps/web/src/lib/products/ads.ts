@@ -1205,13 +1205,33 @@ export async function createProductAd(params: {
  * script's checks, and the scene choices against its scenes. Empty when
  * they pass.
  */
-const adChangesIssues = (doc: IProductAd, changes: ProductAdUpdateRequest) => [
+export const adChangesIssues = (
+  doc: IProductAd,
+  changes: ProductAdUpdateRequest
+) => [
   ...adWordsIssues(
     changes,
     doc.products.map(product => product.productId)
   ),
   ...adSceneChangeIssues(changes.scenes, doc.scenes ?? []),
 ];
+
+/**
+ * What the owner's checked free changes save with a run that carries them (a
+ * new voice): the words, left unmarked as edited when they're the same, the
+ * scenes' choices, and another Reel tile's motion.
+ */
+export const adChangesSet = (
+  doc: IProductAd,
+  changes: ProductAdUpdateRequest
+) => {
+  const words = doc.script ? applyAdWords(doc.script, changes) : null;
+  return {
+    script: words && !sameAdWords(doc.script!, words) ? words : doc.script,
+    scenes: applyAdSceneChanges(doc.scenes ?? [], changes.scenes),
+    ...(changes.motion ? { motion: changes.motion } : {}),
+  };
+};
 
 /**
  * The ad as it was before a run that couldn't start: its words, scenes,

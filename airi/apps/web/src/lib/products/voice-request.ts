@@ -1,4 +1,7 @@
-import { isAdObjectId } from "@/lib/products/ad-request";
+import {
+  isAdObjectId,
+  parseProductAdUpdateRequest,
+} from "@/lib/products/ad-request";
 import {
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_VOICE_MODES,
@@ -66,14 +69,15 @@ export function parseProductVoiceSourceQuery(
 }
 
 /**
- * POST /products/ads/[adId]/voice: a request id, a voice mode, and an Airi
- * voice exactly with "stock". Null for any other body.
+ * POST /products/ads/[adId]/voice: a request id, a voice mode, an Airi voice
+ * exactly with "stock", and any pending free changes as PATCH takes them.
+ * Null for any other body.
  */
 export function parseProductAdVoiceRequest(
   body: unknown
 ): ProductAdVoiceRequest | null {
   if (!isObject(body)) return null;
-  const known = new Set(["requestId", "voice", "stockVoiceId"]);
+  const known = new Set(["requestId", "voice", "stockVoiceId", "changes"]);
   if (Object.keys(body).some(key => !known.has(key))) return null;
   const requestId =
     typeof body.requestId === "string" ? body.requestId.trim() : "";
@@ -81,13 +85,22 @@ export function parseProductAdVoiceRequest(
   if (!(PRODUCT_AD_VOICE_MODES as readonly unknown[]).includes(body.voice))
     return null;
   const voice = body.voice as ProductAdVoiceMode;
+  let request: ProductAdVoiceRequest;
   if (voice === "stock") {
     const stock = productAdStockVoice(body.stockVoiceId);
-    return stock ? { requestId, voice, stockVoiceId: stock.id } : null;
+    if (!stock) return null;
+    request = { requestId, voice, stockVoiceId: stock.id };
+  } else {
+    if (body.stockVoiceId !== undefined && body.stockVoiceId !== null)
+      return null;
+    request = { requestId, voice };
   }
-  if (body.stockVoiceId !== undefined && body.stockVoiceId !== null)
-    return null;
-  return { requestId, voice };
+  if (body.changes !== undefined) {
+    const changes = parseProductAdUpdateRequest(body.changes);
+    if (!changes) return null;
+    request.changes = changes;
+  }
+  return request;
 }
 
 /** A sample's language, `?language=kk|ru|en`; English when it's missing. */

@@ -590,8 +590,8 @@ describe("the workbench", () => {
   });
 });
 
-describe("free changes apply themselves", () => {
-  it("sends one PATCH 1.5 s after the last look picked", async () => {
+describe("picks wait for Update", () => {
+  it("holds every look picked until Update, then sends them as one PATCH", async () => {
     routes[`PATCH ${AD_URL}`] = answer(
       { ad: adRecord({ status: "making", runKind: "render", renderNo: 2 }) },
       202
@@ -602,11 +602,16 @@ describe("free changes apply themselves", () => {
     fireEvent.click(wall);
     fireEvent.click(screen.getByRole("button", { name: /^Oak table\./ }));
     await act(async () => {
-      jest.advanceTimersByTime(1499);
+      jest.advanceTimersByTime(60_000);
     });
     expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
+    expect(
+      screen.getByText("Update the video first, or discard your picks")
+    ).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Update video" }));
     await act(async () => {
-      jest.advanceTimersByTime(1);
+      jest.advanceTimersByTime(0);
     });
     expect(callsTo("PATCH", AD_URL)).toHaveLength(1);
     expect(bodyOf("PATCH", AD_URL)).toEqual({
@@ -615,7 +620,7 @@ describe("free changes apply themselves", () => {
     expect(screen.getByText("Updating")).toBeVisible();
   });
 
-  it("cycles the opening with a tap on its sticker", async () => {
+  it("cycles the opening with a tap on its sticker, made on Update", async () => {
     routes[`PATCH ${AD_URL}`] = answer(
       { ad: adRecord({ status: "making", runKind: "render", renderNo: 2 }) },
       202
@@ -624,14 +629,28 @@ describe("free changes apply themselves", () => {
     const sticker = await screen.findByRole("button", {
       name: /Opening 1 of 3/,
     });
-    jest.useFakeTimers();
     fireEvent.click(sticker);
-    await act(async () => {
-      jest.advanceTimersByTime(1500);
-    });
+    expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Update video" }));
+    await waitFor(() => expect(callsTo("PATCH", AD_URL)).toHaveLength(1));
     expect(bodyOf("PATCH", AD_URL)).toEqual({
       sticker: "Сыйлық іздеп жүрсіз бе?",
     });
+  });
+
+  it("puts every pick back on Discard, and sends nothing", async () => {
+    bench("reel_shelf");
+    fireEvent.click(await screen.findByRole("button", { name: /^Wall\./ }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Opening 1 of 3/ })
+    );
+    expect(screen.getByRole("button", { name: "Update video" })).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    expect(
+      screen.queryByRole("button", { name: "Update video" })
+    ).not.toBeInTheDocument();
+    expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
   });
 
   it("makes the video again in the tile's motion", async () => {
@@ -685,7 +704,7 @@ describe("free changes apply themselves", () => {
     expect(screen.getAllByText("AI is off for your company")[0]).toBeVisible();
   });
 
-  it("plays an Airi voice on its first tap and applies it on the second", async () => {
+  it("plays an Airi voice on its tap, and makes it with the other picks on Update", async () => {
     const SAMPLES = `${VOICE_URL}/samples?language=kk`;
     const VOICE_RUN = `${AD_URL}/voice`;
     routes[`GET ${SAMPLES}`] = answer({
@@ -710,16 +729,26 @@ describe("free changes apply themselves", () => {
     await waitFor(() => expect(jessica).toBeEnabled());
     fireEvent.click(jessica);
     await waitFor(() => expect(play).toHaveBeenCalled());
+    expect(
+      screen.getByRole("button", {
+        name: "Jessica, picked, $0.02 on Update",
+      })
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: /^Wall\./ }));
     expect(callsTo("POST", VOICE_RUN)).toHaveLength(0);
+
     fireEvent.click(
-      screen.getByRole("button", { name: "Jessica: Make · $0.02" })
+      screen.getByRole("button", { name: "Update video · $0.02" })
     );
     await waitFor(() => expect(callsTo("POST", VOICE_RUN)).toHaveLength(1));
+    // One run: the free pick rides along with the new voice, no PATCH.
     expect(bodyOf("POST", VOICE_RUN)).toEqual({
       requestId: expect.any(String),
       voice: "stock",
       stockVoiceId: "cgSgspJ2msm6clMCkdW9",
+      changes: { scenes: [{ productId: DOLL, useExact: true }] },
     });
+    expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
     play.mockRestore();
   });
 });

@@ -19,7 +19,10 @@ jest.mock("@/lib/mongoose", () => ({
   default: () => mockConnect(),
 }));
 jest.mock("@/lib/logger", () => ({
-  logger: { error: (...args: unknown[]) => mockLoggerError(...args) },
+  logger: {
+    error: (...args: unknown[]) => mockLoggerError(...args),
+    warn: jest.fn(),
+  },
 }));
 jest.mock("@/lib/products/voices", () => ({
   changeProductAdVoice: (...args: unknown[]) => mockChange(...args),
@@ -70,6 +73,38 @@ it("answers 202 with the ad, its voice run started", async () => {
     adId,
     request: { requestId: "r1", voice: "stock", stockVoiceId: STOCK },
   });
+});
+
+it("passes the workbench's picks along, and answers 400 with the first issues when they don't fit", async () => {
+  const changes = { scenes: [{ productId: adId, useExact: true }] };
+  expect((await post({ requestId: "r1", voice: "none", changes })).status).toBe(
+    202
+  );
+  expect(mockChange).toHaveBeenCalledWith({
+    workspaceId,
+    adId,
+    request: { requestId: "r1", voice: "none", changes },
+  });
+
+  mockChange.mockResolvedValue({
+    refused: "invalid_request",
+    issues: ["a", "b", "c", "d"],
+  });
+  const response = await post({ requestId: "r1", voice: "none", changes });
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual(
+    expect.objectContaining({
+      code: "invalid_request",
+      issues: ["a", "b", "c"],
+    })
+  );
+  // Changes that aren't PATCH's shape never reach the run.
+  mockChange.mockClear();
+  expect(
+    (await post({ requestId: "r1", voice: "none", changes: { junk: 1 } }))
+      .status
+  ).toBe(400);
+  expect(mockChange).not.toHaveBeenCalled();
 });
 
 it("answers 200 as it is when nothing changes", async () => {

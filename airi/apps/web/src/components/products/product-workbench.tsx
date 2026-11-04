@@ -77,13 +77,16 @@ import {
   type WorkbenchPicture,
 } from "./product-workbench-preview";
 import {
+  adVoiceKey,
   LookRail,
   ShotsRail,
   VoiceRail,
+  type VoicePick,
   type WorkbenchLook,
 } from "./product-workbench-rails";
 import styles from "./product-workbench.module.css";
 import { ProductDraftError } from "./products-client";
+import { changeProductAdVoice } from "./voices-client";
 import {
   useAdAutoUpdate,
   useNow,
@@ -98,12 +101,13 @@ import {
 // returns focus to the tile. Not product-stage.tsx, which is the import's
 // stage.
 //
-// Free changes (a look, Wall, an opening or ending, the tile's motion) apply
-// themselves: 1.5 s after the last one, one free render run, one at a time,
-// while the earlier video keeps playing. Paid runs (New place, a voice that
-// costs) need their own second tap. Only Post asks first (it's public), and
-// Run (it spends); Create ad makes everything paused, and Create on
-// WhatsApp only submits for review.
+// Picks (a look, Wall, an opening or ending, a voice) wait for the owner's
+// one Update press: one run for all of them, a free render or, with a new
+// voice, the voice run, whose price the button names; the earlier video keeps
+// playing meanwhile. Opening another Reel tile makes its motion at once. New
+// place needs its own second tap. Only Post asks first (it's public), and Run
+// (it spends); Create ad makes everything paused, and Create on WhatsApp only
+// submits for review.
 
 const COPY = PRODUCTS_COPY.workbench;
 const AD = PRODUCTS_COPY.ad;
@@ -390,17 +394,19 @@ function AdWorkbench({
     onStale: refresh,
   });
 
-  // A Reel tile shows the ad in its own motion: switching tiles makes the
-  // video again in it, free (a 409 while a run goes waits in the queue).
+  // A Reel tile shows the ad in its own motion: opening another one makes
+  // the video again in it at once, free, as Update would, with any picks
+  // waiting (a 409 while a run goes waits for its end).
   const want =
     template.renderer === "motion" ? (template.motion ?? null) : null;
   const motion = ad ? productAdMotionOf(ad.motion) : null;
   const hasVideo = Boolean(ad?.video);
-  const { queue } = auto;
+  const { queue, send } = auto;
   useEffect(() => {
     if (!want || !hasVideo || motion === null || motion === want) return;
     queue({ motion: want });
-  }, [want, motion, hasVideo, queue]);
+    send();
+  }, [want, motion, hasVideo, queue, send]);
 
   // A run that ends changes the tiles' art and stamps on the page.
   const status = ad?.status;
@@ -781,6 +787,10 @@ function AdReadyBench({
   const [runOpen, setRunOpen] = useState(false);
   const [describe, setDescribe] = useState(false);
   const [placeProblem, setPlaceProblem] = useState<string | null>(null);
+  // A voice picked on the rail; it waits for Update with the other picks.
+  const [voicePick, setVoicePick] = useState<VoicePick | null>(null);
+  const [voiceSending, setVoiceSending] = useState(false);
+  const [voiceProblem, setVoiceProblem] = useState<string | null>(null);
 
   const settle = useCallback(() => {
     refresh();
@@ -799,7 +809,19 @@ function AdReadyBench({
     : null;
 
   const running = ad.status === "making";
-  const updating = running || auto.pending !== null || auto.sending;
+  const updating = running || auto.sending || voiceSending;
+  // The picks waiting for Update: free changes, and a voice the video hasn't.
+  const voiceChange =
+    voicePick && (voicePick.key !== adVoiceKey(ad) || ad.voiceResult?.fallback)
+      ? voicePick
+      : null;
+  const hasChanges = auto.pending !== null || voiceChange !== null;
+  // Why Post and Create wait: an update going, or picks not made yet.
+  const updateWhy = updating
+    ? COPY.states.waitForUpdate
+    : hasChanges
+      ? COPY.states.updateFirst
+      : null;
   const colourway = colourways[shotId] ?? null;
   const look = lookOf(template, ad, shotId, colourway, carouselLook);
 
@@ -922,6 +944,45 @@ function AdReadyBench({
     }
   };
 
+  // Update: every pick in one run. A new voice carries the free changes in
+  // its voice run; otherwise they go as one free render.
+  const update = async () => {
+    if (!voiceChange) {
+      auto.send();
+      return;
+    }
+    setVoiceSending(true);
+    setVoiceProblem(null);
+    const changes = auto.take();
+    try {
+      setAd(
+        await changeProductAdVoice(workspaceId, ad.id, {
+          requestId: adRequestId(),
+          voice: voiceChange.voice,
+          ...(voiceChange.stockVoiceId
+            ? { stockVoiceId: voiceChange.stockVoiceId }
+            : {}),
+          ...(changes ? { changes } : {}),
+        })
+      );
+      setVoicePick(null);
+    } catch (error) {
+      // The picks stay, to update again or discard.
+      if (changes) auto.queue(changes);
+      const code = error instanceof ProductDraftError ? error.code : "failed";
+      const refusals: Record<string, string> = PRODUCTS_COPY.adVoice.refusals;
+      setVoiceProblem(refusals[code] ?? COPY.voiceFailed);
+    } finally {
+      setVoiceSending(false);
+    }
+  };
+  const discard = () => {
+    auto.cancel();
+    setVoicePick(null);
+    setVoiceProblem(null);
+  };
+  const updateCents = voiceChange?.cents ?? 0;
+
   // ⋯
   const items: MoreItem[] = [
     ...(ad.video
@@ -960,12 +1021,12 @@ function AdReadyBench({
           },
         ]
       : []),
-    ...(auto.pending
+    ...(hasChanges
       ? [
           {
             key: "back",
             label: COPY.menu.backToVideo(ad.video?.renderNo ?? ad.renderNo),
-            onSelect: auto.cancel,
+            onSelect: discard,
           },
         ]
       : []),
@@ -1057,8 +1118,8 @@ function AdReadyBench({
         ? COPY.states.priceToCheck
         : pageMissing
           ? COPY.states.pageWhatsAppMissing
-          : updating
-            ? COPY.states.waitForUpdate
+          : updateWhy
+            ? updateWhy
             : assetMissing
               ? COPY.states.noPicture
               : null;
@@ -1167,8 +1228,8 @@ function AdReadyBench({
         ? COPY.states.priceToCheck
         : instagram?.quotaLeft === 0
           ? COPY.states.instagramQuota
-          : updating
-            ? COPY.states.waitForUpdate
+          : updateWhy
+            ? updateWhy
             : !publish
               ? COPY.states.noPicture
               : null;
@@ -1271,7 +1332,13 @@ function AdReadyBench({
               <VoiceRail
                 workspaceId={workspaceId}
                 ad={ad}
-                onAd={setAd}
+                pick={voiceChange}
+                onPick={next => {
+                  setVoiceProblem(null);
+                  setVoicePick(next);
+                }}
+                sending={voiceSending}
+                problem={voiceProblem}
                 blocked={paidBlocked}
               />
             ) : null}
@@ -1281,7 +1348,29 @@ function AdReadyBench({
           <div className={styles.updating} role="status">
             <span className={styles.updatingChip}>{COPY.updating}</span>
             <span className={styles.updatingBar} aria-hidden="true" />
-            <span className={styles.note}>{COPY.updatingNote}</span>
+            <span className={styles.note}>
+              {voiceSending || (running && ad.runKind !== "render")
+                ? COPY.updatingNotePaid
+                : COPY.updatingNote}
+            </span>
+          </div>
+        ) : hasChanges ? (
+          <div className={styles.updateBar}>
+            <p className={styles.note}>{COPY.update.waiting}</p>
+            <div className={styles.updateActions}>
+              <Button type="button" variant="outline" onClick={discard}>
+                {COPY.update.discard}
+              </Button>
+              <Button
+                type="button"
+                disabled={updateCents > 0 && paidBlocked !== null}
+                onClick={() => void update()}
+              >
+                {updateCents > 0
+                  ? COPY.update.buttonCost(updateCents)
+                  : COPY.update.button}
+              </Button>
+            </div>
           </div>
         ) : null}
         {auto.problem ? (

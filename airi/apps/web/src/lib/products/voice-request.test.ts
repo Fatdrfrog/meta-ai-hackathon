@@ -104,6 +104,43 @@ describe("an ad's new voice", () => {
     ).toEqual({ requestId: "r1", voice: "none" });
   });
 
+  it("carries the workbench's picks as PATCH takes them, and refuses changes that aren't", () => {
+    expect(
+      parseProductAdVoiceRequest({
+        requestId: "r1",
+        voice: "none",
+        changes: { sticker: "  New   opening " },
+      })
+    ).toEqual({
+      requestId: "r1",
+      voice: "none",
+      changes: { sticker: "New opening" },
+    });
+    expect(
+      parseProductAdVoiceRequest({
+        requestId: "r1",
+        voice: "stock",
+        stockVoiceId: STOCK,
+        changes: { motion: "float" },
+      })
+    ).toEqual({
+      requestId: "r1",
+      voice: "stock",
+      stockVoiceId: STOCK,
+      changes: { motion: "float" },
+    });
+    expect(
+      parseProductAdVoiceRequest({ requestId: "r1", voice: "own", changes: {} })
+    ).toBeNull();
+    expect(
+      parseProductAdVoiceRequest({
+        requestId: "r1",
+        voice: "own",
+        changes: { junk: 1 },
+      })
+    ).toBeNull();
+  });
+
   it("refuses an unknown voice, a stock without one of airi's, and stray keys", () => {
     expect(
       parseProductAdVoiceRequest({ requestId: "r1", voice: "robot" })

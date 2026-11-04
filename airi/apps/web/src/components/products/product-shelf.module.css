@@ -362,29 +362,33 @@
 
 /* ---------------------------------------------------------------- empty */
 
-/* The empty shelf: the message stands on the wall, above a plank with dashed
-   ghost labels where products will be. */
+/* The empty shelf: one wall shelf. The message is on the wall; under it,
+   dashed ghost products stand on the same birch plank the bays use, sunk 4px
+   into its top like products, each with a blank label clipped to the edge
+   below it. Two brackets hold the plank, and the wall runs on beneath it. */
 .empty {
+  --ghost-scale: 1;
   overflow: hidden;
   border-radius: var(--p-r-tile);
   background: var(--p-wall);
   box-shadow: 0 0 0 1px var(--p-line);
+}
+@media (min-width: 640px) {
+  .empty {
+    --ghost-scale: 1.18;
+  }
 }
 .emptyWall {
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 32px 18px 24px;
-  text-align: center;
+  padding-top: 32px;
   background: linear-gradient(var(--p-wall), var(--p-wall-low));
 }
 @media (min-width: 640px) {
   .emptyWall {
-    min-height: 300px;
-    padding: 44px 24px 30px;
+    padding-top: 44px;
   }
 }
 .emptyWall::before {
@@ -402,34 +406,153 @@
 .empty[data-light="off"] .emptyWall::before {
   opacity: 0.15;
 }
+.emptyMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 18px;
+  text-align: center;
+}
+@media (min-width: 640px) {
+  .emptyMessage {
+    padding: 0 24px;
+  }
+}
+
+/* The ghosts and their labels share one grid, so each label hangs under
+   its own ghost: 2, 3 and 4 bays, like the shelf. */
+.ghostRow,
 .ghostTags {
-  position: absolute;
-  inset: 1px 0 auto;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   pointer-events: none;
 }
-.ghostTags span {
-  justify-self: center;
-  width: 54px;
-  height: 22px;
-  border-radius: 3px;
-  outline: 1px dashed color-mix(in oklab, var(--p-ink) 22%, transparent);
-  outline-offset: -1px;
-  /* A faint sheet of the raised paper, so the dashes carry the ghost in
-     the evening shop too. */
-  background: color-mix(in oklab, var(--p-raised) 50%, transparent);
-}
-.ghostTags span:nth-child(n + 3) {
-  display: none;
-}
 @media (min-width: 640px) {
+  .ghostRow,
+  .ghostTags {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .ghostRow,
   .ghostTags {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .ghostTags span:nth-child(n + 3) {
-    display: block;
+}
+.ghostBay {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+}
+.ghostBay:nth-child(n + 3) {
+  display: none;
+}
+@media (min-width: 640px) {
+  .ghostBay:nth-child(3) {
+    display: flex;
   }
+}
+@media (min-width: 1024px) {
+  .ghostBay:nth-child(4) {
+    display: flex;
+  }
+}
+
+/* Room for the tallest ghost above the plank; the row sinks 4px into the
+   plank's top, which is drawn over it. */
+.ghostRow {
+  position: relative;
+  z-index: 1;
+  height: calc(92px * var(--ghost-scale));
+  margin: 28px 0 -4px;
+}
+@media (min-width: 640px) {
+  .ghostRow {
+    margin-top: 36px;
+  }
+}
+.ghost {
+  position: relative;
+  display: block;
+  width: calc(var(--w) * var(--ghost-scale));
+  height: calc(var(--h) * var(--ghost-scale));
+  border-radius: var(--r);
+  outline: 1.5px dashed color-mix(in oklab, var(--p-ink) 20%, transparent);
+  outline-offset: -1.5px;
+  /* A faint sheet of the raised paper, so the dashes carry the ghost in
+     the evening shop too. */
+  background: color-mix(in oklab, var(--p-raised) 45%, transparent);
+}
+.ghost[data-shape="bottle"] {
+  --w: 32px;
+  --h: 80px;
+  --r: 15px 15px 6px 6px;
+}
+.ghost[data-shape="box"] {
+  --w: 70px;
+  --h: 50px;
+  --r: 5px;
+}
+.ghost[data-shape="jar"] {
+  --w: 50px;
+  --h: 62px;
+  --r: 12px 12px 9px 9px;
+}
+.ghost[data-shape="carton"] {
+  --w: 42px;
+  --h: 72px;
+  --r: 5px;
+}
+.empty[data-light="off"] .ghost {
+  opacity: 0.55;
+}
+
+/* A blank label per ghost, clipped to the plank's edge where a price goes. */
+.ghostTags {
+  position: absolute;
+  inset: 1px 0 auto;
+}
+.ghostTag {
+  display: block;
+  width: 48px;
+  height: 20px;
+  border-radius: var(--p-r-label);
+  outline: 1px dashed color-mix(in oklab, var(--p-ink) 22%, transparent);
+  outline-offset: -1px;
+  background: color-mix(in oklab, var(--p-raised) 50%, transparent);
+}
+
+/* The wall under the plank, in its shade, with a bracket near each end. */
+.emptyBelow {
+  position: relative;
+  height: 40px;
+  background:
+    linear-gradient(var(--p-under), transparent 70%), var(--p-wall-low);
+}
+@media (min-width: 640px) {
+  .emptyBelow {
+    height: 48px;
+  }
+}
+.emptyBelow::before,
+.emptyBelow::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 7px;
+  height: 24px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(var(--p-ply-low), var(--p-ply));
+  box-shadow:
+    inset -1px 0 0 var(--p-ply-shade),
+    3px 4px 6px -3px rgb(var(--p-shade) / 0.35);
+}
+.emptyBelow::before {
+  left: 9%;
+}
+.emptyBelow::after {
+  right: 9%;
 }
 
 /* A long shelf paints only the bays in view; a bay is about 17rem tall. */

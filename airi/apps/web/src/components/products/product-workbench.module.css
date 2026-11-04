@@ -835,6 +835,36 @@ button.endingSticker:focus-visible {
 
 /* --------------------------------------------------------- updating, steps */
 
+/* The picks waiting for the one Update press: a line about them, then
+   Discard and Update; on a phone the buttons share the row. */
+.updateBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+  padding: 12px 14px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-accent-wash);
+}
+.updateBar .note {
+  flex: 1 1 200px;
+  margin: 0;
+}
+.updateActions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+@media (max-width: 639px) {
+  .updateActions {
+    flex: 1 1 100%;
+  }
+  .updateActions > * {
+    flex: 1 1 0;
+  }
+}
+
 .updating {
   display: flex;
   flex-wrap: wrap;

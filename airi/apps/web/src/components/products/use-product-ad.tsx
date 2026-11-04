@@ -77,15 +77,13 @@ export function useNarrowStudio(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Studio v3: free changes apply themselves. The workbench's picture rails
-// (a look, Wall, an opening or ending, another motion) queue a change; 1.5 s
-// after the last one, the merged change goes as ONE PATCH, a free render run.
-// One at a time: while a run goes, later changes wait as one merged pending
-// change, sent when the run ends; a 409 ad_not_ready (a run started
-// elsewhere) keeps it waiting. Paid runs never start here.
-
-/** How long after the last free change it is sent. */
-export const PRODUCT_AD_AUTO_UPDATE_MS = 1500;
+// The workbench's free changes wait for the owner. The picture rails (a
+// look, Wall, an opening or ending, another motion) queue a change, and the
+// owner picks as many as they like; nothing is made until they press Update,
+// when the merged change goes as ONE PATCH, a free render run (or rides
+// along with a paid run: a new voice or a new place). One at a time: a press
+// made while a run goes is sent when the run ends, and a 409 ad_not_ready (a
+// run started elsewhere) keeps it waiting. Paid runs never start here.
 
 /** How long a change refused with 409 ad_not_ready waits before it asks again. */
 export const PRODUCT_AD_BUSY_RETRY_MS = 3000;
@@ -193,39 +191,42 @@ export function effectiveAdChanges(
 export type ProductAdAutoUpdate = {
   /** Queued and not sent yet, as the ad doesn't have it; null when nothing waits. */
   pending: ProductAdUpdateRequest | null;
-  /** The PATCH is on its way. */
+  /** Update was pressed: the PATCH is on its way, or waits for the run going to end. */
   sending: boolean;
   /** Why the last PATCH was refused (other than a run going); null otherwise. */
   problem: ProductsErrorCode | "failed" | null;
-  /** Adds a free change; it goes 1.5 s after the last one, or when the run going ends. */
+  /** Adds a free change, which waits for Update. */
   queue: (change: ProductAdUpdateRequest) => void;
-  /** Drops what waits ("Back to video N"). */
+  /** Update: sends what waits as one PATCH, now or when the run going ends. */
+  send: () => void;
+  /** Drops what waits ("Discard", "Back to video N"). */
   cancel: () => void;
-  /** Takes what waits, for a paid run to carry ("New place"); null when nothing. */
+  /** Takes what waits, for a paid run to carry (a new voice, "New place"); null when nothing. */
   take: () => ProductAdUpdateRequest | null;
 };
 
 /**
- * Debounced, single-flight free changes on one ad. `onAd` gets the PATCH's
- * answer (the ad, its render run started); `onStale` asks for the ad again
- * when the server says a run is going that the page doesn't know of yet.
+ * Single-flight free changes on one ad, sent when the owner presses Update.
+ * `onAd` gets the PATCH's answer (the ad, its render run started);
+ * `onStale` asks for the ad again when the server says a run is going that
+ * the page doesn't know of yet.
  */
 export function useAdAutoUpdate({
   workspaceId,
   ad,
   onAd,
   onStale,
-  delayMs = PRODUCT_AD_AUTO_UPDATE_MS,
   busyRetryMs = PRODUCT_AD_BUSY_RETRY_MS,
 }: {
   workspaceId: string;
   ad: ProductAdRecord | undefined;
   onAd: (ad: ProductAdRecord) => void;
   onStale?: () => void;
-  delayMs?: number;
   busyRetryMs?: number;
 }): ProductAdAutoUpdate {
   const [pending, setPending] = useState<ProductAdUpdateRequest | null>(null);
+  // Update was pressed for what waits; cleared once it's sent or refused.
+  const [requested, setRequested] = useState(false);
   const [dueAt, setDueAt] = useState(0);
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<ProductsErrorCode | "failed" | null>(
@@ -239,7 +240,8 @@ export function useAdAutoUpdate({
   const status = ad?.status;
   const adId = ad?.id;
   useEffect(() => {
-    if (!pending || sending || !adId || status !== "ready") return;
+    if (!requested || !pending || sending || !adId || status !== "ready")
+      return;
     const timer = setTimeout(
       () => {
         const now = latest.current;
@@ -248,14 +250,16 @@ export function useAdAutoUpdate({
         const changes = effectiveAdChanges(now.ad, pending);
         if (!changes) {
           setPending(current => (current === pending ? null : current));
+          setRequested(false);
           return;
         }
         setSending(true);
         setProblem(null);
         updateProductAd(workspaceId, now.ad.id, changes)
           .then(next => {
-            // What was queued while it went stays queued.
+            // What was picked while it went waits for the next Update.
             setPending(current => (current === pending ? null : current));
+            setRequested(false);
             latest.current.onAd(next);
           })
           .catch((error: unknown) => {
@@ -268,7 +272,8 @@ export function useAdAutoUpdate({
               setDueAt(Date.now() + busyRetryMs);
               return;
             }
-            setPending(current => (current === pending ? null : current));
+            // The picks stay, so Update can be pressed again or discarded.
+            setRequested(false);
             setProblem(code);
           })
           .finally(() => setSending(false));
@@ -276,21 +281,38 @@ export function useAdAutoUpdate({
       Math.max(0, dueAt - Date.now())
     );
     return () => clearTimeout(timer);
-  }, [pending, sending, adId, status, dueAt, workspaceId, busyRetryMs]);
+  }, [
+    requested,
+    pending,
+    sending,
+    adId,
+    status,
+    dueAt,
+    workspaceId,
+    busyRetryMs,
+  ]);
 
-  const queue = useCallback(
-    (change: ProductAdUpdateRequest) => {
-      setPending(current => mergeAdChanges(current, change));
-      setDueAt(Date.now() + delayMs);
-      setProblem(null);
-    },
-    [delayMs]
-  );
-  const cancel = useCallback(() => setPending(null), []);
+  const queue = useCallback((change: ProductAdUpdateRequest) => {
+    setPending(current => mergeAdChanges(current, change));
+    // A pick after Update was pressed waits for the next press.
+    setRequested(false);
+    setProblem(null);
+  }, []);
+  const send = useCallback(() => {
+    setRequested(true);
+    setDueAt(0);
+    setProblem(null);
+  }, []);
+  const cancel = useCallback(() => {
+    setPending(null);
+    setRequested(false);
+    setProblem(null);
+  }, []);
   const take = useCallback(() => {
     const now = latest.current;
     const changes = now.ad ? effectiveAdChanges(now.ad, now.pending) : null;
     setPending(null);
+    setRequested(false);
     return changes;
   }, []);
 
@@ -300,9 +322,10 @@ export function useAdAutoUpdate({
   );
   return {
     pending: effectivePending,
-    sending,
+    sending: sending || (requested && effectivePending !== null),
     problem,
     queue,
+    send,
     cancel,
     take,
   };
@@ -313,6 +336,7 @@ type UpdateRegistry = {
   states: ReadonlyMap<string, ProductAdAutoUpdate>;
   register: (adId: string) => () => void;
   queue: (adId: string, change: ProductAdUpdateRequest) => void;
+  send: (adId: string) => void;
   cancel: (adId: string) => void;
   take: (adId: string) => ProductAdUpdateRequest | null;
 };
@@ -403,6 +427,9 @@ function AdUpdateRegistry({
     },
     [ensure]
   );
+  const send = useCallback((adId: string) => {
+    handles.current.get(adId)?.send();
+  }, []);
   const cancel = useCallback((adId: string) => {
     waiting.current.delete(adId);
     handles.current.get(adId)?.cancel();
@@ -436,8 +463,8 @@ function AdUpdateRegistry({
     [removeIdle]
   );
   const value = useMemo(
-    () => ({ workspaceId, states, register, queue, cancel, take }),
-    [workspaceId, states, register, queue, cancel, take]
+    () => ({ workspaceId, states, register, queue, send, cancel, take }),
+    [workspaceId, states, register, queue, send, cancel, take]
   );
   return (
     <UpdateContext.Provider value={value}>
@@ -470,10 +497,10 @@ function AdUpdateController({
   );
   const onStale = useCallback(() => void mutate(), [mutate]);
   const state = useAdAutoUpdate({ workspaceId, ad, onAd, onStale });
-  const { pending, sending, problem, queue, cancel, take } = state;
+  const { pending, sending, problem, queue, send, cancel, take } = state;
   useEffect(() => {
-    changed(adId, { pending, sending, problem, queue, cancel, take });
-  }, [adId, changed, pending, sending, problem, queue, cancel, take]);
+    changed(adId, { pending, sending, problem, queue, send, cancel, take });
+  }, [adId, changed, pending, sending, problem, queue, send, cancel, take]);
   return null;
 }
 
@@ -493,6 +520,7 @@ export function useSharedAdAutoUpdate(
     if (adId) return register?.(adId);
   }, [adId, register]);
   const queueShared = shared?.queue;
+  const sendShared = shared?.send;
   const cancelShared = shared?.cancel;
   const takeShared = shared?.take;
   const queue = useCallback(
@@ -501,6 +529,9 @@ export function useSharedAdAutoUpdate(
     },
     [adId, queueShared]
   );
+  const send = useCallback(() => {
+    if (adId) sendShared?.(adId);
+  }, [adId, sendShared]);
   const cancel = useCallback(() => {
     if (adId) cancelShared?.(adId);
   }, [adId, cancelShared]);
@@ -515,6 +546,7 @@ export function useSharedAdAutoUpdate(
     sending: state?.sending ?? false,
     problem: state?.problem ?? null,
     queue,
+    send,
     cancel,
     take,
   };

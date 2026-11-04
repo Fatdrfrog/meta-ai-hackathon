@@ -8,7 +8,6 @@ import { ProductDraftError } from "./products-client";
 import {
   effectiveAdChanges,
   mergeAdChanges,
-  PRODUCT_AD_AUTO_UPDATE_MS,
   PRODUCT_AD_BUSY_RETRY_MS,
   PRODUCT_AD_POLL_MS,
   useAdAutoUpdate,
@@ -89,7 +88,7 @@ test("starts asking again once Try again answers with the ad being made", async 
   ]);
 });
 
-// Studio v3: free changes apply themselves, merged, one PATCH at a time.
+// Studio v3: free changes wait for Update, merged, one PATCH at a time.
 
 const DOLL = "doll";
 const MUG = "mug";
@@ -194,26 +193,38 @@ describe("useAdAutoUpdate", () => {
     });
   };
 
-  it("sends one PATCH for a burst of changes, 1.5 s after the last", async () => {
+  it("never sends a pick by itself: the picks wait for Update", async () => {
+    const { result } = renderHook(() =>
+      useAdAutoUpdate({ workspaceId: "w", ad: studioAd(), onAd: jest.fn() })
+    );
+    act(() => result.current.queue({ sticker: "Opening two" }));
+    act(() =>
+      result.current.queue({ scenes: [{ productId: DOLL, useExact: true }] })
+    );
+    await advance(60_000);
+
+    expect(update()).not.toHaveBeenCalled();
+    expect(result.current.sending).toBe(false);
+    expect(result.current.pending).toEqual({
+      sticker: "Opening two",
+      scenes: [{ productId: DOLL, useExact: true }],
+    });
+  });
+
+  it("sends every pick as one PATCH when Update is pressed", async () => {
     update().mockResolvedValue(studioAd({ status: "making", renderNo: 2 }));
     const onAd = jest.fn();
     const { result } = renderHook(() =>
       useAdAutoUpdate({ workspaceId: "w", ad: studioAd(), onAd })
     );
     act(() => result.current.queue({ sticker: "Opening two" }));
-    await advance(1000);
     act(() =>
       result.current.queue({ scenes: [{ productId: DOLL, useExact: true }] })
     );
-    await advance(1000);
     act(() => result.current.queue({ sticker: "Opening three" }));
-    expect(result.current.pending).toEqual({
-      sticker: "Opening three",
-      scenes: [{ productId: DOLL, useExact: true }],
-    });
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS - 1);
-    expect(update()).not.toHaveBeenCalled();
-    await advance(1);
+    act(() => result.current.send());
+    expect(result.current.sending).toBe(true);
+    await advance(0);
 
     expect(update()).toHaveBeenCalledTimes(1);
     expect(update()).toHaveBeenCalledWith("w", "ad-1", {
@@ -224,9 +235,10 @@ describe("useAdAutoUpdate", () => {
       expect.objectContaining({ status: "making", renderNo: 2 })
     );
     expect(result.current.pending).toBeNull();
+    expect(result.current.sending).toBe(false);
   });
 
-  it("waits while a run goes, then sends what waits as one change", async () => {
+  it("sends a press made while a run goes once the run ends", async () => {
     update().mockResolvedValue(studioAd({ status: "making", renderNo: 3 }));
     let ad = studioAd({ status: "making", renderNo: 2 });
     const { result, rerender } = renderHook(() =>
@@ -234,8 +246,10 @@ describe("useAdAutoUpdate", () => {
     );
     act(() => result.current.queue({ motion: "filmed_sold" }));
     act(() => result.current.queue({ ending: "Ending two" }));
+    act(() => result.current.send());
     await advance(10_000);
     expect(update()).not.toHaveBeenCalled();
+    expect(result.current.sending).toBe(true);
 
     ad = studioAd({ status: "ready", renderNo: 2 });
     rerender();
@@ -247,7 +261,7 @@ describe("useAdAutoUpdate", () => {
     });
   });
 
-  it("keeps the change on 409 ad_not_ready and asks for the ad again", async () => {
+  it("keeps the press on 409 ad_not_ready and asks for the ad again", async () => {
     update()
       .mockRejectedValueOnce(new ProductDraftError("ad_not_ready"))
       .mockResolvedValue(studioAd({ status: "making", renderNo: 2 }));
@@ -261,7 +275,8 @@ describe("useAdAutoUpdate", () => {
       })
     );
     act(() => result.current.queue({ motion: "filmed_sold" }));
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
+    act(() => result.current.send());
+    await advance(0);
     expect(update()).toHaveBeenCalledTimes(1);
     expect(onStale).toHaveBeenCalledTimes(1);
     expect(result.current.pending).toEqual({ motion: "filmed_sold" });
@@ -272,18 +287,46 @@ describe("useAdAutoUpdate", () => {
     expect(result.current.pending).toBeNull();
   });
 
-  it("says why another refusal dropped the change", async () => {
+  it("says why another refusal stopped it, and keeps the picks to try again", async () => {
     update().mockRejectedValue(new ProductDraftError("invalid_request"));
     const { result } = renderHook(() =>
       useAdAutoUpdate({ workspaceId: "w", ad: studioAd(), onAd: jest.fn() })
     );
     act(() => result.current.queue({ sticker: "Opening two" }));
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
+    act(() => result.current.send());
+    await advance(0);
     expect(result.current.problem).toBe("invalid_request");
-    expect(result.current.pending).toBeNull();
+    expect(result.current.pending).toEqual({ sticker: "Opening two" });
+    expect(result.current.sending).toBe(false);
+
+    // Nothing goes again until the next press.
+    await advance(60_000);
+    expect(update()).toHaveBeenCalledTimes(1);
   });
 
-  it("hands what waits to a paid run, and Back to the video drops it", async () => {
+  it("holds a pick made after Update was pressed for the next press", async () => {
+    update().mockResolvedValue(studioAd({ status: "making", renderNo: 3 }));
+    let ad = studioAd({ status: "making", renderNo: 2 });
+    const { result, rerender } = renderHook(() =>
+      useAdAutoUpdate({ workspaceId: "w", ad, onAd: jest.fn() })
+    );
+    act(() => result.current.queue({ motion: "filmed_sold" }));
+    act(() => result.current.send());
+    act(() => result.current.queue({ ending: "Ending two" }));
+    ad = studioAd({ status: "ready", renderNo: 2 });
+    rerender();
+    await advance(10_000);
+    expect(update()).not.toHaveBeenCalled();
+
+    act(() => result.current.send());
+    await advance(0);
+    expect(update()).toHaveBeenCalledWith("w", "ad-1", {
+      motion: "filmed_sold",
+      ending: "Ending two",
+    });
+  });
+
+  it("hands what waits to a paid run, and Discard drops it", async () => {
     const { result } = renderHook(() =>
       useAdAutoUpdate({ workspaceId: "w", ad: studioAd(), onAd: jest.fn() })
     );
@@ -297,8 +340,10 @@ describe("useAdAutoUpdate", () => {
 
     act(() => result.current.queue({ sticker: "Opening three" }));
     act(() => result.current.cancel());
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS * 2);
+    act(() => result.current.send());
+    await advance(10_000);
     expect(update()).not.toHaveBeenCalled();
+    expect(result.current.pending).toBeNull();
   });
 });
 
@@ -349,11 +394,12 @@ describe("page-owned free changes", () => {
     });
   };
 
-  it("sends the queued edit after the workbench closes before debounce", async () => {
+  it("sends a pressed Update after the workbench closes", async () => {
     const view = await setup();
     act(() => latest.queue({ sticker: "Keep this edit" }));
+    act(() => latest.send());
     view.rerender(view.tree(false));
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
+    await advance(0);
     expect(updateProductAd).toHaveBeenCalledTimes(1);
     expect(updateProductAd).toHaveBeenCalledWith("w", "ad-1", {
       sticker: "Keep this edit",
@@ -367,7 +413,7 @@ describe("page-owned free changes", () => {
     expect(fetchProductAd).toHaveBeenCalledTimes(reads);
   });
 
-  it("preserves pending edits across tile remounts and keeps different ads separate", async () => {
+  it("keeps picks across tile remounts, and Update sends only its own ad's", async () => {
     const view = await setup();
     act(() => latest.queue({ sticker: "First ad" }));
     view.rerender(view.tree(true, "ad-1", "tile-2"));
@@ -376,34 +422,37 @@ describe("page-owned free changes", () => {
     view.rerender(view.tree(true, "ad-2", "tile-3"));
     await act(async () => {});
     act(() => latest.queue({ ending: "Second ad" }));
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
-    expect(updateProductAd).toHaveBeenCalledWith("w", "ad-1", {
-      sticker: "First ad",
-    });
+    act(() => latest.send());
+    await advance(0);
+    expect(updateProductAd).toHaveBeenCalledTimes(1);
     expect(updateProductAd).toHaveBeenCalledWith("w", "ad-2", {
       ending: "Second ad",
     });
-    expect(updateProductAd).toHaveBeenCalledTimes(2);
+
+    view.rerender(view.tree(true, "ad-1", "tile-4"));
+    await act(async () => {});
+    expect(latest.pending).toEqual({ sticker: "First ad" });
   });
 
-  it("keeps an edit queued in the same event that closes the workbench", async () => {
+  it("sends an Update pressed in the same event that closes the workbench", async () => {
     const view = await setup();
     act(() => {
       latest.queue({ sticker: "Same event edit" });
+      latest.send();
       view.rerender(view.tree(false));
     });
     await act(async () => {
       jest.runAllTicks();
     });
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
+    await advance(0);
     expect(updateProductAd).toHaveBeenCalledTimes(1);
     expect(updateProductAd).toHaveBeenCalledWith("w", "ad-1", {
       sticker: "Same event edit",
     });
   });
 
-  it("keeps edits made during an in-flight request after closing", async () => {
-    const view = await setup();
+  it("holds a pick made during an in-flight update for the next press", async () => {
+    await setup();
     let finish!: (ad: ProductAdRecord) => void;
     jest.mocked(updateProductAd).mockImplementationOnce(
       () =>
@@ -412,9 +461,9 @@ describe("page-owned free changes", () => {
         })
     );
     act(() => latest.queue({ sticker: "First" }));
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
+    act(() => latest.send());
+    await advance(0);
     act(() => latest.queue({ ending: "Next" }));
-    view.rerender(view.tree(false));
     await act(async () => {
       finish(
         studioAd({
@@ -431,7 +480,12 @@ describe("page-owned free changes", () => {
       })
     );
     await advance(PRODUCT_AD_POLL_MS);
-    await advance(PRODUCT_AD_AUTO_UPDATE_MS);
+    await advance(10_000);
+    expect(updateProductAd).toHaveBeenCalledTimes(1);
+    expect(latest.pending).toEqual({ ending: "Next" });
+
+    act(() => latest.send());
+    await advance(0);
     expect(updateProductAd).toHaveBeenLastCalledWith("w", "ad-1", {
       ending: "Next",
     });
