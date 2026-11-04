@@ -6,9 +6,9 @@
 
 **[Live on airi.chat](https://airi.chat)** · **[Demo video](HACKATHON.md#the-demo-video)** · **[Judge access](HACKATHON.md#try-it)** · **[HACKATHON.md](HACKATHON.md)**: what is new, what existed before
 
-![One toy from the owner's phone video: filmed in the hand, restored by Muse Image and cut out by SAM 3.1, then a Reel frame and a 4:5 post, with prices drawn by code](docs/media/hero-strip.jpg)
+![One toy from the owner's phone video: filmed in the hand, then a Studio picture of it restored by Muse Image and cut out by SAM 3.1, a Reel frame and a 4:5 post, with prices drawn by code](docs/media/hero-strip.jpg)
 
-<sub>From our 65-second test video, narrated in Kazakh. The Reel frame and the post are rendered by studio v3's code from the test ad's saved scenes, on a local worker; they are not production posts.</sub>
+<sub>From our 65-second test video, narrated in Kazakh. Panels 2-4 are rendered by studio v3's code from the test ad's saved scenes and cut-outs, on a local worker: the Studio picture sets the cut-out on a code-drawn sweep with its tag. They are not production posts.</sub>
 
 Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Oct 26 – Nov 4, 2026), Startup track, from the team behind [airi.chat](https://airi.chat). **Theme: Build for Your World.** The small shops we work with sell on WhatsApp and have no product photos. Their owners film on their phones and talk in their own language, so the import takes a narration in any language ElevenLabs Scribe transcribes, with each price in the currency the owner names.
 
@@ -23,7 +23,7 @@ Our entry to the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/
 
 ![SAM 3.1 tracking a toy rooster and a toy dinosaur through the owner's clip, with the frame chosen by measuring each mask](docs/media/sam-track.gif)
 
-<sub>SAM 3.1's real masks on the owner's own clip, outlined on every frame; the frame code chose flashes. Made on Nov 4 with the prototype pipeline's own functions and the hackathon key, for about $0.10, tracking at 30 frames a second for smooth motion where the pipeline uses 10.</sub>
+<sub>SAM 3.1's real masks on the owner's own clip, outlined on every frame; the frame code chose flashes. Made on Nov 4 with the airi.chat import pipeline's own functions (`airi/apps/temporal-worker/src/media/product-video/`) and the hackathon key, for about $0.10, tracking at 30 frames a second for smooth motion where the pipeline uses 10.</sub>
 
 Not Meta's, and why: **ElevenLabs Scribe v2** listens, because Meta's own docs say audio understanding in Muse Spark 1.3 is not fully supported, Muse Voice Transcribe's 25 languages include neither Kazakh nor Russian, and in our tests Muse Spark heard nothing in 5 of 9 tries while Scribe got all 7 prices every run. ElevenLabs also turns the background down behind the owner's own voice, and since studio v2 reads new words in Airi's stock voices or, after the owner ticks consent, a clone of the owner's voice. ffmpeg renders the video, and code draws every price.
 
