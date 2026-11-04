@@ -123,6 +123,8 @@ export function Chat({
         <div className="min-w-0">
           <h2 className="font-display text-base font-semibold">Ask the shop</h2>
           <p className="truncate text-sm text-ink-soft">{shopName} answers in Kazakh, Russian or English</p>
+          {/* Muse Spark Open's licence asks for this notice in the product's interface. */}
+          <p className="text-xs font-medium text-ink-soft">Built with Muse Spark Open</p>
         </div>
         {onClose && (
           <button type="button" onClick={onClose} className="ml-auto rounded-md px-2 py-1 text-ink-soft hover:bg-wall hover:text-ink" aria-label="Close the chat">
