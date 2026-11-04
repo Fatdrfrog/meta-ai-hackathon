@@ -1,4 +1,4 @@
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { isElevenLabsSttAcceptedRequest } from "@icecore/airi-runtime/elevenlabs-stt";
 import {
@@ -239,6 +239,10 @@ export type AdJobPorts = {
   isolationCostMicros: (seconds: number) => number;
   /** New words read by ElevenLabs ("clone" and "stock", voice.ts); null or absent when not set up. */
   voiceOver?: VoiceOverPorts | null;
+  /** ElevenLabs instrumental background music for `seconds` of video; null or absent when not set up. */
+  music?: ((seconds: number, prompt: string) => Promise<Buffer>) | null;
+  /** The music generator's list price for `seconds` of audio, in micro-dollars. */
+  musicCostMicros?: (seconds: number) => number;
   mode: ProductAdMode;
   renderNo: number;
   /** The activity's attempt, so each retry reserves its own operations. */
@@ -452,6 +456,7 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
     );
   await begin("video");
   const { voices, lines } = await adVoices(ports, ad, script, paid, update);
+  const music = await adMusic(ports, ad, paid);
   const pictures = await scenePictures(ports, products, scenes, saveScenes);
   const presenter = await presenterPhoto(ports, ad);
   const composeProducts = products.map(({ product, cutout, original }) => {
@@ -484,6 +489,7 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
       shopName: ad.ending.shopName,
       phone: ad.ending.phone,
       presenter,
+      music,
       workDir: ports.workDir,
       motion,
     },
@@ -1282,6 +1288,81 @@ async function ownVoices(
     await ports.storage.saveVoice(voice.productId, flac);
   }
   return voices;
+}
+
+const AD_MUSIC_KEY = "music-bed";
+const AD_MUSIC_SECONDS = 20;
+
+export function adMusicPrompt(
+  ad: Pick<AdRecord, "idea" | "motion" | "products">,
+): string {
+  const motion = productAdMotionOf(ad.motion);
+  if (ad.idea.kind === "gift")
+    return "Warm, uplifting acoustic instrumental background music for a boutique gift shop reel, gentle guitar, soft bells and light rhythm, cheerful and modern, no vocals";
+  if (motion === "pop" || motion === "filmed_sold")
+    return "Upbeat, modern lifestyle instrumental background music for a product showcase reel, warm lo-fi groove and light percussion, no vocals";
+  return "Warm, calm boutique instrumental background music for a product showcase reel, soft acoustic guitar, gentle piano and light rhythm, no vocals";
+}
+
+/**
+ * The ad's instrumental background music: kept from an earlier run, or
+ * generated once via ElevenLabs Music (booked in the ad's action on a make
+ * run) and saved as FLAC for later renders. Any failure is logged and leaves
+ * the ad without music so the video still finishes.
+ */
+async function adMusic(
+  ports: AdJobPorts,
+  ad: AdRecord,
+  paid: PaidCall,
+): Promise<Pcm | null> {
+  const keptPath = join(ports.workDir, "kept-music.flac");
+  try {
+    if (await ports.storage.loadVoice(AD_MUSIC_KEY, keptPath))
+      return await decodeVoice(keptPath, ports.workDir, "kept-music", {
+        signal: ports.signal,
+        pulse: ports.pulse,
+      });
+  } catch (error) {
+    ports.log?.("products.ad_music_load_failed", { error: messageOf(error) });
+  }
+  if (!ports.music) return null;
+  const generate = ports.music;
+  const costMicros = ports.musicCostMicros
+    ? ports.musicCostMicros(AD_MUSIC_SECONDS)
+    : 20_000;
+  const prompt = adMusicPrompt(ad);
+  try {
+    const raw =
+      ports.mode === "make"
+        ? await paid("music", "elevenlabs", costMicros, async (onCost) => {
+            try {
+              return {
+                value: await generate(AD_MUSIC_SECONDS, prompt),
+                costMicros,
+              };
+            } catch (error) {
+              if (isElevenLabsSttAcceptedRequest(error))
+                onCost(costMicros / 1_000_000, "background music");
+              throw error;
+            }
+          })
+        : await generate(AD_MUSIC_SECONDS, prompt);
+    const rawPath = join(ports.workDir, "music-raw.mp3");
+    await writeFile(rawPath, raw);
+    const pcm = await decodeVoice(rawPath, ports.workDir, "music-decoded", {
+      signal: ports.signal,
+      pulse: ports.pulse,
+    });
+    const flac = await encodeFlac(pcm, ports.workDir, "music-bed", {
+      signal: ports.signal,
+      pulse: ports.pulse,
+    });
+    await ports.storage.saveVoice(AD_MUSIC_KEY, flac);
+    return pcm;
+  } catch (error) {
+    ports.log?.("products.ad_music_skipped", { error: messageOf(error) });
+    return null;
+  }
 }
 
 /**

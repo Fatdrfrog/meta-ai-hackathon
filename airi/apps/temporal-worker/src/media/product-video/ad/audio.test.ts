@@ -16,6 +16,7 @@ import {
   isolateClips,
   ISOLATOR_MIN_SECONDS,
   joinClips,
+  mixMusicBed,
   parseLoudness,
   pcmSeconds,
   placeVoices,
@@ -465,4 +466,30 @@ test("ffmpeg: new words a little long are said faster, their length cut by the f
   assert.equal(await changeTempo(words, 1, dir, "same"), words);
   await assert.rejects(changeTempo(words, 1.5, dir, "too"), RangeError);
   await assert.rejects(changeTempo(words, 0.9, dir, "slow"), RangeError);
+});
+
+test("mixMusicBed ducks the music during speech, swells in the ending, and builds a stereo WAV even without speech", async (t) => {
+  const music = sound(6, [[0, 6]], 12000);
+  const placements = [
+    { voice: sound(1.5, [[0, 1.5]], 10000), at: 1, seconds: 1.5 },
+  ];
+  const ducked = mixMusicBed(null, music, placements, 6);
+  // During speech (around 1.8 s), the music envelope is ducked lower than during the open ending (around 4.2 s).
+  const rmsWindow = (atSec: number) => {
+    const start = Math.round(atSec * RATE);
+    const len = Math.round(0.2 * RATE);
+    let sum = 0;
+    for (let i = start; i < start + len; i++)
+      sum += ducked.samples[i]! * ducked.samples[i]!;
+    return Math.sqrt(sum / len);
+  };
+  assert.ok(rmsWindow(1.8) < rmsWindow(4.2) * 0.65);
+
+  if (!hasFfmpeg()) return;
+  const dir = await workDir(t);
+  const out = join(dir, "music-only.wav");
+  assert.equal(await buildVoiceTrack([], 4, out, dir, {}, music), true);
+  const file = await readFile(out);
+  assert.equal(file.readUInt16LE(22), 2, "stereo");
+  close(pcmSeconds(readWav(file)), 4, 0.02);
 });

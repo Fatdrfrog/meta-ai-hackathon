@@ -2,7 +2,9 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  composeElevenLabsMusic,
   elevenLabsAudioIsolationCostMicros,
+  elevenLabsMusicCostMicros,
   isElevenLabsAudioIsolationConfigured,
   isolateElevenLabsAudio,
 } from "@icecore/airi-runtime/elevenlabs-audio-isolation";
@@ -354,6 +356,16 @@ export async function productAdActivity(
             ).audio
         : null,
       isolationCostMicros: elevenLabsAudioIsolationCostMicros,
+      music: isolationKey
+        ? async (seconds, prompt) =>
+            (
+              await composeElevenLabsMusic(
+                { prompt, seconds },
+                { signal: context.cancellationSignal },
+              )
+            ).audio
+        : null,
+      musicCostMicros: elevenLabsMusicCostMicros,
       voiceOver: await productAdVoiceOverPorts(
         input,
         context.cancellationSignal,

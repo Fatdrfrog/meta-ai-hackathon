@@ -104,6 +104,8 @@ export type ComposeInput = {
   phone: string | null;
   /** The person from the video, shown on the ending when they agreed. */
   presenter: Buffer | null;
+  /** Optional instrumental background music, ducked under spoken words. */
+  music?: Pcm | null;
   workDir: string;
   /** How the video moves; "shelf" when absent or unknown. */
   motion?: ProductAdMotion;
@@ -268,6 +270,7 @@ export async function composeAd(
     voicePath,
     input.workDir,
     deps,
+    input.music ?? null,
   );
 
   const first = input.products[0]!;

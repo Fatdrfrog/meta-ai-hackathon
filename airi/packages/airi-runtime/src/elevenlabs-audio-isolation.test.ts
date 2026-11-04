@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  composeElevenLabsMusic,
   elevenLabsAudioIsolationCostMicros,
+  elevenLabsMusicCostMicros,
   isElevenLabsAudioIsolationConfigured,
   isolateElevenLabsAudio,
 } from "./elevenlabs-audio-isolation";
@@ -103,4 +105,36 @@ test("without a key or audio, nothing is sent", async () => {
     if (saved === undefined) delete process.env.ELEVENLABS_API_KEY;
     else process.env.ELEVENLABS_API_KEY = saved;
   }
+});
+
+test("composeElevenLabsMusic posts an instrumental music request and falls back to sound-generation on 4xx", async () => {
+  assert.equal(elevenLabsMusicCostMicros(0), 0);
+  assert.equal(elevenLabsMusicCostMicros(15.2), 16_000);
+  const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
+  const music = await composeElevenLabsMusic(
+    { prompt: "Warm acoustic shop music", seconds: 16 },
+    {
+      apiKey: "test-key",
+      fetch: (async (url: string, init: RequestInit) => {
+        calls.push({ url, body: JSON.parse(String(init.body)) });
+        if (url.endsWith("/music"))
+          return new Response(JSON.stringify({ detail: "plan required" }), {
+            status: 403,
+          });
+        return new Response(Buffer.from("ID3 music"), {
+          status: 200,
+          headers: { "content-type": "audio/mpeg" },
+        });
+      }) as typeof fetch,
+    },
+  );
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0]!.url, "https://api.elevenlabs.io/v1/music");
+  assert.deepEqual(calls[0]!.body, {
+    prompt: "Warm acoustic shop music",
+    music_length_ms: 16000,
+    force_instrumental: true,
+  });
+  assert.equal(calls[1]!.url, "https://api.elevenlabs.io/v1/sound-generation");
+  assert.equal(music.audio.toString(), "ID3 music");
 });

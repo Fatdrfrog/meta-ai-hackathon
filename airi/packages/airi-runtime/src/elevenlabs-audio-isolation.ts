@@ -187,3 +187,150 @@ export async function isolateElevenLabsAudio(
     options.signal?.removeEventListener("abort", onAbort);
   }
 }
+
+/**
+ * ElevenLabs instrumental music / sound generation rate: USD 0.001 per second
+ * (1,000 micro-dollars per second; 10 characters per second at standard rate).
+ */
+export const ELEVENLABS_MUSIC_MICROS_PER_SECOND = 1_000;
+
+/**
+ * What generating `seconds` of instrumental background music costs, rounded up
+ * to the whole second.
+ */
+export function elevenLabsMusicCostMicros(seconds: number): number {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new RangeError("Music duration must be a non-negative number");
+  }
+  return Math.ceil(seconds) * ELEVENLABS_MUSIC_MICROS_PER_SECOND;
+}
+
+/**
+ * Composes an instrumental background music track with ElevenLabs
+ * (`POST /v1/music` with `force_instrumental: true`, falling back to
+ * `POST /v1/sound-generation` when `/v1/music` is refused on the account tier).
+ */
+export async function composeElevenLabsMusic(
+  input: { prompt: string; seconds: number },
+  options: {
+    apiKey?: string | null;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+    fetch?: typeof fetch;
+  } = {},
+): Promise<{ audio: Buffer; mimeType: string }> {
+  const apiKey =
+    cleanString(options.apiKey, 4000) ||
+    cleanString(process.env.ELEVENLABS_API_KEY, 4000);
+  if (!apiKey)
+    throw new ElevenLabsSttError({
+      kind: "config",
+      transient: false,
+      message: "ELEVENLABS_API_KEY is not configured",
+    });
+  const prompt = cleanString(input.prompt, 1000);
+  if (!prompt)
+    throw new ElevenLabsSttError({
+      kind: "invalid_request",
+      transient: false,
+      message: "The music prompt is empty",
+    });
+  if (!Number.isFinite(input.seconds) || input.seconds <= 0)
+    throw new ElevenLabsSttError({
+      kind: "invalid_request",
+      transient: false,
+      message: "The music duration must be positive",
+    });
+  const clampedSeconds = Math.max(3, Math.min(60, Math.ceil(input.seconds)));
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(),
+    options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+  );
+  const onAbort = () => controller.abort();
+  options.signal?.addEventListener("abort", onAbort, { once: true });
+  const doFetch = options.fetch ?? fetch;
+  try {
+    let response: Response;
+    try {
+      response = await doFetch(`${ELEVENLABS_API_BASE_URL}/music`, {
+        method: "POST",
+        headers: {
+          "xi-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          music_length_ms: clampedSeconds * 1000,
+          force_instrumental: true,
+        }),
+        signal: controller.signal,
+      });
+      if (
+        !response.ok &&
+        response.status >= 400 &&
+        response.status < 500 &&
+        response.status !== 401 &&
+        response.status !== 408 &&
+        response.status !== 429
+      ) {
+        response = await doFetch(
+          `${ELEVENLABS_API_BASE_URL}/sound-generation`,
+          {
+            method: "POST",
+            headers: {
+              "xi-api-key": apiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: prompt,
+              duration_seconds: Math.min(22, clampedSeconds),
+              prompt_influence: 0.3,
+            }),
+            signal: controller.signal,
+          },
+        );
+      }
+    } catch (error) {
+      throw new ElevenLabsSttError({
+        kind: controller.signal.aborted ? "timeout" : "unknown",
+        transient: true,
+        message:
+          error instanceof Error
+            ? cleanString(error.message, 300)
+            : "ElevenLabs music request failed",
+      });
+    }
+    if (!response.ok)
+      throw failure(response.status, await failureMessage(response));
+    let audio: Buffer;
+    try {
+      audio = Buffer.from(await response.arrayBuffer());
+    } catch (error) {
+      throw new ElevenLabsSttError({
+        kind: "unknown",
+        transient: true,
+        status: response.status,
+        message:
+          error instanceof Error
+            ? cleanString(error.message, 300)
+            : "The answer was lost",
+      });
+    }
+    if (audio.length === 0)
+      throw new ElevenLabsSttError({
+        kind: "unknown",
+        transient: true,
+        status: response.status,
+        message: "ElevenLabs returned no audio",
+      });
+    return {
+      audio,
+      mimeType:
+        cleanString(response.headers.get("content-type"), 80) || "audio/mpeg",
+    };
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", onAbort);
+  }
+}

@@ -680,10 +680,94 @@ export function parseLoudness(stderr: string): Loudness | null {
 /** The target: about -16 LUFS integrated, -1.5 dBTP, loudness range 11. */
 export const LOUDNORM_TARGET = "I=-16:TP=-1.5:LRA=11";
 
+/** A 16-bit stereo (2-channel) WAV file from mono PCM. */
+export function writeStereoWav(pcm: Pcm): Buffer {
+  const data = Buffer.alloc(pcm.samples.length * 4);
+  for (let i = 0; i < pcm.samples.length; i++) {
+    const sample = pcm.samples[i]!;
+    data.writeInt16LE(sample, i * 4);
+    data.writeInt16LE(sample, i * 4 + 2);
+  }
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0, "ascii");
+  header.writeUInt32LE(36 + data.length, 4);
+  header.write("WAVE", 8, "ascii");
+  header.write("fmt ", 12, "ascii");
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(2, 22);
+  header.writeUInt32LE(pcm.sampleRate, 24);
+  header.writeUInt32LE(pcm.sampleRate * 4, 28);
+  header.writeUInt16LE(4, 32);
+  header.writeUInt16LE(16, 34);
+  header.write("data", 36, "ascii");
+  header.writeUInt32LE(data.length, 40);
+  return Buffer.concat([header, data]);
+}
+
 /**
- * The voice track as 48 kHz stereo WAV, normalised in two passes: loudnorm
- * measures the words first, then applies one linear gain where it can. False
- * when there are no words, for the render to use silence.
+ * Mixes an instrumental music bed under the normalized voice track (or alone
+ * when there is no voice). The music ducks smoothly during spoken words, swells
+ * gently in the intro, price card and ending, and fades in/out at the video's
+ * ends, keeping peaks under -1.5 dBTP.
+ */
+export function mixMusicBed(
+  voice: Pcm | null,
+  music: Pcm,
+  placements: VoicePlacement[],
+  totalSeconds: number,
+): Pcm {
+  const rate = VOICE_SAMPLE_RATE;
+  const total = Math.max(1, Math.round(totalSeconds * rate));
+  const out = new Int16Array(total);
+  let musicPeak = 0;
+  for (let i = 0; i < music.samples.length; i++) {
+    const abs = Math.abs(music.samples[i]!);
+    if (abs > musicPeak) musicPeak = abs;
+  }
+  if (musicPeak === 0 || music.samples.length === 0) {
+    if (voice) out.set(voice.samples.subarray(0, total));
+    return { samples: out, sampleRate: rate };
+  }
+  const speechMask = new Uint8Array(total);
+  for (const placement of placements) {
+    const from = Math.max(0, Math.round((placement.at - 0.15) * rate));
+    const to = Math.min(
+      total,
+      Math.round((placement.at + placement.seconds + 0.2) * rate),
+    );
+    for (let i = from; i < to; i++) speechMask[i] = 1;
+  }
+  const openAmp = (placements.length > 0 ? 0.22 : 0.28) * 32767;
+  const duckedAmp = 0.095 * 32767;
+  const alpha = 1 / Math.max(1, Math.round(0.25 * rate));
+  const fadeInSamples = Math.max(1, Math.round(0.4 * rate));
+  const fadeOutSamples = Math.max(1, Math.round(0.8 * rate));
+  let env = speechMask[0] ? duckedAmp : openAmp;
+  const musicLen = music.samples.length;
+  for (let i = 0; i < total; i++) {
+    const target = speechMask[i] ? duckedAmp : openAmp;
+    env += (target - env) * alpha;
+    let endGain = 1;
+    if (i < fadeInSamples) endGain = i / fadeInSamples;
+    else if (i > total - fadeOutSamples)
+      endGain = Math.max(0, (total - i) / fadeOutSamples);
+    const musicSample =
+      (music.samples[i % musicLen]! / musicPeak) * env * endGain;
+    const voiceSample =
+      voice && i < voice.samples.length ? voice.samples[i]! : 0;
+    const mixed = Math.round(voiceSample + musicSample);
+    out[i] = Math.max(-27500, Math.min(27500, mixed));
+  }
+  return { samples: out, sampleRate: rate };
+}
+
+/**
+ * The voice and background music track as 48 kHz stereo WAV, normalised in two
+ * passes: loudnorm measures the words first, then applies one linear gain
+ * where it can, and mixes the ducked music bed underneath when `music` is
+ * given. False when there are neither words nor music, for the render to use
+ * silence.
  */
 export async function buildVoiceTrack(
   placements: VoicePlacement[],
@@ -691,8 +775,15 @@ export async function buildVoiceTrack(
   outPath: string,
   workDir: string,
   deps: VoiceDeps = {},
+  music: Pcm | null = null,
 ): Promise<boolean> {
-  if (placements.length === 0) return false;
+  const hasMusic = Boolean(music && music.samples.length > 0);
+  if (placements.length === 0 && !hasMusic) return false;
+  if (placements.length === 0 && music) {
+    const mixed = mixMusicBed(null, music, [], totalSeconds);
+    await writeFile(outPath, writeStereoWav(mixed));
+    return true;
+  }
   const trackPath = join(workDir, "voice-track.wav");
   await writeFile(trackPath, writeWav(placeVoices(placements, totalSeconds)));
   const measured = await ffmpeg(
@@ -714,6 +805,7 @@ export async function buildVoiceTrack(
         `:measured_LRA=${loudness.input_lra}:measured_thresh=${loudness.input_thresh}` +
         `:offset=${loudness.target_offset}:linear=true`
       : `loudnorm=${LOUDNORM_TARGET}`;
+  const normPath = hasMusic ? join(workDir, "voice-norm.wav") : outPath;
   await ffmpeg(
     [
       ...input(trackPath),
@@ -727,9 +819,14 @@ export async function buildVoiceTrack(
       "pcm_s16le",
       "-t",
       totalSeconds.toFixed(3),
-      outPath,
+      normPath,
     ],
     deps,
   );
+  if (hasMusic && music) {
+    const normVoice = readWav(await readFile(normPath));
+    const mixed = mixMusicBed(normVoice, music, placements, totalSeconds);
+    await writeFile(outPath, writeStereoWav(mixed));
+  }
   return true;
 }
