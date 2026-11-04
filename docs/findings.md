@@ -245,10 +245,10 @@ Studio v3 (built in airi.chat's branch `claude/products-studio-v3`, **not live y
 | --- | --- | --- | --- |
 | Shelf ad (v2's motion) | yes | 17.5 s, 4.0 s, 16.6 s long, 2.0 MB | 15.1 s, 3.6 s, 13.0 s long, 2.9 MB |
 | Filmed → Sold: each shot opens on the product as the owner filmed it, then wipes to the made scene | yes | 23.3 s, 4.2 s, 19.0 s long, 2.6 MB | 18.4 s, 4.2 s, 14.3 s long, 3.2 MB |
-| Float | no | 21.5 s, 4.9 s, 16.6 s long, 1.2 MB | 16.6 s, 4.4 s, 13.0 s long, 1.3 MB |
-| Pop | no | 29.0 s, 4.6 s, 16.6 s long, 1.6 MB | 22.4 s, 3.5 s, 13.0 s long, 2.0 MB |
+| Float | yes | 21.5 s, 4.9 s, 16.6 s long, 1.2 MB | 16.6 s, 4.4 s, 13.0 s long, 1.3 MB |
+| Pop | yes | 29.0 s, 4.6 s, 16.6 s long, 1.6 MB | 22.4 s, 3.5 s, 13.0 s long, 2.0 MB |
 
-The Filmed → Sold, Float and Pop runs are from Nov 3, about 20:00 UTC; the Shelf ad runs were repeated on Nov 4 at about 03:00 UTC, after the last changes to the pictures. "Shipped" is the motion's tile in `lib/products/templates.ts` at the branch's head `282e469d1`; a tile that isn't shipped isn't shown. Every video is 1080×1920 H.264 at CRF 21, under WhatsApp's 16 MB.
+The Filmed → Sold, Float and Pop runs are from Nov 3, about 20:00 UTC; the Shelf ad runs were repeated on Nov 4 at about 03:00 UTC, after the last changes to the pictures. "Shipped" is the motion's tile in `lib/products/templates.ts` at `cf1913aba`, the branch's latest commit on Nov 4 (all four since `9e5505511`; at `282e469d1` only Shelf ad and Filmed → Sold); a tile that isn't shipped isn't shown. Every video is 1080×1920 H.264 at CRF 21, under WhatsApp's 16 MB.
 
 ## Nov 3–4: Meta actions before going live
 

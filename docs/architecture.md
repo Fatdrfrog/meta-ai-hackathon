@@ -103,16 +103,16 @@ On two real videos, through this pipeline on a local worker with the hackathon k
 
 ## Studio v3: one page and Meta actions
 
-**Not live yet.** Studio v3 is built in airi.chat's branch `claude/products-studio-v3` (head `282e469d1` when this was written) and deploys on November 4, after which this note changes. Its code is airi.chat's and is not yet in this repository's `airi/`; the paths below are relative to airi.chat's `apps/web/src/` unless they start with `apps/`.
+**Not live yet.** Studio v3 is built in airi.chat's branch `claude/products-studio-v3` (at `cf1913aba`, its latest commit on November 4 at 03:51 UTC, when this was written) and deploys on November 4, after which this note changes. Its code is airi.chat's and is not yet in this repository's `airi/`; the paths below are relative to airi.chat's `apps/web/src/` unless they start with `apps/`.
 
-**One page.** Each video is a row on the shelf, newest first, headed by a small print of the video. When an import finishes, its first 3 products are picked; a tap picks or unpicks a product, which then shows its number, and the picks live in the page's address. Below the shelf, template tiles are grouped by where they end up on Meta: Reel, Story and Post (Instagram), WhatsApp ad (a Facebook ad that opens a WhatsApp chat) and WhatsApp chat. Each tile is drawn in CSS from the owner's own cut-outs and filmed frames, so it costs nothing and redraws as the picks change. Dropping the picks on a tile, or tapping it, makes the result: one code path for both. The tile catalog is one static file, `lib/products/templates.ts`. A tile is a template plus a destination, so its workbench has exactly one Meta action, and a tile is shown only when its renderer is deployed (`shipped: true`). At the branch's head, 9 tiles ship:
+**One page.** Each video is a row on the shelf, newest first, headed by a small print of the video. When an import finishes, its first 3 products are picked; a tap picks or unpicks a product, which then shows its number, and the picks live in the page's address. Below the shelf, template tiles are grouped by where they end up on Meta: Reel, Story and Post (Instagram), WhatsApp ad (a Facebook ad that opens a WhatsApp chat) and WhatsApp chat. Each tile is drawn in CSS from the owner's own cut-outs and filmed frames, so it costs nothing and redraws as the picks change. Dropping the picks on a tile, or tapping it, makes the result: one code path for both. The tile catalog is one static file, `lib/products/templates.ts`. A tile is a template plus a destination, so its workbench has exactly one Meta action, and a tile is shown only when its renderer is deployed (`shipped: true`). At `cf1913aba`, all 15 tiles in the catalog ship (`grep -c "shipped: true"` on `templates.ts`; 9 did before `9e5505511`), and the count is checked again at the commit that deploys:
 
 | Group | Tiles that ship | Made from | Its one Meta action |
 | --- | --- | --- | --- |
-| Reel | Shelf ad, Filmed → Sold | the ad's video, in that motion | **Post Reel** |
-| Story | Video | the ad's video | **Post Story** |
-| Post | In a room, Studio, Collection, Carousel | the ad's pictures (stills) | **Post**, **Post carousel** |
-| WhatsApp ad | Video | the ad's video | **Create ad** |
+| Reel | Shelf ad, Filmed → Sold, Float, Pop | the ad's video, in that motion | **Post Reel** |
+| Story | Video, Price list, Big price | the ad's video; its Story pictures (stills) | **Post Story** |
+| Post | In a room, Studio, Big price, Collection, Carousel | the ad's pictures (stills) | **Post**, **Post carousel** |
+| WhatsApp ad | Video, Picture | the ad's video; its In a room picture | **Create ad** |
 | WhatsApp chat | Carousel + form | the products' cut-outs, with no AI action | **Create on WhatsApp** |
 
 **One AI action, many formats.** The first video, picture or WhatsApp-ad tile for a set of picks makes the ad, as one AI action, exactly as in [Video ad](#video-ad). Every other one of those tiles reuses that ad: a different motion is a render with no model, and the pictures are drawn by the same render. In production that one action has cost $0.076–0.090 ([findings.md](findings.md#production-read-on-nov-4)); the motions and pictures cost nothing more.
@@ -128,8 +128,8 @@ flowchart LR
     W --> SC --> CK --> BX
   end
   subgraph free["Code over what the ad made, at no cost"]
-    MO["ffmpeg motions: Shelf ad, Filmed → Sold"]
-    ST["Pictures: In a room, Studio in 5 colourways, Collection"]
+    MO["ffmpeg motions: Shelf ad, Filmed → Sold, Float, Pop"]
+    ST["Pictures: In a room, Studio in 5 colourways, Big price, Collection, Price list"]
   end
   PR["Prices from the shelf, drawn by code"]
   BX --> MO
@@ -137,12 +137,12 @@ flowchart LR
   VO --> MO
   PR --> MO
   PR --> ST
-  MO --> RT["Reel, Story and WhatsApp-ad tiles"]
-  ST --> PT["Post and carousel tiles"]
+  MO --> RT["Reel tiles, Story Video, WhatsApp-ad Video"]
+  ST --> PT["Post tiles, Story pictures, WhatsApp-ad Picture"]
 ```
 
-- **Motions** (`apps/temporal-worker/src/media/product-video/ad/render.ts`, `compose.ts`): Shelf ad is v2's push-in on each scene. Filmed → Sold opens each shot on the product as the owner filmed it, from the import's original frame, then wipes to the made scene. Float and Pop are built, but their tiles don't ship.
-- **Pictures** (`apps/temporal-worker/src/media/product-video/ad/stills.ts`): every still is a JPEG, 1080×1350 for a post or 1080×1920 for a Story, drawn by code over what the ad made, with the shelf's prices set as text: In a room (the product's scene), Studio (the exact cut-out on a code-drawn sweep in 5 colourways, its shadow cast from its own shape) and Collection (every product on one plank with its tag). The Carousel post is Collection, then one picture per product. Big price and Price list are drawn too, but their tiles don't ship.
+- **Motions** (`apps/temporal-worker/src/media/product-video/ad/render.ts`, `compose.ts`): Shelf ad is v2's push-in on each scene. Filmed → Sold opens each shot on the product as the owner filmed it, from the import's original frame, then wipes to the made scene. Float sets the exact cut-out on its own layer over the scene's wall, bobbing on a 2 s wave with its shadow breathing in step; Pop blurs the scene behind the cut-out and grows the cut-out once, from 100 % to 108 % in 0.6 s.
+- **Pictures** (`apps/temporal-worker/src/media/product-video/ad/stills.ts`): every still is a JPEG, 1080×1350 for a post or 1080×1920 for a Story, drawn by code over what the ad made, with the shelf's prices set as text: In a room (the product's scene), Studio (the exact cut-out on a code-drawn sweep in 5 colourways, its shadow cast from its own shape), Big price (the price huge, the product standing in front of it, as a post and as a Story), Collection (every product on one plank with its tag) and Price list (a Story with every product, a dotted leader to its price, the shop's name, the ad's ending and its WhatsApp line). The Carousel post is Collection, then one picture per product.
 - **The workbench** opens under the tile, with the result in the frame it will appear in: a Reel or Story frame, a 4:5 post, a Facebook feed ad with its WhatsApp button, or a WhatsApp chat. Its rails are pictures only: **Shots**, **Look** (the exact photo, earlier Muse Image pictures, or a **New place**) and **Voice**. Free changes apply themselves, sent once 1.5 s after the last one; a paid change, such as a new picture or a new cloned voice, needs its own tap.
 - **Out on Meta** lists only what exists at Meta: each post, ad and kit, with its status and link.
 
@@ -172,18 +172,18 @@ A post still processing after 15 minutes no longer holds its destination, and th
 
 ### The Click-to-WhatsApp ad
 
-**Create ad** makes a Click-to-WhatsApp ad through the Marketing API, with the workspace's stored Meta Ads token (airi's existing Meta Ads connection): the ad's video, a campaign, an ad set, a creative and an ad. **Every object is created `PAUSED`, so nothing is spent and Meta doesn't review it.** It runs on Facebook placements only (the ads token can't reach Instagram placements), in Kazakhstan, with the objective `OUTCOME_ENGAGEMENT` and an ad set that sends buyers to WhatsApp and optimises for conversations. The creative greets buyers in the shop's own words, from the ad's Click-to-WhatsApp copy, with Meta's own greeting as the fallback. The Graph calls are in `lib/meta-ads/ctwa.ts`; the state machine is `lib/products/ctwa.ts`.
+**Create ad** makes a Click-to-WhatsApp ad through the Marketing API, with the workspace's stored Meta Ads token (airi's existing Meta Ads connection): the ad's video (or, from the Picture tile, its In a room picture), a campaign, an ad set, a creative and an ad. **The campaign, ad set and ad are created `PAUSED` (the video and the creative have no on/off of their own), so nothing is spent.** Meta reviews an ad before it can run ([Meta's Advertising Standards](https://transparency.meta.com/policies/ad-standards/)). It runs on Facebook placements only (the ads token can't reach Instagram placements), in Kazakhstan, with the objective `OUTCOME_ENGAGEMENT` and an ad set that sends buyers to WhatsApp and optimises for conversations. The creative greets buyers in the shop's own words, from the ad's Click-to-WhatsApp copy, with Meta's own greeting as the fallback. The Graph calls are in `lib/meta-ads/ctwa.ts`; the state machine is `lib/products/ctwa.ts`.
 
 - **Checked before anything is made:** the ad account's currency (USD), a Facebook Page the account can promote, and whether that Page has the shop's WhatsApp number linked. Without the link, the page says "WhatsApp isn't linked to your Facebook Page yet" and spends nothing.
 - **A resumable state machine.** The press answers `202`; each step saves its id on the ad before the next starts, and polls advance it under a 30 s lease. Every object gets a deterministic name, `airi-products-<adId>-<attempt>-<step>`, so a step whose answer was lost is found by its name instead of being made twice.
-- **The ad set is checked with `validate_only` first**, which creates nothing, and then created.
+- **Before the ad set is created, Meta checks it with `validate_only`**, which creates nothing; a Page without WhatsApp is refused there.
 - **A failure resumes** from the last step made; a new video, a failed upload or Meta's disapproval starts the next attempt, and the earlier objects stay at Meta, paused.
-- **Run is off.** It sets a daily budget and switches the ad on, so Meta reviews it, but the server refuses it unless `PRODUCTS_CTWA_RUN_ENABLED=1`, and caps it at $1 a day for at most 3 days whatever the page sends. It is unset in production, and we have never pressed it.
+- **Run is off.** It sets a daily budget and switches the ad on, and Meta's review then has to approve the ad before it runs; the server refuses Run unless `PRODUCTS_CTWA_RUN_ENABLED=1`, and caps it at $1 a day for at most 3 days whatever the page sends. It is unset in production, and we have never pressed it.
 
 ```mermaid
 stateDiagram-v2
   [*] --> video: Create ad pressed, answers 202
-  video --> campaign: video uploaded and processed, id saved
+  video --> campaign: video uploaded and processed (or picture uploaded), id saved
   campaign --> adset: campaign created PAUSED
   adset --> creative: validate_only passed, ad set created PAUSED
   creative --> ad: creative with the WhatsApp button and the greeting
@@ -249,7 +249,7 @@ In airi.chat's studio v3 branch, not yet in this repository (paths under airi.ch
 - `lib/products/templates.ts`: the tile catalog, grouped by Meta destination, with each tile's renderer, frame, Meta action and `shipped` flag.
 - `lib/instagram/publish.ts`: the Instagram Graph API calls (the connected account and its token, media containers, `status_code`, `media_publish`, the permalink and the publishing quota), shared with airi's `/api/sources/instagram/publish` route.
 - `lib/products/meta-publish.ts` and the routes `products/ads/[adId]/publish/`: posting an ad's video or pictures to Instagram, and the readiness behind `products/meta/`.
-- `lib/meta-ads/ctwa.ts`: the Marketing API calls for a Click-to-WhatsApp ad, every object created `PAUSED` on Facebook placements, with `validate_only` and lookup by name.
+- `lib/meta-ads/ctwa.ts`: the Marketing API calls for a Click-to-WhatsApp ad, the campaign, ad set and ad created `PAUSED`, on Facebook placements, with `validate_only` and lookup by name.
 - `lib/products/ctwa.ts` and the routes `products/ads/[adId]/ctwa/` and `ctwa/run/`: the ad's resumable state machine, its readiness, and Run's server-side caps.
 - `apps/temporal-worker/src/media/product-video/ad/stills.ts`, `render.ts` and `compose.ts`: the pictures and the Filmed → Sold, Float and Pop motions.
 - `components/products/product-gallery.tsx`, `product-workbench.tsx`, `product-publish-sheet.tsx`, `product-ctwa-panel.tsx` and `product-made-list.tsx`: the tiles, the workbench, the Instagram confirm, the Click-to-WhatsApp panel and Out on Meta.
