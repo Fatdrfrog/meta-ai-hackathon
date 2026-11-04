@@ -41,6 +41,7 @@ export type AiriTurnErrorCode =
   | "airi_run_cancelled"
   | "airi_run_interrupted"
   | "artifact_validation_failed"
+  | "workspace_ai_disabled"
   | "own_ai_source_required";
 
 /** A typed turn failure a handler or the run layer throws on purpose. */
@@ -48,7 +49,9 @@ export class AiriTurnError extends Error {
   constructor(
     readonly code: Exclude<
       AiriTurnErrorCode,
-      "provider_resource_exhausted" | "own_ai_source_required"
+      | "provider_resource_exhausted"
+      | "own_ai_source_required"
+      | "workspace_ai_disabled"
     >,
     message: string = code
   ) {
@@ -103,15 +106,22 @@ export const AIRI_TURN_LOCALIZED_FAILURE_CODES: ReadonlySet<AiriTurnErrorCode> =
     "airi_run_cancelled",
     "airi_run_interrupted",
     "artifact_validation_failed",
+    "workspace_ai_disabled",
   ]);
 
 export const AIRI_TURN_FAILURE_MESSAGES: Record<
   | "meta_ads_requires_claude"
   | "airi_run_cancelled"
   | "airi_run_interrupted"
+  | "workspace_ai_disabled"
   | "artifact_validation_failed",
   { en: string; ru: string; kz: string }
 > = {
+  workspace_ai_disabled: {
+    en: "AI is disabled for this company.",
+    ru: "ИИ отключён для этой компании.",
+    kz: "Бұл компания үшін ЖИ өшірілген.",
+  },
   meta_ads_requires_claude: {
     en: "Meta Ads answers need Claude, which is unavailable right now. Please try again in a few minutes.",
     ru: "Для ответов по Meta Ads нужен Claude, а он сейчас недоступен. Попробуйте ещё раз через несколько минут.",

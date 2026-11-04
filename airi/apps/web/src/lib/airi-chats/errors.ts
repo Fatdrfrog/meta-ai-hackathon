@@ -28,6 +28,7 @@ export type AiriChatRequestErrorCode =
   | "selected_source_unavailable"
   | "thread_not_found"
   | "own_ai_source_required"
+  | "workspace_ai_disabled"
   | "workspace_ai_policy_unavailable"
   | "cancelled"
   | "timed_out"

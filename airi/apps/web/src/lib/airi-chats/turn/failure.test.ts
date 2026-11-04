@@ -54,6 +54,24 @@ const sourceRequired = () =>
   });
 
 describe("mapAiriTurnFailure", () => {
+  it.each(["step", "turn"] as const)(
+    "never retries a company AI block (%s)",
+    at => {
+      expect(
+        mapAiriTurnFailure({ code: "workspace_ai_disabled" }, at)
+      ).toMatchObject({
+        code: "workspace_ai_disabled",
+        retryable: false,
+      });
+      expect(
+        getAiriTurnFailureMessage({
+          code: "workspace_ai_disabled",
+          language: "en",
+          workspaceId: "workspace-1",
+        })
+      ).toBe("AI is disabled for this company.");
+    }
+  );
   it("maps a retryable provider failure inside a step to the busy code", () => {
     expect(mapAiriTurnFailure(overloaded(), "step")).toEqual({
       code: "provider_resource_exhausted",
@@ -178,6 +196,7 @@ describe("getAiriTurnFailureMessage", () => {
       "artifact_validation_failed",
       "meta_ads_requires_claude",
       "provider_resource_exhausted",
+      "workspace_ai_disabled",
     ]);
   });
 });

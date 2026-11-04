@@ -1,5 +1,6 @@
 function findWorkspaceAiPolicyError(error: unknown): {
   code:
+    | "workspace_ai_disabled"
     | "own_ai_source_required"
     | "workspace_ai_policy_unavailable"
     | "workspace_ai_spend_limit"
@@ -15,6 +16,7 @@ function findWorkspaceAiPolicyError(error: unknown): {
       cause?: unknown;
     };
     if (
+      value.code === "workspace_ai_disabled" ||
       value.code === "own_ai_source_required" ||
       value.code === "workspace_ai_policy_unavailable" ||
       value.code === "workspace_ai_spend_limit" ||
@@ -31,13 +33,20 @@ export function isWorkspaceAiPolicyError(error: unknown): boolean {
   return findWorkspaceAiPolicyError(error) !== null;
 }
 
-/** Safe, serializable allowance denial across job/provider error wrappers. */
+/** Safe, serializable access denial across job/provider error wrappers. */
 export function getWorkspaceAiRequiredDetails(error: unknown): {
-  code: "own_ai_source_required";
+  code: "own_ai_source_required" | "workspace_ai_disabled";
   error: string;
   resetAt: string | null;
 } | null {
   const value = findWorkspaceAiPolicyError(error);
+  if (value?.code === "workspace_ai_disabled") {
+    return {
+      code: "workspace_ai_disabled",
+      error: "AI is disabled for this company.",
+      resetAt: null,
+    };
+  }
   if (value?.code === "own_ai_source_required") {
     return {
       code: "own_ai_source_required",

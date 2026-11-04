@@ -13,6 +13,17 @@ import {
 jest.mock("@/lib/google/google-ai-source", () => ({}));
 
 describe("describeAiriChatRequestFailure", () => {
+  it("returns a company AI block as a non-retryable access denial", () => {
+    const failure = describeAiriChatRequestFailure(
+      new Error("wrapper", { cause: { code: "workspace_ai_disabled" } })
+    );
+    expect(failure).toEqual({
+      status: 403,
+      code: "workspace_ai_disabled",
+      message: "AI is disabled for this company.",
+    });
+    expect(shouldLogAiriChatRequestFailure(failure)).toBe(false);
+  });
   it("keeps typed errors' safe messages and maps them to their codes", () => {
     expect(
       describeAiriChatRequestFailure(
