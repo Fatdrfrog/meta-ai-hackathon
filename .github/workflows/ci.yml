@@ -53,6 +53,8 @@ jobs:
           src/meta-model-api.test.ts src/meta-sam.test.ts src/llm-pricing.test.ts
           src/elevenlabs-stt.test.ts src/elevenlabs-audio-isolation.test.ts
           src/whatsapp-webhook-runtime.test.ts
+          src/elevenlabs-pricing.test.ts src/elevenlabs-tts.test.ts
+          src/elevenlabs-voices.test.ts
       # The video ad's whole-ad, voice and smoke-render tests skip without
       # ffmpeg, so install it when the runner lacks it, as airi.chat's worker
       # pipeline does.
@@ -71,9 +73,13 @@ jobs:
           "src/media/product-video/*.test.ts"
           "src/media/product-video/ad/*.test.ts"
           src/activities/product-video-import.test.ts
+          src/activities/product-ad.test.ts
+          src/activities/product-ad-voice.test.ts
           ../../packages/temporal/src/products/price.test.ts
           ../../packages/temporal/src/products/ad-script.test.ts
           ../../packages/temporal/src/products/spoken-price.test.ts
+          ../../packages/temporal/src/products/ad-voice.test.ts
+          ../../packages/temporal/src/products/contracts.test.ts
           src/workflow-versioning-source.test.ts
           src/web-alias-import-shape-source.test.ts
       - name: Products section tests
@@ -92,6 +98,16 @@ jobs:
           src/lib/google/gcs-resumable-upload.test.ts
           "src/app/api/workspaces/\[workspaceId\]/whatsapp-template-header-media"
           src/components/whatsapp-templates/template-editor-draft.test.ts
+          src/components/whatsapp-templates/template-editor-form.test.tsx
+          src/lib/whatsapp/templates/mutation-service.test.ts
+          src/lib/whatsapp/templates/unified-service.test.ts
+          src/features/panel/messengers/whatsapp-templates/actions.test.ts
+          "src/app/panel/w/\[workspaceId\]/messengers/whatsapp-templates/page.test.ts"
+          src/components/scenarios/builders/whatsapp/field-editor.test.tsx
+          src/components/ai/airi-builder-intl-provider.test.tsx
+          src/lib/instagram/publish.test.ts
+          src/app/api/sources/instagram/publish/route.test.ts
+          src/lib/meta-ads/ctwa.test.ts
       - name: Type checks
         env:
           NODE_OPTIONS: --max-old-space-size=6144
