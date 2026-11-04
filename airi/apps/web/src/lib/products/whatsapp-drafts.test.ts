@@ -39,6 +39,7 @@ import { generateFlowJson } from "@/components/scenarios/builders/whatsapp/flow-
 import { validateWhatsAppFlowConfig } from "@/components/scenarios/builders/whatsapp/flow-validation";
 import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
 import sharp from "sharp";
+import * as orderFormConfig from "./order-form-config";
 import {
   buildOrderFormFlowConfig,
   createOrderFormDraft,
@@ -294,6 +295,12 @@ describe("prepareCarouselDraft", () => {
 });
 
 describe("buildOrderFormFlowConfig", () => {
+  it("is order-form-config's, so the page and the server build one form", () => {
+    expect(buildOrderFormFlowConfig).toBe(
+      orderFormConfig.buildOrderFormFlowConfig
+    );
+  });
+
   it("lists up to 20 products with their prices, then the buyer's details, in the owner's language", () => {
     const products = Array.from({ length: 22 }, (_, index) =>
       product(index + 1, {
@@ -413,6 +420,25 @@ describe("createOrderFormDraft", () => {
     });
     expect(JSON.parse(update.flowJson).screens[0].id).toBe("ORDER");
     expect(mockDeleteFlow).not.toHaveBeenCalled();
+  });
+
+  it("sends the owner's edited questions instead of the shelf's when given them", async () => {
+    mockCreateFlow.mockResolvedValue({
+      ok: true,
+      status: 200,
+      flow: { id: "flow-1" },
+    });
+    mockUpdateFlow.mockResolvedValue({ ok: true, status: 200 });
+    const shelf = buildOrderFormFlowConfig(params.products, "Russian");
+    const config = {
+      ...shelf,
+      screens: [{ ...shelf.screens[0]!, title: "Ваш заказ" }],
+    };
+
+    await createOrderFormDraft({ ...params, config });
+
+    const update = mockUpdateFlow.mock.calls[0]![0];
+    expect(JSON.parse(update.flowJson).screens[0].title).toBe("Ваш заказ");
   });
 
   it("deletes a draft Meta refused the form for, rather than leave it broken", async () => {

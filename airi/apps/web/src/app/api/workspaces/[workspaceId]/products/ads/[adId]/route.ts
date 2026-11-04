@@ -42,10 +42,12 @@ export async function GET(_request: Request, { params }: Context) {
 }
 
 /**
- * The owner's edits to the words on screen (`ProductAdUpdateRequest`): 202
- * with the ad, its video being made again from the saved pictures, with no
- * AI action. 400 when the words fail the script's checks; 409 ad_not_ready
- * unless the ad is ready. Edits that change nothing answer 200 as it is.
+ * The owner's free changes (`ProductAdUpdateRequest`: the words on screen,
+ * and each scene's word zone, exact photo or earlier picture): 202 with the
+ * ad, its video being made again from the saved pictures, with no AI
+ * action. 400 when the words fail the script's checks or a scene choice
+ * doesn't fit the ad (with the first issues); 409 ad_not_ready unless the
+ * ad is ready. Changes that change nothing answer 200 as it is.
  */
 export async function PATCH(request: Request, { params }: Context) {
   const { workspaceId, adId } = await params;
@@ -76,7 +78,10 @@ export async function PATCH(request: Request, { params }: Context) {
           ? 404
           : result.refused === "ad_not_ready"
             ? 409
-            : 400
+            : 400,
+        result.refused === "invalid_request" && result.issues?.length
+          ? { issues: result.issues.slice(0, 3) }
+          : {}
       );
     }
     return productsJson(

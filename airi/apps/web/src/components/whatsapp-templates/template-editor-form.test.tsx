@@ -2427,3 +2427,311 @@ describe("TemplateEditorForm drafts across a deploy", () => {
     expect(reloadUrl.searchParams.get("create")).toBe("1");
   });
 });
+
+// Products opens this editor for a kit's carousel: its own draft, its own
+// create, its own words, and a shape it decides. The Templates page passes
+// none of these, so everything above is its unchanged behaviour.
+describe("TemplateEditorForm opened by another page", () => {
+  const newDraftKey = getTemplateEditorDraftKey({ workspaceId: "workspace-1" });
+  const scope = "products:9b2f0c1e-77aa-4d1c-8e0e-0d6c1f2a3b4c";
+  const scopedDraftKey = getTemplateEditorDraftKey({
+    workspaceId: "workspace-1",
+    scope,
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: () => {},
+    });
+  });
+
+  // What the kit drafts route answers: a body and two image cards.
+  const kitCarousel = {
+    name: "products_20261103_101500",
+    language: "kk",
+    category: "MARKETING",
+    status: "PENDING",
+    components: [
+      { type: "BODY", text: "Жаңа тауарлар келді!" },
+      {
+        type: "CAROUSEL",
+        cards: ["doll", "mug"].map(name => ({
+          components: [
+            {
+              type: "HEADER",
+              format: "IMAGE",
+              example: {
+                header_handle: [
+                  `https://project.supabase.co/storage/v1/object/public/template-media/${name}.png`,
+                ],
+              },
+            },
+            { type: "BODY", text: `${name} 5 000 ₸` },
+            {
+              type: "BUTTONS",
+              buttons: [{ type: "QUICK_REPLY", text: "Тапсырыс беру" }],
+            },
+          ],
+        })),
+      },
+    ],
+  };
+
+  function seedTemplatesPageDraft() {
+    const seeded = JSON.stringify({
+      savedAt: Date.now() - 60_000,
+      values: {
+        name: "templates_page_draft",
+        targetPlatform: "whatsapp",
+        language: "en",
+        category: "MARKETING",
+        bodyText: "Typed on the Templates page",
+      },
+    });
+    window.localStorage.setItem(newDraftKey, seeded);
+    return seeded;
+  }
+
+  function renderForProducts(
+    props: Partial<React.ComponentProps<typeof TemplateEditorForm>> = {}
+  ) {
+    return render(
+      <TemplateEditorForm
+        workspaceId="workspace-1"
+        onSuccess={jest.fn()}
+        onCancel={jest.fn()}
+        layout="modal"
+        platformScope="whatsapp"
+        template={kitCarousel as never}
+        draftScope={scope}
+        fixedShape={{
+          category: "MARKETING",
+          layout: "carousel",
+          language: "kk",
+        }}
+        submitLabel="Save changes"
+        {...props}
+      />
+    );
+  }
+
+  it("never restores, overwrites or clears the Templates page's new draft", () => {
+    const seeded = seedTemplatesPageDraft();
+
+    const opened = renderForProducts();
+    // Opened from the kit's cards, not the Templates page's draft.
+    expect(screen.getByPlaceholderText("order_confirmation")).toHaveValue(
+      "products_20261103_101500"
+    );
+    expect(screen.queryByText("form.draftRestored")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByDisplayValue("doll 5 000 ₸"), {
+      target: { value: "Кукла Лол 5 000 ₸" },
+    });
+    opened.unmount();
+
+    // The edit was kept under the scoped key only.
+    expect(readTemplateEditorDraft(scopedDraftKey)?.values.name).toBe(
+      "products_20261103_101500"
+    );
+    expect(window.localStorage.getItem(newDraftKey)).toBe(seeded);
+
+    // Reopened: the scoped edit comes back; Cancel drops it, not the page's.
+    renderForProducts();
+    expect(screen.getByDisplayValue("Кукла Лол 5 000 ₸")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "form.cancel" }));
+    expect(readTemplateEditorDraft(scopedDraftKey)).toBeNull();
+    expect(window.localStorage.getItem(newDraftKey)).toBe(seeded);
+  });
+
+  it("hands the template to onCreate instead of creating it, with no success toast", async () => {
+    const seeded = seedTemplatesPageDraft();
+    const onCreate = jest
+      .fn()
+      .mockResolvedValue({ success: true, toast: null });
+    const onSuccess = jest.fn();
+    renderForProducts({ onCreate, onSuccess });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+    expect(mockCreateUnifiedTemplateAction).not.toHaveBeenCalled();
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    const input = onCreate.mock.calls[0][0];
+    expect(input).toMatchObject({
+      name: "products_20261103_101500",
+      language: "kk",
+      category: "MARKETING",
+    });
+    expect(input.components.map((c: { type: string }) => c.type)).toEqual([
+      "BODY",
+      "CAROUSEL",
+    ]);
+    const carousel = input.components[1] as {
+      cards: Array<{ components: Array<{ type: string; text?: string }> }>;
+    };
+    expect(
+      carousel.cards.map(
+        card => card.components.find(item => item.type === "BODY")?.text
+      )
+    ).toEqual(["doll 5 000 ₸", "mug 5 000 ₸"]);
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+    // Its own draft is cleared on save; the Templates page's stays.
+    expect(readTemplateEditorDraft(scopedDraftKey)).toBeNull();
+    expect(window.localStorage.getItem(newDraftKey)).toBe(seeded);
+  });
+
+  it("shows a caller's own success toast and warning", async () => {
+    const onCreate = jest.fn().mockResolvedValue({
+      success: true,
+      toast: "Cards saved",
+      warning: "Prices are your words",
+    });
+    renderForProducts({ onCreate });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith("Cards saved")
+    );
+    expect(toast.warning).toHaveBeenCalledWith("Prices are your words");
+  });
+
+  it("keeps every edit when onCreate refuses, and says why", async () => {
+    const onCreate = jest
+      .fn()
+      .mockResolvedValue({ success: false, error: "Name taken" });
+    const onSuccess = jest.fn();
+    renderForProducts({ onCreate, onSuccess });
+    fireEvent.change(screen.getByDisplayValue("mug 5 000 ₸"), {
+      target: { value: "Кружка 3 500 ₸" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Name taken"));
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(mockCreateUnifiedTemplateAction).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("Кружка 3 500 ₸")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("order_confirmation")).toHaveValue(
+      "products_20261103_101500"
+    );
+    expect(
+      screen.getByRole("button", { name: "Save changes" })
+    ).not.toBeDisabled();
+  });
+
+  it("leaves a refusal with toast: null to the caller, keeping every edit", async () => {
+    const onCreate = jest
+      .fn()
+      .mockResolvedValue({ success: false, error: "Name taken", toast: null });
+    const onSuccess = jest.fn();
+    renderForProducts({ onCreate, onSuccess });
+    fireEvent.change(screen.getByDisplayValue("mug 5 000 ₸"), {
+      target: { value: "Кружка 3 500 ₸" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      await onCreate.mock.results[0]!.value;
+    });
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Save changes" })
+      ).not.toBeDisabled()
+    );
+    // The caller says why, in its dialog: no toast over the buttons.
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("Кружка 3 500 ₸")).toBeInTheDocument();
+  });
+
+  it("runs the editor's own checks before onCreate", async () => {
+    const onCreate = jest.fn();
+    renderForProducts({ onCreate });
+    fireEvent.change(screen.getByDisplayValue("mug 5 000 ₸"), {
+      target: { value: "" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Each carousel card needs body text"
+      )
+    );
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it("shows a fixed shape as one read-only line instead of three pickers", () => {
+    renderForProducts();
+
+    expect(screen.getByTestId("template-fixed-shape")).toHaveTextContent(
+      "Marketing · Media carousel · Kazakh"
+    );
+    expect(
+      screen.queryByRole("combobox", { name: "form.lang" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: "Category" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("radio", { name: "Media carousel" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("radio", { name: "Standard message" })
+    ).not.toBeInTheDocument();
+    // The cards themselves stay editable.
+    expect(screen.getByText("Card 1")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add card" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Save changes" })
+    ).toBeInTheDocument();
+  });
+
+  it("without the new props, a new template keeps the pickers and creates it here", async () => {
+    mockCreateUnifiedTemplateAction.mockResolvedValueOnce({
+      success: true,
+      data: { id: "created" },
+    });
+    const { container } = render(
+      <TemplateEditorForm
+        workspaceId="workspace-1"
+        onSuccess={jest.fn()}
+        layout="modal"
+      />
+    );
+
+    expect(
+      screen.queryByTestId("template-fixed-shape")
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Category" })).toBeVisible();
+    expect(
+      screen.getByRole("radio", { name: "Media carousel" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "form.createTemplate" })
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("order_confirmation"), {
+      target: { value: "spring_sale" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/^Hello /), {
+      target: { value: "Spring sale is on" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() =>
+      expect(mockCreateUnifiedTemplateAction).toHaveBeenCalledTimes(1)
+    );
+    expect(toast.success).toHaveBeenCalledWith("alerts.createSuccess");
+  });
+});

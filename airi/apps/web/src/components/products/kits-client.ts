@@ -1,9 +1,15 @@
 import type {
   ProductKitCreateRequest,
+  ProductKitDraftsRequest,
+  ProductKitDraftsResponse,
+  ProductKitEditRequest,
+  ProductKitEditSourceResponse,
   ProductKitPart,
   ProductKitPlanResponse,
   ProductKitRecord,
   ProductKitResponse,
+  ProductKitSendTestRequest,
+  ProductKitSendTestResponse,
   ProductsMadeResponse,
 } from "@/lib/products/types";
 import {
@@ -78,6 +84,84 @@ export async function retryProductKitPart(
       "POST",
       { part }
     )
+  );
+}
+
+// ------------------------------------------------------------ kit editing
+
+export function productKitDraftsUrl(workspaceId: string): string {
+  return `${productKitsUrl(workspaceId)}/drafts`;
+}
+
+export function productKitEditUrl(
+  workspaceId: string,
+  kitId: string,
+  part?: ProductKitPart
+): string {
+  const url = `${productKitUrl(workspaceId, kitId)}/edit`;
+  return part ? `${url}?part=${encodeURIComponent(part)}` : url;
+}
+
+/**
+ * "Edit cards" before Make: the carousel the shelf would make for these
+ * products, as template components, for the template editor to open.
+ */
+export async function prepareProductKitDrafts(
+  workspaceId: string,
+  request: ProductKitDraftsRequest
+): Promise<ProductKitDraftsResponse> {
+  const data = await sendForAnswer<ProductKitDraftsResponse>(
+    productKitDraftsUrl(workspaceId),
+    "POST",
+    request
+  );
+  if (!Array.isArray(data?.carousel?.components))
+    throw new ProductDraftError("failed");
+  return data;
+}
+
+/** "Edit and send again" / "Edit order form": what was sent, to open the editor with. */
+export async function loadProductKitEditSource(
+  workspaceId: string,
+  kitId: string,
+  part: ProductKitPart
+): Promise<ProductKitEditSourceResponse> {
+  const data = await sendForAnswer<ProductKitEditSourceResponse>(
+    productKitEditUrl(workspaceId, kitId, part),
+    "GET"
+  );
+  if (!isKit(data?.kit)) throw new ProductDraftError("failed");
+  return data;
+}
+
+/**
+ * Sends one made part again with the owner's edits; answers with the kit
+ * once it has settled. A 409 carousel_found throws with the kit as it now
+ * is (`error.kit`); a 400 throws with the failed checks (`error.issues`).
+ */
+export async function sendProductKitPartEdit(
+  workspaceId: string,
+  kitId: string,
+  request: ProductKitEditRequest
+): Promise<ProductKitRecord> {
+  return kitOf(
+    await sendForAnswer<ProductKitResponse>(
+      productKitEditUrl(workspaceId, kitId),
+      "POST",
+      request
+    )
+  );
+}
+
+/** Stretch S1, "Send me the order form": the published form to the owner's test phone. */
+export async function sendProductKitFormTest(
+  workspaceId: string,
+  kitId: string
+): Promise<void> {
+  await sendForAnswer<ProductKitSendTestResponse>(
+    `${productKitUrl(workspaceId, kitId)}/send-test`,
+    "POST",
+    { part: "orderForm" } satisfies ProductKitSendTestRequest
   );
 }
 

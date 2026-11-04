@@ -1095,11 +1095,631 @@
   background: var(--p-sunk);
 }
 
+/*
+ * Studio v2's tools on the finished ad: the openings and endings, the
+ * scenes one at a time, the update card and its phone bar. Radio groups are
+ * real buttons (role="radio") with the shared focus ring; nothing loops.
+ */
+
+/* A change that isn't in the video yet: a rose dot (and "changed" for screen readers). */
+.changedMark {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.changedDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-accent);
+}
+
+.toolSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Muse Spark's options: a paper sticker each, its kind above, its English gloss under. */
+.optionList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--p-r-tile);
+  background: var(--p-raised);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+
+.option:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--p-pick-line);
+}
+
+.option[data-checked] {
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+}
+
+.option:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.option:focus-visible,
+.sceneTab:focus-visible,
+.placeChip:focus-visible,
+.segment:focus-visible,
+.earlierThumb:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.optionRadio {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: var(--p-r-pill);
+  box-shadow: inset 0 0 0 1.5px var(--p-line-strong);
+}
+
+.option[data-checked] .optionRadio {
+  box-shadow: inset 0 0 0 5px var(--p-accent);
+}
+
+.optionBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.optionKind {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-ink-2);
+}
+
+.optionSticker {
+  max-width: 100%;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--p-label);
+  box-shadow: var(--p-shadow-label);
+  color: var(--p-label-ink);
+  font-family: var(--p-font-display);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.optionGloss {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.optionOwn {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--p-ink);
+}
+
+.optionNow {
+  align-self: center;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--p-ink-2);
+}
+
+@media (max-width: 639px) {
+  .option {
+    grid-template-columns: 18px minmax(0, 1fr);
+  }
+
+  .optionNow {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* Scene tabs: a 9:16 thumb with the product's name each. */
+.sceneTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+}
+
+/* A group's name over its controls (Place, Earlier pictures, Words on the picture). */
+.groupLabel {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--p-ink);
+}
+
+.sceneTab {
+  display: grid;
+  flex: 1 1 0;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  max-width: 220px;
+  min-height: 64px;
+  padding: 6px 10px 6px 6px;
+  border: 0;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink-2);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sceneTab[data-checked] {
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+  color: var(--p-ink);
+}
+
+.sceneTabThumb {
+  display: block;
+  width: 36px;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--p-r-thumb);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+}
+
+.sceneTabThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sceneTabThumb img[data-cutout] {
+  padding: 3px;
+  object-fit: contain;
+}
+
+.sceneTabName {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One scene: its 9:16 picture beside its controls (stacked on a phone). */
+.sceneTool {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .sceneTool {
+    grid-template-columns: 148px minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.scenePicture {
+  width: min(148px, 46vw);
+}
+
+.scenePictureFrame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--p-r-film);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.scenePictureFrame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scenePictureFrame img[data-cutout] {
+  padding: 18% 12%;
+  object-fit: contain;
+  filter: var(--p-cutout-lift);
+}
+
+.sceneBadge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  max-width: calc(100% - 12px);
+  padding: 2px 6px;
+  border-radius: var(--p-r-label);
+  background: var(--p-label);
+  color: var(--p-label-ink);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 500;
+}
+
+.sceneBadge svg {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  color: var(--p-ok-ink);
+}
+
+.sceneControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.sceneHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+/* Place chips, and the New picture press. */
+.placeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--p-r-pill);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  color: var(--p-ink-2);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.placeChip svg {
+  width: 13px;
+  height: 13px;
+}
+
+.placeChip[data-checked] {
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+  color: var(--p-ink);
+}
+
+.placeChip:disabled,
+.sceneTab:disabled,
+.segment:disabled,
+.earlierThumb:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.placeNow {
+  color: var(--p-ink-2);
+}
+
+.describe {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.newPicture {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+/* Earlier pictures: small 9:16 thumbs, the one in the video ticked. */
+.earlierRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.earlier {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.earlierThumb {
+  width: 42px;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: var(--p-r-thumb);
+  background: linear-gradient(var(--p-sand), var(--p-sand-low));
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  cursor: pointer;
+}
+
+.earlierThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.earlierThumb[data-checked] {
+  box-shadow:
+    0 0 0 2px var(--p-raised),
+    0 0 0 3.5px var(--p-pick-line);
+}
+
+/* Auto / Top / Bottom, as one segmented control. */
+.segmented {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px;
+  border-radius: var(--p-r-control);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+.segment {
+  min-width: 64px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: calc(var(--p-r-control) - 3px);
+  background: transparent;
+  color: var(--p-ink-2);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.segment[data-checked] {
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--p-pick-line),
+    var(--p-shadow-control);
+  color: var(--p-ink);
+}
+
+/* SAM 3.1's hint when the words cover the product. */
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-label);
+  box-shadow: inset 0 0 0 1px var(--p-line-strong);
+}
+
+.hintText {
+  flex: 1 1 200px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-label-ink);
+}
+
+/* How the latest New picture went. */
+.outcome {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--p-r-tile);
+  font-size: 13px;
+  line-height: 18px;
+  background: var(--p-label);
+  box-shadow: inset 0 0 0 1px var(--p-line-strong);
+  color: var(--p-label-ink);
+}
+
+.outcome[data-tone="ok"] {
+  background: var(--p-ok-wash);
+  box-shadow: none;
+  color: var(--p-ok-ink);
+}
+
+/* The update card, in the side column; rose-edged while changes wait. */
+.updateCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.updateCard[data-pending] {
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-accent-line),
+    var(--p-shadow-sheet);
+}
+
+.pendingList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink);
+}
+
+.pendingList li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.pendingList li::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-accent);
+}
+
+.updateFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.runningLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-accent-ink);
+}
+
+.barRunning {
+  display: flex;
+  justify-content: center;
+  min-height: 36px;
+  align-items: center;
+}
+
+/* "AI on this ad". */
+.aiBox {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.aiBox .checks li {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* The video's tag on the frame's corner. */
+.frameTag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-label);
+  color: var(--p-label-ink);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Rows that open: the post, the ad copy, the checks, the credits. */
+.rowPanel {
+  min-width: 0;
+  padding: 16px 20px;
+}
+
+@media (max-width: 639px) {
+  .rowPanel {
+    padding: 14px 16px;
+  }
+}
+
+.rowTitle {
+  flex: none;
+}
+
+.rowSummary {
+  margin-left: auto;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--p-ink-2);
+}
+
+.rowBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.rowBody .creditList {
+  margin: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .progressFill,
   .stepDot,
   .stepName,
   .choicePill,
+  .option,
   .input,
   .credits summary svg {
     transition: none;

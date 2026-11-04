@@ -76,6 +76,14 @@ export type RenderScene = {
   sticker: RenderLayer | null;
   /** How this scene hands over to the next; null for the last. */
   transition: "fade" | "slideleft" | null;
+  /**
+   * The voice-over in this product scene, as the voice track places it:
+   * from `at` (seconds into the video) for `seconds`; with "Your voice, new
+   * words" or "Airi voices", the line it reads (`line`), else null. Absent
+   * on the price card, the ending and silent scenes. The ffmpeg graph
+   * doesn't draw it: it's the plan's record of the VO, for its captions.
+   */
+  voice?: { line: string | null; at: number; seconds: number } | null;
 };
 
 export type RenderPlan = {
@@ -83,7 +91,11 @@ export type RenderPlan = {
   /** The scenes' start times in the video, from layout's timeline. */
   starts: number[];
   totalSeconds: number;
-  /** The voice track (48 kHz stereo WAV); null for a silent ad. */
+  /**
+   * The voice track (48 kHz stereo WAV): the owner's polished words or the
+   * new words read in a voice, placed scene by scene (compose.ts); null for
+   * a silent ad. It's the video's only sound.
+   */
   voice: string | null;
 };
 

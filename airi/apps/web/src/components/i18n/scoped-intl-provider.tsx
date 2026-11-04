@@ -8,13 +8,20 @@ type MessageMap = Record<string, unknown>;
 type ScopedIntlProviderProps = {
   children: ReactNode;
   messages: MessageMap;
+  /**
+   * The subtree's locale, instead of the page's: an English-only section
+   * (Products) passes "en" with its own English catalogs.
+   */
+  locale?: string;
 };
 
 export function ScopedIntlProvider({
   children,
   messages,
+  locale: localeOverride,
 }: ScopedIntlProviderProps) {
-  const locale = useLocale();
+  const parentLocale = useLocale();
+  const locale = localeOverride ?? parentLocale;
   const parentMessages = useMessages() as MessageMap;
   const mergedMessages = useMemo(
     () => ({ ...parentMessages, ...messages }),

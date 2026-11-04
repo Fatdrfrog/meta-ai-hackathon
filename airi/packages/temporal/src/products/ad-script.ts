@@ -6,7 +6,9 @@
 // property escapes.
 
 import {
+  PRODUCT_AD_OPTIONS_MAX,
   PRODUCT_AD_SETTINGS,
+  type ProductAdOption,
   type ProductAdScript,
   type ProductAdSetting,
 } from "./contracts";
@@ -231,6 +233,29 @@ export function productAdTextIssues(
   } else if (length(trimmed) > limit.chars) {
     issues.push(`${field} is longer than ${limit.chars} characters.`);
   }
+  return issues;
+}
+
+/**
+ * What's wrong with Muse Spark's openings or endings, each named by its
+ * place ("openings[1]"): every text passes the same checks as the words it
+ * stands in for (`limit`: the sticker's or the ending's), the kinds are
+ * distinct, and there are at most PRODUCT_AD_OPTIONS_MAX. Empty when they
+ * pass; the worker drops a failing option rather than the script.
+ */
+export function productAdOptionIssues(
+  field: "openings" | "endings",
+  options: ReadonlyArray<ProductAdOption<string>>,
+  limit: ProductAdTextLimit,
+): string[] {
+  const issues = options.flatMap((option, index) =>
+    productAdTextIssues(`${field}[${index}]`, option.text, limit),
+  );
+  if (options.length > PRODUCT_AD_OPTIONS_MAX)
+    issues.push(`${field} must hold at most ${PRODUCT_AD_OPTIONS_MAX}.`);
+  const kinds = options.map((option) => option.kind);
+  if (new Set(kinds).size !== kinds.length)
+    issues.push(`${field} must each be of a different kind.`);
   return issues;
 }
 

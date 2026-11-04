@@ -120,13 +120,33 @@ jest.mock("@/lib/temporal/product-ad", () => ({
 jest.mock("@/lib/whatsapp/get-workspace-context", () => ({
   getWhatsAppWorkspaceContext: (...args: unknown[]) => mockWhatsApp(...args),
 }));
+// Supabase: the workspace's name, and the AI ledger's rows the picture
+// budget reads, by table.
+const mockLedgerRow = jest.fn();
+const mockLedgerFilters: Array<{ table: string; filters: string[] }> = [];
 jest.mock("@/lib/supabase/admin", () => ({
   supabaseAdmin: {
-    from: () => ({
-      select: () => ({
-        eq: () => ({ maybeSingle: () => mockWorkspaceName() }),
-      }),
-    }),
+    from: (table: string) => {
+      let columns = "";
+      const filters: string[] = [];
+      const query = {
+        select: (selected: string) => {
+          columns = selected;
+          return query;
+        },
+        eq: (column: string, value: unknown) => {
+          filters.push(`${column}=${String(value)}`);
+          return query;
+        },
+        maybeSingle: async () => {
+          if (table === "workspaces" && columns === "name")
+            return mockWorkspaceName();
+          mockLedgerFilters.push({ table, filters });
+          return mockLedgerRow(table, columns);
+        },
+      };
+      return query;
+    },
   },
 }));
 jest.mock("@/lib/products/photo-urls", () => ({
@@ -153,6 +173,7 @@ import {
   loadAdShelf,
   loadProductAdBrief,
   loadProductAdRecord,
+  redoProductAdScene,
   retryProductAd,
   updateProductAdWords,
 } from "./ads";
@@ -230,6 +251,12 @@ const allowance = (overrides: Doc = {}) => ({
   trialEnded: false,
   ...overrides,
 });
+
+/** The allowance's answer for a company that turned AI off (main's WorkspaceAiAccessError). */
+const aiDisabled = () =>
+  Object.assign(new Error("AI is disabled for this company."), {
+    code: "workspace_ai_disabled",
+  });
 
 const brief = (overrides: Doc = {}) => ({
   requestId: "press-1",
@@ -371,9 +398,30 @@ function readyAd(id: string, overrides: Doc = {}): Doc {
 
 const AD = "751f1f77bcf86cd799439031";
 
+/**
+ * The AI ledger's rows for the picture budget: a Pro company with no
+ * override, whose plan lets one action spend $0.50, and this ad's action
+ * at $0.08 committed: (500 000 - 80 000) / 47 500 leaves 8 new pictures.
+ */
+function ledger(rows: Record<string, unknown> = {}) {
+  const all: Record<string, unknown> = {
+    workspaces: {
+      company_id: "company-1",
+      companies: { subscription_type: "pro" },
+    },
+    workspace_text_ai_actions: { committed_micros: 80_000 },
+    company_ai_usage: { action_spend_limit_micros: null },
+    ai_sponsorship_policies: { action_spend_limit_micros: 500_000 },
+    ...rows,
+  };
+  return (table: string) => ({ data: all[table] ?? null, error: null });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockAds.length = 0;
+  mockLedgerFilters.length = 0;
+  mockLedgerRow.mockImplementation(ledger());
   mockProductFind.mockImplementation(() =>
     mockQuery([productRow(DOLL), mug()])
   );
@@ -523,6 +571,14 @@ describe("the brief", () => {
     expect(result.blocked).toBe("trial_ended");
     // A number without its access token isn't connected.
     expect(result.ending).toEqual({ phone: null, shopName: "QazOner Group" });
+  });
+
+  it("blocks the brief, saying why, for a company that turned AI off", async () => {
+    mockAllowance.mockRejectedValue(aiDisabled());
+
+    const result = await loadProductAdBrief(WS, [DOLL]);
+
+    expect(result.blocked).toBe("ai_disabled");
   });
 
   it("doesn't block the brief when the allowance can't be read", async () => {
@@ -738,6 +794,33 @@ describe("making an ad", () => {
     expect(mockStart).not.toHaveBeenCalled();
   });
 
+  it("refuses a company that turned AI off, before writing or starting anything", async () => {
+    mockAllowance.mockRejectedValue(aiDisabled());
+
+    expect(
+      await createProductAd({
+        workspaceId: WS,
+        userId: "user-1",
+        request: brief(),
+      })
+    ).toEqual({ refused: "ai_disabled" });
+    expect(mockProductAd.create).not.toHaveBeenCalled();
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("still throws when the company's AI switch can't be read, so the route answers 503", async () => {
+    mockAllowance.mockRejectedValue(
+      Object.assign(new Error("AI access could not be verified."), {
+        code: "workspace_ai_policy_unavailable",
+      })
+    );
+
+    await expect(
+      createProductAd({ workspaceId: WS, userId: "user-1", request: brief() })
+    ).rejects.toMatchObject({ code: "workspace_ai_policy_unavailable" });
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
   it("admits a plan with no set number of actions", async () => {
     mockAllowance.mockResolvedValue(
       allowance({ includedActions: null, remainingActions: null })
@@ -929,6 +1012,27 @@ describe("making an ad", () => {
 });
 
 describe("the ad as the page reads it", () => {
+  it("has no recording to offer when no product has the owner's clip", async () => {
+    const base = readyAd(AD) as { products: Array<Record<string, unknown>> };
+    mockAds.push(
+      readyAd(AD, {
+        products: base.products.map(product => ({ ...product, clip: null })),
+      })
+    );
+    const ad = await loadProductAdRecord(WS, AD, NOW);
+    expect(ad?.hasRecording).toBe(false);
+  });
+
+  // A scene saved before studio v2's tools, as the page reads it.
+  const V1_SCENE = {
+    textZone: "auto",
+    useExact: false,
+    pictures: [],
+    place: null,
+    redo: null,
+    textOverlap: null,
+  } as const;
+
   it("links every file, and composes the post around Muse Spark's opening", async () => {
     mockAds.push(readyAd(AD));
 
@@ -953,6 +1057,17 @@ describe("the ad as the page reads it", () => {
       },
       idea: { kind: "new", text: null },
       voice: "own",
+      // An ad from before studio v2 reads as its defaults.
+      stockVoiceId: null,
+      voiceResult: null,
+      // The doll has the owner saying its price.
+      hasRecording: true,
+      runKind: "make",
+      lastRun: null,
+      // Read from the ledger for a ready ad.
+      picturesLeft: 8,
+      openings: [],
+      endings: [],
       ending: { phone: SHOP_NUMBER, shopName: "QazOner Group" },
       products: [
         {
@@ -986,12 +1101,20 @@ describe("the ad as the page reads it", () => {
           method: "muse",
           imageUrl: `https://signed.test/ads/${AD}/scene-${DOLL}-a1.png`,
           checked: true,
+          ...V1_SCENE,
+          // Muse Image's picture from the first make: the script's setting.
+          place: {
+            setting: "oak_table_window",
+            words: null,
+            englishPlace: null,
+          },
         },
         {
           productId: MUG,
           method: "exact",
           imageUrl: `https://signed.test/ads/${AD}/exact-${MUG}.png`,
           checked: false,
+          ...V1_SCENE,
         },
       ],
       video: {
@@ -999,6 +1122,7 @@ describe("the ad as the page reads it", () => {
         bytes: 3_355_443,
         seconds: 14.2,
         posterUrl: `https://signed.test/ads/${AD}/r1/poster.jpg`,
+        renderNo: 1,
       },
       stills: {
         statusUrl: `https://signed.test/ads/${AD}/r1/status.jpg`,
@@ -1022,6 +1146,101 @@ describe("the ad as the page reads it", () => {
       costUsd: 0.052,
       pricesChanged: false,
     });
+  });
+
+  it("reads studio v2's choices, kept pictures, last run and voice", async () => {
+    const base = readyAd(AD) as { scenes: Array<Record<string, unknown>> };
+    const kept = ref(`ads/${AD}/scene-${DOLL}-a1.png`);
+    mockAds.push(
+      readyAd(AD, {
+        voice: "clone",
+        voiceResult: { used: "own", fallback: "unavailable" },
+        runKind: "scene",
+        lastRun: {
+          renderNo: 2,
+          kind: "scene",
+          outcome: "failed",
+          errorCode: "failed",
+          message: "for support only",
+          at: NOW,
+        },
+        script: {
+          ...script(),
+          openings: [{ text: "Жаңа тауар", kind: "news", gloss: "New" }],
+        },
+        scenes: [
+          {
+            ...base.scenes[0],
+            textZone: "top",
+            pictures: [
+              {
+                ref: ref(`ads/${AD}/scene-${DOLL}-a0.png`),
+                box: null,
+                place: "a pale stone counter",
+                madeAt: NOW,
+              },
+              { ref: kept, box: null, place: "a linen shelf", madeAt: NOW },
+            ],
+            place: { setting: null, words: "киіз үй", englishPlace: "a yurt" },
+            redo: {
+              requestId: "press-2",
+              renderNo: 2,
+              from: { muse: kept, box: null, method: "muse", check: null },
+              outcome: "place_refused",
+              reason: "people",
+            },
+            textOverlap: { covers: true, suggested: "bottom" },
+          },
+          { ...base.scenes[1], useExact: true },
+        ],
+      })
+    );
+
+    const ad = await loadProductAdRecord(WS, AD, NOW);
+
+    expect(ad).toMatchObject({
+      voice: "clone",
+      voiceResult: { used: "own", fallback: "unavailable" },
+      runKind: "scene",
+      lastRun: {
+        renderNo: 2,
+        kind: "scene",
+        outcome: "failed",
+        errorCode: "failed",
+        at: NOW.toISOString(),
+      },
+      openings: [{ text: "Жаңа тауар", kind: "news", gloss: "New" }],
+      endings: [],
+      picturesLeft: 8,
+    });
+    expect(ad!.lastRun).not.toHaveProperty("message");
+    expect(ad!.scenes[0]).toMatchObject({
+      textZone: "top",
+      useExact: false,
+      pictures: [
+        {
+          index: 0,
+          url: `https://signed.test/ads/${AD}/scene-${DOLL}-a0.png`,
+          place: "a pale stone counter",
+          current: false,
+        },
+        {
+          index: 1,
+          url: `https://signed.test/ads/${AD}/scene-${DOLL}-a1.png`,
+          place: "a linen shelf",
+          current: true,
+        },
+      ],
+      place: { setting: null, words: "киіз үй", englishPlace: "a yurt" },
+      redo: {
+        renderNo: 2,
+        outcome: "place_refused",
+        reason: "people",
+        englishPlace: "a yurt",
+      },
+      textOverlap: { covers: true, suggested: "bottom" },
+    });
+    expect(ad!.scenes[1]).toMatchObject({ useExact: true, pictures: [] });
   });
 
   it("says when a shelf price changed since the ad was made", async () => {
@@ -1078,6 +1297,138 @@ describe("the ad as the page reads it", () => {
     );
     const later = new Date(NOW.getTime() + 10 * 60_000);
     expect((await loadProductAdRecord(WS, AD, later))?.status).toBe("making");
+  });
+
+  it("puts an edit run that never started back to ready with its video, and its New picture back as it was", async () => {
+    const base = readyAd(AD) as { scenes: Array<Record<string, unknown>> };
+    const before = ref(`ads/${AD}/scene-${DOLL}-a1.png`);
+    mockAds.push(
+      readyAd(AD, {
+        status: "making",
+        step: "pictures",
+        runKind: "scene",
+        renderNo: 2,
+        workflowId: `product-ad:${AD}:r1`,
+        scenes: [
+          {
+            ...base.scenes[0],
+            method: "exact",
+            muse: null,
+            check: null,
+            box: null,
+            redo: {
+              requestId: "press-2",
+              renderNo: 2,
+              from: {
+                muse: before,
+                box: { x: 0.2, y: 0.3, w: 0.5, h: 0.5 },
+                method: "muse",
+                check: { same: true, difference: null },
+              },
+              outcome: null,
+              reason: null,
+            },
+          },
+          base.scenes[1],
+        ],
+      })
+    );
+    const later = new Date(NOW.getTime() + 3 * 60_000);
+
+    const ad = await loadProductAdRecord(WS, AD, later);
+
+    expect(ad).toMatchObject({
+      status: "ready",
+      errorCode: null,
+      renderNo: 2,
+      lastRun: {
+        renderNo: 2,
+        kind: "scene",
+        outcome: "failed",
+        errorCode: "failed",
+      },
+      video: { url: `https://signed.test/ads/${AD}/r1/ad.mp4` },
+    });
+    expect(ad!.scenes[0]).toMatchObject({
+      method: "muse",
+      imageUrl: `https://signed.test/${before.path}`,
+      checked: true,
+      redo: { outcome: "unavailable" },
+    });
+    expect(mockAds[0]).toMatchObject({ status: "ready", step: null });
+  });
+
+  it("divides the room left in the ad's AI action by the most one New picture costs", async () => {
+    mockAds.push(readyAd(AD));
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBe(8);
+    expect(mockLedgerFilters).toEqual(
+      expect.arrayContaining([
+        {
+          table: "workspace_text_ai_actions",
+          filters: [`workspace_id=${WS}`, `action_id=product-ad:${AD}`],
+        },
+        { table: "company_ai_usage", filters: ["company_id=company-1"] },
+        { table: "ai_sponsorship_policies", filters: ["plan=pro"] },
+      ])
+    );
+  });
+
+  it("takes the company's own action limit over its plan's", async () => {
+    mockAds.push(readyAd(AD));
+    mockLedgerRow.mockImplementation(
+      ledger({ company_ai_usage: { action_spend_limit_micros: 2_000_000 } })
+    );
+    // (2 000 000 - 80 000) / 47 500
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBe(40);
+  });
+
+  it("is held to the company's spend left when that's tighter", async () => {
+    mockAds.push(readyAd(AD));
+    mockAllowance.mockResolvedValue(
+      allowance({ spendRemainingMicros: 100_000 })
+    );
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBe(2);
+
+    mockAllowance.mockResolvedValue(allowance({ spendLimitReached: true }));
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBe(0);
+  });
+
+  it("is 0 for an action at its limit, and counts an action not booked yet as empty", async () => {
+    mockAds.push(readyAd(AD));
+    mockLedgerRow.mockImplementation(
+      ledger({ workspace_text_ai_actions: { committed_micros: 480_000 } })
+    );
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBe(0);
+
+    mockLedgerRow.mockImplementation(
+      ledger({ workspace_text_ai_actions: null })
+    );
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBe(10);
+  });
+
+  it("is null when the ledger can't tell, or the ad isn't ready, and never stops it loading", async () => {
+    mockAds.push(readyAd(AD));
+    mockLedgerRow.mockImplementation((table: string) =>
+      table === "company_ai_usage"
+        ? { data: null, error: { message: "down" } }
+        : ledger()(table)
+    );
+    expect(await loadProductAdRecord(WS, AD, NOW)).toMatchObject({
+      status: "ready",
+      picturesLeft: null,
+    });
+
+    mockAllowance.mockRejectedValue(new Error("Supabase down"));
+    expect(await loadProductAdRecord(WS, AD, NOW)).toMatchObject({
+      status: "ready",
+      picturesLeft: null,
+    });
+
+    mockAllowance.mockResolvedValue(allowance());
+    mockLedgerRow.mockImplementation(ledger());
+    mockAds[0]!.status = "making";
+    mockAds[0]!.workflowId = `product-ad:${AD}:r1`;
+    expect((await loadProductAdRecord(WS, AD, NOW))?.picturesLeft).toBeNull();
   });
 
   it("lists the newest ads with their poster and products linked, not every still", async () => {
@@ -1255,6 +1606,364 @@ describe("the owner's edits", () => {
       "Сөреде жаңа тауарлар"
     );
   });
+
+  it("saves the scenes' choices as a free render run, words left unmarked", async () => {
+    mockAds.push(readyAd(AD));
+
+    const result = await updateProductAdWords({
+      workspaceId: WS,
+      adId: AD,
+      changes: {
+        scenes: [
+          { productId: DOLL, textZone: "bottom" },
+          { productId: MUG, useExact: true },
+        ],
+      },
+    });
+
+    expect(result).toMatchObject({
+      started: true,
+      ad: { status: "making", runKind: "render", renderNo: 2 },
+    });
+    const scenes = mockAds[0]!.scenes as Array<Record<string, unknown>>;
+    expect(scenes[0]).toMatchObject({ textZone: "bottom", method: "muse" });
+    expect(scenes[1]).toMatchObject({ useExact: true });
+    expect(mockAds[0]).toMatchObject({ runKind: "render" });
+    expect((mockAds[0]!.script as ProductAdScript).edited).toBe(false);
+    expect(mockStart).toHaveBeenCalledWith(
+      expect.objectContaining({ renderNo: 2, mode: "render" })
+    );
+    expect(mockAllowance).not.toHaveBeenCalled();
+  });
+
+  it("puts an earlier picture back with its own box, and refuses one the scene didn't keep", async () => {
+    const base = readyAd(AD) as { scenes: Array<Record<string, unknown>> };
+    const earlier = ref(`ads/${AD}/scene-${DOLL}-a0.png`);
+    const earlierBox = { x: 0.1, y: 0.25, w: 0.4, h: 0.45 };
+    mockAds.push(
+      readyAd(AD, {
+        scenes: [
+          {
+            ...base.scenes[0],
+            useExact: true,
+            pictures: [
+              {
+                ref: earlier,
+                box: earlierBox,
+                place: "linen shelf",
+                madeAt: NOW,
+              },
+              {
+                ref: ref(`ads/${AD}/scene-${DOLL}-a1.png`),
+                box: { x: 0.2, y: 0.3, w: 0.5, h: 0.5 },
+                place: "oak table",
+                madeAt: NOW,
+              },
+            ],
+          },
+          base.scenes[1],
+        ],
+      })
+    );
+
+    expect(
+      await updateProductAdWords({
+        workspaceId: WS,
+        adId: AD,
+        changes: { scenes: [{ productId: DOLL, pictureIndex: 3 }] },
+      })
+    ).toEqual({
+      refused: "invalid_request",
+      issues: [`${DOLL} has no kept picture 3.`],
+    });
+    expect(
+      await updateProductAdWords({
+        workspaceId: WS,
+        adId: AD,
+        changes: { scenes: [{ productId: CLOCK, textZone: "top" }] },
+      })
+    ).toMatchObject({ refused: "invalid_request" });
+
+    await updateProductAdWords({
+      workspaceId: WS,
+      adId: AD,
+      changes: { scenes: [{ productId: DOLL, pictureIndex: 0 }] },
+    });
+    expect(
+      (mockAds[0]!.scenes as Array<Record<string, unknown>>)[0]
+    ).toMatchObject({
+      muse: earlier,
+      box: earlierBox,
+      method: "muse",
+      check: { same: true, difference: null },
+      useExact: false,
+    });
+  });
+
+  it("starts nothing for the picture already in the video", async () => {
+    const base = readyAd(AD) as { scenes: Array<Record<string, unknown>> };
+    mockAds.push(
+      readyAd(AD, {
+        scenes: [
+          {
+            ...base.scenes[0],
+            pictures: [
+              {
+                ref: ref(`ads/${AD}/scene-${DOLL}-a1.png`),
+                box: { x: 0.2, y: 0.3, w: 0.5, h: 0.5 },
+                place: "oak table",
+                madeAt: NOW,
+              },
+            ],
+          },
+          base.scenes[1],
+        ],
+      })
+    );
+    expect(
+      await updateProductAdWords({
+        workspaceId: WS,
+        adId: AD,
+        changes: { scenes: [{ productId: DOLL, pictureIndex: 0 }] },
+      })
+    ).toMatchObject({ started: false });
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+});
+
+describe("New picture", () => {
+  const press = (overrides: Doc = {}) => ({
+    workspaceId: WS,
+    adId: AD,
+    productId: MUG,
+    request: { requestId: "press-2", setting: "gift_table" as const },
+    now: new Date("2026-11-03T10:00:00.000Z"),
+    ...overrides,
+  });
+
+  it("starts a scene run for that scene alone, its exact photo standing in", async () => {
+    const base = readyAd(AD) as { scenes: Array<Record<string, unknown>> };
+    mockAds.push(
+      readyAd(AD, {
+        scenes: [
+          base.scenes[0],
+          {
+            ...base.scenes[1],
+            useExact: true,
+            exactBox: { x: 0.25, y: 0.4, w: 0.5, h: 0.3 },
+          },
+        ],
+      })
+    );
+
+    const result = await redoProductAdScene(press());
+
+    expect(result).toMatchObject({
+      started: true,
+      ad: { status: "making", step: "pictures", runKind: "scene", renderNo: 2 },
+    });
+    expect(mockAds[0]).toMatchObject({
+      status: "making",
+      step: "pictures",
+      runKind: "scene",
+      renderNo: 2,
+      requestedAt: new Date("2026-11-03T10:00:00.000Z"),
+      startedAt: null,
+      workflowId: `product-ad:${AD}:r2`,
+    });
+    const [doll, mug] = mockAds[0]!.scenes as Array<Record<string, unknown>>;
+    expect(doll).toEqual(base.scenes[0]);
+    expect(mug).toMatchObject({
+      method: "exact",
+      muse: null,
+      check: null,
+      box: { x: 0.25, y: 0.4, w: 0.5, h: 0.3 },
+      // The worker turns it off only for a new picture.
+      useExact: true,
+      place: { setting: "gift_table", words: null, englishPlace: null },
+      redo: {
+        requestId: "press-2",
+        renderNo: 2,
+        from: {
+          muse: null,
+          box: null,
+          method: "exact",
+          check: { same: false, difference: "The logo changed." },
+        },
+        outcome: null,
+        reason: null,
+      },
+    });
+    const saved = mockAds[0]!.script as ProductAdScript;
+    expect(saved.scenes[1]!.setting).toBe("gift_table");
+    // The press keeps the setting the replaced picture was made in, for the
+    // worker to name it by (the script now names the pressed chip).
+    expect(
+      (mug!.redo as { from: { setting?: string | null } }).from.setting
+    ).toBe("linen_shelf");
+    expect(saved.edited).toBe(false);
+    // A scene run may pay: a "make" run.
+    expect(mockStart).toHaveBeenCalledWith({
+      workspaceId: WS,
+      adId: AD,
+      renderNo: 2,
+      mode: "make",
+    });
+  });
+
+  it("takes a described place, and the pending free changes with it", async () => {
+    mockAds.push(readyAd(AD));
+
+    await redoProductAdScene(
+      press({
+        productId: DOLL,
+        request: {
+          requestId: "press-3",
+          words: "киіз үй ішінде",
+          changes: {
+            sticker: "Жаңа тауар",
+            scenes: [{ productId: MUG, textZone: "top" }],
+          },
+        },
+      })
+    );
+
+    const [doll, mug] = mockAds[0]!.scenes as Array<Record<string, unknown>>;
+    expect(doll).toMatchObject({
+      place: { setting: null, words: "киіз үй ішінде", englishPlace: null },
+      redo: {
+        requestId: "press-3",
+        from: {
+          muse: ref(`ads/${AD}/scene-${DOLL}-a1.png`),
+          box: { x: 0.2, y: 0.3, w: 0.5, h: 0.5 },
+          method: "muse",
+          check: { same: true, difference: null },
+        },
+      },
+    });
+    expect(mug).toMatchObject({ textZone: "top" });
+    const saved = mockAds[0]!.script as ProductAdScript;
+    expect(saved.sticker).toBe("Жаңа тауар");
+    expect(saved.edited).toBe(true);
+    // The setting stays the script's: the owner's place is in `place`.
+    expect(saved.scenes[0]!.setting).toBe("oak_table_window");
+  });
+
+  it("asks admission as an admitted action, and refuses when the ad's action has no room", async () => {
+    mockAds.push(readyAd(AD));
+    mockAllowance.mockResolvedValue(allowance({ remainingActions: 0 }));
+    mockLedgerRow.mockImplementation(
+      ledger({ workspace_text_ai_actions: { committed_micros: 460_000 } })
+    );
+    expect(await redoProductAdScene(press())).toEqual({
+      refused: "no_pictures_left",
+    });
+
+    mockLedgerRow.mockImplementation(ledger());
+    // No included action left doesn't stop an action already admitted.
+    expect(await redoProductAdScene(press())).toMatchObject({ started: true });
+
+    mockAds[0]!.status = "ready";
+    mockAds[0]!.scenes = (readyAd(AD) as { scenes: unknown[] }).scenes;
+    mockAllowance.mockResolvedValue(allowance({ trialEnded: true }));
+    expect(
+      await redoProductAdScene(
+        press({ request: { requestId: "press-9", setting: "gift_table" } })
+      )
+    ).toEqual({ refused: "trial_ended" });
+  });
+
+  it("refuses a company that turned AI off, the scene as it was", async () => {
+    mockAds.push(readyAd(AD));
+    mockAllowance.mockRejectedValue(aiDisabled());
+    expect(await redoProductAdScene(press())).toEqual({
+      refused: "ai_disabled",
+    });
+    expect(mockAds[0]!.status).toBe("ready");
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("goes on when the budget can't be read: the ledger is the real gate", async () => {
+    mockAds.push(readyAd(AD));
+    mockLedgerRow.mockImplementation(() => ({
+      data: null,
+      error: { message: "down" },
+    }));
+    expect(await redoProductAdScene(press())).toMatchObject({ started: true });
+  });
+
+  it("refuses unless the ad is ready, for a product it doesn't show, and changes that don't fit", async () => {
+    mockAds.push(readyAd(AD, { status: "making" }));
+    expect(await redoProductAdScene(press())).toEqual({
+      refused: "ad_not_ready",
+    });
+    mockAds[0]!.status = "ready";
+    expect(await redoProductAdScene(press({ productId: CLOCK }))).toEqual({
+      refused: "product_not_found",
+    });
+    expect(
+      await redoProductAdScene(
+        press({
+          request: {
+            requestId: "press-2",
+            setting: "gift_table",
+            changes: { sticker: "50% жеңілдік" },
+          },
+        })
+      )
+    ).toMatchObject({ refused: "invalid_request" });
+    expect(
+      await redoProductAdScene(press({ adId: "751f1f77bcf86cd799439099" }))
+    ).toEqual({ refused: "ad_not_found" });
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("starts nothing twice for the same press", async () => {
+    mockAds.push(readyAd(AD));
+    expect(await redoProductAdScene(press())).toMatchObject({ started: true });
+    expect(await redoProductAdScene(press())).toMatchObject({
+      started: false,
+      ad: { status: "making", renderNo: 2 },
+    });
+    expect(mockStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves one run when two presses race for the same render", async () => {
+    mockAds.push(readyAd(AD));
+    const [first, second] = await Promise.all([
+      redoProductAdScene(press()),
+      redoProductAdScene(
+        press({
+          productId: DOLL,
+          request: { requestId: "press-3", setting: "stone_counter" },
+        })
+      ),
+    ]);
+    expect([first, second].filter(entry => "ad" in entry)).toHaveLength(1);
+    expect([first, second]).toContainEqual({ refused: "ad_not_ready" });
+    expect(mockStart).toHaveBeenCalledTimes(1);
+    expect(mockAds[0]!.renderNo).toBe(2);
+  });
+
+  it("puts the ad back as it was when the run can't start", async () => {
+    mockAds.push(readyAd(AD));
+    mockStart.mockRejectedValue(new Error("Temporal down"));
+
+    await expect(redoProductAdScene(press())).rejects.toThrow("Temporal down");
+
+    expect(mockAds[0]).toMatchObject({
+      status: "ready",
+      step: null,
+      renderNo: 1,
+      runKind: "make",
+    });
+    expect(mockAds[0]!.scenes).toEqual(
+      (readyAd(AD) as { scenes: unknown[] }).scenes
+    );
+    expect((mockAds[0]!.script as ProductAdScript).scenes[1]!.setting).toBe(
+      "linen_shelf"
+    );
+  });
 });
 
 describe("trying a failed ad again", () => {
@@ -1313,6 +2022,16 @@ describe("trying a failed ad again", () => {
     });
   });
 
+  it("refuses a company that turned AI off, the ad left failed", async () => {
+    mockAds.push(failed({ costMicros: 16_000 }));
+    mockAllowance.mockRejectedValue(aiDisabled());
+    expect(await retryProductAd({ workspaceId: WS, adId: AD })).toEqual({
+      refused: "ai_disabled",
+    });
+    expect(mockAds[0]!.status).toBe("failed");
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
   it("answers an ad that isn't failed as it is, and a missing one as not found", async () => {
     mockAds.push(readyAd(AD));
     expect(await retryProductAd({ workspaceId: WS, adId: AD })).toMatchObject({
@@ -1339,6 +2058,68 @@ describe("trying a failed ad again", () => {
       status: "failed",
       errorCode: "failed",
       renderNo: 2,
+    });
+  });
+
+  const editFailed = (kind: string) =>
+    readyAd(AD, {
+      renderNo: 3,
+      runKind: kind,
+      lastRun: {
+        renderNo: 3,
+        kind,
+        outcome: "failed",
+        errorCode: "failed",
+        message: "ffmpeg exited",
+        at: NOW,
+      },
+    });
+
+  it("makes the video again for free after an Update or a New picture failed", async () => {
+    for (const kind of ["render", "scene"]) {
+      mockAds.length = 0;
+      mockStart.mockClear();
+      mockAds.push(editFailed(kind));
+
+      const result = await retryProductAd({ workspaceId: WS, adId: AD });
+
+      expect(result).toMatchObject({
+        started: true,
+        ad: { status: "making", step: "video", runKind: "render", renderNo: 4 },
+      });
+      expect(mockStart).toHaveBeenCalledWith({
+        workspaceId: WS,
+        adId: AD,
+        renderNo: 4,
+        mode: "render",
+      });
+    }
+    expect(mockAllowance).not.toHaveBeenCalled();
+  });
+
+  it("leaves a ready ad as it is after a voice run failed, or a failure that isn't the latest run", async () => {
+    mockAds.push(editFailed("voice"));
+    expect(await retryProductAd({ workspaceId: WS, adId: AD })).toMatchObject({
+      started: false,
+    });
+    mockAds[0] = { ...editFailed("render"), renderNo: 4 };
+    expect(await retryProductAd({ workspaceId: WS, adId: AD })).toMatchObject({
+      started: false,
+    });
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("puts a ready ad back as it was when its render can't start", async () => {
+    mockAds.push(editFailed("render"));
+    mockStart.mockRejectedValue(new Error("Temporal down"));
+    await expect(retryProductAd({ workspaceId: WS, adId: AD })).rejects.toThrow(
+      "Temporal down"
+    );
+    expect(mockAds[0]).toMatchObject({
+      status: "ready",
+      renderNo: 3,
+      runKind: "render",
+      lastRun: { outcome: "failed" },
     });
   });
 });

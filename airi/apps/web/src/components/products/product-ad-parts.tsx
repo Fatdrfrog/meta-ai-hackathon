@@ -1,11 +1,22 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { oneLine } from "@/lib/products/ad-request";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
-import type { ProductAdRecord } from "@/lib/products/types";
+import {
+  productAdTextIssues,
+  type ProductAdRecord,
+  type ProductAdTextLimit,
+} from "@/lib/products/types";
 import { cn } from "@/lib/utils";
 import { Check, CircleAlert, Copy, Download, Lock } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { downloadProductAdFile } from "./ads-client";
 import styles from "./product-ad-studio.module.css";
 import { ProductCheck } from "./product-controls";
@@ -13,9 +24,230 @@ import theme from "./product-theme.module.css";
 
 // The pieces the studio's views share: the head, the product chips with
 // their locked prices, the sketch of the first scene, the scene rows, and
-// small controls (a check, a choice, a download, a copy button).
+// small controls (a check, a choice, a radio group, a field for words, a
+// download, a copy button).
 
 const COPY = PRODUCTS_COPY.ad;
+
+/** An id for one press, so sending it twice does it once. */
+export function adRequestId(): string {
+  const api = typeof crypto === "undefined" ? undefined : crypto;
+  if (typeof api?.randomUUID === "function") return api.randomUUID();
+  return `ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+/**
+ * Whether a line was changed: the server keeps words as one line, so
+ * spacing alone (the owner's, or a double space in Muse Spark's) isn't.
+ */
+export const wordsEdited = (draft: string, saved: string | undefined) =>
+  oneLine(draft) !== oneLine(saved ?? "");
+
+/**
+ * Why the owner's words can't go on screen, in their terms, by the script's
+ * own checks: empty, a number or a currency (Airi draws prices), letters
+ * the fonts lack, or more than the line room. Null when they can.
+ */
+export function wordsIssue(
+  text: string,
+  limit: ProductAdTextLimit
+): string | null {
+  const [first] = productAdTextIssues("text", text, limit);
+  if (!first) return null;
+  if (first.includes("is empty")) return COPY.issues.empty;
+  if (first.includes("digit")) return COPY.issues.digits;
+  if (first.includes("currency")) return COPY.issues.currency;
+  if (first.includes("fonts")) return COPY.issues.letters;
+  return COPY.issues.room(limit.lines ?? 1, limit.chars);
+}
+
+/** A rose dot for a control whose change isn't in the video yet, said as "changed". */
+export function ChangedMark() {
+  return (
+    <span className={styles.changedMark}>
+      <span aria-hidden="true" className={styles.changedDot} />
+      <span className="sr-only">{COPY.changed}</span>
+    </span>
+  );
+}
+
+/**
+ * A line of the owner's words, with its room ("One line of up to 26
+ * letters") and, once changed, the script's own checks.
+ */
+export function WordField({
+  id,
+  label,
+  value,
+  saved,
+  limit,
+  onChange,
+  disabled = false,
+  describedBy,
+}: {
+  id: string;
+  label: ReactNode;
+  value: string;
+  saved: string;
+  limit: ProductAdTextLimit;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  describedBy?: string;
+}) {
+  const lines = limit.lines ?? 1;
+  const changed = wordsEdited(value, saved);
+  // Only a changed line is checked: the saved words passed already.
+  const issue = changed ? wordsIssue(value, limit) : null;
+  const describedByIds = [
+    `${id}-room`,
+    issue ? `${id}-issue` : null,
+    describedBy ?? null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const shared = {
+    id,
+    value,
+    className: styles.input,
+    maxLength: limit.chars * lines + 20,
+    spellCheck: true,
+    disabled,
+    "aria-invalid": issue ? true : undefined,
+    "aria-describedby": describedByIds,
+  } as const;
+  return (
+    <div className={styles.field}>
+      <div className={styles.fieldHead}>
+        <label htmlFor={id} className={styles.fieldLabel}>
+          {label}
+          {changed ? <ChangedMark /> : null}
+        </label>
+        <span id={`${id}-room`} className={styles.fieldRoom}>
+          {COPY.lineRoom(lines, limit.chars)}
+        </span>
+      </div>
+      {lines > 1 ? (
+        <textarea
+          {...shared}
+          rows={2}
+          onChange={event => onChange(event.target.value)}
+        />
+      ) : (
+        <input
+          {...shared}
+          autoComplete="off"
+          onChange={event => onChange(event.target.value)}
+        />
+      )}
+      {issue ? (
+        <p id={`${id}-issue`} className={styles.issue}>
+          {issue}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** One option of an AdRadioGroup. */
+export type AdRadioOption<Value> = {
+  value: Value;
+  content: ReactNode;
+  /** Its accessible name, when its content says more than the name should. */
+  label?: string;
+  disabled?: boolean;
+  className?: string;
+};
+
+/**
+ * One choice of a few, as buttons in a WAI-ARIA radio group: Tab reaches the
+ * chosen one (or the first), the arrow keys, Home and End move the choice
+ * and the focus, wrapping, over the options that aren't disabled.
+ */
+export function AdRadioGroup<Value extends string | number>({
+  label,
+  labelledBy,
+  describedBy,
+  value,
+  options,
+  onChange,
+  disabled = false,
+  className,
+  itemClassName,
+}: {
+  label?: string;
+  labelledBy?: string;
+  describedBy?: string;
+  value: Value | null;
+  options: ReadonlyArray<AdRadioOption<Value>>;
+  onChange: (value: Value) => void;
+  disabled?: boolean;
+  className?: string;
+  itemClassName?: string;
+}) {
+  const buttons = useRef<Array<HTMLButtonElement | null>>([]);
+  const enabled = options.flatMap((option, index) =>
+    disabled || option.disabled ? [] : [index]
+  );
+  const checkedIndex = options.findIndex(option => option.value === value);
+  const tabbable = enabled.includes(checkedIndex)
+    ? checkedIndex
+    : (enabled[0] ?? -1);
+
+  const move = (event: KeyboardEvent<HTMLButtonElement>, from: number) => {
+    if (enabled.length === 0) return;
+    const at = enabled.indexOf(from);
+    let next: number | undefined;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown")
+      next = enabled[(at + 1) % enabled.length];
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      next = enabled[(at - 1 + enabled.length) % enabled.length];
+    else if (event.key === "Home") next = enabled[0];
+    else if (event.key === "End") next = enabled[enabled.length - 1];
+    if (next === undefined) return;
+    event.preventDefault();
+    const option = options[next];
+    if (!option) return;
+    buttons.current[next]?.focus();
+    if (option.value !== value) onChange(option.value);
+  };
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      aria-disabled={disabled || undefined}
+      className={className}
+    >
+      {options.map((option, index) => {
+        const checked = index === checkedIndex;
+        return (
+          <button
+            key={String(option.value)}
+            ref={element => {
+              buttons.current[index] = element;
+            }}
+            type="button"
+            role="radio"
+            aria-checked={checked}
+            aria-label={option.label}
+            tabIndex={index === tabbable ? 0 : -1}
+            disabled={disabled || option.disabled}
+            data-checked={checked || undefined}
+            className={cn(itemClassName, option.className)}
+            onClick={() => {
+              if (!checked) onChange(option.value);
+            }}
+            onKeyDown={event => move(event, index)}
+          >
+            {option.content}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /** "0:38", "12:05": the making clock. */
 export function clockTime(ms: number): string {
@@ -180,7 +412,7 @@ export function AdBriefLine({ ad }: { ad: ProductAdRecord }) {
       </div>
       <div>
         <dt>{COPY.voice}</dt>
-        <dd>{COPY.voices[ad.voice]}</dd>
+        <dd>{PRODUCTS_COPY.adVoice.modes[ad.voice]}</dd>
       </div>
       {ending ? (
         <div>

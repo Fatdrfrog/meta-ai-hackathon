@@ -11,6 +11,7 @@ import {
   endingLayers,
   escapeMarkup,
   exactScene,
+  exactSceneBox,
   feedStill,
   LABEL_MAX_WIDTH,
   labelLayer,
@@ -299,4 +300,54 @@ test("the 4:5 picture is 1080x1350", async () => {
     [meta.format, meta.width, meta.height],
     ["jpeg", 1080, 1350],
   );
+});
+
+test("the exact still's box is worked out from the cut-out alone, as the still draws it", async () => {
+  for (const [width, height] of [
+    [400, 640],
+    [900, 300],
+    [200, 1200],
+  ] as const) {
+    const cutout = await blob(width, height, "#e5e7eb");
+    assert.deepEqual(
+      await exactSceneBox(cutout),
+      (await exactScene(cutout)).box,
+    );
+  }
+  const empty = await sharp({
+    create: {
+      width: 10,
+      height: 10,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .png()
+    .toBuffer();
+  assert.equal(await exactSceneBox(empty), null);
+});
+
+test("the owner's zone moves a scene's words, on the 4:5 picture too", async () => {
+  const product = { x: 300, y: 560, w: 480, h: 760 };
+  const low = await productSceneLayers({
+    frame: "reels",
+    product,
+    name: "Кукла Лол",
+    caption: "Балаңызға керемет сыйлық",
+    priceText: "5 000 ₸",
+    sticker: "Жаңа тауар",
+    zone: "bottom",
+  });
+  assert.equal(low.layout.zone, "bottom");
+  assert.ok(low.sticker!.rect.y > REELS_SAFE.y + REELS_SAFE.h / 2);
+  assert.ok(low.layout.textOverlap);
+  const auto = await productSceneLayers({
+    frame: "reels",
+    product,
+    name: "Кукла Лол",
+    caption: "Балаңызға керемет сыйлық",
+    priceText: "5 000 ₸",
+    sticker: null,
+  });
+  assert.equal(auto.layout.zone, "top");
 });

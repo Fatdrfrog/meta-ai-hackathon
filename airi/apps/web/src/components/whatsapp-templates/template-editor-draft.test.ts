@@ -43,6 +43,50 @@ describe("template editor drafts", () => {
     ).toBe("airi.templateEditorDraft.v1:ws-1:edit:db-7");
   });
 
+  it("keeps a scoped new-template draft apart from the Templates page's", () => {
+    expect(
+      getTemplateEditorDraftKey({
+        workspaceId: "ws-1",
+        scope: "products:9b2f0c1e-77aa-4d1c-8e0e-0d6c1f2a3b4c",
+      })
+    ).toBe(
+      "airi.templateEditorDraft.v1:ws-1:new:products:9b2f0c1e-77aa-4d1c-8e0e-0d6c1f2a3b4c"
+    );
+    expect(
+      getTemplateEditorDraftKey({
+        workspaceId: "ws-1",
+        scope: "products:kit:651f1f77bcf86cd799439099:carousel",
+      })
+    ).toBe(
+      "airi.templateEditorDraft.v1:ws-1:new:products:kit:651f1f77bcf86cd799439099:carousel"
+    );
+    // Sanitised to [a-z0-9:_-]{1,64}, and never the unscoped key.
+    expect(
+      getTemplateEditorDraftKey({ workspaceId: "ws-1", scope: "Kit / Ä 7" })
+    ).toBe("airi.templateEditorDraft.v1:ws-1:new:kit-7");
+    expect(
+      getTemplateEditorDraftKey({ workspaceId: "ws-1", scope: "x".repeat(90) })
+    ).toBe(`airi.templateEditorDraft.v1:ws-1:new:${"x".repeat(64)}`);
+    expect(getTemplateEditorDraftKey({ workspaceId: "ws-1", scope: "" })).toBe(
+      "airi.templateEditorDraft.v1:ws-1:new:-"
+    );
+    // No scope, or null: byte-for-byte the key from before scopes.
+    expect(
+      getTemplateEditorDraftKey({ workspaceId: "ws-1", scope: null })
+    ).toBe("airi.templateEditorDraft.v1:ws-1:new");
+    expect(
+      getTemplateEditorDraftKey({ workspaceId: "ws-1", scope: undefined })
+    ).toBe("airi.templateEditorDraft.v1:ws-1:new");
+    // An existing template's draft is keyed by its id alone.
+    expect(
+      getTemplateEditorDraftKey({
+        workspaceId: "ws-1",
+        templateId: "db-7",
+        scope: "products:x",
+      })
+    ).toBe("airi.templateEditorDraft.v1:ws-1:edit:db-7");
+  });
+
   it("reads back what was written", () => {
     const key = getTemplateEditorDraftKey({ workspaceId: "ws-1" });
     writeTemplateEditorDraft(key, draftValues(), NOW);

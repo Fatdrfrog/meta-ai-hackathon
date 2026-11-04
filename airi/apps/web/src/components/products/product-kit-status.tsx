@@ -2,14 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
-import { carouselVerdict } from "@/lib/products/kit-status";
+import { carouselVerdict, kitPartCanEdit } from "@/lib/products/kit-status";
 import type {
   ProductKitPart,
   ProductKitPartError,
   ProductKitRecord,
   ProductsErrorCode,
 } from "@/lib/products/types";
-import { ClipboardList, GalleryHorizontalEnd, RotateCcw } from "lucide-react";
+import {
+  ClipboardList,
+  GalleryHorizontalEnd,
+  Pencil,
+  RotateCcw,
+  Send,
+} from "lucide-react";
 import Link from "next/link";
 import type { ProductChipTone } from "./product-controls";
 import { ProductChip } from "./product-controls";
@@ -40,7 +46,16 @@ export type KitPartView = {
   actions: KitAction[];
   /** Made, and still good for buyers. */
   holds: boolean;
+  /**
+   * The make view's way to send it again with edits ("Edit and send again"),
+   * and what that does; the made list doesn't offer it.
+   */
+  edit?: { label: string; note: string | null } | null;
+  /** The order form's version once an edit published a new one (2 and up). */
+  version?: number | null;
 };
+
+const EDIT = PRODUCTS_COPY.kit.edit;
 
 /** "Carousel + order form", or the one part a kit has. */
 export function kitTitle(kit: ProductKitRecord): string {
@@ -122,6 +137,7 @@ function orderFormView(
       actions: [],
       holds: false,
     };
+  const version = (form.version ?? 1) > 1 ? form.version : null;
   if (form.state === "ready")
     return {
       ...base,
@@ -133,6 +149,9 @@ function orderFormView(
       ),
       actions: [flows],
       holds: true,
+      // A new version: forms already sent keep opening this one.
+      edit: { label: EDIT.editOrderForm, note: null },
+      version,
     };
   if (form.state === "draft")
     return {
@@ -142,6 +161,8 @@ function orderFormView(
       line: COPY.orderFormDraft,
       actions: [flows],
       holds: false,
+      edit: { label: EDIT.editAndPublish, note: null },
+      version,
     };
   return {
     ...base,
@@ -150,6 +171,11 @@ function orderFormView(
     line: kitErrorLine(form.error),
     actions: [retry("orderForm", COPY.tryAgain)],
     holds: false,
+    edit:
+      form.state === "failed"
+        ? { label: EDIT.editAndPublish, note: null }
+        : null,
+    version,
   };
 }
 
@@ -219,6 +245,7 @@ function carouselView(
       line: kitErrorLine(carousel.error),
       actions: [retry("carousel", COPY.tryAgain), ...free],
       holds: false,
+      edit: { label: EDIT.editAndTryAgain, note: null },
     };
   }
   switch (carouselVerdict(carousel.metaStatus)) {
@@ -300,13 +327,46 @@ export function kitPartViews(
   kit: ProductKitRecord,
   remaking: ProductKitPart | null = null
 ): KitPartView[] {
-  return [orderFormView(workspaceId, kit), carouselView(workspaceId, kit)]
+  return [
+    orderFormView(workspaceId, kit),
+    withCarouselEdit(kit, carouselView(workspaceId, kit)),
+  ]
     .filter((view): view is KitPartView => view !== null)
     .map(view =>
       view.part === remaking
-        ? { ...view, ...makingLook(view.part, kit), holds: false }
-        : view
+        ? { ...view, ...makingLook(view.part, kit), holds: false, edit: null }
+        : // Only what the edit route takes is offered.
+          kitPartCanEdit(view.part, kit.parts[view.part])
+          ? view
+          : { ...view, edit: null }
     );
+}
+
+/**
+ * "Edit and send again" on a carousel with Meta, whatever Meta decided: it
+ * always goes as a new template, and the note says what becomes of this one.
+ */
+function withCarouselEdit(
+  kit: ProductKitRecord,
+  view: KitPartView | null
+): KitPartView | null {
+  const carousel = kit.parts.carousel;
+  if (!view || carousel?.state !== "submitted") return view;
+  const verdict = carouselVerdict(carousel.metaStatus);
+  return {
+    ...view,
+    edit: {
+      label: EDIT.editAndSendAgain,
+      note:
+        verdict === "waiting"
+          ? EDIT.notes.pending
+          : verdict === "approved"
+            ? EDIT.notes.approved
+            : verdict === "paused"
+              ? EDIT.notes.paused
+              : EDIT.notes.turnedDown,
+    },
+  };
 }
 
 /** What each part is now, said once for a screen reader: "Order form: Ready." */
@@ -352,6 +412,8 @@ export function KitStatus({
   remaking,
   refusal,
   onRetry,
+  onEdit,
+  formTest,
 }: {
   workspaceId: string;
   kit: ProductKitRecord;
@@ -360,6 +422,14 @@ export function KitStatus({
   /** Why making a part again was refused. */
   refusal: { part: ProductKitPart; line: string } | null;
   onRetry: (part: ProductKitPart) => void;
+  /** "Edit and send again" and the like; without it, the rows offer none. */
+  onEdit?: (part: ProductKitPart, trigger: HTMLElement) => void;
+  /** "Send me the order form" on a published form, and what the last send said. */
+  formTest?: {
+    sending: boolean;
+    line: { text: string; ok: boolean } | null;
+    onSend: () => void;
+  } | null;
 }) {
   const views = kitPartViews(workspaceId, kit, remaking);
   const kept = keptLine(views);
@@ -381,10 +451,50 @@ export function KitStatus({
                 <ProductChip tone={view.chip.tone}>
                   {view.chip.label}
                 </ProductChip>
+                {view.version ? (
+                  <ProductChip>{EDIT.version(view.version)}</ProductChip>
+                ) : null}
               </p>
               <p className={styles.partLine}>{view.line}</p>
-              {view.actions.length > 0 ? (
+              {view.version ? (
+                <p className={styles.partNote}>
+                  {EDIT.versionNote(view.version)}
+                </p>
+              ) : null}
+              {onEdit && view.edit?.note ? (
+                <p className={styles.partNote}>{view.edit.note}</p>
+              ) : null}
+              {view.actions.length > 0 || (onEdit && view.edit) ? (
                 <div className={styles.partActions}>
+                  {onEdit && view.edit ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      {...retryBusy(remaking !== null)}
+                      onClick={event => {
+                        if (remaking === null)
+                          onEdit(view.part, event.currentTarget);
+                      }}
+                    >
+                      <Pencil aria-hidden="true" />
+                      {view.edit.label}
+                    </Button>
+                  ) : null}
+                  {formTest &&
+                  view.part === "orderForm" &&
+                  kit.parts.orderForm?.state === "ready" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      {...retryBusy(formTest.sending)}
+                      onClick={() => {
+                        if (!formTest.sending) formTest.onSend();
+                      }}
+                    >
+                      <Send aria-hidden="true" />
+                      {formTest.sending ? EDIT.sendingTest : EDIT.sendTest}
+                    </Button>
+                  ) : null}
                   {view.actions.map(action =>
                     action.kind === "link" ? (
                       <Button
@@ -415,6 +525,16 @@ export function KitStatus({
               {refusal?.part === view.part ? (
                 <p role="alert" className={styles.partAlert}>
                   {refusal.line}
+                </p>
+              ) : null}
+              {view.part === "orderForm" && formTest?.line ? (
+                <p
+                  role={formTest.line.ok ? "status" : "alert"}
+                  className={
+                    formTest.line.ok ? styles.partNote : styles.partAlert
+                  }
+                >
+                  {formTest.line.text}
                 </p>
               ) : null}
             </div>

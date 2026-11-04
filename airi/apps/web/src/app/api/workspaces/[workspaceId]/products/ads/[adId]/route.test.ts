@@ -36,6 +36,7 @@ import { GET, PATCH } from "./route";
 const workspaceId = "workspace-1";
 const adId = "751f1f77bcf86cd799439031";
 const DOLL = "651f1f77bcf86cd799439011";
+const MUG = "651f1f77bcf86cd799439012";
 const contextFor = (id: string) => ({
   params: Promise.resolve({ workspaceId, adId: id }),
 });
@@ -126,6 +127,50 @@ describe("changing the words on screen", () => {
         sticker: "Жаңа тауар",
         captions: [{ productId: DOLL, caption: "Көк көйлек" }],
       },
+    });
+  });
+
+  it("takes the scenes' free changes: word zone, exact photo, an earlier picture", async () => {
+    const response = await patch({
+      scenes: [
+        { productId: DOLL, textZone: "bottom", pictureIndex: 1 },
+        { productId: MUG, useExact: true },
+      ],
+    });
+    expect(response.status).toBe(202);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      workspaceId,
+      adId,
+      changes: {
+        scenes: [
+          { productId: DOLL, textZone: "bottom", pictureIndex: 1 },
+          { productId: MUG, useExact: true },
+        ],
+      },
+    });
+  });
+
+  it("refuses scene changes it can't read, and names the first issues of ones that don't fit", async () => {
+    for (const body of [
+      { scenes: [{ productId: DOLL, pictureIndex: 4 }] },
+      { scenes: [{ productId: DOLL, textZone: "middle" }] },
+      { scenes: [{ productId: DOLL, look: "studio" }] },
+      { sticker: "Жаңа", length: 15 },
+    ])
+      expect((await patch(body)).status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+
+    mockUpdate.mockResolvedValue({
+      refused: "invalid_request",
+      issues: [`${DOLL} has no kept picture 3.`],
+    });
+    const response = await patch({
+      scenes: [{ productId: DOLL, pictureIndex: 3 }],
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      code: "invalid_request",
+      issues: [`${DOLL} has no kept picture 3.`],
     });
   });
 

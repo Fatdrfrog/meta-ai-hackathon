@@ -1,9 +1,13 @@
 import "server-only";
+import { getWorkspaceAiRequiredDetails } from "@/lib/ai/workspace-ai-errors";
 import { logger } from "@/lib/logger";
 import {
+  adSceneChangeIssues,
   adWordsIssues,
+  applyAdSceneChanges,
   applyAdWords,
   oneLine,
+  sameAdScenes,
   sameAdWords,
 } from "@/lib/products/ad-request";
 import { productImportSpend } from "@/lib/products/import-spend";
@@ -18,6 +22,7 @@ import {
   type ShopWords,
 } from "@/lib/products/shop-words";
 import {
+  PRODUCT_AD_NEW_PICTURE_MAX_MICROS,
   PRODUCT_AD_STEPS,
   productAdLettersSupported,
   type ProductAdAdmissionStop,
@@ -25,6 +30,8 @@ import {
   type ProductAdCreateRequest,
   type ProductAdProductProblem,
   type ProductAdRecord,
+  type ProductAdRunKind,
+  type ProductAdSceneRequest,
   type ProductAdUpdateRequest,
   type ProductShopWordsCode,
   type StoredFileRef,
@@ -42,6 +49,7 @@ import {
   buildProductAdActionId,
   buildProductAdWorkflowId,
   type ProductAdMode,
+  type ProductAdStoredScene,
 } from "@icecore/temporal";
 import mongoose from "mongoose";
 
@@ -261,12 +269,21 @@ export function adUnsupportedTexts(params: {
  * the import admits by: the company's spending limit first (it stops every
  * plan), then the free trial, then the plan's included actions. An action
  * already admitted needs no included action left. Null when nothing does.
+ * A company that turned AI off is "ai_disabled"; an allowance that can't be
+ * read still throws.
  */
 export async function adAdmissionStop(
   workspaceId: string,
   options: { admitted?: boolean } = {}
 ): Promise<ProductAdAdmissionStop | null> {
-  const allowance = await productImportSpend.allowance(workspaceId);
+  let allowance: Awaited<ReturnType<typeof productImportSpend.allowance>>;
+  try {
+    allowance = await productImportSpend.allowance(workspaceId);
+  } catch (error) {
+    if (getWorkspaceAiRequiredDetails(error)?.code === "workspace_ai_disabled")
+      return "ai_disabled";
+    throw error;
+  }
   if (allowance.spendLimitReached) return "spend_limit";
   if (allowance.trialEnded) return "trial_ended";
   if (
@@ -397,6 +414,14 @@ const toIso = (value: unknown): string | null =>
     ? value.toISOString()
     : null;
 
+/** Whether two stored files are the same one. */
+const sameFile = (a: FileRow, b: FileRow) =>
+  Boolean(a?.bucket && a.path && a.bucket === b?.bucket && a.path === b?.path);
+
+/** The setting the script asked a product's scene in; null without one. */
+const settingOf = (script: IProductAd["script"], productId: string) =>
+  script?.scenes.find(scene => scene.productId === productId)?.setting ?? null;
+
 /**
  * The ad's links: "ad" for the studio, every one; "list" for the made list,
  * which shows a poster and the products, so scene pictures and stills stay
@@ -441,17 +466,60 @@ async function toAdRecord(
       }))
     ),
     Promise.all(
-      (doc.scenes ?? []).map(async scene => ({
-        productId: scene.productId,
-        method: scene.method,
-        imageUrl: full
-          ? await sign(scene.method === "muse" ? scene.muse : scene.exact)
-          : null,
-        checked:
-          scene.method === "muse" &&
-          Boolean(scene.muse) &&
-          scene.check?.same === true,
-      }))
+      (doc.scenes ?? []).map(
+        async (scene): Promise<ProductAdRecord["scenes"][number]> => ({
+          productId: scene.productId,
+          method: scene.method,
+          imageUrl: full
+            ? await sign(scene.method === "muse" ? scene.muse : scene.exact)
+            : null,
+          checked:
+            scene.method === "muse" &&
+            Boolean(scene.muse) &&
+            scene.check?.same === true,
+          textZone: scene.textZone ?? "auto",
+          useExact: scene.useExact === true,
+          pictures: await Promise.all(
+            (scene.pictures ?? []).map(async (picture, index) => ({
+              index,
+              url: full ? await sign(picture.ref) : null,
+              place: picture.place ?? "",
+              current:
+                scene.method === "muse" &&
+                !scene.useExact &&
+                sameFile(picture.ref, scene.muse),
+            }))
+          ),
+          place: scene.place
+            ? {
+                setting: scene.place.setting ?? null,
+                words: scene.place.words ?? null,
+                englishPlace: scene.place.englishPlace ?? null,
+              }
+            : scene.method === "muse" && scene.muse
+              ? // A picture from the first make: the setting the script asked for.
+                {
+                  setting: settingOf(doc.script, scene.productId),
+                  words: null,
+                  englishPlace: null,
+                }
+              : null,
+          redo: scene.redo
+            ? {
+                renderNo: scene.redo.renderNo,
+                outcome: scene.redo.outcome ?? null,
+                reason: scene.redo.reason ?? null,
+                englishPlace: scene.place?.englishPlace ?? null,
+              }
+            : null,
+          textOverlap: scene.textOverlap
+            ? {
+                covers: scene.textOverlap.covers === true,
+                suggested: scene.textOverlap.suggested ?? null,
+              }
+            : null,
+        })
+      )
     ),
     render ? sign(render.video) : null,
     render ? sign(render.poster) : null,
@@ -479,6 +547,28 @@ async function toAdRecord(
     timings,
     idea: { kind: doc.idea.kind, text: doc.idea.text ?? null },
     voice: doc.voice,
+    stockVoiceId: doc.stockVoiceId ?? null,
+    voiceResult: doc.voiceResult
+      ? {
+          used: doc.voiceResult.used,
+          fallback: doc.voiceResult.fallback ?? null,
+        }
+      : null,
+    hasRecording: (doc.products ?? []).some(product => Boolean(product.clip)),
+    runKind: doc.runKind ?? "make",
+    lastRun: doc.lastRun
+      ? {
+          renderNo: doc.lastRun.renderNo,
+          kind: doc.lastRun.kind,
+          outcome: doc.lastRun.outcome,
+          errorCode: doc.lastRun.errorCode ?? null,
+          at: toIso(doc.lastRun.at) ?? new Date(0).toISOString(),
+        }
+      : null,
+    // The ledger read is the single ad's (adPictureBudget).
+    picturesLeft: null,
+    openings: (script?.openings ?? []).map(option => ({ ...option })),
+    endings: (script?.endings ?? []).map(option => ({ ...option })),
     ending: {
       phone: doc.ending?.phone ?? null,
       shopName: doc.ending?.shopName ?? "",
@@ -503,6 +593,7 @@ async function toAdRecord(
             bytes: render.bytes,
             seconds: render.seconds,
             posterUrl,
+            renderNo: render.renderNo,
           }
         : null,
     stills: { statusUrl, feedUrl },
@@ -567,6 +658,16 @@ export async function loadProductAdRecord(
     doc.workflowId !== expected &&
     now.getTime() - requestedAt.getTime() > NEVER_STARTED_MS
   ) {
+    // An edit run leaves the ad ready with its earlier video, saying why;
+    // only a first make (or a retry of one) with no video fails.
+    const unstarted = isEditRun(doc)
+      ? editRunFailed(doc, "The ad's run never started", now)
+      : {
+          status: "failed" as const,
+          step: null,
+          errorCode: "failed" as const,
+          errorMessage: "The ad's run never started",
+        };
     const stuck = await ProductAd.updateOne(
       {
         _id: adId,
@@ -575,31 +676,166 @@ export async function loadProductAdRecord(
         renderNo: doc.renderNo,
         workflowId: { $ne: expected },
       },
-      {
-        $set: {
-          status: "failed",
-          step: null,
-          errorCode: "failed",
-          errorMessage: "The ad's run never started",
-        },
-      }
+      { $set: unstarted }
     );
     if (stuck.modifiedCount > 0)
-      return adRecord(workspaceId, {
-        ...doc,
-        status: "failed",
-        step: null,
-        errorCode: "failed",
-      });
+      return adRecord(workspaceId, { ...doc, ...unstarted });
     const current = await findAd(workspaceId, adId);
     return current ? adRecord(workspaceId, current) : null;
   }
-  const [record, pricesChanged] = await Promise.all([
+  const [record, pricesChanged, picturesLeft] = await Promise.all([
     adRecord(workspaceId, doc),
-    // A check the studio can do without: it never stops the ad loading.
+    // Checks the studio can do without: they never stop the ad loading.
     adPricesChanged(workspaceId, doc).catch(() => false),
+    doc.status === "ready"
+      ? adPictureBudget(workspaceId, adId).catch(error => {
+          logger.warn("[Products] ad picture budget unread", {
+            event: "products.ad_picture_budget_failed",
+            workspaceId,
+            adId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          return null;
+        })
+      : null,
   ]);
-  return { ...record, pricesChanged };
+  return { ...record, pricesChanged, picturesLeft };
+}
+
+/** What a run of the ad does; v1 ads have no runKind: their first run made it, later ones rendered edits. */
+const runKindOf = (
+  doc: Pick<IProductAd, "runKind" | "renderNo">
+): ProductAdRunKind => doc.runKind ?? (doc.renderNo > 1 ? "render" : "make");
+
+/**
+ * Whether the ad's current run is an edit (render, scene or voice) of an ad
+ * that has a video: such a run never fails the ad.
+ */
+const isEditRun = (doc: Pick<IProductAd, "runKind" | "render">) =>
+  Boolean(doc.render) &&
+  (doc.runKind === "render" ||
+    doc.runKind === "scene" ||
+    doc.runKind === "voice");
+
+/**
+ * The ad back to ready with its earlier video after an edit run that didn't
+ * happen, saying why in `lastRun`: a "New picture" still running is put back
+ * as it was before the press, with "unavailable".
+ */
+function editRunFailed(
+  doc: Pick<IProductAd, "renderNo" | "runKind" | "scenes">,
+  message: string,
+  now: Date
+) {
+  return {
+    status: "ready" as const,
+    step: null,
+    errorCode: null,
+    errorMessage: null,
+    scenes: (doc.scenes ?? []).map(scene =>
+      scene.redo && scene.redo.outcome === null
+        ? {
+            ...scene,
+            muse: scene.redo.from.muse,
+            box: scene.redo.from.box,
+            method: scene.redo.from.method,
+            check: scene.redo.from.check,
+            redo: { ...scene.redo, outcome: "unavailable" as const },
+          }
+        : scene
+    ),
+    lastRun: {
+      renderNo: doc.renderNo,
+      kind: runKindOf(doc),
+      outcome: "failed" as const,
+      errorCode: "failed" as const,
+      message,
+      at: now,
+    },
+  };
+}
+
+/**
+ * "New picture" presses the ad's AI action still has room for: what the
+ * action may spend (the company's override, else its plan's limit, as
+ * reserve_workspace_ai_spend reads them) less what it has committed, capped
+ * by the company's spend left, divided by the most one press may cost. Null
+ * when the ledger can't tell. It reads committed spend, kept reservations
+ * included, so it may say one fewer than the ledger would take.
+ */
+export async function adPictureBudget(
+  workspaceId: string,
+  adId: string
+): Promise<number | null> {
+  const { supabaseAdmin } = await import("@/lib/supabase/admin");
+  const [workspace, action, allowance] = await Promise.all([
+    supabaseAdmin
+      .from("workspaces")
+      .select(
+        "company_id, companies!workspaces_company_id_fkey(subscription_type)"
+      )
+      .eq("id", workspaceId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("workspace_text_ai_actions")
+      .select("committed_micros")
+      .eq("workspace_id", workspaceId)
+      .eq("action_id", buildProductAdActionId(adId))
+      .maybeSingle(),
+    productImportSpend.allowance(workspaceId),
+  ]);
+  if (workspace.error || action.error) return null;
+  const row = workspace.data as {
+    company_id?: unknown;
+    companies?:
+      | { subscription_type?: unknown }
+      | Array<{ subscription_type?: unknown }>;
+  } | null;
+  const companyId = typeof row?.company_id === "string" ? row.company_id : null;
+  if (!companyId) return null;
+  const company = Array.isArray(row?.companies)
+    ? row?.companies[0]
+    : row?.companies;
+  const plan =
+    typeof company?.subscription_type === "string"
+      ? company.subscription_type
+      : "free";
+  const [usage, policy] = await Promise.all([
+    supabaseAdmin
+      .from("company_ai_usage")
+      .select("action_spend_limit_micros")
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("ai_sponsorship_policies")
+      .select("action_spend_limit_micros")
+      .eq("plan", plan)
+      .maybeSingle(),
+  ]);
+  if (usage.error || policy.error) return null;
+  const micros = (value: unknown) =>
+    typeof value === "number" && Number.isFinite(value) ? value : null;
+  const limit =
+    micros(
+      (usage.data as { action_spend_limit_micros?: unknown } | null)
+        ?.action_spend_limit_micros
+    ) ??
+    micros(
+      (policy.data as { action_spend_limit_micros?: unknown } | null)
+        ?.action_spend_limit_micros
+    );
+  if (limit === null) return null;
+  const committed =
+    micros(
+      (action.data as { committed_micros?: unknown } | null)?.committed_micros
+    ) ?? 0;
+  const actionLeft = Math.max(0, limit - committed);
+  const companyLeft = allowance.spendLimitReached
+    ? 0
+    : allowance.spendRemainingMicros;
+  const room =
+    companyLeft === null ? actionLeft : Math.min(actionLeft, companyLeft);
+  return Math.max(0, Math.floor(room / PRODUCT_AD_NEW_PICTURE_MAX_MICROS));
 }
 
 /**
@@ -651,8 +887,12 @@ export async function adPricesChanged(
   });
 }
 
-/** Starts the ad's run `renderNo` and keeps its workflow id on the ad. */
-async function startAdRun(
+/**
+ * Starts the ad's run `renderNo` and keeps its workflow id on the ad. Scene
+ * and voice runs are "make" runs (they may pay), words runs "render" runs;
+ * the ad's `runKind` tells the worker which.
+ */
+export async function startAdRun(
   workspaceId: string,
   adId: string,
   renderNo: number,
@@ -670,6 +910,10 @@ async function startAdRun(
   );
   return started.workflowId;
 }
+
+/** The workflow mode a run kind starts: only a words run ("render") calls no model. */
+const adRunMode = (kind: ProductAdRunKind): ProductAdMode =>
+  kind === "render" ? "render" : "make";
 
 const isDuplicateKeyError = (error: unknown) =>
   typeof error === "object" &&
@@ -696,7 +940,7 @@ async function replayAd(
         workspaceId,
         adId,
         doc.renderNo,
-        doc.renderNo === 1 ? "make" : "render"
+        adRunMode(runKindOf(doc))
       );
       return adRecord(workspaceId, { ...doc, workflowId });
     } catch (error) {
@@ -853,6 +1097,8 @@ export async function createProductAd(params: {
       wordsCode: words.code,
       idea: { kind: request.idea.kind, text: ideaText },
       voice: request.voice,
+      stockVoiceId:
+        request.voice === "stock" ? (request.stockVoiceId ?? null) : null,
       presenter,
       ending,
       products,
@@ -896,11 +1142,41 @@ export async function createProductAd(params: {
 }
 
 /**
- * The owner's edits to the words on screen: checked like the script, saved,
- * and the video made again from the saved pictures, a run with no model
- * calls and so no AI action. Only a ready ad takes edits. Edits that change
- * nothing start nothing. When the run can't start, the ad goes back to how
- * it was and the error goes to the caller.
+ * What's wrong with the owner's free changes for this ad: the words by the
+ * script's checks, and the scene choices against its scenes. Empty when
+ * they pass.
+ */
+const adChangesIssues = (doc: IProductAd, changes: ProductAdUpdateRequest) => [
+  ...adWordsIssues(
+    changes,
+    doc.products.map(product => product.productId)
+  ),
+  ...adSceneChangeIssues(changes.scenes, doc.scenes ?? []),
+];
+
+/**
+ * The ad as it was before a run that couldn't start: its words, scenes,
+ * run, state and times, so the owner's next press finds it as it was.
+ */
+const restoredBeforeRun = (doc: IProductAd) => ({
+  script: doc.script,
+  scenes: doc.scenes,
+  runKind: doc.runKind ?? runKindOf(doc),
+  status: doc.status,
+  step: doc.step ?? null,
+  renderNo: doc.renderNo,
+  requestedAt: doc.requestedAt ?? doc.createdAt,
+  startedAt: doc.startedAt ?? null,
+});
+
+/**
+ * The owner's free changes ("Update the video"): the words on screen,
+ * checked like the script, and the scenes' choices (where the words sit,
+ * the exact photo, an earlier picture), saved, and the video made again from
+ * the saved pictures: a "render" run with no model calls and so no AI
+ * action. Only a ready ad takes them. Changes that change nothing start
+ * nothing. When the run can't start, the ad goes back to how it was and the
+ * error goes to the caller.
  */
 export async function updateProductAdWords(params: {
   workspaceId: string;
@@ -918,13 +1194,13 @@ export async function updateProductAdWords(params: {
   const doc = await findAd(workspaceId, adId);
   if (!doc) return { refused: "ad_not_found" };
   if (doc.status !== "ready" || !doc.script) return { refused: "ad_not_ready" };
-  const issues = adWordsIssues(
-    changes,
-    doc.products.map(product => product.productId)
-  );
+  const issues = adChangesIssues(doc, changes);
   if (issues.length > 0) return { refused: "invalid_request", issues };
   const script = applyAdWords(doc.script, changes);
-  if (sameAdWords(doc.script, script))
+  const scenes = applyAdSceneChanges(doc.scenes ?? [], changes.scenes);
+  const wordsSame = sameAdWords(doc.script, script);
+  const scenesSame = sameAdScenes(doc.scenes ?? [], scenes);
+  if (wordsSame && scenesSame)
     return { ad: await adRecord(workspaceId, doc), started: false };
   const renderNo = doc.renderNo + 1;
   const now = params.now ?? new Date();
@@ -932,7 +1208,10 @@ export async function updateProductAdWords(params: {
     { _id: adId, workspaceId, status: "ready", renderNo: doc.renderNo },
     {
       $set: {
-        script,
+        // Words left as they were stay unmarked as edited.
+        script: wordsSame ? doc.script : script,
+        scenes,
+        runKind: "render",
         status: "making",
         step: "video",
         renderNo,
@@ -961,16 +1240,238 @@ export async function updateProductAdWords(params: {
     });
     await ProductAd.updateOne(
       { _id: adId, workspaceId, renderNo },
-      {
-        $set: {
-          script: doc.script,
-          status: "ready",
-          step: null,
-          renderNo: doc.renderNo,
-          requestedAt: doc.requestedAt ?? doc.createdAt,
-          startedAt: doc.startedAt ?? null,
-        },
+      { $set: restoredBeforeRun(doc) }
+    );
+    throw error;
+  }
+}
+
+/** Why "New picture" was refused. */
+export type ProductAdSceneRefusal =
+  | "ad_not_found"
+  | "product_not_found"
+  | "ad_not_ready"
+  | "invalid_request"
+  | "no_pictures_left"
+  | ProductAdAdmissionStop;
+
+/**
+ * "New picture" on one scene: a "scene" run in which only that scene pays,
+ * for a new Muse Image picture in a tested setting or the owner's described
+ * place (Muse Spark reads it first), checked by Muse Spark and framed by SAM
+ * 3.1. The scene shows its exact photo until the picture lands; the worker
+ * puts the earlier picture back (`redo.from`) when the press doesn't end in
+ * a new one. Pending free changes ride along in the same run.
+ *
+ * Only a ready ad takes it, with room left in its AI action for one more
+ * picture, and admission (the limit and the trial; an admitted action needs
+ * no included action left). The same press, sent again, starts nothing
+ * twice. When the run can't start, the ad goes back to how it was and the
+ * error goes to the caller.
+ */
+export async function redoProductAdScene(params: {
+  workspaceId: string;
+  adId: string;
+  productId: string;
+  request: ProductAdSceneRequest;
+  now?: Date;
+}): Promise<
+  | { ad: ProductAdRecord; started: boolean }
+  | { refused: ProductAdSceneRefusal; issues?: string[] }
+> {
+  const { workspaceId, adId, productId, request } = params;
+  const doc = await findAd(workspaceId, adId);
+  if (!doc) return { refused: "ad_not_found" };
+  // The same press again: it started its run already.
+  if (
+    (doc.scenes ?? []).some(
+      scene => scene.redo?.requestId === request.requestId
+    )
+  )
+    return { ad: await adRecord(workspaceId, doc), started: false };
+  if (doc.status !== "ready" || !doc.script) return { refused: "ad_not_ready" };
+  const sceneIndex = (doc.scenes ?? []).findIndex(
+    scene => scene.productId === productId
+  );
+  const scriptIndex = doc.script.scenes.findIndex(
+    scene => scene.productId === productId
+  );
+  if (
+    sceneIndex < 0 ||
+    scriptIndex < 0 ||
+    !doc.products.some(product => product.productId === productId)
+  )
+    return { refused: "product_not_found" };
+  const changes = request.changes ?? {};
+  const issues = adChangesIssues(doc, changes);
+  if (issues.length > 0) return { refused: "invalid_request", issues };
+  // The ledger is the real gate (a press it refuses ends "no_budget"); a
+  // budget it can't read doesn't stop the press.
+  const left = await adPictureBudget(workspaceId, adId).catch(() => null);
+  if (left !== null && left <= 0) return { refused: "no_pictures_left" };
+  const stop = await adAdmissionStop(workspaceId, { admitted: true });
+  if (stop) return { refused: stop };
+
+  const renderNo = doc.renderNo + 1;
+  const now = params.now ?? new Date();
+  const words = applyAdWords(doc.script, changes);
+  // Words left as they were stay unmarked as edited.
+  const base = sameAdWords(doc.script, words) ? doc.script : words;
+  const setting = request.setting;
+  const script = setting
+    ? {
+        ...base,
+        scenes: base.scenes.map((scene, index) =>
+          index === scriptIndex ? { ...scene, setting } : scene
+        ),
       }
+    : base;
+  const scenes = applyAdSceneChanges(doc.scenes ?? [], changes.scenes).map(
+    (scene, index): ProductAdStoredScene => {
+      if (index !== sceneIndex) return scene;
+      return {
+        ...scene,
+        redo: {
+          requestId: request.requestId,
+          renderNo,
+          from: {
+            muse: scene.muse ?? null,
+            box: scene.box ?? null,
+            method: scene.method,
+            check: scene.check ?? null,
+            // Before this press writes its chip into the script.
+            setting: settingOf(doc.script, productId),
+          },
+          outcome: null,
+          reason: null,
+        },
+        place: {
+          setting: request.setting ?? null,
+          words: request.words ?? null,
+          englishPlace: null,
+        },
+        // The exact photo stands in until the new picture lands. The worker
+        // turns "Use my exact photo" off only when the press ends in a new
+        // picture, so a press that doesn't leaves the scene as it was.
+        method: "exact",
+        muse: null,
+        check: null,
+        box: scene.exactBox ?? null,
+      };
+    }
+  );
+  const updated = await ProductAd.findOneAndUpdate(
+    { _id: adId, workspaceId, status: "ready", renderNo: doc.renderNo },
+    {
+      $set: {
+        script,
+        scenes,
+        runKind: "scene",
+        status: "making",
+        step: "pictures",
+        renderNo,
+        requestedAt: now,
+        startedAt: null,
+        errorCode: null,
+        errorMessage: null,
+      },
+    },
+    { new: true }
+  ).lean<IProductAd | null>();
+  if (!updated) {
+    // Another press got there first: the same one answers with its run.
+    const current = await findAd(workspaceId, adId);
+    if (
+      current &&
+      (current.scenes ?? []).some(
+        scene => scene.redo?.requestId === request.requestId
+      )
+    )
+      return { ad: await adRecord(workspaceId, current), started: false };
+    return { refused: "ad_not_ready" };
+  }
+  try {
+    const workflowId = await startAdRun(workspaceId, adId, renderNo, "make");
+    return {
+      ad: await adRecord(workspaceId, { ...updated, workflowId }),
+      started: true,
+    };
+  } catch (error) {
+    logger.error("[Products] ad scene start failed", error, {
+      event: "products.ad_scene_start_failed",
+      workspaceId,
+      adId,
+      renderNo,
+    });
+    await ProductAd.updateOne(
+      { _id: adId, workspaceId, renderNo },
+      { $set: restoredBeforeRun(doc) }
+    );
+    throw error;
+  }
+}
+
+/**
+ * Whether "Try again" on a ready ad makes its video again: its latest run
+ * was an "Update the video" or a "New picture" that failed, so the video
+ * doesn't have what was saved for it. A voice run is tried again from the
+ * voice panel, which may pay.
+ */
+const retriesAsRender = (doc: IProductAd) =>
+  doc.lastRun?.outcome === "failed" &&
+  doc.lastRun.renderNo === doc.renderNo &&
+  (doc.lastRun.kind === "render" || doc.lastRun.kind === "scene");
+
+/**
+ * The video made again from what's saved (a free "render" run), after an
+ * edit run failed. When the run can't start, the ad goes back to how it was
+ * and the error goes to the caller.
+ */
+async function renderAgain(
+  workspaceId: string,
+  doc: IProductAd,
+  now: Date
+): Promise<{ ad: ProductAdRecord; started: boolean }> {
+  const adId = String(doc._id);
+  const renderNo = doc.renderNo + 1;
+  const updated = await ProductAd.findOneAndUpdate(
+    { _id: adId, workspaceId, status: "ready", renderNo: doc.renderNo },
+    {
+      $set: {
+        runKind: "render",
+        status: "making",
+        step: "video",
+        renderNo,
+        requestedAt: now,
+        startedAt: null,
+        errorCode: null,
+        errorMessage: null,
+      },
+    },
+    { new: true }
+  ).lean<IProductAd | null>();
+  if (!updated) {
+    // Another press got there first.
+    const current = await findAd(workspaceId, adId);
+    if (!current) throw new Error("The ad disappeared while it was retried");
+    return { ad: await adRecord(workspaceId, current), started: false };
+  }
+  try {
+    const workflowId = await startAdRun(workspaceId, adId, renderNo, "render");
+    return {
+      ad: await adRecord(workspaceId, { ...updated, workflowId }),
+      started: true,
+    };
+  } catch (error) {
+    logger.error("[Products] ad render retry start failed", error, {
+      event: "products.ad_render_retry_start_failed",
+      workspaceId,
+      adId,
+      renderNo,
+    });
+    await ProductAd.updateOne(
+      { _id: adId, workspaceId, renderNo },
+      { $set: restoredBeforeRun(doc) }
     );
     throw error;
   }
@@ -979,9 +1480,11 @@ export async function updateProductAdWords(params: {
 /**
  * "Try again" on a failed ad: a new run that resumes it, paying only for
  * what wasn't saved (the pictures already made are reused). It asks the AI
- * allowance first, as making the ad did. An ad that isn't failed is answered
- * as it is, so a second press starts nothing. When the run can't start, the
- * ad stays failed and the error goes to the caller.
+ * allowance first, as making the ad did. On a ready ad whose latest edit run
+ * failed, it makes the video again from what's saved, for free. Any other
+ * ad is answered as it is, so a second press starts nothing. When the run
+ * can't start, a failed ad stays failed and a ready one stays as it was, and
+ * the error goes to the caller.
  */
 export async function retryProductAd(params: {
   workspaceId: string;
@@ -994,6 +1497,8 @@ export async function retryProductAd(params: {
   const { workspaceId, adId } = params;
   const doc = await findAd(workspaceId, adId);
   if (!doc) return { refused: "ad_not_found" };
+  if (doc.status === "ready" && retriesAsRender(doc))
+    return renderAgain(workspaceId, doc, params.now ?? new Date());
   if (doc.status !== "failed")
     return { ad: await adRecord(workspaceId, doc), started: false };
   // An action that has booked spend was admitted, and goes on without an
@@ -1011,6 +1516,7 @@ export async function retryProductAd(params: {
         step: null,
         errorCode: null,
         errorMessage: null,
+        runKind: "make",
         renderNo,
         requestedAt: params.now ?? new Date(),
         startedAt: null,

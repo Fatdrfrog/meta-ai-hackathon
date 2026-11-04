@@ -309,3 +309,99 @@ test("a long ad gives back time evenly; a short one grows to 10 s", () => {
   assert.ok(short.totalSeconds >= 10 && short.totalSeconds < 10.2);
   assert.ok(short.scenes[0]!.seconds > 3.5);
 });
+
+test("the owner's zone puts the words at the top or the bottom, the sticker with them", () => {
+  const centre = PRODUCTS.centre!;
+  // Auto keeps v1's choice; the owner can move the words either way.
+  const auto = placeSceneText({
+    safe: REELS_SAFE,
+    product: centre,
+    label: LABEL,
+    tag: TAG,
+    sticker: STICKER,
+  });
+  const low = placeSceneText({
+    safe: REELS_SAFE,
+    product: centre,
+    label: LABEL,
+    tag: TAG,
+    sticker: STICKER,
+    zone: "bottom",
+  });
+  assert.equal(auto.zone, "top");
+  assert.equal(low.zone, "bottom");
+  assert.equal(low.label.y + low.label.h, REELS_SAFE.y + REELS_SAFE.h - 7);
+  assert.equal(
+    low.sticker!.y + low.sticker!.h,
+    REELS_SAFE.y + REELS_SAFE.h - 7,
+    "the sticker goes down with the words",
+  );
+  assert.equal(auto.sticker!.y, REELS_SAFE.y + 7);
+  for (const rect of [low.label, low.tag, low.sticker!])
+    assert.ok(inside(rect, REELS_SAFE), JSON.stringify(rect));
+
+  // A product reaching the top: auto goes below it; the owner may still say top.
+  const high = placeSceneText({
+    safe: REELS_SAFE,
+    product: PRODUCTS.top!,
+    label: LABEL,
+    tag: TAG,
+    zone: "top",
+  });
+  assert.equal(high.zone, "top");
+  assert.equal(high.label.y, REELS_SAFE.y + 7);
+});
+
+test("the overlap: whether the words cover the product, and the band that keeps it clear", () => {
+  // The deer on the orteke table reached up into the words (paid gate G1).
+  const reaching = placeSceneText({
+    safe: REELS_SAFE,
+    product: PRODUCTS.top!,
+    label: LABEL,
+    tag: TAG,
+    zone: "top",
+  });
+  assert.deepEqual(reaching.textOverlap, { covers: true, suggested: "bottom" });
+  // Below it, the words leave it clear.
+  const below = placeSceneText({
+    safe: REELS_SAFE,
+    product: PRODUCTS.top!,
+    label: LABEL,
+    tag: TAG,
+  });
+  assert.equal(below.zone, "bottom");
+  assert.deepEqual(below.textOverlap, { covers: false, suggested: null });
+  // A product standing low, words at the bottom by the owner's choice: the top is clearer.
+  const low = placeSceneText({
+    safe: REELS_SAFE,
+    product: PRODUCTS.bottom!,
+    label: LABEL,
+    tag: TAG,
+    zone: "bottom",
+  });
+  assert.deepEqual(low.textOverlap, { covers: true, suggested: "top" });
+  // A panel filling the frame is covered either way: no better band to suggest.
+  const tall = placeSceneText({
+    safe: REELS_SAFE,
+    product: { x: 0, y: 0, w: 1080, h: 1920 },
+    label: LABEL,
+    tag: TAG,
+  });
+  assert.equal(tall.textOverlap?.covers, true);
+  assert.equal(tall.textOverlap?.suggested, null);
+  // Under 4% of the product's box isn't covering it.
+  const touching = placeSceneText({
+    safe: REELS_SAFE,
+    product: { x: 300, y: 500, w: 480, h: 760 },
+    label: LABEL,
+    tag: TAG,
+    zone: "top",
+  });
+  assert.equal(touching.textOverlap?.covers, false);
+  // Without a box there's nothing to say.
+  assert.equal(
+    placeSceneText({ safe: REELS_SAFE, product: null, label: LABEL, tag: TAG })
+      .textOverlap,
+    null,
+  );
+});

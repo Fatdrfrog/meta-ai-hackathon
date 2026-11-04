@@ -17,6 +17,7 @@ import {
   saidAround,
   scriptLanguage,
   spokenPriceIssues,
+  withCheckedOptions,
   writeAdScript,
   type ScriptRequest,
 } from "./script";
@@ -503,4 +504,180 @@ test("the paid gate's Shezhire panel no longer gets the medal hanger's line", ()
   assert.equal(said.length, 2);
   assert.match(said[1]!, /^\[7\.5\] Шенжірелердің бағасы/);
   assert.ok(!said.some((line) => line.includes("Жеңімпаз")));
+});
+
+const OPENINGS = [
+  { text: "Сөреде жаңа тауар", kind: "news", gloss: "New on the shelf" },
+  {
+    text: "Сыйлық іздеп жүрсіз бе?",
+    kind: "question",
+    gloss: "Looking for a gift?",
+  },
+  {
+    text: "Балаңыз қуанады",
+    kind: "promise",
+    gloss: "Your child will love it",
+  },
+];
+const ENDINGS = [
+  {
+    text: "Тапсырыс беру үшін жазыңыз",
+    kind: "order",
+    gloss: "Message us to order",
+  },
+  { text: "Сұрағыңызды жазыңыз", kind: "ask", gloss: "Ask us anything" },
+  {
+    text: "Өзіңізге сақтатып қойыңыз",
+    kind: "reserve",
+    gloss: "Have one kept for you",
+  },
+];
+const WITH_OPTIONS = {
+  ...GOOD,
+  openings: OPENINGS,
+  sticker: OPENINGS[0]!.text,
+  endings: ENDINGS,
+  ending: ENDINGS[0]!.text,
+};
+
+test("the schema asks for three openings and three endings, each closed, by kind", () => {
+  const schema = adScriptSchema(["doll"]) as Record<string, any>;
+  for (const [key, kinds] of [
+    ["openings", ["news", "question", "promise"]],
+    ["endings", ["order", "ask", "reserve"]],
+  ] as const) {
+    assert.ok(schema.required.includes(key), key);
+    const item = schema.properties[key].items;
+    assert.equal(item.additionalProperties, false);
+    assert.deepEqual([...item.required].sort(), ["gloss", "kind", "text"]);
+    assert.deepEqual(item.properties.kind.enum, kinds);
+  }
+  const prompt = adScriptPrompt(REQUEST);
+  assert.match(prompt, /openings: exactly three short hooks/);
+  assert.match(prompt, /news \(what's new on the shelf\), question/);
+  assert.match(prompt, /endings: exactly three last words/);
+  assert.match(prompt, /order \(to order one\), ask/);
+  assert.match(prompt, /sticker: the opening you would show/);
+  assert.match(prompt, /These rules hold for every opening and ending too/);
+});
+
+test("three openings and three endings are kept as written, in their kinds' order", async () => {
+  const written = await writeAdScript(REQUEST, async () => ({
+    ...WITH_OPTIONS,
+    // Out of order, and a kind twice: the first of each is kept.
+    openings: [
+      OPENINGS[2],
+      OPENINGS[0],
+      { ...OPENINGS[0], text: "Тағы бір жаңалық" },
+      OPENINGS[1],
+    ],
+  }));
+  assert.equal(written.source, "muse");
+  assert.deepEqual(written.script.openings, OPENINGS);
+  assert.deepEqual(written.script.endings, ENDINGS);
+  assert.equal(written.script.sticker, OPENINGS[0]!.text);
+  assert.equal(written.script.ending, ENDINGS[0]!.text);
+  assert.deepEqual(written.problems, []);
+});
+
+test("an opening or ending that fails a check is dropped, never the script", async () => {
+  let calls = 0;
+  const written = await writeAdScript(REQUEST, async () => {
+    calls++;
+    return {
+      ...WITH_OPTIONS,
+      openings: [
+        // A digit; a price said in words; a Tatar letter in Kazakh.
+        { ...OPENINGS[0]!, text: "Тек 2 күн" },
+        { ...OPENINGS[1]!, text: "Бес мыңға сыйлық па?" },
+        OPENINGS[2],
+      ],
+      endings: [
+        ENDINGS[0],
+        { ...ENDINGS[1]!, text: "Җазыңыз бізге" },
+        // A gloss with a price loses only the gloss.
+        { ...ENDINGS[2]!, gloss: "Keep one for 5000 tenge" },
+      ],
+    };
+  });
+  assert.equal(calls, 1, "a failing option alone asks for no repair");
+  assert.equal(written.source, "muse");
+  assert.deepEqual(
+    written.script.openings?.map((option) => option.kind),
+    ["promise"],
+  );
+  assert.deepEqual(
+    written.script.endings?.map((option) => [option.kind, option.gloss]),
+    [
+      ["order", "Message us to order"],
+      ["reserve", ""],
+    ],
+  );
+  assert.equal(written.problems.length, 3);
+  assert.match(written.problems.join("\n"), /openings\[0\]\.text has a digit/);
+  assert.match(
+    written.problems.join("\n"),
+    /openings\[1\]\.text says a price in words/,
+  );
+  assert.match(
+    written.problems.join("\n"),
+    /endings\[1\]\.text has letters Kazakh doesn't use/,
+  );
+});
+
+test("a missing or failing sticker or ending takes the first opening or ending that passes", async () => {
+  const written = await writeAdScript(REQUEST, async () => ({
+    ...WITH_OPTIONS,
+    sticker: "",
+    ending: "Бес мыңға алыңыз",
+    openings: [{ ...OPENINGS[0]!, text: "Тек 2 күн" }, OPENINGS[1]],
+  }));
+  assert.equal(written.source, "muse");
+  assert.equal(written.script.sticker, OPENINGS[1]!.text);
+  assert.equal(written.script.ending, ENDINGS[0]!.text);
+
+  // With no option to stand in, the script is repaired; the repair hears
+  // about the dropped options too.
+  const questions: string[] = [];
+  const repaired = await writeAdScript(REQUEST, async (question, call) => {
+    questions.push(question);
+    return call === 1
+      ? {
+          ...GOOD,
+          sticker: "",
+          openings: [{ ...OPENINGS[0]!, text: "Тек 2 күн" }],
+        }
+      : WITH_OPTIONS;
+  });
+  assert.equal(repaired.source, "repaired");
+  assert.match(questions[1]!, /sticker is empty/);
+  assert.match(questions[1]!, /openings\[0\]\.text has a digit/);
+});
+
+test("the code's own words offer one opening and one ending", () => {
+  for (const wordsCode of [...PRODUCT_SHOP_WORDS_CODES, null]) {
+    for (const idea of [
+      { kind: "new" as const, text: null },
+      { kind: "gift" as const, text: null },
+      { kind: "own" as const, text: "Тек осы аптада" },
+    ]) {
+      const script = fallbackAdScript({ ...REQUEST, wordsCode, idea });
+      assert.equal(script.openings?.length, 1);
+      assert.equal(script.endings?.length, 1);
+      assert.deepEqual(
+        [script.openings![0]!.kind, script.openings![0]!.text],
+        ["news", script.sticker],
+      );
+      assert.deepEqual(
+        [script.endings![0]!.kind, script.endings![0]!.text],
+        ["order", script.ending],
+      );
+      assert.ok(script.openings![0]!.gloss && script.endings![0]!.gloss);
+      assert.deepEqual(
+        withCheckedOptions(script, { ...REQUEST, wordsCode, idea }).issues,
+        [],
+        `${wordsCode} ${idea.kind}`,
+      );
+    }
+  }
 });

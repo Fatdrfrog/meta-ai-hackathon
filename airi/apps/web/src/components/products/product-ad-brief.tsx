@@ -7,13 +7,11 @@ import {
   PRODUCT_AD_IDEA_MAX_LENGTH,
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MIN_PRODUCTS,
-  PRODUCT_AD_VOICES,
   productAdLettersSupported,
   productAdShopName,
   type ProductAdBrief,
   type ProductAdCreateRequest,
   type ProductAdIdeaKind,
-  type ProductAdVoice,
 } from "@/lib/products/types";
 import { oneLine } from "@/lib/products/ad-request";
 import { cn } from "@/lib/utils";
@@ -33,8 +31,15 @@ import {
   AdSketch,
   AdSkeleton,
   AdToggle,
+  adRequestId,
 } from "./product-ad-parts";
 import styles from "./product-ad-studio.module.css";
+import {
+  PRODUCT_AD_VOICE_DEFAULT,
+  ProductAdVoiceChoice,
+  productAdVoiceRequest,
+  type ProductAdVoiceValue,
+} from "./product-ad-voice";
 import theme from "./product-theme.module.css";
 import {
   ProductDraftError,
@@ -54,17 +59,6 @@ const IDEA_OPTIONS = PRODUCT_AD_IDEA_KINDS.map(kind => ({
   value: kind,
   label: COPY.ideas[kind],
 }));
-const VOICE_OPTIONS = PRODUCT_AD_VOICES.map(voice => ({
-  value: voice,
-  label: COPY.voices[voice],
-}));
-
-/** An id for one press of "Make the ad", so sending it twice makes one ad. */
-function newRequestId(): string {
-  const api = typeof crypto === "undefined" ? undefined : crypto;
-  if (typeof api?.randomUUID === "function") return api.randomUUID();
-  return `ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-}
 
 const length = (text: string) => Array.from(text).length;
 
@@ -76,6 +70,7 @@ const AD_REFUSALS_BEFORE_WRITING: ReadonlySet<string> = new Set([
   "trial_ended",
   "spend_limit",
   "ai_actions_used",
+  "ai_disabled",
 ]);
 
 type CreateErrorCode = keyof typeof COPY.createErrors;
@@ -167,7 +162,9 @@ function BriefForm({
   const { mutate } = useSWRConfig();
   const [idea, setIdea] = useState<ProductAdIdeaKind>("new");
   const [ownWords, setOwnWords] = useState("");
-  const [voiceChoice, setVoiceChoice] = useState<ProductAdVoice>("own");
+  const [voiceChoice, setVoiceChoice] = useState<ProductAdVoiceValue>(
+    PRODUCT_AD_VOICE_DEFAULT
+  );
   const [showPresenter, setShowPresenter] = useState(false);
   const [consent, setConsent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -193,9 +190,8 @@ function BriefForm({
   }, [idea]);
 
   const { products } = brief;
-  const withVoice = products.filter(product => product.hasVoice).length;
-  // "Your voice" is the default when the video has the owner saying a price.
-  const voice: ProductAdVoice = withVoice > 0 ? voiceChoice : "none";
+  // "Your recording" is the default when the video has the owner saying a price.
+  const voice = productAdVoiceRequest(voiceChoice, products);
   const ownText = oneLine(ownWords);
   const presenterShown = brief.presenter !== null && showPresenter;
 
@@ -229,15 +225,14 @@ function BriefForm({
     const request: Omit<ProductAdCreateRequest, "requestId"> = {
       productIds: products.map(product => product.productId),
       idea: idea === "own" ? { kind: "own", text: ownText } : { kind: idea },
-      voice,
+      ...voice,
       presenter: { use: presenterShown, consent: presenterShown && consent },
     };
     // A press is sent again only with the brief it first sent: under the
     // same id the server answers with the ad that brief saved, so a brief
     // changed since is a new press, made of the owner's latest choices.
     const sent = JSON.stringify(request);
-    const id =
-      press.current?.brief === sent ? press.current.id : newRequestId();
+    const id = press.current?.brief === sent ? press.current.id : adRequestId();
     press.current = { id, brief: sent };
     try {
       const ad = await createProductAd(workspaceId, {
@@ -364,29 +359,15 @@ function BriefForm({
           </div>
 
           <div className={cn(theme.sheet, styles.panel)}>
-            {withVoice > 0 ? (
-              <>
-                <AdChoices
-                  name={`${ids}-voice`}
-                  legend={COPY.voice}
-                  options={VOICE_OPTIONS}
-                  value={voice}
-                  onChange={setVoiceChoice}
-                  describedBy={`${ids}-voice-about`}
-                />
-                <p id={`${ids}-voice-about`} className={styles.note}>
-                  {COPY.voiceAbout[voice]}
-                  {voice === "own" && withVoice < products.length
-                    ? ` ${COPY.voiceSilent}`
-                    : ""}
-                </p>
-              </>
-            ) : (
-              <div className={styles.field}>
-                <h3 className={styles.sectionTitle}>{COPY.voice}</h3>
-                <p className={styles.note}>{COPY.noVoiceClips}</p>
-              </div>
-            )}
+            <ProductAdVoiceChoice
+              workspaceId={workspaceId}
+              idPrefix={ids}
+              value={voiceChoice}
+              onChange={setVoiceChoice}
+              products={products}
+              wordsCode={brief.wordsCode}
+              disabled={sending}
+            />
           </div>
 
           {brief.presenter ? (

@@ -20,6 +20,7 @@ export * from "./whatsapp/webhook-contracts";
 export * from "./otp/contracts";
 export * from "./products/contracts";
 export * from "./products/ad-script";
+export * from "./products/ad-voice";
 export * from "./products/price";
 export * from "./products/spoken-price";
 export * from "./whatsapp-calls";

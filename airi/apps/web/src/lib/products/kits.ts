@@ -2,11 +2,20 @@ import "server-only";
 import { logger } from "@/lib/logger";
 import { carouselTemplateComponents } from "@/lib/products/carousel-components";
 import {
+  carouselCardCount,
+  keepCardPictures,
+  parseCarouselEdit,
+} from "@/lib/products/kit-carousel-edit";
+import {
   isObjectIdText,
+  type ProductKitEditInput,
   type ProductKitRequest,
+  type ProductKitRequestEdits,
 } from "@/lib/products/kit-request";
 import {
   carouselVerdict,
+  kitPartBusy,
+  kitPartCanEdit,
   kitPartCanRetry,
   productKitStatus,
 } from "@/lib/products/kit-status";
@@ -21,14 +30,23 @@ import {
   withProductPhotoUrls,
 } from "@/lib/products/photo-urls";
 import {
+  buildOrderFormFlowConfig,
+  ORDER_FORM_PRODUCTS_FIELD_ID,
+  parseOrderFormConfig,
+} from "@/lib/products/order-form-config";
+import {
   shopWords,
   spokeShopWordsLanguage,
   type ShopPrice,
 } from "@/lib/products/shop-words";
 import {
   PRODUCT_KIT_PARTS,
+  type ProductKitDraftsRequest,
+  type ProductKitDraftsResponse,
+  type ProductKitEditSourceResponse,
   type ProductKitPart,
   type ProductKitPartError,
+  type ProductKitPartErrorCode,
   type ProductKitPlanProduct,
   type ProductKitPlanResponse,
   type ProductKitRecord,
@@ -47,6 +65,7 @@ import {
 } from "@/lib/products/whatsapp-drafts";
 import { createClient } from "@/lib/supabase/server";
 import {
+  deleteMetaWhatsAppFlow,
   getMetaWhatsAppFlow,
   updateMetaWhatsAppFlow,
 } from "@/lib/whatsapp/flows/service";
@@ -63,6 +82,8 @@ import {
   WhatsAppTemplateRecordPersistenceError,
 } from "@/lib/whatsapp/templates/unified-service";
 import {
+  PRODUCT_KIT_COMPONENTS_MAX_BYTES,
+  PRODUCT_KIT_EARLIER_MAX,
   ProductKit,
   type IProductKit,
   type IProductKitCarouselPart,
@@ -73,6 +94,8 @@ import {
 import { ProductVideoImport } from "@/models/product-video-import";
 import { WorkspaceProduct } from "@/models/workspace-product";
 import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
+import type { WhatsAppFlowConfig } from "@icecore/scenario-contracts";
+import type { WhatsAppComponent } from "@icecore/shared/types/whatsapp";
 import mongoose from "mongoose";
 
 // Kits: the carousel and the order form one press makes from shelf products,
@@ -85,9 +108,10 @@ import mongoose from "mongoose";
 /** A part still "making" this long after its last change has stopped: functions end at 60 s. */
 const MAKING_TIMEOUT_MS = 90_000;
 /**
- * The kit routes stop at 60 s (maxDuration). From when the parts start,
- * nothing new is begun after this, so the answer leaves well before then:
- * the sign-in, shelf and connection reads before it take 1–3 s.
+ * The kit routes stop at 60 s (maxDuration). From when the press or edit
+ * began (`deadlineFrom`: after sign-in, before the kit, shelf and
+ * connection reads, an edit's Assets copies and its looks by name), nothing
+ * new is begun after this, so the answer leaves well before then.
  *
  * Before the carousel's create come a Try again's look by name (up to 5 s),
  * the cards on white and their header uploads, 4 at a time: about 7 s for 4
@@ -384,6 +408,13 @@ export function toProductKitRecord(
       flowName: form.flowName ?? null,
       productCount: form.productCount ?? 0,
       error: recordError(form.error),
+      edited: form.edited === true,
+      version: form.version ?? 1,
+      earlier: (form.earlier ?? []).map(entry => ({
+        flowId: entry.flowId ?? null,
+        flowName: entry.flowName ?? null,
+        replacedAt: iso(entry.replacedAt) ?? new Date(0).toISOString(),
+      })),
     };
   if (carousel)
     parts.carousel = {
@@ -395,6 +426,13 @@ export function toProductKitRecord(
       metaReason: carousel.metaReason ?? null,
       approvedAt: iso(carousel.approvedAt),
       error: recordError(carousel.error),
+      edited: carousel.edited === true,
+      earlier: (carousel.earlier ?? []).map(entry => ({
+        templateId: entry.templateId ?? null,
+        templateName: entry.templateName ?? null,
+        metaStatus: entry.metaStatus ?? null,
+        replacedAt: iso(entry.replacedAt) ?? new Date(0).toISOString(),
+      })),
     };
   return {
     id: String(doc._id),
@@ -422,6 +460,60 @@ export function carouselTemplateName(now: Date, kitId: KitId): string {
     .replace(/[-:]/g, "")
     .replace("T", "_");
   return `products_${stamp}_${String(kitId).slice(-6).toLowerCase()}`;
+}
+
+/** A name carouselTemplateName made, for this kit or another (or for a draft). */
+const MADE_NAME = /^products_\d{8}_\d{6}_[0-9a-f]{6}$/;
+
+/** Why a carousel can't go under a name: this kit had it, or Meta has it, or Meta couldn't say. */
+type NameRefusal = "template_name_taken" | "meta_unavailable";
+
+/**
+ * The name an edited carousel goes to Meta under, unique to this kit so a
+ * look by name after a lost answer only finds this kit's own carousel:
+ * - a name this kit already sent under (now or earlier) is taken;
+ * - a name airi made for this kit (GET …/edit) is used as it is;
+ * - a name airi made for a draft before Make, or for another kit, is made
+ *   again for this kit;
+ * - the owner's own name is used once Meta says it has no template under
+ *   it in the kit's language; Meta having one, it's taken.
+ */
+async function carouselNameFor(params: {
+  wanted: string;
+  kitId: KitId;
+  now: Date;
+  taken: ReadonlySet<string>;
+  lookup: CarouselLookup;
+}): Promise<{ name: string } | { refused: NameRefusal }> {
+  const { wanted, kitId, now, taken, lookup } = params;
+  if (taken.has(wanted)) return { refused: "template_name_taken" };
+  if (MADE_NAME.test(wanted)) {
+    const own = `_${String(kitId).slice(-6).toLowerCase()}`;
+    if (wanted.endsWith(own)) return { name: wanted };
+    // Made a second later when this second's name was this kit's already.
+    for (let tries = 0; tries < 5; tries += 1) {
+      const name = carouselTemplateName(
+        new Date(now.getTime() + tries * 1000),
+        kitId
+      );
+      if (!taken.has(name)) return { name };
+    }
+    return { refused: "template_name_taken" };
+  }
+  const look = await sentEarlier(lookup, wanted);
+  if (isFound(look)) return { refused: "template_name_taken" };
+  if (look === "unknown") return { refused: "meta_unavailable" };
+  return { name: wanted };
+}
+
+/** The names a kit's carousel was sent under: now and before. */
+function sentNames(carousel: IProductKitCarouselPart | null | undefined) {
+  return new Set(
+    [
+      carousel?.templateName,
+      ...(carousel?.earlier ?? []).map(entry => entry.templateName),
+    ].filter((name): name is string => Boolean(name))
+  );
 }
 
 /** "Order form · 2 Nov 09:14" on the owner's clock, or "… 04:14 UTC" without their zone. */
@@ -452,13 +544,32 @@ type KitContext = {
   whatsapp: { accessToken: string; wabaId: string };
   now: Date;
   /**
+   * When the request's work began, if before `now`: the kit's time counts
+   * from it, so slow reads before the parts start never push the answer
+   * past the route's 60 s. `now` stays the time names and records carry.
+   */
+  deadlineFrom?: Date;
+  /**
    * The carousel's template name for this attempt, saved on the kit before
    * Meta is asked; `mayExist` when an earlier attempt sent it under that
    * name and its answer was lost, so Meta is asked for it first.
+   * `components` are the owner's edited cards, sent instead of the shelf's.
    */
-  carousel: { name: string; mayExist: boolean };
-  /** The Flow an earlier attempt made before its answer was lost, to finish; null for none. */
-  orderForm: { flowId: string | null; flowName: string | null };
+  carousel: {
+    name: string;
+    mayExist: boolean;
+    components?: WhatsAppComponent[];
+  };
+  /**
+   * The Flow an earlier attempt made before its answer was lost, to finish;
+   * null for none. `config` is the owner's edited form, sent instead of the
+   * shelf's.
+   */
+  orderForm: {
+    flowId: string | null;
+    flowName: string | null;
+    config?: WhatsAppFlowConfig;
+  };
 };
 
 /** A first attempt: nothing made before it. */
@@ -472,7 +583,7 @@ const firstAttempt = (
 
 /** When nothing new starts for this attempt's parts any more. */
 const kitDeadline = (context: KitContext) =>
-  context.now.getTime() + KIT_DEADLINE_MS;
+  (context.deadlineFrom ?? context.now).getTime() + KIT_DEADLINE_MS;
 
 type OrderFormOutcome = Partial<Omit<IProductKitOrderFormPart, "updatedAt">> &
   Pick<IProductKitOrderFormPart, "state">;
@@ -588,17 +699,27 @@ async function recordFlow(context: KitContext, flowId: string, name: string) {
 
 /**
  * The Flow an earlier attempt made, as Meta has it now: published (done),
- * a draft (to finish), or neither (gone, or stopped by Meta: make another).
+ * a draft (to finish), neither (gone, or stopped by Meta: make another), or
+ * "unknown" when Meta couldn't be asked (an outage, a rate limit, the read
+ * failing), when making another would leave this one behind.
  */
 async function earlierFlow(
-  context: KitContext,
+  context: Pick<KitContext, "whatsapp">,
   flowId: string
-): Promise<"published" | "draft" | null> {
+): Promise<"published" | "draft" | "unknown" | null> {
   const read = await getMetaWhatsAppFlow({
     accessToken: context.whatsapp.accessToken,
     flowId,
     expectedWabaId: context.whatsapp.wabaId,
   });
+  // Gone, as template-flow-facts reads it: 404 (not this WABA's) or
+  // Graph's 100/33 (no such object). Any other failure says nothing.
+  if (
+    !read.ok &&
+    read.status !== 404 &&
+    !(read.providerCode === 100 && read.providerSubcode === 33)
+  )
+    return "unknown";
   const status = read.ok ? String(read.flow?.status ?? "").toUpperCase() : "";
   return status === "PUBLISHED"
     ? "published"
@@ -607,13 +728,24 @@ async function earlierFlow(
       : null;
 }
 
+/** How many products a form's products question lists. */
+function listedProducts(config: WhatsAppFlowConfig): number {
+  const field = config.screens
+    .flatMap(screen => screen.fields)
+    .find(entry => entry.id === ORDER_FORM_PRODUCTS_FIELD_ID);
+  return field?.options?.length ?? 0;
+}
+
 /** The order form: saved as a Flow, then published; a Flow Meta won't publish stays a draft. */
 async function makeOrderForm(context: KitContext): Promise<OrderFormOutcome> {
   const { accessToken, wabaId } = context.whatsapp;
-  const productCount = Math.min(
-    context.products.length,
-    ORDER_FORM_MAX_PRODUCTS
-  );
+  // The owner's edit, or the shelf's questions: kept on the kit as sent.
+  const config =
+    context.orderForm.config ??
+    buildOrderFormFlowConfig(context.products, context.language);
+  const productCount = context.orderForm.config
+    ? listedProducts(config)
+    : Math.min(context.products.length, ORDER_FORM_MAX_PRODUCTS);
   const name =
     context.orderForm.flowName ?? orderFormName(context.now, context.timeZone);
   // An earlier attempt's answer was lost after Meta made its Flow: finish
@@ -621,6 +753,15 @@ async function makeOrderForm(context: KitContext): Promise<OrderFormOutcome> {
   const earlier = context.orderForm.flowId
     ? await earlierFlow(context, context.orderForm.flowId)
     : null;
+  // Meta couldn't say what became of it: nothing new is made while it may
+  // be there. The part keeps its Flow, so Try again finishes that one.
+  if (earlier === "unknown")
+    return {
+      state: "failed",
+      productCount,
+      config,
+      error: { code: "failed", message: null },
+    };
   if (earlier === "published")
     return {
       state: "ready",
@@ -634,6 +775,7 @@ async function makeOrderForm(context: KitContext): Promise<OrderFormOutcome> {
     wabaId,
     products: context.products,
     language: context.language,
+    config,
     name,
     ...(earlier === "draft" && context.orderForm.flowId
       ? { flowId: context.orderForm.flowId }
@@ -650,6 +792,7 @@ async function makeOrderForm(context: KitContext): Promise<OrderFormOutcome> {
     return {
       state: "failed",
       productCount,
+      config,
       error:
         draft.reason === "refused"
           ? { code: "meta_refused", message: metaWords(draft.error) }
@@ -661,7 +804,12 @@ async function makeOrderForm(context: KitContext): Promise<OrderFormOutcome> {
     flowId: draft.flowId,
     operation: "publish",
   });
-  const flow = { flowId: draft.flowId, flowName: draft.name, productCount };
+  const flow = {
+    flowId: draft.flowId,
+    flowName: draft.name,
+    productCount,
+    config,
+  };
   if (published.ok) return { state: "ready", ...flow, error: null };
   logger.warn("[Products] kit order form left as a draft", {
     event: "products.kit_order_form_draft",
@@ -856,14 +1004,17 @@ async function carouselBehindRefusal(
  */
 async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
   const name = context.carousel.name;
+  const edited = context.carousel.components;
   // An earlier attempt's answer was lost (it timed out, or its function
   // was stopped): Meta may have its template under this very name.
   if (context.carousel.mayExist) {
     const look = await sentEarlier(context, name);
-    const cards = Math.min(
-      context.products.filter(product => product.photo).length,
-      KIT_CAROUSEL_MAX_CARDS
-    );
+    const cards = edited
+      ? carouselCardCount(edited)
+      : Math.min(
+          context.products.filter(product => product.photo).length,
+          KIT_CAROUSEL_MAX_CARDS
+        );
     if (isFound(look))
       return submittedCarousel(
         { templateId: look.id, status: look.status, rowId: null },
@@ -875,19 +1026,26 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
     // poll looks again.
     if (look === "unknown") return checkingCarousel(name, cards, new Date());
   }
-  const draft = await prepareCarouselDraft(
-    context.workspaceId,
-    { language: context.language, products: context.products },
-    context.now
-  );
-  if (!draft)
+  // The owner's edited cards (checked when they were saved), or the
+  // shelf's: its products' pictures on white, stored as header samples.
+  const draft = edited
+    ? null
+    : await prepareCarouselDraft(
+        context.workspaceId,
+        { language: context.language, products: context.products },
+        context.now
+      );
+  if (!edited && !draft)
     return {
       state: "failed",
       cardCount: 0,
       error: { code: "not_enough_products", message: null },
     };
-  const cardCount = draft.cards.length;
-  const components = carouselTemplateComponents(draft);
+  const components = edited ?? carouselTemplateComponents(draft!);
+  const cardCount = edited ? carouselCardCount(edited) : draft!.cards.length;
+  const language = draft?.language ?? context.language;
+  // Kept on the kit as sent, for "Edit and send again".
+  const kept = storableComponents(components);
   const checked = parseWhatsAppTemplateSubmissionComponents(
     components,
     "MARKETING"
@@ -901,6 +1059,7 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
     return {
       state: "failed",
       cardCount,
+      ...kept,
       error: { code: "failed", message: null },
     };
   }
@@ -915,7 +1074,7 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
       name,
       channel: "whatsapp",
       whatsappData: {
-        language: draft.language,
+        language,
         category: "MARKETING",
         components,
       },
@@ -941,7 +1100,10 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
           kitId: String(context.kitId),
           reason,
         });
-        return lookForLostCarousel(context, name, cardCount);
+        return {
+          ...(await lookForLostCarousel(context, name, cardCount)),
+          ...kept,
+        };
       }
       const refusal = graphRefusalOf(error);
       const twin = refusal !== null && isTwinRefusal(refusal);
@@ -956,7 +1118,7 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
           twin,
           reason
         );
-        if (behind) return behind;
+        if (behind) return { ...behind, ...kept };
       }
       logger.warn("[Products] kit carousel not sent", {
         event: "products.kit_carousel_refused",
@@ -965,7 +1127,7 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
         code: failure.code,
         reason,
       });
-      return { state: "failed", cardCount, error: failure };
+      return { state: "failed", cardCount, ...kept, error: failure };
     }
     // Meta has it; only airi's own row of it wasn't saved.
     logger.warn("[Products] kit carousel row not saved", {
@@ -983,13 +1145,25 @@ async function makeCarousel(context: KitContext): Promise<CarouselOutcome> {
     return {
       state: "failed",
       cardCount,
+      ...kept,
       error: { code: "failed", message: null },
     };
-  return submittedCarousel(
-    { templateId: sent.templateId, status: sent.status, rowId: sent.rowId },
-    name,
-    cardCount
-  );
+  return {
+    ...submittedCarousel(
+      { templateId: sent.templateId, status: sent.status, rowId: sent.rowId },
+      name,
+      cardCount
+    ),
+    ...kept,
+  };
+}
+
+/** Components small enough to keep on the kit, as `{components}`; nothing for bigger ones. */
+function storableComponents(components: WhatsAppComponent[]): {
+  components?: WhatsAppComponent[];
+} {
+  const bytes = new TextEncoder().encode(JSON.stringify(components)).length;
+  return bytes <= PRODUCT_KIT_COMPONENTS_MAX_BYTES ? { components } : {};
 }
 
 /**
@@ -1480,10 +1654,75 @@ async function currentRecord(
 const isDuplicateKey = (error: unknown) =>
   (error as { code?: unknown } | null)?.code === 11000;
 
-/** Why a kit (or one part of it) can't be made at all; nothing is written. */
-export type ProductKitRefusal =
-  | "not_enough_products"
-  | "whatsapp_not_connected";
+/**
+ * Why a kit (or one part of it) can't be made at all; nothing is written.
+ * The edited carousel's name can be taken, or Meta couldn't say whether it
+ * is (meta_unavailable: try again).
+ */
+export type ProductKitRefusal = PartRefusal | NameRefusal;
+
+/** Why a part can't be made (or made again) at all. */
+type PartRefusal = "not_enough_products" | "whatsapp_not_connected";
+
+/**
+ * The checked edits with the cards' pictures from airi's Assets copied to
+ * Supabase Storage, so the kit keeps cards whose links last; issues for
+ * pictures that couldn't be copied.
+ */
+async function keepEditedPictures(
+  workspaceId: string,
+  edits: CheckedEdits
+): Promise<{ edits: CheckedEdits } | { invalid: string[] }> {
+  if (!edits.carousel) return { edits };
+  const kept = await keepCardPictures(workspaceId, edits.carousel.components);
+  if (!kept.ok) return { invalid: kept.issues.slice(0, 3) };
+  return {
+    edits: {
+      ...edits,
+      carousel: { ...edits.carousel, components: kept.components },
+    },
+  };
+}
+
+/** The owner's edits, checked: what each edited part sends. */
+type CheckedEdits = {
+  carousel?: { name: string; components: WhatsAppComponent[] };
+  orderForm?: { config: WhatsAppFlowConfig };
+};
+
+/**
+ * The owner's edits with their content checked: the carousel by its
+ * template rules and pictures, the form by the Flow's rules with the
+ * shelf's products question listing only `productIds`. The issues, the
+ * first 3, when either fails.
+ */
+function checkEdits(
+  edits: ProductKitRequestEdits | null,
+  productIds: readonly string[]
+): { edits: CheckedEdits } | { invalid: string[] } {
+  const checked: CheckedEdits = {};
+  const issues: string[] = [];
+  if (edits?.carousel) {
+    const carousel = parseCarouselEdit(
+      edits.carousel.name,
+      edits.carousel.components
+    );
+    if (carousel.ok)
+      checked.carousel = {
+        name: carousel.name,
+        components: carousel.components,
+      };
+    else issues.push(...carousel.issues);
+  }
+  if (edits?.orderForm) {
+    const form = parseOrderFormConfig(edits.orderForm.config, productIds);
+    if (form.ok) checked.orderForm = { config: form.config };
+    else issues.push(...form.issues);
+  }
+  return issues.length > 0
+    ? { invalid: issues.slice(0, 3) }
+    : { edits: checked };
+}
 
 /**
  * Makes the parts asked for, at once, and answers with the kit once both
@@ -1497,9 +1736,14 @@ export async function makeProductKit(params: {
   userId: string;
   request: ProductKitRequest;
 }): Promise<
-  { kit: ProductKitRecord; repeated: boolean } | { refused: ProductKitRefusal }
+  | { kit: ProductKitRecord; repeated: boolean }
+  | { refused: ProductKitRefusal }
+  | { invalid: string[] }
 > {
   const { workspaceId, userId, request } = params;
+  // The kit's time counts from here: the reads, Assets copies and name
+  // look below come out of the route's 60 s too.
+  const startedAt = new Date();
   const earlier = await findByRequest(workspaceId, request.requestId);
   if (earlier)
     return { kit: await currentRecord(workspaceId, earlier), repeated: true };
@@ -1508,22 +1752,60 @@ export async function makeProductKit(params: {
   if (shelf.products.length === 0) return { refused: "not_enough_products" };
   const whatsapp = await readKitWhatsApp(workspaceId);
   if (!whatsapp.connected) return { refused: "whatsapp_not_connected" };
+  const checked = checkEdits(
+    request.edits,
+    shelf.products.map(product => product.id)
+  );
+  if ("invalid" in checked) return { invalid: checked.invalid };
+  const kept = await keepEditedPictures(workspaceId, checked.edits);
+  if ("invalid" in kept) return kept;
+  const { edits } = kept;
   const photos = shelf.products.filter(product => product.photo).length;
-  const carouselFits = photos >= KIT_CAROUSEL_MIN_CARDS;
+  // The owner's edited cards carry their own pictures.
+  const carouselFits =
+    Boolean(edits.carousel) || photos >= KIT_CAROUSEL_MIN_CARDS;
   if (request.make.carousel && !carouselFits && !request.make.orderForm)
     return { refused: "not_enough_products" };
+  const language = request.language ?? shopWords(shelf.language).code;
 
-  const now = new Date();
   // The kit's id first: its carousel's name carries it.
   const kitId: KitId = new mongoose.Types.ObjectId();
-  const attempt = firstAttempt(now, kitId);
+  const named = edits.carousel
+    ? await carouselNameFor({
+        wanted: edits.carousel.name,
+        kitId,
+        now: new Date(),
+        taken: new Set(),
+        lookup: { workspaceId, kitId, language, whatsapp },
+      })
+    : null;
+  if (named && "refused" in named) return { refused: named.refused };
+  // Its names and records carry the time its name was settled.
+  const now = new Date();
+  const first = firstAttempt(now, kitId);
+  const attempt: Pick<KitContext, "carousel" | "orderForm"> = {
+    carousel: {
+      ...first.carousel,
+      ...(named ? { name: named.name } : {}),
+      ...(edits.carousel ? { components: edits.carousel.components } : {}),
+    },
+    orderForm: {
+      ...first.orderForm,
+      ...(edits.orderForm ? { config: edits.orderForm.config } : {}),
+    },
+  };
   const parts: IProductKit["parts"] = {};
   if (request.make.orderForm)
     parts.orderForm = {
       state: "making",
-      productCount: Math.min(shelf.products.length, ORDER_FORM_MAX_PRODUCTS),
+      productCount: edits.orderForm
+        ? listedProducts(edits.orderForm.config)
+        : Math.min(shelf.products.length, ORDER_FORM_MAX_PRODUCTS),
       prices: orderFormPrices(shelf.products),
       updatedAt: now,
+      edited: Boolean(edits.orderForm),
+      version: 1,
+      ...(edits.orderForm ? { config: edits.orderForm.config } : {}),
     };
   if (request.make.carousel)
     parts.carousel = carouselFits
@@ -1531,9 +1813,13 @@ export async function makeProductKit(params: {
           state: "making",
           // Saved before Meta is asked: a retry after a lost answer finds it.
           templateName: attempt.carousel.name,
-          cardCount: Math.min(photos, KIT_CAROUSEL_MAX_CARDS),
+          cardCount: edits.carousel
+            ? carouselCardCount(edits.carousel.components)
+            : Math.min(photos, KIT_CAROUSEL_MAX_CARDS),
           prices: carouselPrices(shelf.products),
           updatedAt: now,
+          edited: Boolean(edits.carousel),
+          ...(edits.carousel ? { components: edits.carousel.components } : {}),
         }
       : {
           state: "skipped",
@@ -1541,7 +1827,6 @@ export async function makeProductKit(params: {
           error: { code: "not_enough_products", message: null },
           updatedAt: now,
         };
-  const language = request.language ?? shopWords(shelf.language).code;
 
   try {
     await ProductKit.create({
@@ -1575,6 +1860,7 @@ export async function makeProductKit(params: {
       products: shelf.products,
       whatsapp,
       now,
+      deadlineFrom: startedAt,
       ...attempt,
     },
     PRODUCT_KIT_PARTS.filter(part => parts[part]?.state === "making")
@@ -1616,7 +1902,9 @@ export async function listProductKitRecords(
  * lost: its template name is kept (Meta is asked for it first, and refuses
  * a twin), and so is its Flow, to finish. A part Meta refused or turned
  * down starts anew. (A carousel Meta may still have is never saved as
- * refused: it is "checking" until found, or timed out with its name.)
+ * refused: it is "checking" until found, or timed out with its name.) A
+ * form's later version keeps its "… · v2" name either way, so Flows tells
+ * its versions apart.
  */
 function retryAttempt(
   part: ProductKitPart,
@@ -1628,22 +1916,46 @@ function retryAttempt(
   const lost =
     current?.state === "failed" &&
     (current.error?.code === "timed_out" || current.error?.code === "failed");
-  if (!lost) return attempt;
   const { carousel, orderForm } = doc.parts ?? {};
-  if (part === "carousel" && carousel?.templateName && !carousel.templateId)
-    return {
-      ...attempt,
-      carousel: { name: carousel.templateName, mayExist: true },
-    };
-  if (part === "orderForm" && orderForm?.flowId)
+  if (part === "carousel")
+    return lost && carousel?.templateName && !carousel.templateId
+      ? {
+          ...attempt,
+          carousel: { name: carousel.templateName, mayExist: true },
+        }
+      : attempt;
+  const version = orderForm?.version ?? 1;
+  const versionName =
+    version > 1
+      ? `${flowBaseName(orderForm?.flowName ?? orderFormName(now, doc.timeZone ?? null))} · v${version}`
+      : null;
+  if (lost && orderForm?.flowId)
     return {
       ...attempt,
       orderForm: {
         flowId: orderForm.flowId,
-        flowName: orderForm.flowName ?? null,
+        flowName: orderForm.flowName ?? versionName,
       },
     };
-  return attempt;
+  return versionName
+    ? { ...attempt, orderForm: { flowId: null, flowName: versionName } }
+    : attempt;
+}
+
+/** The owner's edits a kit sent, to send again: none for parts made from the shelf. */
+function keptEdits(doc: IProductKit): {
+  carousel?: { components: WhatsAppComponent[] };
+  orderForm?: { config: WhatsAppFlowConfig };
+} {
+  const { carousel, orderForm } = doc.parts ?? {};
+  return {
+    ...(carousel?.edited && carousel.components?.length
+      ? { carousel: { components: carousel.components } }
+      : {}),
+    ...(orderForm?.edited && orderForm.config
+      ? { orderForm: { config: orderForm.config } }
+      : {}),
+  };
 }
 
 /** What a part is reset to while it's made again. */
@@ -1661,7 +1973,9 @@ function remakeFields(
           ...common,
           flowId: attempt.orderForm.flowId,
           flowName: attempt.orderForm.flowName,
-          productCount: Math.min(shelf.length, ORDER_FORM_MAX_PRODUCTS),
+          productCount: attempt.orderForm.config
+            ? listedProducts(attempt.orderForm.config)
+            : Math.min(shelf.length, ORDER_FORM_MAX_PRODUCTS),
           prices: orderFormPrices(shelf),
         }
       : {
@@ -1675,10 +1989,12 @@ function remakeFields(
           approvedAt: null,
           submittedAt: null,
           checkedAt: null,
-          cardCount: Math.min(
-            shelf.filter(product => product.photo).length,
-            KIT_CAROUSEL_MAX_CARDS
-          ),
+          cardCount: attempt.carousel.components
+            ? carouselCardCount(attempt.carousel.components)
+            : Math.min(
+                shelf.filter(product => product.photo).length,
+                KIT_CAROUSEL_MAX_CARDS
+              ),
           prices: carouselPrices(shelf),
         };
   return Object.fromEntries(
@@ -1700,7 +2016,7 @@ export async function retryProductKitPart(params: {
   userId: string;
   kitId: string;
   part: ProductKitPart;
-}): Promise<{ kit: ProductKitRecord } | { refused: ProductKitRefusal } | null> {
+}): Promise<{ kit: ProductKitRecord } | { refused: PartRefusal } | null> {
   const { workspaceId, userId, kitId, part } = params;
   if (!isObjectIdText(kitId)) return null;
   const found = await findKit(workspaceId, kitId);
@@ -1714,14 +2030,20 @@ export async function retryProductKitPart(params: {
   if (!whatsapp.connected) return { refused: "whatsapp_not_connected" };
   const shelf = await loadShelfProducts(workspaceId, doc.productIds);
   const photos = shelf.products.filter(product => product.photo).length;
+  // The owner's edits go again, as they were sent: not the shelf's.
+  const edits = keptEdits(doc);
   if (
     shelf.products.length === 0 ||
-    (part === "carousel" && photos < KIT_CAROUSEL_MIN_CARDS)
+    (part === "carousel" && !edits.carousel && photos < KIT_CAROUSEL_MIN_CARDS)
   )
     return { refused: "not_enough_products" };
 
   const now = new Date();
-  const attempt = retryAttempt(part, doc, now);
+  const retried = retryAttempt(part, doc, now);
+  const attempt: Pick<KitContext, "carousel" | "orderForm"> = {
+    carousel: { ...retried.carousel, ...edits.carousel },
+    orderForm: { ...retried.orderForm, ...edits.orderForm },
+  };
   const claimed = await ProductKit.updateOne(
     {
       _id: doc._id,
@@ -1749,6 +2071,588 @@ export async function retryProductKitPart(params: {
   // Another press claimed it first: answer with the kit as that one leaves it.
   const kit = await findKit(workspaceId, doc._id);
   return { kit: await recordOf(workspaceId, kit ?? doc) };
+}
+
+// ---------------------------------------------------------------- editing
+
+/** Meta's answers that refuse a part outright, rather than airi failing to ask. */
+const META_REFUSALS: ReadonlySet<ProductKitPartErrorCode> = new Set([
+  "meta_refused",
+  "template_limit",
+]);
+
+/** What sending a made part again with the owner's edits answers. */
+export type ProductKitEditOutcome =
+  | { kit: ProductKitRecord }
+  | {
+      refused: ProductKitRefusal | "kit_part_busy" | "invalid_request";
+      /** The kit as it now is, when the refusal changed what it shows (a carousel now looked for). */
+      kit?: ProductKitRecord;
+    }
+  | { invalid: string[] }
+  /** The carousel an earlier send lost the answer for was at Meta after all: the edits weren't sent. */
+  | { carouselFound: ProductKitRecord }
+  /** Meta refused the edited part, in its own words; the kit keeps what it held. */
+  | { metaRefused: { words: string | null; kit: ProductKitRecord } };
+
+/** What an edit of one kit part works with. */
+type EditBase = {
+  workspaceId: string;
+  userId: string;
+  doc: IProductKit;
+  whatsapp: { accessToken: string; wabaId: string };
+  shelf: ShelfProduct[];
+  requestId: string;
+  /** When the edit's request began: the kit's time counts from it. */
+  startedAt: Date;
+};
+
+/** A part's fields as one $set. */
+const partFields = (part: ProductKitPart, fields: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [
+      `parts.${part}.${key}`,
+      value,
+    ])
+  );
+
+const editContext = (
+  base: EditBase,
+  now: Date,
+  attempt: Pick<KitContext, "carousel" | "orderForm">
+): KitContext => ({
+  workspaceId: base.workspaceId,
+  userId: base.userId,
+  kitId: base.doc._id,
+  language: base.doc.language,
+  timeZone: base.doc.timeZone ?? null,
+  products: base.shelf,
+  whatsapp: base.whatsapp,
+  now,
+  deadlineFrom: base.startedAt,
+  ...attempt,
+});
+
+/**
+ * Takes the part for this edit, while it is as it was read: null when
+ * taken, or the answer when another press got there first (this same press
+ * answers with the kit; any other means the part is busy).
+ */
+async function claimPart(
+  base: EditBase,
+  part: ProductKitPart,
+  current: { state: string; updatedAt: Date },
+  fields: Record<string, unknown>
+): Promise<ProductKitEditOutcome | null> {
+  const { workspaceId, doc } = base;
+  const claimed = await ProductKit.updateOne(
+    {
+      _id: doc._id,
+      workspaceId,
+      [`parts.${part}.state`]: current.state,
+      [`parts.${part}.updatedAt`]: current.updatedAt,
+    },
+    { $set: partFields(part, fields) }
+  );
+  if (claimed.modifiedCount > 0) return null;
+  const latest = await findKit(workspaceId, doc._id);
+  if (latest?.parts?.[part]?.lastEditRequestId === base.requestId)
+    return { kit: await recordOf(workspaceId, latest) };
+  return { refused: "kit_part_busy" };
+}
+
+/**
+ * Puts back what a part held before an edit Meta refused, while the part
+ * is still as that refusal left it; the kit as it then is.
+ */
+async function restorePart(
+  base: EditBase,
+  part: ProductKitPart,
+  refusedAt: Date,
+  fields: Record<string, unknown>
+): Promise<IProductKit | null> {
+  const { workspaceId, doc } = base;
+  await ProductKit.updateOne(
+    {
+      _id: doc._id,
+      workspaceId,
+      [`parts.${part}.state`]: { $in: ["failed", "draft"] },
+      [`parts.${part}.updatedAt`]: refusedAt,
+    },
+    { $set: partFields(part, { ...fields, updatedAt: new Date() }) }
+  );
+  return findKit(workspaceId, doc._id);
+}
+
+/** A carousel with Meta as it was before an edit: what a refused edit puts back. */
+const heldCarousel = (carousel: IProductKitCarouselPart) => ({
+  state: carousel.state,
+  templateId: carousel.templateId ?? null,
+  templateName: carousel.templateName ?? null,
+  templateRowId: carousel.templateRowId ?? null,
+  cardCount: carousel.cardCount,
+  prices: carousel.prices ?? null,
+  metaStatus: carousel.metaStatus ?? null,
+  metaReason: carousel.metaReason ?? null,
+  approvedAt: carousel.approvedAt ?? null,
+  submittedAt: carousel.submittedAt ?? null,
+  checkedAt: carousel.checkedAt ?? null,
+  error: carousel.error ?? null,
+  components: carousel.components ?? null,
+  edited: carousel.edited === true,
+  earlier: carousel.earlier ?? [],
+});
+
+/** A published form as it was before an edit: what a refused new version puts back. */
+const heldOrderForm = (form: IProductKitOrderFormPart) => ({
+  state: form.state,
+  flowId: form.flowId ?? null,
+  flowName: form.flowName ?? null,
+  productCount: form.productCount,
+  prices: form.prices ?? null,
+  error: form.error ?? null,
+  config: form.config ?? null,
+  edited: form.edited === true,
+  version: form.version ?? 1,
+  earlier: form.earlier ?? [],
+});
+
+/**
+ * "Edit and send again" / "Edit and try again": the owner's cards go to
+ * Meta as a new template, through the same path as Make. A carousel whose
+ * answer was lost is looked for at Meta first, so nothing goes twice: found,
+ * it is with Meta and the edits aren't sent (carouselFound). One with Meta
+ * is remembered in `earlier`; if Meta refuses the new one, the kit goes on
+ * pointing at it.
+ */
+async function editCarousel(
+  base: EditBase,
+  carousel: IProductKitCarouselPart,
+  edit: { name: string; components: WhatsAppComponent[] }
+): Promise<ProductKitEditOutcome> {
+  const { workspaceId, doc } = base;
+  const lookup: CarouselLookup = {
+    workspaceId,
+    kitId: doc._id,
+    language: doc.language,
+    whatsapp: base.whatsapp,
+  };
+  const keptName = carousel.templateName;
+  const lost =
+    carousel.state === "failed" &&
+    !carousel.templateId &&
+    Boolean(keptName) &&
+    (carousel.error?.code === "timed_out" || carousel.error?.code === "failed");
+  let lostLook: CarouselLook | null = null;
+  if (lost && keptName) {
+    const look = await sentEarlier(lookup, keptName);
+    lostLook = look;
+    if (isFound(look)) {
+      logger.info("[Products] kit carousel found before an edit", {
+        event: "products.kit_carousel_found",
+        workspaceId,
+        kitId: String(doc._id),
+      });
+      await ProductKit.updateOne(
+        {
+          _id: doc._id,
+          workspaceId,
+          "parts.carousel.state": "failed",
+          "parts.carousel.updatedAt": carousel.updatedAt,
+        },
+        {
+          $set: partFields("carousel", {
+            ...submittedCarousel(
+              { templateId: look.id, status: look.status, rowId: null },
+              keptName,
+              carousel.cardCount,
+              true
+            ),
+            updatedAt: new Date(),
+          }),
+        }
+      );
+      const kit = await findKit(workspaceId, doc._id);
+      return { carouselFound: await recordOf(workspaceId, kit ?? doc) };
+    }
+    // Meta couldn't say: nothing new goes while it may have the first.
+    if (look === "unknown") return { refused: "meta_unavailable" };
+    // A send that failed moments ago (a dropped connection, say) may have
+    // reached Meta, which can take a while to list it: it is looked for
+    // as a lost answer is ("checking", its 3 minutes counted from the
+    // failure), and the edits go once it is found or its time is over.
+    if (
+      carousel.error?.code === "failed" &&
+      Date.now() - carousel.updatedAt.getTime() < CHECKING_FOR_MS
+    ) {
+      await ProductKit.updateOne(
+        {
+          _id: doc._id,
+          workspaceId,
+          "parts.carousel.state": "failed",
+          "parts.carousel.updatedAt": carousel.updatedAt,
+        },
+        {
+          $set: partFields("carousel", {
+            ...checkingCarousel(keptName, carousel.cardCount, new Date()),
+            updatedAt: carousel.updatedAt,
+          }),
+        }
+      );
+      const kit = await findKit(workspaceId, doc._id);
+      return {
+        refused: "kit_part_busy",
+        kit: await recordOf(workspaceId, kit ?? doc),
+      };
+    }
+  }
+
+  // The part's own name, when Meta refused it or doesn't list it, never
+  // made a template: the owner may press the same name again. (Were it at
+  // Meta after all, Meta refuses the twin, and the part is "checking".)
+  const taken = sentNames(carousel);
+  if (
+    carousel.state === "failed" &&
+    !carousel.templateId &&
+    keptName &&
+    ((carousel.error && META_REFUSALS.has(carousel.error.code)) ||
+      lostLook === "absent")
+  )
+    taken.delete(keptName);
+  const named = await carouselNameFor({
+    wanted: edit.name,
+    kitId: doc._id,
+    now: new Date(),
+    taken,
+    lookup,
+  });
+  if ("refused" in named) return named;
+  const now = new Date();
+  const earlier =
+    carousel.state === "submitted"
+      ? [
+          ...(carousel.earlier ?? []),
+          {
+            templateId: carousel.templateId ?? null,
+            templateName: carousel.templateName ?? null,
+            metaStatus: carousel.metaStatus ?? null,
+            replacedAt: now,
+          },
+        ].slice(-PRODUCT_KIT_EARLIER_MAX)
+      : (carousel.earlier ?? []);
+  const busy = await claimPart(base, "carousel", carousel, {
+    state: "making",
+    error: null,
+    updatedAt: now,
+    templateId: null,
+    // Saved before Meta is asked: a retry after a lost answer finds it.
+    templateName: named.name,
+    templateRowId: null,
+    metaStatus: null,
+    metaReason: null,
+    approvedAt: null,
+    submittedAt: null,
+    checkedAt: null,
+    cardCount: carouselCardCount(edit.components),
+    prices: carouselPrices(base.shelf),
+    components: edit.components,
+    edited: true,
+    earlier,
+    lastEditRequestId: base.requestId,
+  });
+  if (busy) return busy;
+
+  await runParts(
+    editContext(base, now, {
+      carousel: {
+        name: named.name,
+        mayExist: false,
+        components: edit.components,
+      },
+      orderForm: { flowId: null, flowName: null },
+    }),
+    ["carousel"]
+  );
+  const after = await findKit(workspaceId, doc._id);
+  const settled = after?.parts?.carousel;
+  if (
+    after &&
+    settled?.state === "failed" &&
+    settled.error &&
+    META_REFUSALS.has(settled.error.code)
+  ) {
+    // The kit goes on with the carousel it had; this press may be sent again.
+    const kit =
+      (await restorePart(base, "carousel", settled.updatedAt, {
+        ...(carousel.state === "submitted" ? heldCarousel(carousel) : {}),
+        lastEditRequestId: carousel.lastEditRequestId ?? null,
+      })) ?? after;
+    return {
+      metaRefused: {
+        words: settled.error.message ?? null,
+        kit: await recordOf(workspaceId, kit),
+      },
+    };
+  }
+  return { kit: await recordOf(workspaceId, after ?? doc) };
+}
+
+/** A form's name without its version: "Order form · 2 Nov 09:14" from "… · v3". */
+const flowBaseName = (name: string) => name.replace(/ · v\d+$/, "");
+
+/**
+ * "Edit order form" / "Edit and publish": a published form gets a new Flow
+ * as its next version ("… · v2"), since forms already sent keep opening the
+ * one they have and published Flows can't be changed or deleted; the old
+ * one is remembered in `earlier`. A draft is given the edits in place and
+ * published; a form without a Flow gets one. If Meta refuses a new version,
+ * its Flow is deleted and the kit goes on with the published one.
+ */
+async function editOrderForm(
+  base: EditBase,
+  form: IProductKitOrderFormPart,
+  config: WhatsAppFlowConfig
+): Promise<ProductKitEditOutcome> {
+  const { workspaceId, doc } = base;
+  const status =
+    form.state === "ready"
+      ? "published"
+      : form.flowId
+        ? await earlierFlow(base, form.flowId)
+        : null;
+  // Meta couldn't say what became of the form's Flow: nothing is written,
+  // so no second Flow is made beside it and the kit keeps it.
+  if (status === "unknown") return { refused: "meta_unavailable" };
+  const now = new Date();
+  const newVersion = status === "published";
+  const version = (form.version ?? 1) + (newVersion ? 1 : 0);
+  const named = form.flowName ?? orderFormName(now, doc.timeZone ?? null);
+  const flowName =
+    version > 1 && status !== "draft"
+      ? `${flowBaseName(named)} · v${version}`
+      : named;
+  const flowId = status === "draft" ? form.flowId! : null;
+  const earlier =
+    newVersion && form.flowId
+      ? [
+          ...(form.earlier ?? []),
+          {
+            flowId: form.flowId,
+            flowName: form.flowName ?? null,
+            replacedAt: now,
+          },
+        ].slice(-PRODUCT_KIT_EARLIER_MAX)
+      : (form.earlier ?? []);
+  const busy = await claimPart(base, "orderForm", form, {
+    state: "making",
+    error: null,
+    updatedAt: now,
+    flowId,
+    flowName,
+    productCount: listedProducts(config),
+    prices: orderFormPrices(base.shelf),
+    config,
+    edited: true,
+    version,
+    earlier,
+    lastEditRequestId: base.requestId,
+  });
+  if (busy) return busy;
+
+  await runParts(
+    editContext(base, now, {
+      carousel: { name: "", mayExist: false },
+      orderForm: { flowId, flowName, config },
+    }),
+    ["orderForm"]
+  );
+  const after = await findKit(workspaceId, doc._id);
+  const settled = after?.parts?.orderForm;
+  const refused =
+    settled?.state === "draft" ||
+    (settled?.state === "failed" &&
+      Boolean(settled.error && META_REFUSALS.has(settled.error.code)));
+  if (!after || !settled || !refused)
+    return { kit: await recordOf(workspaceId, after ?? doc) };
+  if (
+    newVersion &&
+    settled.state === "draft" &&
+    settled.flowId &&
+    settled.flowId !== form.flowId
+  ) {
+    // An unpublished Flow can go: the published one stays the form. (One
+    // whose JSON Meta refused was deleted as it was refused.)
+    try {
+      await deleteMetaWhatsAppFlow({
+        accessToken: base.whatsapp.accessToken,
+        flowId: settled.flowId,
+      });
+    } catch (error) {
+      logger.warn("[Products] kit order form version not deleted", {
+        event: "products.kit_order_form_version_delete_failed",
+        workspaceId,
+        kitId: String(doc._id),
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  const kit =
+    (await restorePart(base, "orderForm", settled.updatedAt, {
+      ...(newVersion ? heldOrderForm(form) : {}),
+      lastEditRequestId: form.lastEditRequestId ?? null,
+    })) ?? after;
+  return {
+    metaRefused: {
+      words: settled.error?.message ?? null,
+      kit: await recordOf(workspaceId, kit),
+    },
+  };
+}
+
+/**
+ * Sends one made part again with the owner's edits, through the same path
+ * as Make: the carousel as a new template, the order form as a new version
+ * (or in place, for a draft). Checked first, before anything is written:
+ * the part can be edited now (409 kit_part_busy while it's made or looked
+ * for), the edit's content, a connected number. The same requestId again
+ * answers with the kit as it is. Null when the kit isn't this workspace's.
+ */
+export async function editProductKitPart(params: {
+  workspaceId: string;
+  userId: string;
+  kitId: string;
+  request: ProductKitEditInput;
+}): Promise<ProductKitEditOutcome | null> {
+  const { workspaceId, userId, kitId, request } = params;
+  // The kit's time counts from here: the Assets copies and looks by name
+  // below come out of the route's 60 s too.
+  const startedAt = new Date();
+  if (!isObjectIdText(kitId)) return null;
+  const found = await findKit(workspaceId, kitId);
+  if (!found) return null;
+  const doc = await expireStaleParts(found, new Date());
+  const current = doc.parts?.[request.part];
+  if (current?.lastEditRequestId === request.requestId)
+    return { kit: await recordOf(workspaceId, doc) };
+  if (kitPartBusy(current)) return { refused: "kit_part_busy" };
+  if (!current || !kitPartCanEdit(request.part, current))
+    return { refused: "invalid_request" };
+  const checked = checkEdits(
+    request.part === "carousel"
+      ? {
+          carousel: { name: request.name, components: request.components },
+        }
+      : { orderForm: { config: request.config } },
+    doc.productIds
+  );
+  if ("invalid" in checked) return checked;
+  const whatsapp = await readKitWhatsApp(workspaceId);
+  if (!whatsapp.connected) return { refused: "whatsapp_not_connected" };
+  const kept = await keepEditedPictures(workspaceId, checked.edits);
+  if ("invalid" in kept) return kept;
+  const shelf = await loadShelfProducts(workspaceId, doc.productIds);
+  const base: EditBase = {
+    workspaceId,
+    userId,
+    doc,
+    whatsapp,
+    shelf: shelf.products,
+    requestId: request.requestId,
+    startedAt,
+  };
+  return request.part === "carousel"
+    ? editCarousel(
+        base,
+        current as IProductKitCarouselPart,
+        kept.edits.carousel!
+      )
+    : editOrderForm(
+        base,
+        current as IProductKitOrderFormPart,
+        kept.edits.orderForm!.config
+      );
+}
+
+/**
+ * What "Edit and send again" or "Edit order form" opens with: the part as
+ * it was sent (kits from before v2 kept nothing, so it's made again from the
+ * shelf), the carousel under a new name for this kit. Null when the kit
+ * isn't this workspace's.
+ */
+export async function productKitEditSource(params: {
+  workspaceId: string;
+  kitId: string;
+  part: ProductKitPart;
+}): Promise<
+  | ProductKitEditSourceResponse
+  | { refused: "not_enough_products" | "invalid_request" }
+  | null
+> {
+  const { workspaceId, kitId, part } = params;
+  if (!isObjectIdText(kitId)) return null;
+  const doc = await findKit(workspaceId, kitId);
+  if (!doc) return null;
+  const stored = doc.parts?.[part];
+  if (!stored || stored.state === "skipped")
+    return { refused: "invalid_request" };
+  const kit = await currentRecord(workspaceId, doc);
+  const shelf = () => loadShelfProducts(workspaceId, doc.productIds);
+  if (part === "carousel") {
+    let components = doc.parts?.carousel?.components ?? null;
+    if (!components?.length) {
+      const draft = await prepareCarouselDraft(workspaceId, {
+        language: doc.language,
+        products: (await shelf()).products,
+      });
+      if (!draft) return { refused: "not_enough_products" };
+      components = carouselTemplateComponents(draft);
+    }
+    return {
+      kit,
+      carousel: {
+        name: carouselTemplateName(new Date(), doc._id),
+        language: doc.language,
+        components,
+      },
+    };
+  }
+  let config = doc.parts?.orderForm?.config ?? null;
+  if (!config) {
+    const { products } = await shelf();
+    if (products.length === 0) return { refused: "not_enough_products" };
+    config = buildOrderFormFlowConfig(products, doc.language);
+  }
+  return { kit, orderForm: { config } };
+}
+
+/**
+ * "Edit cards" before Make: the carousel the shelf would make for these
+ * products, as template components (its pictures on white, stored as
+ * header samples), under a name that is made again for the kit at Make.
+ */
+export async function prepareProductKitDrafts(
+  workspaceId: string,
+  request: ProductKitDraftsRequest
+): Promise<ProductKitDraftsResponse | { refused: "not_enough_products" }> {
+  const shelf = await loadShelfProducts(workspaceId, request.productIds);
+  if (shelf.products.length === 0) return { refused: "not_enough_products" };
+  const now = new Date();
+  const draft = await prepareCarouselDraft(
+    workspaceId,
+    { language: request.language, products: shelf.products },
+    now
+  );
+  if (!draft) return { refused: "not_enough_products" };
+  return {
+    carousel: {
+      // No kit yet: a name of the same shape, made again for the kit at Make.
+      name: carouselTemplateName(now, new mongoose.Types.ObjectId()),
+      language: request.language,
+      components: carouselTemplateComponents(draft),
+      productIds: draft.cards.map(card => card.productId),
+      leftOut: draft.leftOut,
+    },
+  };
 }
 
 /** A shelf product as the make view shows it. */

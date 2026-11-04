@@ -1,33 +1,50 @@
 import mongoose from "mongoose";
 import {
+  PRODUCT_AD_ENDING_KINDS,
   PRODUCT_AD_ERROR_CODES,
   PRODUCT_AD_IDEA_KINDS,
   PRODUCT_AD_IDEA_MAX_LENGTH,
   PRODUCT_AD_MAX_PRODUCTS,
   PRODUCT_AD_MIN_PRODUCTS,
+  PRODUCT_AD_OPENING_KINDS,
+  PRODUCT_AD_PICTURES_KEPT,
+  PRODUCT_AD_PLACE_WORDS_MAX,
+  PRODUCT_AD_REDO_OUTCOMES,
+  PRODUCT_AD_RUN_KINDS,
   PRODUCT_AD_SCENE_METHODS,
   PRODUCT_AD_SETTINGS,
   PRODUCT_AD_STATUSES,
   PRODUCT_AD_STEPS,
-  PRODUCT_AD_VOICES,
+  PRODUCT_AD_TEXT_ZONES,
+  PRODUCT_AD_VOICE_FALLBACKS,
+  PRODUCT_AD_VOICE_MODES,
   PRODUCT_SHOP_WORDS_CODES,
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
+  type ProductAdRunKind,
   type ProductAdScript,
   type ProductAdStatus,
   type ProductAdStep,
-  type ProductAdVoice,
+  type ProductAdVoiceMode,
+  type ProductAdVoiceResult,
   type ProductShopWordsCode,
 } from "@/lib/products/types";
 import type {
   ProductAdBox,
   ProductAdFileRef,
+  ProductAdLastRun,
+  ProductAdOption,
   ProductAdRender,
+  ProductAdScenePicture,
+  ProductAdScenePlace,
+  ProductAdSceneRedo,
   ProductAdStepTiming,
   ProductAdStills,
   ProductAdStoredProduct,
   ProductAdStoredScene,
+  ProductAdTextOverlap,
   ProductAdTimings,
+  ProductAdVoiceOver,
 } from "@icecore/temporal";
 
 /**
@@ -68,7 +85,21 @@ export interface IProductAd {
   wordsCode: ProductShopWordsCode | null;
   /** The brief. */
   idea: { kind: ProductAdIdeaKind; text: string | null };
-  voice: ProductAdVoice;
+  /** The voice asked for: v1's "own" or "none", or new words read by "clone" or "stock" (Part V). */
+  voice: ProductAdVoiceMode;
+  /** The Airi voice asked for, with "stock"; null or absent otherwise. */
+  stockVoiceId?: string | null;
+  /** The voice-over the worker last read in new words, reused while the voice and words stay the same. */
+  voiceOver?: ProductAdVoiceOver | null;
+  /** What the latest video's voice was when new words were asked for, and why it fell back. */
+  voiceResult?: ProductAdVoiceResult | null;
+  /**
+   * What the current (or latest) run does; "make" when absent (ads from
+   * before edit runs). render, scene and voice are edit runs.
+   */
+  runKind?: ProductAdRunKind;
+  /** How the latest finished run went; an edit run's failure is kept here, never as `failed`. */
+  lastRun?: ProductAdLastRun | null;
   /**
    * The person from the video, shown only after the owner said they agreed:
    * the import's transparent cut-out (photo) and its small copy (thumb). Null
@@ -128,6 +159,18 @@ const ProductSnapshotSchema = new mongoose.Schema<ProductAdSnapshot>(
   { _id: false }
 );
 
+/** One of Muse Spark's openings or endings. */
+function optionSchema(kinds: readonly string[]) {
+  return new mongoose.Schema<ProductAdOption<string>>(
+    {
+      text: { type: String, required: true, maxlength: 160 },
+      kind: { type: String, required: true, enum: kinds },
+      gloss: { type: String, maxlength: 160, default: "" },
+    },
+    { _id: false }
+  );
+}
+
 const ScriptSchema = new mongoose.Schema<ProductAdScript>(
   {
     sticker: { type: String, maxlength: 80, default: "" },
@@ -138,6 +181,7 @@ const ScriptSchema = new mongoose.Schema<ProductAdScript>(
             productId: { type: String, required: true, maxlength: 64 },
             caption: { type: String, maxlength: 160, default: "" },
             setting: { type: String, enum: PRODUCT_AD_SETTINGS },
+            spoken: { type: String, maxlength: 400, default: undefined },
           },
           { _id: false }
         ),
@@ -154,6 +198,14 @@ const ScriptSchema = new mongoose.Schema<ProductAdScript>(
       questions: { type: [{ type: String, maxlength: 160 }], default: [] },
     },
     edited: { type: Boolean, default: false },
+    openings: {
+      type: [optionSchema(PRODUCT_AD_OPENING_KINDS)],
+      default: undefined,
+    },
+    endings: {
+      type: [optionSchema(PRODUCT_AD_ENDING_KINDS)],
+      default: undefined,
+    },
   },
   { _id: false }
 );
@@ -168,24 +220,107 @@ const BoxSchema = new mongoose.Schema<ProductAdBox>(
   { _id: false }
 );
 
+const SceneCheckSchema = new mongoose.Schema<
+  NonNullable<ProductAdStoredScene["check"]>
+>(
+  {
+    same: { type: Boolean, required: true },
+    difference: { type: String, maxlength: 400, default: null },
+  },
+  { _id: false }
+);
+
+const ScenePictureSchema = new mongoose.Schema<ProductAdScenePicture>(
+  {
+    ref: { type: FileRefSchema, required: true },
+    box: { type: BoxSchema, default: null },
+    place: { type: String, maxlength: 200, default: "" },
+    madeAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+const ScenePlaceSchema = new mongoose.Schema<ProductAdScenePlace>(
+  {
+    setting: {
+      type: String,
+      enum: [...PRODUCT_AD_SETTINGS, null],
+      default: null,
+    },
+    words: {
+      type: String,
+      maxlength: PRODUCT_AD_PLACE_WORDS_MAX,
+      default: null,
+    },
+    englishPlace: { type: String, maxlength: 200, default: null },
+  },
+  { _id: false }
+);
+
+const SceneRedoSchema = new mongoose.Schema<ProductAdSceneRedo>(
+  {
+    requestId: { type: String, required: true, maxlength: 64 },
+    renderNo: { type: Number, required: true, min: 1 },
+    from: {
+      muse: { type: FileRefSchema, default: null },
+      box: { type: BoxSchema, default: null },
+      method: {
+        type: String,
+        enum: PRODUCT_AD_SCENE_METHODS,
+        default: "exact",
+      },
+      check: { type: SceneCheckSchema, default: null },
+      setting: {
+        type: String,
+        enum: [...PRODUCT_AD_SETTINGS, null],
+        default: undefined,
+      },
+    },
+    outcome: {
+      type: String,
+      enum: [...PRODUCT_AD_REDO_OUTCOMES, null],
+      default: null,
+    },
+    reason: { type: String, maxlength: 200, default: null },
+    allowance: { type: Number, min: 0, default: undefined },
+  },
+  { _id: false }
+);
+
+const TextOverlapSchema = new mongoose.Schema<ProductAdTextOverlap>(
+  {
+    covers: { type: Boolean, required: true },
+    suggested: { type: String, enum: ["top", "bottom", null], default: null },
+  },
+  { _id: false }
+);
+
 const SceneSchema = new mongoose.Schema<ProductAdStoredScene>(
   {
     productId: { type: String, required: true, maxlength: 64 },
     exact: { type: FileRefSchema, default: null },
     muse: { type: FileRefSchema, default: null },
     method: { type: String, enum: PRODUCT_AD_SCENE_METHODS, default: "exact" },
-    check: {
-      type: new mongoose.Schema<NonNullable<ProductAdStoredScene["check"]>>(
-        {
-          same: { type: Boolean, required: true },
-          difference: { type: String, maxlength: 400, default: null },
-        },
-        { _id: false }
-      ),
-      default: null,
-    },
+    check: { type: SceneCheckSchema, default: null },
     box: { type: BoxSchema, default: null },
     attempts: { type: Number, default: 0, min: 0 },
+    // v2's creative tools: absent on ads from before, read as their defaults.
+    textZone: { type: String, enum: PRODUCT_AD_TEXT_ZONES, default: undefined },
+    useExact: { type: Boolean, default: undefined },
+    exactBox: { type: BoxSchema, default: undefined },
+    pictures: {
+      type: [ScenePictureSchema],
+      default: undefined,
+      validate: {
+        validator: (pictures: unknown[] | undefined) =>
+          !pictures || pictures.length <= PRODUCT_AD_PICTURES_KEPT,
+        message: `A scene keeps at most ${PRODUCT_AD_PICTURES_KEPT} pictures`,
+      },
+    },
+    place: { type: ScenePlaceSchema, default: undefined },
+    allowance: { type: Number, min: 0, default: undefined },
+    redo: { type: SceneRedoSchema, default: undefined },
+    textOverlap: { type: TextOverlapSchema, default: undefined },
   },
   { _id: false }
 );
@@ -200,6 +335,59 @@ const RenderSchema = new mongoose.Schema<ProductAdRender>(
     height: { type: Number, required: true, min: 0 },
     poster: { type: FileRefSchema, default: null },
     ms: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
+const LastRunSchema = new mongoose.Schema<ProductAdLastRun>(
+  {
+    renderNo: { type: Number, required: true, min: 1 },
+    kind: { type: String, required: true, enum: PRODUCT_AD_RUN_KINDS },
+    outcome: { type: String, required: true, enum: ["ready", "failed"] },
+    errorCode: {
+      type: String,
+      enum: [...PRODUCT_AD_ERROR_CODES, null],
+      default: null,
+    },
+    message: { type: String, maxlength: 500, default: null },
+    at: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+const VoiceOverLineSchema = new mongoose.Schema<
+  ProductAdVoiceOver["lines"][number]
+>(
+  {
+    productId: { type: String, required: true, maxlength: 64 },
+    text: { type: String, maxlength: 400, default: "" },
+    audio: { type: FileRefSchema, required: true },
+    seconds: { type: Number, min: 0, default: 0 },
+  },
+  { _id: false }
+);
+
+const VoiceOverSchema = new mongoose.Schema<ProductAdVoiceOver>(
+  {
+    mode: { type: String, required: true, enum: ["clone", "stock"] },
+    voiceId: { type: String, required: true, maxlength: 64 },
+    modelId: { type: String, required: true, maxlength: 64 },
+    lines: { type: [VoiceOverLineSchema], default: [] },
+    key: { type: String, required: true, maxlength: 128 },
+    costMicros: { type: Number, min: 0, default: 0 },
+    madeAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+const VoiceResultSchema = new mongoose.Schema<ProductAdVoiceResult>(
+  {
+    used: { type: String, required: true, enum: PRODUCT_AD_VOICE_MODES },
+    fallback: {
+      type: String,
+      enum: [...PRODUCT_AD_VOICE_FALLBACKS, null],
+      default: null,
+    },
   },
   { _id: false }
 );
@@ -245,7 +433,12 @@ const ProductAdSchema = new mongoose.Schema<IProductAd>(
         default: null,
       },
     },
-    voice: { type: String, required: true, enum: PRODUCT_AD_VOICES },
+    voice: { type: String, required: true, enum: PRODUCT_AD_VOICE_MODES },
+    stockVoiceId: { type: String, maxlength: 64, default: null },
+    voiceOver: { type: VoiceOverSchema, default: null },
+    voiceResult: { type: VoiceResultSchema, default: null },
+    runKind: { type: String, enum: PRODUCT_AD_RUN_KINDS, default: undefined },
+    lastRun: { type: LastRunSchema, default: null },
     presenter: {
       type: new mongoose.Schema<NonNullable<IProductAd["presenter"]>>(
         {

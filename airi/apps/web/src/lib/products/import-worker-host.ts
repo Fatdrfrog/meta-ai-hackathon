@@ -7,6 +7,7 @@ import "server-only";
  */
 export { default as connectDB } from "@/lib/mongoose";
 export { ProductAd } from "@/models/product-ad";
+export { ProductVoice } from "@/models/product-voice";
 export { ProductVideoImport } from "@/models/product-video-import";
 export { WorkspaceProduct } from "@/models/workspace-product";
 export { emitProductsChangedRealtimeEvent } from "@/lib/realtime/server";

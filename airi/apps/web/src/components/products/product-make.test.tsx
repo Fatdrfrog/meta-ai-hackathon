@@ -15,8 +15,83 @@ import {
   within,
 } from "@testing-library/react";
 import { SWRConfig } from "swr";
+import { installMatchMedia } from "@/test-support/dom-test-utils";
 import { MakeOutputs } from "./product-make";
 import { madeWhen } from "./use-product-kits";
+
+// The editors themselves (airi's template and Flow editors) have their own
+// suites; here they stand in as their props: what they open with, and saving.
+// What the editor would show as its error toast when onCreate refuses
+// without `toast: null` (which leaves the error to the sheet).
+const mockCreateErrors: string[] = [];
+// The words the owner has typed on the card when the editor saves.
+const mockEditorWords = { text: "My words" };
+jest.mock("./product-carousel-editor", () => ({
+  ProductCarouselEditor: (props: {
+    prefill: { name: string; components: unknown[] };
+    draftScope: string;
+    submitLabel: string;
+    onCreate: (input: unknown) => Promise<{
+      success: boolean;
+      error?: string;
+      toast?: string | null;
+    }>;
+    onSaved: () => void;
+    onCancel: () => void;
+  }) => (
+    <div data-testid="carousel-editor" data-scope={props.draftScope}>
+      <p>Opened with {props.prefill.name}</p>
+      <p>{props.prefill.components.length} components</p>
+      <button
+        type="button"
+        onClick={async () => {
+          const result = await props.onCreate({
+            name: "my_cards",
+            language: "kk",
+            category: "MARKETING",
+            components: [{ type: "BODY", text: mockEditorWords.text }],
+          });
+          if (result.success) props.onSaved();
+          else if (result.toast !== null)
+            mockCreateErrors.push(result.error ?? "");
+        }}
+      >
+        {props.submitLabel}
+      </button>
+      <button type="button" onClick={props.onCancel}>
+        Cancel
+      </button>
+    </div>
+  ),
+}));
+jest.mock("./product-order-form-editor", () => ({
+  ProductOrderFormEditor: (props: {
+    initialConfig: { screens: Array<{ fields: Array<{ label: string }> }> };
+    submitLabel: string;
+    onSave: (config: unknown) => void;
+    onCancel: () => void;
+  }) => (
+    <div data-testid="form-editor">
+      <p>First question: {props.initialConfig.screens[0]!.fields[0]!.label}</p>
+      <button
+        type="button"
+        onClick={() =>
+          props.onSave({
+            ...props.initialConfig,
+            screens: [{ id: "ORDER", title: "My form", fields: [] }],
+          })
+        }
+      >
+        {props.submitLabel}
+      </button>
+      <button type="button" onClick={props.onCancel}>
+        Cancel
+      </button>
+    </div>
+  ),
+}));
+
+installMatchMedia();
 
 // "Make something with them": the kit for customers on WhatsApp (both parts
 // ticked, one press), the way into a video ad, and what buyers see.
@@ -67,6 +142,9 @@ const madeKit: ProductKitRecord = {
       flowName: "Order form · 2 Nov 09:14",
       productCount: 3,
       error: null,
+      edited: false,
+      version: 1,
+      earlier: [],
     },
     carousel: {
       state: "submitted",
@@ -77,6 +155,8 @@ const madeKit: ProductKitRecord = {
       metaReason: null,
       approvedAt: null,
       error: null,
+      edited: false,
+      earlier: [],
     },
   },
   status: "waiting_for_meta",
@@ -100,6 +180,7 @@ const planUrl = (importId: string | null = IMPORT) =>
 
 beforeEach(() => {
   posts = [];
+  mockEditorWords.text = "My words";
   routes = {
     [planUrl()]: () => respond(200, plan()),
     [`POST ${BASE}`]: init => {
@@ -632,4 +713,635 @@ test("products no longer on the shelf say so, with Change", async () => {
   } finally {
     jest.useRealTimers();
   }
+});
+
+describe("editing before Make", () => {
+  const drafts = {
+    carousel: {
+      name: "products_20261103_101500",
+      language: "kk",
+      components: [
+        { type: "BODY", text: "Жаңа тауарлар келді!" },
+        { type: "CAROUSEL", cards: [] },
+      ],
+      productIds: ids,
+      leftOut: 0,
+    },
+  };
+
+  beforeEach(() => {
+    routes[`POST ${BASE}/drafts`] = init => {
+      posts.push({ drafts: JSON.parse(String(init?.body)) });
+      return respond(200, drafts);
+    };
+  });
+
+  async function saveQuestions(card: HTMLElement) {
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Edit questions" })
+    );
+    fireEvent.click(
+      within(await screen.findByTestId("form-editor")).getByRole("button", {
+        name: "Save changes",
+      })
+    );
+    await waitFor(() => expect(screen.queryByTestId("form-editor")).toBeNull());
+  }
+
+  test("a ticked part has its edit row; an unticked one has none", async () => {
+    renderMake();
+    const card = await kitCard();
+
+    expect(
+      within(card).getByRole("button", { name: "Edit cards" })
+    ).toBeVisible();
+    expect(
+      within(card).getByRole("button", { name: "Edit questions" })
+    ).toBeVisible();
+
+    fireEvent.click(within(card).getByRole("checkbox", { name: /Order form/ }));
+    expect(
+      within(card).queryByRole("button", { name: "Edit questions" })
+    ).toBeNull();
+    // Pressing the edit row never toggles the part (the open sheet hides
+    // the page from assistive tech meanwhile).
+    fireEvent.click(within(card).getByRole("button", { name: "Edit cards" }));
+    expect(
+      within(card).getByRole("checkbox", { name: /Carousel/, hidden: true })
+    ).toBeChecked();
+    expect(await screen.findByTestId("carousel-editor")).toBeVisible();
+  });
+
+  test("Edit cards opens the shelf's cards once, saves them, and Make sends them", async () => {
+    renderMake();
+    const card = await kitCard();
+
+    fireEvent.click(within(card).getByRole("button", { name: "Edit cards" }));
+    const editor = await screen.findByTestId("carousel-editor");
+    expect(
+      within(editor).getByText("Opened with products_20261103_101500")
+    ).toBeVisible();
+    // The card's own draft space, per language.
+    expect(editor.dataset.scope).toMatch(/^products:[0-9a-f-]+:kk$/);
+    expect(posts).toEqual([{ drafts: { productIds: ids, language: "kk" } }]);
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "airi's template editor, filled from your 3 shelf products. Nothing goes to Meta until you press Make."
+    );
+
+    fireEvent.click(
+      within(editor).getByRole("button", { name: "Save changes" })
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("carousel-editor")).toBeNull()
+    );
+    expect(within(card).getByText("Edited")).toBeVisible();
+    expect(
+      within(card).getByText(
+        "Carousel edited. It goes to Meta when you press Make."
+      )
+    ).toBeInTheDocument();
+    // What buyers see follows the edits.
+    expect(screen.getByText("My words")).toBeVisible();
+
+    // Opened again: the saved cards, without asking for the shelf's again.
+    fireEvent.click(within(card).getByRole("button", { name: "Edit cards" }));
+    expect(await screen.findByText("Opened with my_cards")).toBeInTheDocument();
+    expect(posts).toHaveLength(1);
+    fireEvent.click(
+      within(screen.getByTestId("carousel-editor")).getByRole("button", {
+        name: "Cancel",
+      })
+    );
+    await waitFor(() =>
+      expect(screen.queryByTestId("carousel-editor")).toBeNull()
+    );
+
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Make carousel + order form" })
+    );
+    await waitFor(() => expect(posts).toHaveLength(2));
+    expect(posts[1]).toMatchObject({
+      make: { carousel: true, orderForm: true },
+      edits: {
+        carousel: {
+          name: "my_cards",
+          components: [{ type: "BODY", text: "My words" }],
+        },
+      },
+    });
+    expect(posts[1]!.edits).not.toHaveProperty("orderForm");
+  });
+
+  test("Edit questions opens the shelf's form, and an unticked part's edits stay home", async () => {
+    renderMake();
+    const card = await kitCard();
+
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Edit questions" })
+    );
+    const editor = await screen.findByTestId("form-editor");
+    expect(
+      within(editor).getByText("First question: Не алғыңыз келеді?")
+    ).toBeVisible();
+    fireEvent.click(
+      within(editor).getByRole("button", { name: "Save changes" })
+    );
+    await waitFor(() => expect(screen.queryByTestId("form-editor")).toBeNull());
+    expect(within(card).getByText("Edited")).toBeVisible();
+
+    // Unticked, the form isn't made, so its edits aren't sent.
+    fireEvent.click(within(card).getByRole("checkbox", { name: /Order form/ }));
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Make the carousel" })
+    );
+    await waitFor(() => expect(posts).toHaveLength(1));
+    expect(posts[0]).not.toHaveProperty("edits");
+  });
+
+  test("Reset asks first, then the part is the shelf's again", async () => {
+    renderMake();
+    const card = await kitCard();
+    await saveQuestions(card);
+
+    fireEvent.click(within(card).getByRole("button", { name: "Reset" }));
+    expect(
+      within(card).getByText(
+        "Reset the questions to your shelf? Your edits go."
+      )
+    ).toBeVisible();
+    // Keep my edits takes the focus as the question opens.
+    const keep = within(card).getByRole("button", { name: "Keep my edits" });
+    expect(document.activeElement).toBe(keep);
+    fireEvent.click(keep);
+    expect(within(card).getByText("Edited")).toBeVisible();
+
+    fireEvent.click(within(card).getByRole("button", { name: "Reset" }));
+    fireEvent.click(within(card).getByRole("button", { name: "Reset" }));
+    expect(within(card).queryByText("Edited")).toBeNull();
+    expect(document.activeElement).toBe(
+      within(card).getByRole("button", { name: "Edit questions" })
+    );
+
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Make carousel + order form" })
+    );
+    await waitFor(() => expect(posts).toHaveLength(1));
+    expect(posts[0]).not.toHaveProperty("edits");
+  });
+
+  test("a language change with edits asks first; keeping them keeps the language", async () => {
+    renderMake();
+    const card = await kitCard();
+    await saveQuestions(card);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Change" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Russian" }));
+
+    const confirm = screen.getByRole("alertdialog");
+    expect(confirm).toHaveTextContent(
+      "Your edits are in Kazakh. Switching to Russian starts the cards and the questions again from your shelf."
+    );
+    fireEvent.click(
+      within(confirm).getByRole("button", { name: "Keep Kazakh" })
+    );
+    expect(
+      screen.getByText("Buyers see it in Kazakh", { exact: false })
+    ).toBeVisible();
+    expect(within(card).getByText("Edited")).toBeVisible();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Change" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Russian" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Switch to Russian",
+      })
+    );
+    expect(
+      screen.getByText("Buyers see it in Russian.", { exact: false })
+    ).toBeVisible();
+    expect(within(card).queryByText("Edited")).toBeNull();
+  });
+
+  test("a product change with edits asks first", async () => {
+    const { onChangeProducts } = renderMake();
+    const card = await kitCard();
+    await saveQuestions(card);
+
+    fireEvent.click(within(card).getByRole("button", { name: "Change" }));
+    expect(onChangeProducts).not.toHaveBeenCalled();
+    const confirm = screen.getByRole("alertdialog");
+    expect(confirm).toHaveTextContent(
+      "Changing the products starts the cards and the questions again from your shelf."
+    );
+    fireEvent.click(
+      within(confirm).getByRole("button", { name: "Change products" })
+    );
+    expect(onChangeProducts).toHaveBeenCalledWith(ids);
+  });
+
+  test("the shelf's cards that can't be made say why, with Try again", async () => {
+    let calls = 0;
+    routes[`POST ${BASE}/drafts`] = () => {
+      calls += 1;
+      return calls === 1
+        ? respond(500, { error: "x", code: "draft_failed" })
+        : respond(200, drafts);
+    };
+    renderMake();
+    const card = await kitCard();
+    fireEvent.click(within(card).getByRole("button", { name: "Edit cards" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Couldn't put your products on cards. Check your connection and try again."
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByTestId("carousel-editor")).toBeVisible();
+  });
+
+  test("a Make whose answer was lost goes again as the same press, but cards changed since make it a new one", async () => {
+    let attempt = 0;
+    routes[`POST ${BASE}`] = init => {
+      posts.push(JSON.parse(String(init?.body)));
+      attempt += 1;
+      if (attempt <= 2) throw new TypeError("Failed to fetch");
+      return respond(201, { kit: madeKit });
+    };
+    renderMake();
+    const card = await kitCard();
+    const saveCards = async () => {
+      fireEvent.click(within(card).getByRole("button", { name: "Edit cards" }));
+      fireEvent.click(
+        within(await screen.findByTestId("carousel-editor")).getByRole(
+          "button",
+          { name: "Save changes" }
+        )
+      );
+      await waitFor(() =>
+        expect(screen.queryByTestId("carousel-editor")).toBeNull()
+      );
+    };
+    const press = async () => {
+      fireEvent.click(
+        within(card).getByRole("button", { name: "Make carousel + order form" })
+      );
+      await waitFor(() =>
+        expect(posts.filter(post => "requestId" in post)).toHaveLength(
+          pressed + 1
+        )
+      );
+      pressed += 1;
+    };
+    let pressed = 0;
+
+    await saveCards();
+    await press();
+    expect(await within(card).findByRole("alert")).toBeVisible();
+    // Unchanged: the same press, which finds a kit it may have made.
+    await press();
+    expect(await within(card).findByRole("alert")).toBeVisible();
+    // The owner fixes a card first: a new press, with the fix.
+    mockEditorWords.text = "Fixed words";
+    await saveCards();
+    await press();
+
+    const [first, again, fixed] = posts.filter(post => "requestId" in post);
+    expect(again!.requestId).toBe(first!.requestId);
+    expect(fixed!.requestId).not.toBe(first!.requestId);
+    expect(fixed).toMatchObject({
+      edits: {
+        carousel: { components: [{ type: "BODY", text: "Fixed words" }] },
+      },
+    });
+    expect(await within(card).findByText("With Meta")).toBeVisible();
+  });
+
+  test("the keyboard's focus goes back to the language line once the language question is answered", async () => {
+    renderMake();
+    const card = await kitCard();
+    await saveQuestions(card);
+    const languageChange = screen.getAllByRole("button", {
+      name: "Change",
+    })[0]!;
+
+    fireEvent.click(languageChange);
+    fireEvent.click(screen.getByRole("button", { name: "Russian" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Keep Kazakh",
+      })
+    );
+    await waitFor(() => expect(document.activeElement).toBe(languageChange));
+
+    fireEvent.click(languageChange);
+    fireEvent.click(screen.getByRole("button", { name: "Russian" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Switch to Russian",
+      })
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getAllByRole("button", { name: "Change" })[0]
+      )
+    );
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  test("keeping the edits on a product change gives the focus to the section's title", async () => {
+    renderMake();
+    const card = await kitCard();
+    await saveQuestions(card);
+
+    fireEvent.click(within(card).getByRole("button", { name: "Change" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Keep my edits",
+      })
+    );
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("heading", { level: 2 })
+      )
+    );
+  });
+
+  test("an edit Make refuses says the first check that failed", async () => {
+    routes[`POST ${BASE}`] = () =>
+      respond(400, {
+        error: "x",
+        code: "invalid_request",
+        issues: ["Card 2's picture isn't on this project's storage."],
+      });
+    renderMake();
+    const card = await kitCard();
+    fireEvent.click(within(card).getByRole("button", { name: "Edit cards" }));
+    fireEvent.click(
+      within(await screen.findByTestId("carousel-editor")).getByRole("button", {
+        name: "Save changes",
+      })
+    );
+    await waitFor(() =>
+      expect(screen.queryByTestId("carousel-editor")).toBeNull()
+    );
+
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Make carousel + order form" })
+    );
+
+    expect(await within(card).findByRole("alert")).toHaveTextContent(
+      "It wasn't sent: Card 2's picture isn't on this project's storage."
+    );
+  });
+});
+
+describe("editing after Make", () => {
+  const kitUrl = `${BASE}/${madeKit.id}`;
+
+  beforeEach(() => {
+    routes[planUrl()] = () => respond(200, plan({ latestKit: madeKit }));
+    routes[`GET ${kitUrl}/edit?part=carousel`] = () =>
+      respond(200, {
+        kit: madeKit,
+        carousel: {
+          name: "products_20261103_120000",
+          language: "kk",
+          components: [{ type: "BODY", text: "Sent words" }],
+        },
+      });
+    routes[`GET /api/workspaces/${WS}/products/made`] = () =>
+      respond(200, {
+        kits: [madeKit],
+        ads: [],
+        whatsapp: { connected: true, displayPhone: null },
+      });
+  });
+
+  test("Edit and send again opens what was sent and sends it as a new template", async () => {
+    const sent: ProductKitRecord = {
+      ...madeKit,
+      parts: {
+        ...madeKit.parts,
+        carousel: {
+          ...madeKit.parts.carousel!,
+          templateName: "my_cards",
+          edited: true,
+          earlier: [],
+        },
+      },
+    };
+    routes[`POST ${kitUrl}/edit`] = init => {
+      posts.push(JSON.parse(String(init?.body)));
+      return respond(200, { kit: sent });
+    };
+    renderMake();
+    const card = await kitCard();
+
+    const button = within(card).getByRole("button", {
+      name: "Edit and send again",
+    });
+    fireEvent.click(button);
+    const editor = await screen.findByTestId("carousel-editor");
+    expect(
+      within(editor).getByText("Opened with products_20261103_120000")
+    ).toBeVisible();
+    expect(editor.dataset.scope).toBe(`products:kit:${madeKit.id}:carousel`);
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Meta is checking products_20261102_041405 and won't let it change, so this goes to Meta as a new template."
+    );
+
+    fireEvent.click(
+      within(editor).getByRole("button", { name: "Send to Meta for review" })
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("carousel-editor")).toBeNull()
+    );
+    expect(posts).toEqual([
+      {
+        requestId: expect.any(String),
+        part: "carousel",
+        name: "my_cards",
+        components: [{ type: "BODY", text: "My words" }],
+      },
+    ]);
+    expect(
+      within(card).getByText("Sent to Meta as a new template.")
+    ).toBeInTheDocument();
+  });
+
+  test("an edit whose answer was lost goes again as the same press, but a card changed since makes it a new one", async () => {
+    let attempt = 0;
+    routes[`POST ${kitUrl}/edit`] = init => {
+      posts.push(JSON.parse(String(init?.body)));
+      attempt += 1;
+      // A 503 at the route's limit: the edit may have gone.
+      return attempt <= 2
+        ? respond(503, { error: "x", code: "draft_failed" })
+        : respond(200, { kit: madeKit });
+    };
+    renderMake();
+    const card = await kitCard();
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Edit and send again" })
+    );
+    const editor = await screen.findByTestId("carousel-editor");
+    const send = async (count: number) => {
+      fireEvent.click(
+        within(editor).getByRole("button", { name: "Send to Meta for review" })
+      );
+      await waitFor(() => expect(posts).toHaveLength(count));
+    };
+
+    await send(1);
+    await send(2);
+    // The owner corrects a card before pressing again.
+    mockEditorWords.text = "Corrected words";
+    await send(3);
+
+    expect(posts[1]!.requestId).toBe(posts[0]!.requestId);
+    expect(posts[2]!.requestId).not.toBe(posts[0]!.requestId);
+    expect(posts[2]).toMatchObject({
+      components: [{ type: "BODY", text: "Corrected words" }],
+    });
+    await waitFor(() =>
+      expect(screen.queryByTestId("carousel-editor")).toBeNull()
+    );
+  });
+
+  test("when Meta had the first carousel after all, the edits stay and the kit says so", async () => {
+    const failed: ProductKitRecord = {
+      ...madeKit,
+      parts: {
+        ...madeKit.parts,
+        carousel: {
+          ...madeKit.parts.carousel!,
+          state: "failed",
+          templateId: null,
+          metaStatus: null,
+          error: { code: "timed_out", message: null },
+        },
+      },
+      status: "needs_attention",
+    };
+    routes[planUrl()] = () => respond(200, plan({ latestKit: failed }));
+    routes[`POST ${kitUrl}/edit`] = init => {
+      posts.push(JSON.parse(String(init?.body)));
+      return respond(409, {
+        error: "x",
+        code: "carousel_found",
+        kit: madeKit,
+      });
+    };
+    renderMake();
+    const card = await kitCard();
+
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Edit and try again" })
+    );
+    const editor = await screen.findByTestId("carousel-editor");
+    fireEvent.click(
+      within(editor).getByRole("button", { name: "Send to Meta for review" })
+    );
+
+    expect(
+      await screen.findByText(
+        "Meta did get your first carousel after all; it's with Meta now. Your edits weren't sent. To send them as a new template, press Send to Meta for review again."
+      )
+    ).toBeVisible();
+    // Said once, by the banner; the sheet stays open with the edits, and the
+    // kit shows the found carousel.
+    expect(within(screen.getByRole("dialog")).queryByRole("alert")).toBeNull();
+    expect(screen.getByTestId("carousel-editor")).toBeVisible();
+    expect(await within(card).findByText("With Meta")).toBeInTheDocument();
+  });
+});
+
+test("Meta refusing the edited carousel says so in its words under the button, not in a toast over it, and the sheet keeps the edits", async () => {
+  mockCreateErrors.length = 0;
+  routes[planUrl()] = () => respond(200, plan({ latestKit: madeKit }));
+  routes[`GET ${BASE}/${madeKit.id}/edit?part=carousel`] = () =>
+    respond(200, {
+      kit: madeKit,
+      carousel: {
+        name: "products_20261103_120000",
+        language: "kk",
+        components: [{ type: "BODY", text: "Sent words" }],
+      },
+    });
+  routes[`POST ${BASE}/${madeKit.id}/edit`] = () =>
+    respond(409, {
+      error: "x",
+      code: "meta_refused",
+      issues: ["Template name already exists in this language."],
+      kit: madeKit,
+    });
+  renderMake();
+  const card = await kitCard();
+
+  fireEvent.click(
+    within(card).getByRole("button", { name: "Edit and send again" })
+  );
+  const editor = await screen.findByTestId("carousel-editor");
+  fireEvent.click(
+    within(editor).getByRole("button", { name: "Send to Meta for review" })
+  );
+
+  const alert = await within(screen.getByRole("dialog")).findByRole("alert");
+  expect(alert).toHaveTextContent(
+    "Meta refused it: Template name already exists in this language. Change the template name and send again."
+  );
+  // In the sheet, after the editor and its buttons.
+  expect(
+    screen.getByTestId("carousel-editor").compareDocumentPosition(alert) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+  expect(mockCreateErrors).toEqual([]);
+  expect(screen.getByTestId("carousel-editor")).toBeVisible();
+
+  // Sent again, the old words go while it's sent.
+  const answered: { now?: () => void } = {};
+  routes[`POST ${BASE}/${madeKit.id}/edit`] = () =>
+    new Promise<Response>(resolve => {
+      answered.now = () => resolve(respond(200, { kit: madeKit }));
+    });
+  fireEvent.click(
+    within(editor).getByRole("button", { name: "Send to Meta for review" })
+  );
+  await waitFor(() =>
+    expect(within(screen.getByRole("dialog")).queryByRole("alert")).toBeNull()
+  );
+  await waitFor(() => expect(answered.now).toBeDefined());
+  answered.now!();
+  await waitFor(() =>
+    expect(screen.queryByTestId("carousel-editor")).toBeNull()
+  );
+});
+
+test("Send me the order form sends the published form to the test phone, and says why not when it can't", async () => {
+  routes[planUrl()] = () => respond(200, plan({ latestKit: madeKit }));
+  let answer = respond(200, { sent: true });
+  routes[`POST ${BASE}/${madeKit.id}/send-test`] = init => {
+    posts.push(JSON.parse(String(init?.body)));
+    return answer;
+  };
+  renderMake();
+  const card = await kitCard();
+
+  fireEvent.click(
+    within(card).getByRole("button", { name: "Send me the order form" })
+  );
+  expect(await within(card).findByRole("status")).toHaveTextContent(
+    "Sent to your test number. Open WhatsApp to try the form."
+  );
+  expect(posts).toEqual([{ part: "orderForm" }]);
+
+  answer = respond(409, { error: "x", code: "test_phone_missing" });
+  fireEvent.click(
+    within(card).getByRole("button", { name: "Send me the order form" })
+  );
+  expect(await within(card).findByRole("alert")).toHaveTextContent(
+    "Add your test number in a campaign's Test send first."
+  );
 });

@@ -71,6 +71,34 @@ export function kitPartCanRetry(
   );
 }
 
+/** States a part can be edited and sent again from, by part. */
+const EDITABLE: Record<ProductKitPart, ReadonlySet<string>> = {
+  // With Meta in any verdict (a new template goes), or not made.
+  carousel: new Set(["submitted", "failed"]),
+  // Published (a new version goes), kept as a draft, or not made.
+  orderForm: new Set(["ready", "draft", "failed"]),
+};
+
+/**
+ * Whether "Edit and send again", "Edit and try again", "Edit order form"
+ * or "Edit and publish" can send this part with the owner's edits. A part
+ * being made, or one airi is still looking for at Meta, can't (409
+ * kit_part_busy); nor can a part that wasn't asked for or was skipped.
+ */
+export function kitPartCanEdit(
+  part: ProductKitPart,
+  value: OrderFormLike | CarouselLike | null | undefined
+): boolean {
+  return Boolean(value && EDITABLE[part].has(value.state));
+}
+
+/** Whether a part is still being made or looked for: an edit waits for it. */
+export function kitPartBusy(
+  value: OrderFormLike | CarouselLike | null | undefined
+): boolean {
+  return value?.state === "making" || value?.state === "checking";
+}
+
 /**
  * The kit as a whole: making while a part is (a carousel airi is still
  * looking for at Meta included); needing attention when a part wasn't made,

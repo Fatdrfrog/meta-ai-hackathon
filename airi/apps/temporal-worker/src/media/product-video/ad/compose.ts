@@ -1,6 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { ProductAdBox } from "@icecore/temporal";
+import type {
+  ProductAdBox,
+  ProductAdTextOverlap,
+  ProductAdTextZone,
+} from "@icecore/temporal";
 import { buildVoiceTrack, pcmSeconds, type Pcm, type VoiceDeps } from "./audio";
 import {
   alphaBox,
@@ -32,8 +36,15 @@ export type ComposeProduct = {
   /** The product in the picture, as fractions; null when unknown. */
   box: ProductAdBox | null;
   caption: string;
-  /** The owner's polished words for it; null for a silent scene. */
+  /**
+   * The scene's voice: the owner's polished words, or the new words read in
+   * a voice (Part V); null for a silent scene.
+   */
   voice: Pcm | null;
+  /** The words `voice` reads, when they're new words; null or absent otherwise. */
+  spoken?: string | null;
+  /** Where the words sit: "auto" (the default), or the owner's top or bottom. */
+  textZone?: ProductAdTextZone;
 };
 
 export type ComposeInput = {
@@ -55,6 +66,12 @@ export type ComposedAd = {
   status: Buffer;
   /** The 4:5 ad picture: the first scene. */
   feed: Buffer;
+  /**
+   * Per product, in order: whether its scene's words cover it and the band
+   * that would cover less, for the studio's Top/Bottom hint; null without a
+   * box.
+   */
+  textOverlap: Array<ProductAdTextOverlap | null>;
 };
 
 export async function composeAd(
@@ -81,6 +98,7 @@ export async function composeAd(
   });
 
   const scenes: RenderScene[] = [];
+  const textOverlap: Array<ProductAdTextOverlap | null> = [];
   for (const [index, product] of input.products.entries()) {
     const timed = timeline.scenes[index]!;
     const { image, crop } = await coverBackground(
@@ -95,8 +113,15 @@ export async function composeAd(
       caption: product.caption,
       priceText: product.priceText,
       sticker: index === 0 && input.sticker.trim() ? input.sticker : null,
+      zone: product.textZone ?? "auto",
     });
+    textOverlap.push(words.layout.textOverlap);
+    const voice =
+      timed.kind === "product" && timed.voice
+        ? { line: product.spoken?.trim() || null, ...timed.voice }
+        : null;
     scenes.push({
+      voice,
       background: await file(`scene-${index}.png`, image),
       focus: crop.focus,
       zoomTo: 1.06,
@@ -174,6 +199,7 @@ export async function composeAd(
       name: first.name,
       caption: first.caption,
       priceText: first.priceText,
+      zone: first.textZone ?? "auto",
     }),
   ]);
 
@@ -187,5 +213,6 @@ export async function composeAd(
     timeline,
     status,
     feed,
+    textOverlap,
   };
 }

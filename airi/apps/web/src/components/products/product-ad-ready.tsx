@@ -1,65 +1,77 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { oneLine } from "@/lib/products/ad-request";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import {
   PRODUCT_AD_STEPS,
   PRODUCT_AD_TEXT_LIMITS,
-  productAdTextIssues,
   type ProductAdRecord,
-  type ProductAdTextLimit,
+  type ProductAdSceneChange,
   type ProductAdUpdateRequest,
 } from "@/lib/products/types";
-import { oneLine } from "@/lib/products/ad-request";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, ExternalLink, Info } from "lucide-react";
-import { useId, useState } from "react";
-import { updateProductAd } from "./ads-client";
+import { useId, useState, type ReactNode } from "react";
+import {
+  redoProductAdScene,
+  retryProductAd,
+  updateProductAd,
+} from "./ads-client";
+import {
+  AdOptions,
+  adOptionChoice,
+  type AdOptionChoice,
+} from "./product-ad-options";
 import {
   AdBar,
   AdBriefLine,
   AdDownload,
   AdHead,
   AdProductChips,
-  AdSceneList,
   CopyButton,
+  StatusDot,
+  WordField,
   adFileName,
+  adRequestId,
   fileSize,
+  productWord,
   tookTime,
+  wordsEdited,
+  wordsIssue,
 } from "./product-ad-parts";
 import { AdPlayer } from "./product-ad-player";
+import {
+  AdSceneTools,
+  currentPictureIndex,
+  savedSceneDraft,
+  type AdNewPicturePlace,
+  type AdSceneDraft,
+} from "./product-ad-scene-tools";
 import styles from "./product-ad-studio.module.css";
+import {
+  AdUpdateBarAction,
+  AdUpdateCard,
+  type AdRunning,
+} from "./product-ad-update-bar";
+import { ProductAdVoicePanel } from "./product-ad-voice";
 import { ProductChip } from "./product-controls";
 import theme from "./product-theme.module.css";
 import { ProductDraftError } from "./products-client";
 import { useNarrowStudio } from "./use-product-ad";
 
-// The finished ad: the 9:16 player and its downloads, the words on screen
-// (names and prices locked; the rest the owner may change, which makes the
-// video again with no AI action), the post text and the Click-to-WhatsApp
-// copy to paste, what Airi checked, and how the ad was made.
+// The finished ad, and the studio's tools on it: the opening words and the
+// ending (Muse Spark's three of each, or the owner's own), the scenes one at
+// a time (place, New picture, earlier pictures, where the words sit, the
+// caption, the exact photo), the price card's title, then the post text, the
+// Click-to-WhatsApp copy, what Airi checked and how the ad was made. Every
+// free change waits in the update card for one "Update the video", a run
+// with no AI. While a run goes the view stays, with the earlier video
+// playing; an edit run that fails says why here and keeps that video.
 
 const COPY = PRODUCTS_COPY.ad;
 
 const ADS_MANAGER_URL = "https://adsmanager.facebook.com/";
-
-/**
- * Why the owner's words can't go on screen, in their terms, by the script's
- * own checks: empty, a number or a currency (Airi draws prices), letters
- * the fonts lack, or more than the line room. Null when they can.
- */
-export function wordsIssue(
-  text: string,
-  limit: ProductAdTextLimit
-): string | null {
-  const [first] = productAdTextIssues("text", text, limit);
-  if (!first) return null;
-  if (first.includes("is empty")) return COPY.issues.empty;
-  if (first.includes("digit")) return COPY.issues.digits;
-  if (first.includes("currency")) return COPY.issues.currency;
-  if (first.includes("fonts")) return COPY.issues.letters;
-  return COPY.issues.room(limit.lines ?? 1, limit.chars);
-}
 
 /** The words on screen, by field; captions by product. */
 type Words = {
@@ -78,101 +90,66 @@ const wordsOf = (script: ProductAdRecord["script"]): Words => ({
   ending: script?.ending ?? "",
 });
 
-/**
- * Whether a line was changed: the server keeps words as one line, so
- * spacing alone (the owner's, or a double space in Muse Spark's) isn't.
- */
-const edited = (draft: string, saved: string | undefined) =>
-  oneLine(draft) !== oneLine(saved ?? "");
+const scenesOf = (ad: ProductAdRecord): Record<string, AdSceneDraft> =>
+  Object.fromEntries(
+    ad.scenes.map(scene => [scene.productId, savedSceneDraft(scene)])
+  );
 
-/** What the owner changed, as the PATCH sends it; null when nothing. */
+/** What the owner changed in the words, as the PATCH sends it; null when nothing. */
 export function wordChanges(
   saved: ProductAdRecord["script"],
   draft: Words
 ): ProductAdUpdateRequest | null {
   const before = wordsOf(saved);
   const changes: ProductAdUpdateRequest = {};
-  if (edited(draft.sticker, before.sticker))
+  if (wordsEdited(draft.sticker, before.sticker))
     changes.sticker = oneLine(draft.sticker);
   const captions = Object.entries(draft.captions)
     .filter(([productId, caption]) =>
-      edited(caption, before.captions[productId])
+      wordsEdited(caption, before.captions[productId])
     )
     .map(([productId, caption]) => ({ productId, caption: oneLine(caption) }));
   if (captions.length > 0) changes.captions = captions;
-  if (edited(draft.priceCardTitle, before.priceCardTitle))
+  if (wordsEdited(draft.priceCardTitle, before.priceCardTitle))
     changes.priceCardTitle = oneLine(draft.priceCardTitle);
-  if (edited(draft.ending, before.ending))
+  if (wordsEdited(draft.ending, before.ending))
     changes.ending = oneLine(draft.ending);
   return Object.keys(changes).length > 0 ? changes : null;
+}
+
+/** What the owner changed in the scenes, as the PATCH sends it. */
+export function sceneChanges(
+  ad: ProductAdRecord,
+  drafts: Readonly<Record<string, AdSceneDraft>>
+): ProductAdSceneChange[] {
+  return ad.scenes.flatMap(scene => {
+    const draft = drafts[scene.productId];
+    if (!draft) return [];
+    const change: ProductAdSceneChange = { productId: scene.productId };
+    if (draft.textZone !== scene.textZone) change.textZone = draft.textZone;
+    if (draft.useExact !== scene.useExact) change.useExact = draft.useExact;
+    if (
+      draft.pictureIndex !== null &&
+      draft.pictureIndex !== currentPictureIndex(scene)
+    )
+      change.pictureIndex = draft.pictureIndex;
+    return Object.keys(change).length > 1 ? [change] : [];
+  });
 }
 
 /** "$0.05"; "under $0.01" for less. */
 const dollars = (usd: number) =>
   usd <= 0 ? "$0" : usd < 0.01 ? "under $0.01" : `$${usd.toFixed(2)}`;
 
-type SaveErrorCode = keyof typeof COPY.saveErrors;
-const saveError = (code: string) =>
-  COPY.saveErrors[(code in COPY.saveErrors ? code : "failed") as SaveErrorCode];
-
-function WordField({
-  id,
-  label,
-  value,
-  saved,
-  limit,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  saved: string;
-  limit: ProductAdTextLimit;
-  onChange: (value: string) => void;
-}) {
-  const lines = limit.lines ?? 1;
-  // Only a changed line is checked: the saved words passed already.
-  const issue = edited(value, saved) ? wordsIssue(value, limit) : null;
-  const describedBy = issue ? `${id}-room ${id}-issue` : `${id}-room`;
-  const shared = {
-    id,
-    value,
-    className: styles.input,
-    maxLength: limit.chars * lines + 20,
-    spellCheck: true,
-    "aria-invalid": issue ? true : undefined,
-    "aria-describedby": describedBy,
-  } as const;
-  return (
-    <div className={styles.field}>
-      <div className={styles.fieldHead}>
-        <label htmlFor={id} className={styles.fieldLabel}>
-          {label}
-        </label>
-        <span id={`${id}-room`} className={styles.fieldRoom}>
-          {COPY.lineRoom(lines, limit.chars)}
-        </span>
-      </div>
-      {lines > 1 ? (
-        <textarea
-          {...shared}
-          rows={2}
-          onChange={event => onChange(event.target.value)}
-        />
-      ) : (
-        <input
-          {...shared}
-          autoComplete="off"
-          onChange={event => onChange(event.target.value)}
-        />
-      )}
-      {issue ? (
-        <p id={`${id}-issue`} className={styles.issue}>
-          {issue}
-        </p>
-      ) : null}
-    </div>
-  );
+/** An error code's words from one of the copy's maps, else its "failed". */
+function errorWords(
+  map: Readonly<Record<string, string>> & { failed: string },
+  error: unknown
+): string {
+  const code = error instanceof ProductDraftError ? error.code : "failed";
+  return Object.prototype.hasOwnProperty.call(map, code)
+    ? (map[code] ?? map.failed)
+    : map.failed;
 }
 
 /** The Click-to-WhatsApp copy as one text, for Copy all. */
@@ -186,65 +163,223 @@ function ctwaText(ctwa: NonNullable<ProductAdRecord["ctwa"]>): string {
   ].join("\n");
 }
 
+/** A closed row that opens to its content: the post, the ad copy, the checks, the credits. */
+function AdRow({
+  title,
+  summary,
+  children,
+}: {
+  title: string;
+  summary?: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className={cn(theme.sheet, styles.rowPanel, styles.credits)}>
+      <summary>
+        <ChevronRight aria-hidden="true" />
+        <span className={styles.rowTitle}>{title}</span>
+        {summary ? <span className={styles.rowSummary}>{summary}</span> : null}
+      </summary>
+      <div className={styles.rowBody}>{children}</div>
+    </details>
+  );
+}
+
 export function AdReady({
   workspaceId,
   ad,
   onChanged,
   onChangeProducts,
+  sceneId = null,
+  onSceneId,
+  voiceRunNo = null,
+  onVoiceChanged,
 }: {
   workspaceId: string;
   ad: ProductAdRecord;
   onChanged: (ad: ProductAdRecord) => void;
   /** The shelf's Choose mode with these products chosen, for a new ad. */
   onChangeProducts: (productIds: string[]) => void;
+  /** The scene the owner picked, kept while the view is drawn again for each run. */
+  sceneId?: string | null;
+  onSceneId?: (productId: string) => void;
+  /** The run the voice panel's own press started, kept the same way. */
+  voiceRunNo?: number | null;
+  /** The voice panel's answer; `onChanged` when not given. */
+  onVoiceChanged?: (ad: ProductAdRecord) => void;
 }) {
   const titleId = useId();
   const ids = useId();
   const narrow = useNarrowStudio();
-  const [draft, setDraft] = useState<Words>(() => wordsOf(ad.script));
+  const saved = wordsOf(ad.script);
+  const [draft, setDraft] = useState<Words>(saved);
+  const [opening, setOpening] = useState<AdOptionChoice>(() =>
+    adOptionChoice(ad.openings, saved.sticker)
+  );
+  const [ending, setEnding] = useState<AdOptionChoice>(() =>
+    adOptionChoice(ad.endings, saved.ending)
+  );
+  const [scenes, setScenes] = useState(() => scenesOf(ad));
+  // A run's end can change a scene's saved choices (a New picture turns the
+  // exact photo off), so the scenes are taken again as the status changes.
+  // Every control is off while a run goes, so no choice of the owner's is lost.
+  const [scenesFor, setScenesFor] = useState(ad.status);
+  if (scenesFor !== ad.status) {
+    setScenesFor(ad.status);
+    setScenes(scenesOf(ad));
+  }
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [retryProblem, setRetryProblem] = useState<string | null>(null);
+  const [pressProblem, setPressProblem] = useState<{
+    productId: string;
+    message: string;
+  } | null>(null);
 
-  const saved = wordsOf(ad.script);
-  const changes = wordChanges(ad.script, draft);
+  // The run going on: the earlier video stays, and every control waits.
+  const running: AdRunning | null =
+    ad.status === "making" ? { kind: ad.runKind, since: ad.requestedAt } : null;
+  const busy = running !== null || saving;
+  const busyReason = running
+    ? running.kind === "render" || running.kind === "voice"
+      ? COPY.waitForUpdate
+      : COPY.oneAtATime
+    : saving
+      ? COPY.oneAtATime
+      : null;
+
   const limits = PRODUCT_AD_TEXT_LIMITS;
-  const changedIssues = [
-    edited(draft.sticker, saved.sticker) &&
+  const words = wordChanges(ad.script, draft);
+  const sceneEdits = sceneChanges(ad, scenes);
+  const changes: ProductAdUpdateRequest | null =
+    words || sceneEdits.length > 0
+      ? {
+          ...(words ?? {}),
+          ...(sceneEdits.length ? { scenes: sceneEdits } : {}),
+        }
+      : null;
+  const issues = [
+    wordsEdited(draft.sticker, saved.sticker) &&
       wordsIssue(draft.sticker, limits.sticker),
     ...Object.entries(draft.captions).map(
       ([productId, caption]) =>
-        edited(caption, saved.captions[productId]) &&
+        wordsEdited(caption, saved.captions[productId]) &&
         wordsIssue(caption, limits.caption)
     ),
-    edited(draft.priceCardTitle, saved.priceCardTitle) &&
+    wordsEdited(draft.priceCardTitle, saved.priceCardTitle) &&
       wordsIssue(draft.priceCardTitle, limits.priceCardTitle),
-    edited(draft.ending, saved.ending) &&
+    wordsEdited(draft.ending, saved.ending) &&
       wordsIssue(draft.ending, limits.ending),
   ].filter(Boolean);
-  const dirty = changes !== null;
-  const canSave = dirty && changedIssues.length === 0 && !saving;
+  const nameOf = (productId: string) =>
+    ad.products.find(product => product.productId === productId)?.name ?? "";
+  const pending = [
+    ...(words?.sticker !== undefined
+      ? [COPY.changes.opening(words.sticker)]
+      : []),
+    ...(words?.captions ?? []).map(entry =>
+      COPY.changes.caption(nameOf(entry.productId))
+    ),
+    ...sceneEdits.flatMap(change => [
+      ...(change.pictureIndex !== undefined
+        ? [COPY.changes.picture(nameOf(change.productId))]
+        : []),
+      ...(change.textZone !== undefined
+        ? [COPY.changes.zone(nameOf(change.productId), change.textZone)]
+        : []),
+      ...(change.useExact !== undefined
+        ? [COPY.changes.exact(nameOf(change.productId), change.useExact)]
+        : []),
+    ]),
+    ...(words?.priceCardTitle !== undefined
+      ? [COPY.changes.priceCardTitle(words.priceCardTitle)]
+      : []),
+    ...(words?.ending !== undefined ? [COPY.changes.ending(words.ending)] : []),
+  ];
+  const canUpdate = changes !== null && issues.length === 0 && !busy;
 
-  const save = async () => {
-    if (!changes || !canSave) return;
+  const undoAll = () => {
+    setDraft(saved);
+    setOpening(adOptionChoice(ad.openings, saved.sticker));
+    setEnding(adOptionChoice(ad.endings, saved.ending));
+    setScenes(scenesOf(ad));
+    setProblem(null);
+  };
+
+  const update = async () => {
+    if (!changes || !canUpdate) return;
     setSaving(true);
     setProblem(null);
     try {
       onChanged(await updateProductAd(workspaceId, ad.id, changes));
     } catch (error) {
-      setProblem(
-        saveError(error instanceof ProductDraftError ? error.code : "failed")
+      setProblem(errorWords(COPY.updateErrors, error));
+    } finally {
+      // The answer's new run remounts the view; one that started nothing doesn't.
+      setSaving(false);
+    }
+  };
+
+  const retry = async () => {
+    if (retrying) return;
+    setRetrying(true);
+    setRetryProblem(null);
+    try {
+      onChanged(await retryProductAd(workspaceId, ad.id));
+    } catch (error) {
+      setRetryProblem(errorWords(COPY.retryErrors, error));
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  const newPicture = async (productId: string, place: AdNewPicturePlace) => {
+    if (busy) return;
+    setSaving(true);
+    setPressProblem(null);
+    try {
+      onChanged(
+        await redoProductAdScene(workspaceId, ad.id, productId, {
+          requestId: adRequestId(),
+          ...place,
+          // The free changes waiting go in with the new picture.
+          ...(changes && issues.length === 0 ? { changes } : {}),
+        })
       );
+    } catch (error) {
+      setPressProblem({
+        productId,
+        message: errorWords(COPY.newPictureErrors, error),
+      });
     } finally {
       setSaving(false);
     }
   };
 
+  const lastRun = ad.lastRun;
+  const failed =
+    ad.status === "ready" &&
+    lastRun?.outcome === "failed" &&
+    lastRun.renderNo === ad.renderNo
+      ? {
+          reason: COPY.failReasons[lastRun.errorCode ?? "failed"],
+          canRetry: lastRun.kind === "render" || lastRun.kind === "scene",
+        }
+      : null;
+
   const video = ad.video;
   const size = video ? fileSize(video.bytes) : null;
   const anyMuse = ad.scenes.some(scene => scene.method === "muse");
-  const madeIn = ad.readyAt
-    ? tookTime(Date.parse(ad.readyAt) - Date.parse(ad.requestedAt))
-    : null;
+  const aiPictures = ad.scenes.reduce(
+    (count, scene) =>
+      count + Math.max(scene.pictures.length, scene.method === "muse" ? 1 : 0),
+    0
+  );
+  const madeIn =
+    ad.readyAt && !running
+      ? tookTime(Date.parse(ad.readyAt) - Date.parse(ad.requestedAt))
+      : null;
   // How long each step took, for the credits: "words 7 s · pictures 21 s".
   const took = PRODUCT_AD_STEPS.flatMap(step => {
     const timing = ad.timings[step];
@@ -254,8 +389,30 @@ export function AdReady({
       ? [`${COPY.credits.stepNames[step]} ${tookTime(ms)}`]
       : [];
   });
+  // One credit per scene whose picture a New picture made.
+  const newPictureCredits = ad.scenes.flatMap(scene => {
+    if (scene.redo?.outcome !== "new" || !scene.place) return [];
+    const product = ad.products.find(
+      entry => entry.productId === scene.productId
+    );
+    if (scene.place.words)
+      return [
+        COPY.credits.newPicturePlace(
+          scene.place.englishPlace ?? scene.place.words
+        ),
+      ];
+    return scene.place.setting && product
+      ? [
+          COPY.credits.newPictureSetting(
+            productWord(product),
+            scene.place.setting
+          ),
+        ]
+      : [];
+  });
 
-  // One main action at a time: download the video, or save the changes.
+  const dirty = changes !== null;
+  // One main action at a time: the update while changes wait, else the video.
   const downloadVideo = (variant: "default" | "outline") =>
     video && size ? (
       <AdDownload
@@ -266,29 +423,38 @@ export function AdReady({
         {COPY.download(size)}
       </AdDownload>
     ) : null;
-  const saveButton = (
-    <Button fullWidth disabled={!canSave} onClick={() => void save()}>
-      {saving ? COPY.saving : COPY.save}
-    </Button>
-  );
 
-  const field = (
-    key: string,
-    label: string,
-    value: string,
-    savedValue: string,
-    limit: ProductAdTextLimit,
-    set: (value: string) => void
-  ) => (
-    <WordField
-      id={`${ids}-${key}`}
-      label={label}
-      value={value}
-      saved={savedValue}
-      limit={limit}
-      onChange={set}
-    />
-  );
+  const captionField = (productId: string) =>
+    productId in draft.captions ? (
+      <WordField
+        id={`${ids}-caption-${productId}`}
+        label={COPY.caption(nameOf(productId))}
+        value={draft.captions[productId] ?? ""}
+        saved={saved.captions[productId] ?? ""}
+        limit={limits.caption}
+        disabled={busy}
+        onChange={caption =>
+          setDraft(current => ({
+            ...current,
+            captions: { ...current.captions, [productId]: caption },
+          }))
+        }
+      />
+    ) : null;
+
+  const updateProps = {
+    pending,
+    canUpdate,
+    onUpdate: () => void update(),
+    onUndoAll: undoAll,
+    saving,
+    problem,
+    running,
+    failed,
+    onRetry: () => void retry(),
+    retrying,
+    retryProblem,
+  };
 
   return (
     <section aria-labelledby={titleId} className={styles.studio}>
@@ -300,38 +466,77 @@ export function AdReady({
           ad.language
         )}
         status={
-          <ProductChip tone="ok">
-            <Check aria-hidden="true" />
-            {madeIn ? `${COPY.ready} · ${COPY.madeIn(madeIn)}` : COPY.ready}
-          </ProductChip>
+          running ? (
+            <ProductChip tone="accent">
+              <StatusDot />
+              {COPY.updatingChip}
+            </ProductChip>
+          ) : (
+            <ProductChip tone="ok">
+              <Check aria-hidden="true" />
+              {madeIn ? `${COPY.ready} · ${COPY.madeIn(madeIn)}` : COPY.ready}
+            </ProductChip>
+          )
         }
       />
       <div className={styles.columns}>
         <aside className={styles.side}>
           <div className={styles.picture}>
-            <AdPlayer video={video} />
+            <AdPlayer
+              video={video}
+              tag={
+                video
+                  ? COPY.videoTag(video.renderNo ?? ad.renderNo, video.seconds)
+                  : null
+              }
+            />
           </div>
+          <AdUpdateCard {...updateProps} showAction={!narrow} />
           <div className={styles.downloads}>
             {narrow
               ? dirty
                 ? downloadVideo("outline")
                 : null
               : downloadVideo(dirty ? "outline" : "default")}
-            {ad.stills.statusUrl ? (
-              <AdDownload
-                url={ad.stills.statusUrl}
-                fileName={adFileName(ad, "status")}
-              >
-                {COPY.statusPicture}
-              </AdDownload>
-            ) : null}
-            {ad.stills.feedUrl ? (
-              <AdDownload
-                url={ad.stills.feedUrl}
-                fileName={adFileName(ad, "feed")}
-              >
-                {COPY.adPicture}
-              </AdDownload>
+            <div className={styles.downloadPair}>
+              {ad.stills.statusUrl ? (
+                <AdDownload
+                  url={ad.stills.statusUrl}
+                  fileName={adFileName(ad, "status")}
+                >
+                  {COPY.statusPicture}
+                </AdDownload>
+              ) : null}
+              {ad.stills.feedUrl ? (
+                <AdDownload
+                  url={ad.stills.feedUrl}
+                  fileName={adFileName(ad, "feed")}
+                >
+                  {COPY.adPicture}
+                </AdDownload>
+              ) : null}
+            </div>
+          </div>
+          <div className={cn(theme.sheet, styles.aiBox)}>
+            <h3 className={styles.sectionTitle}>{COPY.aiTitle}</h3>
+            <ul className={styles.checks}>
+              <li>
+                <Check aria-hidden="true" />
+                {COPY.aiWords(ad.openings.length > 0 || ad.endings.length > 0)}
+              </li>
+              <li>
+                <Check aria-hidden="true" />
+                {COPY.aiPictures(aiPictures)}
+              </li>
+              <li>
+                <Check aria-hidden="true" />
+                {COPY.aiFraming}
+              </li>
+            </ul>
+            {ad.picturesLeft !== null ? (
+              <p className={styles.note}>
+                {COPY.aiPicturesLeft(ad.picturesLeft)}
+              </p>
             ) : null}
           </div>
         </aside>
@@ -360,109 +565,126 @@ export function AdReady({
             ) : null}
           </div>
 
+          {/* The voice stream's panel (Part V). */}
+          <ProductAdVoicePanel
+            workspaceId={workspaceId}
+            ad={ad}
+            onChanged={onVoiceChanged ?? onChanged}
+            startedRunNo={voiceRunNo}
+            disabled={busy}
+          />
+
           {ad.script ? (
-            <div className={cn(theme.sheet, styles.panel)}>
-              <div className={styles.field}>
-                <h3 className={styles.sectionTitle}>{COPY.wordsTitle}</h3>
-                <p className={styles.note}>{COPY.wordsAbout}</p>
+            <>
+              <div className={cn(theme.sheet, styles.panel)}>
+                <AdOptions
+                  title={COPY.openingTitle}
+                  about={
+                    ad.openings.length > 0
+                      ? COPY.openingAbout
+                      : COPY.openingAboutV1
+                  }
+                  kindNames={COPY.openingKinds}
+                  ownLabel={COPY.ownOpeningLabel}
+                  options={ad.openings}
+                  saved={saved.sticker}
+                  value={draft.sticker}
+                  choice={opening}
+                  onChoose={choice => {
+                    setOpening(choice);
+                    const option =
+                      choice === "own" ? null : ad.openings[choice];
+                    if (option)
+                      setDraft(current => ({
+                        ...current,
+                        sticker: option.text,
+                      }));
+                  }}
+                  onWrite={sticker =>
+                    setDraft(current => ({ ...current, sticker }))
+                  }
+                  limit={limits.sticker}
+                  disabled={busy}
+                />
               </div>
-              {field(
-                "sticker",
-                COPY.sticker,
-                draft.sticker,
-                saved.sticker,
-                limits.sticker,
-                sticker => setDraft(current => ({ ...current, sticker }))
-              )}
-              <AdSceneList
-                ad={ad}
-                settled
-                body={productId =>
-                  productId in draft.captions
-                    ? field(
-                        `caption-${productId}`,
-                        COPY.caption(
-                          ad.products.find(
-                            product => product.productId === productId
-                          )?.name ?? ""
-                        ),
-                        draft.captions[productId] ?? "",
-                        saved.captions[productId] ?? "",
-                        limits.caption,
-                        caption =>
-                          setDraft(current => ({
-                            ...current,
-                            captions: {
-                              ...current.captions,
-                              [productId]: caption,
-                            },
-                          }))
-                      )
-                    : null
-                }
-              />
-              {field(
-                "price-card",
-                COPY.priceCardTitle,
-                draft.priceCardTitle,
-                saved.priceCardTitle,
-                limits.priceCardTitle,
-                priceCardTitle =>
-                  setDraft(current => ({ ...current, priceCardTitle }))
-              )}
-              {field(
-                "ending",
-                COPY.endingLine,
-                draft.ending,
-                saved.ending,
-                limits.ending,
-                ending => setDraft(current => ({ ...current, ending }))
-              )}
-              {dirty ? (
-                <div className={styles.downloads}>
-                  {narrow ? null : saveButton}
-                  <div className={styles.actions}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={saving}
-                      onClick={() => {
-                        setDraft(wordsOf(ad.script));
-                        setProblem(null);
-                      }}
-                    >
-                      {COPY.undoEdits}
-                    </Button>
-                    <span className={styles.note}>{COPY.saveNote}</span>
-                  </div>
-                  {problem ? (
-                    <p role="alert" className={styles.issue}>
-                      {problem}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
+
+              <div className={cn(theme.sheet, styles.panel)}>
+                <AdSceneTools
+                  ad={ad}
+                  drafts={scenes}
+                  onDraft={(productId, next) =>
+                    setScenes(current => ({ ...current, [productId]: next }))
+                  }
+                  caption={captionField}
+                  busyReason={busyReason}
+                  blockedReason={
+                    issues.length > 0 ? COPY.newPictureWhy.fixLines : null
+                  }
+                  onNewPicture={(productId, place) =>
+                    void newPicture(productId, place)
+                  }
+                  pressProblem={pressProblem}
+                  selectedId={sceneId}
+                  onSelect={onSceneId}
+                />
+                <WordField
+                  id={`${ids}-price-card`}
+                  label={COPY.priceCardTitle}
+                  value={draft.priceCardTitle}
+                  saved={saved.priceCardTitle}
+                  limit={limits.priceCardTitle}
+                  disabled={busy}
+                  onChange={priceCardTitle =>
+                    setDraft(current => ({ ...current, priceCardTitle }))
+                  }
+                />
+              </div>
+
+              <div className={cn(theme.sheet, styles.panel)}>
+                <AdOptions
+                  title={COPY.endingTitle}
+                  about={COPY.endingAbout}
+                  kindNames={COPY.endingKinds}
+                  ownLabel={COPY.ownEndingLabel}
+                  options={ad.endings}
+                  saved={saved.ending}
+                  value={draft.ending}
+                  choice={ending}
+                  onChoose={choice => {
+                    setEnding(choice);
+                    const option = choice === "own" ? null : ad.endings[choice];
+                    if (option)
+                      setDraft(current => ({
+                        ...current,
+                        ending: option.text,
+                      }));
+                  }}
+                  onWrite={text =>
+                    setDraft(current => ({ ...current, ending: text }))
+                  }
+                  limit={limits.ending}
+                  disabled={busy}
+                />
+              </div>
+            </>
           ) : null}
 
           {ad.post ? (
-            <div className={cn(theme.sheet, styles.panel)}>
+            <AdRow title={COPY.postTitle} summary={COPY.postAbout}>
               <div className={styles.panelHead}>
-                <h3 className={styles.sectionTitle}>{COPY.postTitle}</h3>
+                <p className={styles.note}>{COPY.postAbout}</p>
                 <CopyButton text={ad.post.text} />
               </div>
-              <p className={styles.note}>{COPY.postAbout}</p>
               <p className={styles.postText}>{ad.post.text}</p>
-            </div>
+            </AdRow>
           ) : null}
 
           {ad.ctwa ? (
-            <div className={cn(theme.sheet, styles.panel)}>
+            <AdRow title={COPY.ctwaTitle}>
               <div className={styles.panelHead}>
-                <h3 className={styles.sectionTitle}>{COPY.ctwaTitle}</h3>
+                <p className={styles.note}>{COPY.ctwaAbout}</p>
                 <CopyButton text={ctwaText(ad.ctwa)} label={COPY.copyAll} />
               </div>
-              <p className={styles.note}>{COPY.ctwaAbout}</p>
               <dl className={styles.rows}>
                 {(
                   [
@@ -504,11 +726,10 @@ export function AdReady({
                   </a>
                 </Button>
               </div>
-            </div>
+            </AdRow>
           ) : null}
 
-          <div className={cn(theme.sheet, styles.panel)}>
-            <h3 className={styles.sectionTitle}>{COPY.checksTitle}</h3>
+          <AdRow title={COPY.checksTitle}>
             <ul className={styles.checks}>
               <li>
                 <Check aria-hidden="true" />
@@ -535,37 +756,42 @@ export function AdReady({
                 </li>
               ) : null}
             </ul>
-          </div>
+          </AdRow>
 
-          <div className={cn(theme.sheet, styles.panel)}>
-            <details className={styles.credits}>
-              <summary>
-                <ChevronRight aria-hidden="true" />
-                {COPY.creditsTitle}
-              </summary>
-              <ul className={styles.creditList}>
-                <li>{COPY.credits.words}</li>
-                <li>
-                  {anyMuse ? COPY.credits.pictures : COPY.credits.exactPictures}
-                </li>
-                <li>{COPY.credits.framing}</li>
-                <li>
-                  {ad.voice === "own"
-                    ? COPY.credits.voiceOwn
-                    : COPY.credits.voiceNone}
-                </li>
-                {ad.presenter ? <li>{COPY.credits.presenter}</li> : null}
-                <li>{COPY.credits.video}</li>
-                <li>{COPY.credits.prices}</li>
-                {took.length > 0 ? <li>{COPY.credits.took(took)}</li> : null}
-                <li>{COPY.credits.cost(dollars(ad.costUsd))}</li>
-              </ul>
-            </details>
-          </div>
+          <AdRow title={COPY.creditsTitle}>
+            <ul className={styles.creditList}>
+              <li>{COPY.credits.words}</li>
+              <li>
+                {anyMuse ? COPY.credits.pictures : COPY.credits.exactPictures}
+              </li>
+              {newPictureCredits.map(line => (
+                <li key={line}>{line}</li>
+              ))}
+              <li>{COPY.credits.framing}</li>
+              <li>
+                {ad.voice === "own"
+                  ? COPY.credits.voiceOwn
+                  : ad.voice === "none"
+                    ? COPY.credits.voiceNone
+                    : `${COPY.voice}: ${PRODUCTS_COPY.adVoice.modes[ad.voice]}`}
+              </li>
+              {ad.presenter ? <li>{COPY.credits.presenter}</li> : null}
+              <li>{COPY.credits.video}</li>
+              <li>{COPY.credits.prices}</li>
+              {took.length > 0 ? <li>{COPY.credits.took(took)}</li> : null}
+              <li>{COPY.credits.cost(dollars(ad.costUsd))}</li>
+            </ul>
+          </AdRow>
         </div>
       </div>
-      {narrow && (dirty || video) ? (
-        <AdBar>{dirty ? saveButton : downloadVideo("default")}</AdBar>
+      {narrow && (dirty || running || video) ? (
+        <AdBar>
+          {dirty || running ? (
+            <AdUpdateBarAction {...updateProps} />
+          ) : (
+            downloadVideo("default")
+          )}
+        </AdBar>
       ) : null}
     </section>
   );

@@ -7,6 +7,8 @@ import {
   fetchProductAdBrief,
   productAdBriefUrl,
   productAdRetryUrl,
+  productAdSceneUrl,
+  redoProductAdScene,
   retryProductAd,
   updateProductAd,
 } from "./ads-client";
@@ -77,6 +79,33 @@ describe("the studio's requests", () => {
       method: "POST",
       cache: "no-store",
     });
+  });
+
+  it("asks for a New picture on one scene, with the waiting changes", async () => {
+    global.fetch = respond({ ad }, 202);
+    const request = {
+      requestId: "press-2",
+      setting: "gift_table" as const,
+      changes: { scenes: [{ productId: MUG, textZone: "top" as const }] },
+    };
+    expect(await redoProductAdScene(WS, AD, DOLL, request)).toEqual(ad);
+    expect(productAdSceneUrl(WS, AD, DOLL)).toBe(
+      `/api/workspaces/workspace%201/products/ads/${AD}/scenes/${DOLL}`
+    );
+    expect(global.fetch).toHaveBeenLastCalledWith(
+      productAdSceneUrl(WS, AD, DOLL),
+      {
+        method: "POST",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      }
+    );
+
+    global.fetch = respond({ error: "x", code: "no_pictures_left" }, 409);
+    await expect(
+      redoProductAdScene(WS, AD, DOLL, { requestId: "p", words: "a yurt" })
+    ).rejects.toEqual(new ProductDraftError("no_pictures_left"));
   });
 
   it("reads one ad and a brief", async () => {

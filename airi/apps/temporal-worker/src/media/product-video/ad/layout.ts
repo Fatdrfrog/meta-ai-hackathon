@@ -1,4 +1,8 @@
-import type { ProductAdBox } from "@icecore/temporal";
+import type {
+  ProductAdBox,
+  ProductAdTextOverlap,
+  ProductAdTextZone,
+} from "@icecore/temporal";
 
 // Where everything goes in a video ad, as pure geometry: the frame, Meta's
 // Reels safe band the words stay inside, the cover crop of each picture
@@ -148,18 +152,30 @@ export type SceneTextLayout = {
   sticker: Rect | null;
   /** Where the label and tag went: above the product, or below it. */
   zone: "top" | "bottom";
+  /**
+   * Whether the label and tag cover the product (more than
+   * AD_TEXT_COVERS_SHARE of its box) and the band that would cover less;
+   * null without a product box.
+   */
+  textOverlap: ProductAdTextOverlap | null;
 };
+
+/** The share of the product's box the words may cover before the studio suggests the other band. */
+export const AD_TEXT_COVERS_SHARE = 0.04;
 
 /**
  * Where a product scene's words stand: the paper label (name and caption) at
  * the left and the price tag at the right, side by side when they fit, else
- * the tag under the label at the right. They go at the top of the safe band,
- * where Muse Image is asked to leave a calm wall, unless the product reaches
- * up there and the bottom of the band is clearer. The first scene's sticker
- * takes the label's place at the top before the label comes in (render.ts
- * shows them one after the other). The paper is opaque, so a layer that
- * still meets the product stays legible. Every layer is inside `safe`; one
- * larger than the band is the caller's error.
+ * the tag under the label at the right. With `zone` "auto" (or none) they go
+ * at the top of the safe band, where Muse Image is asked to leave a calm
+ * wall, unless the product reaches up there and the bottom of the band is
+ * clearer; "top" or "bottom" (the owner's choice) puts them there, and the
+ * first scene's sticker with them. In "auto" the sticker takes the label's
+ * place at the top before the label comes in (render.ts shows them one after
+ * the other). The paper is opaque, so a layer that still meets the product
+ * stays legible; `textOverlap` says whether it does, for the studio's hint.
+ * Every layer is inside `safe`; one larger than the band is the caller's
+ * error.
  */
 export function placeSceneText(input: {
   safe: Rect;
@@ -167,15 +183,20 @@ export function placeSceneText(input: {
   label: Size;
   tag: Size;
   sticker?: Size | null;
+  zone?: ProductAdTextZone;
 }): SceneTextLayout {
   const { safe, label, tag } = input;
   const sticker = input.sticker ?? null;
+  const zone = input.zone ?? "auto";
   const left = safe.x + INSET;
   const rightEdge = right(safe) - INSET;
   const sideBySide = label.width + GAP + tag.width <= safe.w - INSET * 2;
   const stickerRect: Rect | null = sticker && {
     x: left,
-    y: safe.y + INSET,
+    y:
+      zone === "bottom"
+        ? bottom(safe) - INSET - sticker.height
+        : safe.y + INSET,
     w: sticker.width,
     h: sticker.height,
   };
@@ -205,14 +226,34 @@ export function placeSceneText(input: {
       ? overlapArea(union([placed.label, placed.tag]), grown(input.product, 16))
       : 0;
   // The top is where the prompt leaves room: the bottom wins only when it is
-  // clearly better.
-  const useBottom = cost(low) < cost(top) * 0.6;
+  // clearly better, or when the owner asked for it.
+  const useBottom =
+    zone === "bottom" || (zone === "auto" && cost(low) < cost(top) * 0.6);
   const chosen = useBottom ? low : top;
+  // How much of the product's own box each band's words cover.
+  const share = (placed: { label: Rect; tag: Rect }) => {
+    const product = input.product;
+    if (!product || product.w <= 0 || product.h <= 0) return 0;
+    return (
+      (overlapArea(placed.label, product) + overlapArea(placed.tag, product)) /
+      (product.w * product.h)
+    );
+  };
+  const here = share(chosen);
+  const there = share(useBottom ? top : low);
+  const covers = here > AD_TEXT_COVERS_SHARE;
   return {
     label: chosen.label,
     tag: chosen.tag,
     sticker: stickerRect,
     zone: useBottom ? "bottom" : "top",
+    textOverlap: input.product
+      ? {
+          covers,
+          suggested:
+            covers && there < here ? (useBottom ? "top" : "bottom") : null,
+        }
+      : null,
   };
 }
 

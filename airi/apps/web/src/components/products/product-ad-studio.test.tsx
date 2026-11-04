@@ -1,6 +1,10 @@
 /** @jest-environment jsdom */
 import "@testing-library/jest-dom";
-import type { ProductAdBrief, ProductAdRecord } from "@/lib/products/types";
+import type {
+  ProductAdBrief,
+  ProductAdRecord,
+  ProductAdRecordScene,
+} from "@/lib/products/types";
 import {
   fireEvent,
   render,
@@ -9,6 +13,7 @@ import {
   within,
 } from "@testing-library/react";
 import { SWRConfig } from "swr";
+import { AdReady } from "./product-ad-ready";
 import { AdStudio, type AdStudioView } from "./product-ad-studio";
 
 // The video ad studio: the brief and its consent gate, the honest making
@@ -59,6 +64,19 @@ const brief = (overrides: Partial<ProductAdBrief> = {}): ProductAdBrief => ({
 
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
 
+/** A scene's studio v2 fields as an ad from before them reads. */
+const V1_SCENE: Pick<
+  ProductAdRecordScene,
+  "textZone" | "useExact" | "pictures" | "place" | "redo" | "textOverlap"
+> = {
+  textZone: "auto",
+  useExact: false,
+  pictures: [],
+  place: null,
+  redo: null,
+  textOverlap: null,
+};
+
 function adRecord(overrides: Partial<ProductAdRecord> = {}): ProductAdRecord {
   return {
     id: AD,
@@ -83,6 +101,14 @@ function adRecord(overrides: Partial<ProductAdRecord> = {}): ProductAdRecord {
     },
     idea: { kind: "new", text: null },
     voice: "own",
+    stockVoiceId: null,
+    voiceResult: null,
+    runKind: "make",
+    lastRun: null,
+    picturesLeft: null,
+    // An ad written before Muse Spark's options.
+    openings: [],
+    endings: [],
     ending: { phone: SHOP_NUMBER, shopName: "QazOner Group" },
     products: [
       {
@@ -115,12 +141,14 @@ function adRecord(overrides: Partial<ProductAdRecord> = {}): ProductAdRecord {
         method: "muse",
         imageUrl: "https://signed.test/scene-doll.png",
         checked: true,
+        ...V1_SCENE,
       },
       {
         productId: MUG,
         method: "exact",
         imageUrl: "https://signed.test/exact-mug.png",
         checked: false,
+        ...V1_SCENE,
       },
     ],
     video: {
@@ -128,6 +156,7 @@ function adRecord(overrides: Partial<ProductAdRecord> = {}): ProductAdRecord {
       bytes: 3_355_443,
       seconds: 14.2,
       posterUrl: "https://signed.test/poster.jpg",
+      renderNo: 1,
     },
     stills: {
       statusUrl: "https://signed.test/status.jpg",
@@ -206,7 +235,17 @@ beforeEach(() => {
     configurable: true,
     value: { writeText },
   });
-  delete (window as { matchMedia?: unknown }).matchMedia;
+  // A wide screen, unless a test says otherwise.
+  window.matchMedia = jest.fn((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })) as unknown as typeof window.matchMedia;
 });
 
 const props = {
@@ -249,9 +288,7 @@ describe("the brief", () => {
     expect(
       screen.getByRole("radio", { name: "New on the shelf" })
     ).toBeChecked();
-    expect(
-      screen.getByRole("radio", { name: "Your voice, from the video" })
-    ).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Your recording" })).toBeChecked();
     // One of two products has a clip of the owner saying its price.
     expect(
       screen.getByText(
@@ -276,7 +313,9 @@ describe("the brief", () => {
       screen.getByText("Kazakh, the language you spoke")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("1 AI action · about a minute · you can leave this page")
+      screen.getByText(
+        "1 AI action · about 1-2 minutes · you can leave this page"
+      )
     ).toBeInTheDocument();
     expect(makeButton()).toBeEnabled();
   });
@@ -375,9 +414,7 @@ describe("the brief", () => {
         "No voice: the video has no clip of you saying these products' prices."
       )
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("radio", { name: "Your voice, from the video" })
-    ).toBeNull();
+    expect(screen.queryByRole("radio", { name: "Your recording" })).toBeNull();
     fireEvent.click(makeButton());
     await waitFor(() => expect(props.onCreated).toHaveBeenCalled());
     expect(bodyOf("POST", ADS_URL).voice).toBe("none");
@@ -742,11 +779,14 @@ describe("the finished ad", () => {
       screen.getByText("Кукла Лол and Кружка Web UMN · 14 s · in Kazakh")
     ).toBeInTheDocument();
     expect(screen.getByText("Ready · made in 1 min 4 s")).toBeInTheDocument();
+    expect(screen.getByText("Video 1 · 14 s")).toBeInTheDocument();
+    // One scene at a time: the first, Muse Image's and checked.
     expect(
-      screen.getByText(
-        "Picture by Muse Image · Still your LOL doll: checked by Muse Spark"
-      )
+      screen.getByText("Muse Image · checked by Muse Spark")
     ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("radio", { name: "Scene 2 · Кружка Web UMN" })
+    );
     expect(screen.getByText("Your exact photo")).toBeInTheDocument();
     expect(
       screen.getByText("The video is 3.2 MB, under WhatsApp's 16 MB.")
@@ -870,9 +910,11 @@ describe("the finished ad", () => {
   it("checks edited words like the script before they're saved", async () => {
     open({ kind: "ad", adId: AD });
 
+    // An ad from before Muse Spark's options has only its words to change.
     const sticker = await screen.findByRole("textbox", {
-      name: "Sticker on the first scene",
+      name: /^Your own opening words/,
     });
+    expect(sticker).toHaveValue("Сөреде жаңа тауарлар");
     fireEvent.change(sticker, { target: { value: "5000 ₸ ғана" } });
 
     expect(
@@ -880,7 +922,7 @@ describe("the finished ad", () => {
     ).toBeInTheDocument();
     expect(sticker).toHaveAttribute("aria-invalid", "true");
     expect(
-      screen.getByRole("button", { name: "Save and remake the video" })
+      screen.getByRole("button", { name: "Update the video" })
     ).toBeDisabled();
 
     fireEvent.change(sticker, {
@@ -890,10 +932,10 @@ describe("the finished ad", () => {
       screen.getByText("Too long: it has to fit one line of 26 letters.")
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Undo changes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Undo all" }));
     expect(sticker).toHaveValue("Сөреде жаңа тауарлар");
     expect(
-      screen.queryByRole("button", { name: "Save and remake the video" })
+      screen.queryByRole("button", { name: "Update the video" })
     ).toBeNull();
   });
 
@@ -930,26 +972,30 @@ describe("the finished ad", () => {
     open({ kind: "ad", adId: AD });
 
     const sticker = await screen.findByRole("textbox", {
-      name: "Sticker on the first scene",
+      name: /^Your own opening words/,
     });
     expect(
-      screen.queryByRole("button", { name: "Save and remake the video" })
+      screen.queryByRole("button", { name: "Update the video" })
     ).toBeNull();
     fireEvent.change(sticker, { target: { value: "Сөреде жаңа тауарлар" } });
     expect(
-      screen.queryByRole("button", { name: "Save and remake the video" })
+      screen.queryByRole("button", { name: "Update the video" })
     ).toBeNull();
   });
 
-  it("saves edited words and makes the video again, with no AI action", async () => {
+  it("updates the video with the edited words, with no AI action, and keeps the view while it runs", async () => {
     routes[`PATCH ${AD_URL}`] = answer(
       {
         ad: making({
           step: "video",
+          runKind: "render",
           renderNo: 2,
           timings: adRecord().timings,
           requestedAt: ago(1_000),
           startedAt: null,
+          video: adRecord().video,
+          post: adRecord().post,
+          ctwa: adRecord().ctwa,
         }),
       },
       202
@@ -961,22 +1007,36 @@ describe("the finished ad", () => {
     });
     fireEvent.change(caption, { target: { value: "Жаңа  қуыршақ" } });
     expect(
-      screen.getByText("It costs no AI action and takes about 40 seconds.")
+      screen.getByText("Free · about 20 s · no AI used")
     ).toBeInTheDocument();
-    // While edits wait, saving them is the one main action.
+    expect(
+      screen.getByText("1 change isn't in the video yet")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Кукла Лол: caption")).toBeInTheDocument();
+    // While changes wait, the update is the one main action.
     expect(
       screen.getByRole("link", { name: "Download video · 3.2 MB" })
     ).toHaveAttribute("data-variant", "outline");
-    fireEvent.click(
-      screen.getByRole("button", { name: "Save and remake the video" })
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Update the video" }));
 
     expect(
-      await screen.findByText("Making your video again")
+      await screen.findByText(/^Updating the video… 0:0\d$/)
     ).toBeInTheDocument();
     expect(bodyOf("PATCH", AD_URL)).toEqual({
       captions: [{ productId: DOLL, caption: "Жаңа қуыршақ" }],
     });
+    // The earlier video still plays, and every control waits.
+    expect(screen.getByLabelText("Your video ad")).toHaveAttribute(
+      "src",
+      "https://signed.test/ad.mp4"
+    );
+    expect(screen.queryByText("Making your video again")).toBeNull();
+    expect(
+      screen.getByRole("textbox", { name: "Caption for Кукла Лол" })
+    ).toBeDisabled();
+    expect(
+      screen.getAllByText("Wait for this update to finish").length
+    ).toBeGreaterThan(0);
   });
 
   it("keeps the edits and says why when they can't be saved", async () => {
@@ -986,19 +1046,702 @@ describe("the finished ad", () => {
     );
     open({ kind: "ad", adId: AD });
 
-    fireEvent.change(await screen.findByRole("textbox", { name: "Ending" }), {
-      target: { value: "Бізге жазыңыз" },
-    });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Save and remake the video" })
+    fireEvent.change(
+      await screen.findByRole("textbox", { name: /^Your own ending words/ }),
+      { target: { value: "Бізге жазыңыз" } }
     );
+    fireEvent.click(screen.getByRole("button", { name: "Update the video" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The ad is being made right now. Try again once it's ready."
+      "One change at a time: wait for this one to finish."
     );
-    expect(screen.getByRole("textbox", { name: "Ending" })).toHaveValue(
-      "Бізге жазыңыз"
+    expect(
+      screen.getByRole("textbox", { name: /^Your own ending words/ })
+    ).toHaveValue("Бізге жазыңыз");
+  });
+});
+
+describe("the finished ad's tools", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const SCENES_URL = `${AD_URL}/scenes/${DOLL}`;
+
+  const dollScene = (
+    overrides: Partial<ProductAdRecord["scenes"][number]> = {}
+  ): ProductAdRecord["scenes"][number] => ({
+    productId: DOLL,
+    method: "muse",
+    imageUrl: "https://signed.test/scene-doll-a2.png",
+    checked: true,
+    textZone: "auto",
+    useExact: false,
+    pictures: [
+      {
+        index: 0,
+        url: "https://signed.test/scene-doll-a1.png",
+        place: "a linen shelf",
+        current: false,
+      },
+      {
+        index: 1,
+        url: "https://signed.test/scene-doll-a2.png",
+        place: "an oak table by a window",
+        current: true,
+      },
+    ],
+    place: { setting: "oak_table_window", words: null, englishPlace: null },
+    redo: null,
+    textOverlap: { covers: true, suggested: "bottom" },
+    ...overrides,
+  });
+
+  const mugScene = adRecord().scenes[1]!;
+
+  /** An ad with Muse Spark's options, kept pictures and the ledger's room. */
+  const v2Ad = (overrides: Partial<ProductAdRecord> = {}) =>
+    adRecord({
+      openings: [
+        {
+          text: "Жаңа бұйымдар келді",
+          kind: "news",
+          gloss: "New pieces have arrived",
+        },
+        {
+          text: "Сыйлық іздейсіз бе?",
+          kind: "question",
+          gloss: "Looking for a gift?",
+        },
+        {
+          text: "Үйіңізге жылулық",
+          kind: "promise",
+          gloss: "Warmth for your home",
+        },
+      ],
+      endings: [
+        {
+          text: "WhatsApp-қа жазыңыз",
+          kind: "order",
+          gloss: "Message us on WhatsApp",
+        },
+        {
+          text: "Каталогты сұраңыз",
+          kind: "ask",
+          gloss: "Ask for the catalogue",
+        },
+        {
+          text: "Өзіңізге қалдырыңыз",
+          kind: "reserve",
+          gloss: "Keep one for yourself",
+        },
+      ],
+      picturesLeft: 8,
+      script: { ...adRecord().script!, sticker: "Жаңа бұйымдар келді" },
+      scenes: [dollScene(), mugScene],
+      ...overrides,
+    });
+
+  /** The ad while a run of `kind` goes, with its earlier video. */
+  const editing = (
+    kind: ProductAdRecord["runKind"],
+    overrides: Partial<ProductAdRecord> = {}
+  ) =>
+    v2Ad({
+      status: "making",
+      step: kind === "scene" ? "pictures" : "video",
+      runKind: kind,
+      renderNo: 2,
+      requestedAt: ago(3_000),
+      startedAt: ago(2_000),
+      picturesLeft: null,
+      ...overrides,
+    });
+
+  const openV2 = async (ad: ProductAdRecord = v2Ad()) => {
+    routes[`GET ${AD_URL}`] = answer({ ad });
+    open({ kind: "ad", adId: AD });
+    await screen.findByLabelText("Your video ad");
+  };
+
+  const update = () =>
+    fireEvent.click(screen.getByRole("button", { name: "Update the video" }));
+
+  it("offers Muse Spark's openings by kind, marks the one in the video, and moves with the arrow keys", async () => {
+    routes[`PATCH ${AD_URL}`] = answer({ ad: editing("render") }, 202);
+    await openV2();
+
+    const group = screen.getByRole("radiogroup", { name: "Opening words" });
+    const radios = within(group).getAllByRole("radio");
+    expect(radios).toHaveLength(4);
+    expect(radios[0]).toHaveAttribute("aria-checked", "true");
+    expect(radios[0]).toHaveTextContent(
+      "NewsЖаңа бұйымдар келдіNew pieces have arrivedIn the video now"
     );
+    expect(radios[0]).toHaveAttribute("tabindex", "0");
+    expect(radios[1]).toHaveAttribute("tabindex", "-1");
+
+    radios[0]!.focus();
+    fireEvent.keyDown(radios[0]!, { key: "ArrowDown" });
+    expect(radios[1]).toHaveAttribute("aria-checked", "true");
+    expect(document.activeElement).toBe(radios[1]);
+    expect(
+      screen.getByText("Opening: Сыйлық іздейсіз бе?")
+    ).toBeInTheDocument();
+    // Up from the first wraps to the last: the owner's own words.
+    fireEvent.keyDown(radios[1]!, { key: "Home" });
+    fireEvent.keyDown(radios[0]!, { key: "ArrowUp" });
+    expect(radios[3]).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByRole("textbox", { name: /^Your own opening words/ })
+    ).toHaveValue("Жаңа бұйымдар келді");
+    fireEvent.click(radios[2]!);
+
+    update();
+    await screen.findByText(/^Updating the video…/);
+    expect(bodyOf("PATCH", AD_URL)).toEqual({ sticker: "Үйіңізге жылулық" });
+  });
+
+  it("takes the owner's own ending, two lines, checked like the script", async () => {
+    await openV2();
+    const group = screen.getByRole("radiogroup", { name: "Ending" });
+    fireEvent.click(
+      within(group).getByRole("radio", { name: /^Your own words/ })
+    );
+    const own = screen.getByRole("textbox", { name: /^Your own ending words/ });
+    fireEvent.change(own, { target: { value: "Бүгін 50% арзан" } });
+    expect(
+      screen.getByText("No numbers here: Airi adds the prices from your shelf.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Update the video" })
+    ).toBeDisabled();
+  });
+
+  it("shows one scene at a time, picked with the arrow keys from its tabs", async () => {
+    await openV2();
+    const tabs = screen.getByRole("radiogroup", { name: "Scene to change" });
+    const [doll, mug] = within(tabs).getAllByRole("radio");
+    expect(doll).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Scene 1 of 2")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "The scene of Кукла Лол" })
+    ).toHaveAttribute("src", "https://signed.test/scene-doll-a2.png");
+
+    doll!.focus();
+    fireEvent.keyDown(doll!, { key: "ArrowRight" });
+    expect(mug).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Scene 2 of 2")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "The scene of Кружка Web UMN" })
+    ).toHaveAttribute("src", "https://signed.test/exact-mug.png");
+    // A scene with fewer than 2 kept pictures has none to pick again.
+    expect(screen.queryByText("Earlier pictures")).toBeNull();
+  });
+
+  it("stays on the scene the owner picked while the video updates", async () => {
+    routes[`PATCH ${AD_URL}`] = answer({ ad: editing("render") }, 202);
+    await openV2();
+    fireEvent.click(
+      screen.getByRole("radio", { name: "Scene 2 · Кружка Web UMN" })
+    );
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /^Use my exact photo here · free/ })
+    );
+    update();
+    await screen.findByText(/^Updating the video…/);
+    expect(screen.getByText("Scene 2 of 2")).toBeInTheDocument();
+    expect(bodyOf("PATCH", AD_URL)).toEqual({
+      scenes: [{ productId: MUG, useExact: true }],
+    });
+  });
+
+  it("hints where the words keep the product clear, and moves them there for free", async () => {
+    routes[`PATCH ${AD_URL}`] = answer({ ad: editing("render") }, 202);
+    await openV2();
+
+    expect(
+      screen.getByText("The words cover the LOL doll. Bottom keeps it clear.")
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Use Bottom" }));
+
+    const zones = screen.getByRole("radiogroup", {
+      name: /^Words on the picture/,
+    });
+    expect(
+      within(zones).getByRole("radio", { name: "Bottom" })
+    ).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByText("Кукла Лол: words at the bottom")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/The words cover/)).toBeNull();
+
+    const top = within(zones).getByRole("radio", { name: "Bottom" });
+    top.focus();
+    fireEvent.keyDown(top, { key: "ArrowLeft" });
+    expect(within(zones).getByRole("radio", { name: "Top" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+
+    update();
+    await screen.findByText(/^Updating the video…/);
+    expect(bodyOf("PATCH", AD_URL)).toEqual({
+      scenes: [{ productId: DOLL, textZone: "top" }],
+    });
+  });
+
+  it("picks an earlier picture again for free", async () => {
+    routes[`PATCH ${AD_URL}`] = answer({ ad: editing("render") }, 202);
+    await openV2();
+
+    const earlier = screen.getByRole("radiogroup", {
+      name: /^Earlier pictures/,
+    });
+    expect(
+      within(earlier).getByRole("radio", {
+        name: "Picture 2: an oak table by a window",
+      })
+    ).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(
+      within(earlier).getByRole("radio", { name: "Picture 1: a linen shelf" })
+    );
+    expect(
+      screen.getByRole("img", { name: "The scene of Кукла Лол" })
+    ).toHaveAttribute("src", "https://signed.test/scene-doll-a1.png");
+    expect(
+      screen.getByText("Кукла Лол: an earlier picture")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Tap one to use it again. Free.")
+    ).toBeInTheDocument();
+
+    update();
+    await screen.findByText(/^Updating the video…/);
+    expect(bodyOf("PATCH", AD_URL)).toEqual({
+      scenes: [{ productId: DOLL, pictureIndex: 0 }],
+    });
+  });
+
+  it("uses the exact photo for a scene, and undoes every change at once", async () => {
+    await openV2();
+
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /^Use my exact photo here · free/ })
+    );
+    expect(screen.getByText("Your exact photo")).toBeInTheDocument();
+    fireEvent.click(
+      within(
+        screen.getByRole("radiogroup", { name: /^Words on the picture/ })
+      ).getByRole("radio", { name: "Top" })
+    );
+    fireEvent.click(
+      within(
+        screen.getByRole("radiogroup", { name: /^Opening words/ })
+      ).getAllByRole("radio")[1]!
+    );
+    expect(
+      screen.getByText("3 changes aren't in the video yet")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Кукла Лол: your exact photo")).toBeInTheDocument();
+    // Each changed control says so.
+    expect(screen.getAllByText("changed").length).toBeGreaterThanOrEqual(3);
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo all" }));
+    expect(screen.queryByText(/aren't in the video yet/)).toBeNull();
+    expect(
+      screen.getByRole("checkbox", { name: /^Use my exact photo here · free/ })
+    ).not.toBeChecked();
+  });
+
+  it("makes a new picture in a tested place, with the waiting changes, and shows its steps while the video stays", async () => {
+    routes[`POST ${SCENES_URL}`] = answer(
+      {
+        ad: editing("scene", {
+          scenes: [
+            dollScene({
+              method: "exact",
+              imageUrl: "https://signed.test/exact-doll.png",
+              checked: false,
+              pictures: dollScene().pictures.map(picture => ({
+                ...picture,
+                current: false,
+              })),
+              place: { setting: "gift_table", words: null, englishPlace: null },
+              redo: {
+                renderNo: 2,
+                outcome: null,
+                reason: null,
+                englishPlace: null,
+              },
+            }),
+            mugScene,
+          ],
+        }),
+      },
+      202
+    );
+    await openV2();
+
+    const button = screen.getByRole("button", { name: "New picture" });
+    expect(button).toBeDisabled();
+    expect(screen.getByText("Choose a place first")).toBeInTheDocument();
+    const places = screen.getByRole("radiogroup", { name: "Place" });
+    expect(
+      within(places).getByRole("radio", { name: "Oak table by a window · now" })
+    ).toBeInTheDocument();
+    fireEvent.click(within(places).getByRole("radio", { name: "Gift table" }));
+    expect(button).toBeEnabled();
+    expect(
+      screen.getByText("About 1 minute · 8 new pictures left on this ad")
+    ).toBeInTheDocument();
+    fireEvent.click(
+      within(
+        screen.getByRole("radiogroup", { name: /^Opening words/ })
+      ).getAllByRole("radio")[1]!
+    );
+
+    fireEvent.click(button);
+
+    expect(
+      await screen.findByRole("list", { name: "How the new picture is going" })
+    ).toHaveTextContent("Muse Image is setting your LOL doll there");
+    expect(bodyOf("POST", SCENES_URL)).toEqual({
+      requestId: expect.any(String),
+      setting: "gift_table",
+      changes: { sticker: "Сыйлық іздейсіз бе?" },
+    });
+    expect(
+      screen.getByText(/^Making a new picture… 0:0\d$/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The video updates with the new picture, and with any changes you made before it."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Your video ad")).toHaveAttribute(
+      "src",
+      "https://signed.test/ad.mp4"
+    );
+    // One change at a time.
+    expect(screen.getByRole("button", { name: "New picture" })).toBeDisabled();
+    expect(
+      within(screen.getByRole("radiogroup", { name: "Place" })).getAllByRole(
+        "radio"
+      )[0]
+    ).toBeDisabled();
+  });
+
+  it("reads a described place, in up to 80 letters", async () => {
+    routes[`POST ${SCENES_URL}`] = answer(
+      {
+        ad: editing("scene", {
+          scenes: [
+            dollScene({
+              place: {
+                setting: null,
+                words: "киіз үй ішінде",
+                englishPlace: "inside a yurt",
+              },
+              redo: {
+                renderNo: 2,
+                outcome: null,
+                reason: null,
+                englishPlace: "inside a yurt",
+              },
+            }),
+            mugScene,
+          ],
+        }),
+      },
+      202
+    );
+    await openV2();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Describe a place" }));
+    const field = screen.getByRole("textbox", {
+      name: "Your place, in any language",
+    });
+    expect(field).toHaveAttribute("maxlength", "80");
+    expect(screen.getByText("Describe the place first")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Muse Spark turns it into a scene. Places only: no people, words or logos."
+      )
+    ).toBeInTheDocument();
+    fireEvent.change(field, { target: { value: "киіз үй ішінде " } });
+    expect(screen.getByText("15/80")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "New picture" }));
+
+    expect(
+      await screen.findByText("Muse Spark read your place: “inside a yurt”")
+    ).toBeInTheDocument();
+    expect(bodyOf("POST", SCENES_URL)).toEqual({
+      requestId: expect.any(String),
+      words: "киіз үй ішінде",
+    });
+  });
+
+  it("has no New picture at 0 left, and says so", async () => {
+    await openV2(v2Ad({ picturesLeft: 0 }));
+    fireEvent.click(screen.getByRole("radio", { name: "Gift table" }));
+    expect(screen.getByRole("button", { name: "New picture" })).toBeDisabled();
+    expect(
+      screen.getByText("No new pictures left on this ad")
+    ).toBeInTheDocument();
+  });
+
+  it("says why the ledger refused a press", async () => {
+    routes[`POST ${SCENES_URL}`] = answer(
+      { error: "x", code: "no_pictures_left" },
+      409
+    );
+    await openV2();
+    fireEvent.click(screen.getByRole("radio", { name: "Linen shelf" }));
+    fireEvent.click(screen.getByRole("button", { name: "New picture" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This ad has no budget left for new pictures."
+    );
+    expect(screen.getByRole("button", { name: "New picture" })).toBeEnabled();
+  });
+
+  it.each([
+    ["new", null, "The new picture is in, and the video is updated."],
+    [
+      "kept_check",
+      null,
+      "Muse Spark found the new picture changed your LOL doll, so this scene keeps its picture.",
+    ],
+    [
+      "place_refused",
+      "people",
+      "Muse Spark can't use this place: it has people in it. Describe a place only, with no people, words or logos.",
+    ],
+    [
+      "image_refused",
+      null,
+      "Muse Image wouldn't make this place. Try another.",
+    ],
+    ["no_budget", null, "This ad has no budget left for new pictures."],
+    ["unavailable", null, "Muse Image didn't answer. Try again in a minute."],
+  ] as const)(
+    "says how a New picture ended: %s",
+    async (outcome, reason, words) => {
+      await openV2(
+        v2Ad({
+          renderNo: 2,
+          runKind: "scene",
+          scenes: [
+            dollScene({
+              redo: { renderNo: 2, outcome, reason, englishPlace: null },
+            }),
+            mugScene,
+          ],
+        })
+      );
+      expect(screen.getByText(words)).toHaveAttribute("role", "status");
+    }
+  );
+
+  it("takes the scene as its run left it: a New picture that landed turns the exact photo off, with no change waiting", () => {
+    // Pressed on a scene showing the exact photo: the run turns it off.
+    const place = {
+      setting: "gift_table" as const,
+      words: null,
+      englishPlace: null,
+    };
+    const running = editing("scene", {
+      scenes: [
+        dollScene({
+          method: "exact",
+          useExact: true,
+          place,
+          redo: {
+            renderNo: 2,
+            outcome: null,
+            reason: null,
+            englishPlace: null,
+          },
+        }),
+        mugScene,
+      ],
+    });
+    const landed = v2Ad({
+      renderNo: 2,
+      scenes: [
+        dollScene({
+          useExact: false,
+          place,
+          redo: {
+            renderNo: 2,
+            outcome: "new",
+            reason: null,
+            englishPlace: null,
+          },
+        }),
+        mugScene,
+      ],
+    });
+    const ready = (ad: ProductAdRecord) => (
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+        <AdReady
+          key={ad.renderNo}
+          workspaceId={WS}
+          ad={ad}
+          onChanged={jest.fn()}
+          onChangeProducts={jest.fn()}
+        />
+      </SWRConfig>
+    );
+    const view = render(ready(running));
+    view.rerender(ready(landed));
+
+    expect(screen.queryByText(/in the video yet/)).toBeNull();
+    expect(
+      screen.getByRole("checkbox", { name: /Use my exact photo here/ })
+    ).not.toBeChecked();
+    // Its credit names the place as a sentence says it.
+    expect(
+      screen.getByText(
+        "Muse Image set the LOL doll on a gift table; Muse Spark checked it; SAM 3.1 framed it."
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("doesn't say how an older New picture ended once the video moved on", async () => {
+    await openV2(
+      v2Ad({
+        renderNo: 3,
+        scenes: [
+          dollScene({
+            redo: {
+              renderNo: 2,
+              outcome: "kept_check",
+              reason: null,
+              englishPlace: null,
+            },
+          }),
+          mugScene,
+        ],
+      })
+    );
+    expect(screen.queryByText(/changed your LOL doll/)).toBeNull();
+  });
+
+  it("says inline why an update failed, keeps the earlier video, and tries again", async () => {
+    routes[`POST ${AD_URL}/retry`] = answer({ ad: editing("render") }, 202);
+    await openV2(
+      v2Ad({
+        renderNo: 3,
+        lastRun: {
+          renderNo: 3,
+          kind: "render",
+          outcome: "failed",
+          errorCode: "failed",
+          at: ago(5_000),
+        },
+      })
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The video couldn't be updated: something went wrong while making it. Your earlier video is still here."
+    );
+    expect(screen.queryByText(/The ad couldn't be made/)).toBeNull();
+    expect(screen.getByLabelText("Your video ad")).toHaveAttribute(
+      "src",
+      "https://signed.test/ad.mp4"
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText(/^Updating the video…/)).toBeInTheDocument();
+    expect(callsTo("POST", `${AD_URL}/retry`)).toHaveLength(1);
+  });
+
+  it("says why a New picture's run failed in the ledger's own words", async () => {
+    await openV2(
+      v2Ad({
+        renderNo: 3,
+        lastRun: {
+          renderNo: 3,
+          kind: "scene",
+          outcome: "failed",
+          errorCode: "spend_limit",
+          at: ago(5_000),
+        },
+      })
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The video couldn't be updated: your company's AI spending limit has been reached."
+    );
+  });
+
+  it("keeps the view while a new voice is read", async () => {
+    await openV2(editing("voice"));
+    expect(screen.getByText(/^Updating the video…/)).toBeInTheDocument();
+    expect(screen.queryByText("Making your video again")).toBeNull();
+  });
+
+  it("gives the keyboard's focus to the Voice heading once the new voice's run draws the view again", async () => {
+    routes[`POST ${AD_URL}/voice`] = () => {
+      // The run is under way from now on.
+      routes[`GET ${AD_URL}`] = answer({ ad: editing("voice") });
+      return answer({ ad: editing("voice") }, 202)();
+    };
+    await openV2();
+    fireEvent.click(screen.getByRole("button", { name: "Change the voice" }));
+    fireEvent.click(screen.getByRole("radio", { name: "No voice" }));
+    const press = screen.getByRole("button", {
+      name: "Make the video with this voice",
+    });
+    press.focus();
+    fireEvent.click(press);
+
+    // Run 2 draws the finished view anew, and the press goes with the old one.
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Voice" })).toHaveFocus()
+    );
+    expect(press).not.toBeInTheDocument();
+    expect(screen.getByText(/^Updating the video…/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Change the voice" })
+    ).toBeDisabled();
+  });
+
+  it("leaves the focus where the owner moved it while the new voice's run started", async () => {
+    const answered: { now?: () => void } = {};
+    routes[`POST ${AD_URL}/voice`] = () =>
+      new Promise<Answer>(resolve => {
+        answered.now = () => {
+          routes[`GET ${AD_URL}`] = answer({ ad: editing("voice") });
+          resolve(answer({ ad: editing("voice") }, 202)());
+        };
+      });
+    await openV2();
+    fireEvent.click(screen.getByRole("button", { name: "Change the voice" }));
+    fireEvent.click(screen.getByRole("radio", { name: "No voice" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Make the video with this voice" })
+    );
+    await waitFor(() => expect(answered.now).toBeDefined());
+    // The owner moves on before the answer comes.
+    const elsewhere = document.createElement("button");
+    document.body.appendChild(elsewhere);
+    elsewhere.focus();
+    answered.now!();
+
+    expect(await screen.findByText(/^Updating the video…/)).toBeInTheDocument();
+    expect(elsewhere).toHaveFocus();
+    elsewhere.remove();
+  });
+
+  it("tells what AI made the ad, and how many new pictures are left", async () => {
+    await openV2();
+    expect(
+      screen.getByText("Muse Spark wrote the words, 3 openings and 3 endings")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Muse Image made 2 pictures, each checked by Muse Spark")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("8 new pictures left · all in this ad's one AI action")
+    ).toBeInTheDocument();
   });
 });
 
@@ -1167,14 +1910,22 @@ describe("on a phone", () => {
     ).toBeNull();
   });
 
-  it("puts saving the edits in the bar while they wait", async () => {
+  it("puts the update in the bar while changes wait", async () => {
     open({ kind: "ad", adId: AD });
-    fireEvent.change(await screen.findByRole("textbox", { name: "Ending" }), {
-      target: { value: "Бізге жазыңыз" },
+    fireEvent.change(
+      await screen.findByRole("textbox", { name: /^Your own ending words/ }),
+      { target: { value: "Бізге жазыңыз" } }
+    );
+    const update = screen.getByRole("button", {
+      name: "1 change · Update the video",
     });
-    const save = screen.getByRole("button", {
-      name: "Save and remake the video",
-    });
-    expect(save.closest(".bar")).not.toBeNull();
+    expect(update.closest(".bar")).not.toBeNull();
+    // The card still lists the change, without a second button.
+    expect(
+      screen.getByText("1 change isn't in the video yet")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Update the video" })
+    ).toBeNull();
   });
 });

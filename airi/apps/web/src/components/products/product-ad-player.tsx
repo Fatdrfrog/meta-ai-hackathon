@@ -16,8 +16,11 @@ const COPY = PRODUCTS_COPY.ad;
 
 export function AdPlayer({
   video,
+  tag = null,
 }: {
   video: NonNullable<ProductAdRecord["video"]> | null;
+  /** A label on the frame's corner: which video it is ("Video 2 · 13 s"). */
+  tag?: string | null;
 }) {
   const [safe, setSafe] = useState(false);
   const [sound, setSound] = useState(true);
@@ -44,6 +47,7 @@ export function AdPlayer({
         ) : (
           <p className={styles.frameNote}>{COPY.videoMissing}</p>
         )}
+        {tag && video ? <span className={styles.frameTag}>{tag}</span> : null}
         {safe ? (
           <div className={styles.safe} aria-hidden="true">
             <div className={styles.safeTop}>

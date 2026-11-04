@@ -1,26 +1,42 @@
 import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 import {
   PRODUCT_AD_CTWA_QUESTIONS,
+  PRODUCT_AD_ENDING_KINDS,
+  PRODUCT_AD_OPENING_KINDS,
+  PRODUCT_AD_OPTIONS_MAX,
   PRODUCT_AD_SETTINGS,
   PRODUCT_AD_TEXT_LIMITS,
+  productAdOptionIssues,
   productAdScriptIssues,
   productAdTextIssues,
   saysSpokenWord,
   spokenNumberRoot,
+  type ProductAdEndingKind,
   type ProductAdIdeaKind,
+  type ProductAdOpeningKind,
+  type ProductAdOption,
   type ProductAdScript,
   type ProductAdSetting,
+  type ProductAdTextLimit,
   type ProductShopWordsCode,
 } from "@icecore/temporal";
+import {
+  fallbackSpokenLine,
+  SPOKEN_LINE_SCHEMA,
+  spokenLineIssues,
+  spokenLinesPrompt,
+} from "./voice-script";
 
 // The ad's words: one Muse Spark 1.3 call with a strict JSON schema writes the
 // sticker, a caption and a setting for each product's scene, the price card's
 // title, the ending, the post's opening and the Click-to-WhatsApp copy, in
-// the language the owner spoke and from what they said. No price is ever
-// written: code draws the shelf's prices. Every answer passes the shared
-// checks (ad-script.ts); a failing one gets one repair call with the
-// problems listed, and after that the code writes plain words itself, so an
-// ad always has words.
+// the language the owner spoke and from what they said; and three openings
+// and three endings, one of each kind, for the owner to pick from in the
+// studio. No price is ever written: code draws the shelf's prices. Every
+// answer passes the shared checks (ad-script.ts); a failing one gets one
+// repair call with the problems listed, and after that the code writes plain
+// words itself, so an ad always has words. An opening or ending that fails
+// the same checks is dropped, never the script.
 
 export type AdScript = Omit<ProductAdScript, "edited">;
 
@@ -88,33 +104,52 @@ const IDEAS: Record<Exclude<ProductAdIdeaKind, "own">, string> = {
 /** The JSON schema Muse Spark answers in: every key required, nothing else. */
 export function adScriptSchema(productIds: string[]): object {
   const text = { type: "string" };
+  const options = (kinds: readonly string[]) => ({
+    type: "array",
+    items: {
+      type: "object",
+      additionalProperties: false,
+      required: ["text", "kind", "gloss"],
+      properties: {
+        text,
+        kind: { type: "string", enum: [...kinds] },
+        gloss: text,
+      },
+    },
+  });
   return {
     type: "object",
     additionalProperties: false,
     required: [
+      "openings",
       "sticker",
       "scenes",
       "priceCardTitle",
+      "endings",
       "ending",
       "postIntro",
       "ctwa",
     ],
     properties: {
+      openings: options(PRODUCT_AD_OPENING_KINDS),
       sticker: text,
       scenes: {
         type: "array",
         items: {
           type: "object",
           additionalProperties: false,
-          required: ["productId", "caption", "setting"],
+          required: ["productId", "caption", "setting", "spoken"],
           properties: {
             productId: { type: "string", enum: productIds },
             caption: text,
             setting: { type: "string", enum: [...PRODUCT_AD_SETTINGS] },
+            // The voice-over's line (Part V, voice-script.ts).
+            spoken: SPOKEN_LINE_SCHEMA,
           },
         },
       },
       priceCardTitle: text,
+      endings: options(PRODUCT_AD_ENDING_KINDS),
       ending: text,
       postIntro: text,
       ctwa: {
@@ -191,6 +226,14 @@ export function kazakhSpellingIssues(
   script: AdScript,
   request: ScriptRequest,
 ): string[] {
+  return kazakhTextIssues(scriptTexts(script), request);
+}
+
+/** kazakhSpellingIssues for any texts, each with the field it's named by. */
+function kazakhTextIssues(
+  texts: Array<[string, string]>,
+  request: ScriptRequest,
+): string[] {
   if (!isKazakh(request)) return [];
   const names = new Set(
     Array.from(
@@ -199,7 +242,7 @@ export function kazakhSpellingIssues(
         .toLowerCase(),
     ),
   );
-  return scriptTexts(script).flatMap(([field, text]) => {
+  return texts.flatMap(([field, text]) => {
     const foreign = new Set<string>();
     for (const char of text.normalize("NFC").toLowerCase()) {
       const code = char.codePointAt(0) ?? 0;
@@ -298,6 +341,14 @@ export function spokenPriceIssues(
   script: AdScript,
   request: ScriptRequest,
 ): string[] {
+  return spokenPriceTextIssues(scriptTexts(script), request);
+}
+
+/** spokenPriceIssues for any texts, each with the field it's named by. */
+function spokenPriceTextIssues(
+  texts: Array<[string, string]>,
+  request: ScriptRequest,
+): string[] {
   const names = new Set(
     wordsOf(
       [
@@ -307,7 +358,7 @@ export function spokenPriceIssues(
     ),
   );
   const prices = spokenPrices(request, names);
-  return scriptTexts(script).flatMap(([field, text]) => {
+  return texts.flatMap(([field, text]) => {
     const words = wordsOf(text).filter((word) => !names.has(word));
     const scale = words.some(
       (word) =>
@@ -371,23 +422,33 @@ export function adScriptPrompt(
     idea,
     `The products, in the order the ad shows them:\n${products}`,
     `Write:\n` +
-      `- sticker: a short hook shown at the start, at most ${limits.sticker.chars} characters on one line.\n` +
+      `- openings: exactly three short hooks shown at the start, for the owner to choose from, one of each kind: ` +
+      `news (what's new on the shelf), question (a question a buyer answers yes to), promise (what the buyer gets ` +
+      `from it); each text at most ${limits.sticker.chars} characters on one line, with gloss: the text in plain ` +
+      `English for the owner, at most ${GLOSS_LIMIT.chars} characters.\n` +
+      `- sticker: the opening you would show, its text copied exactly from openings.\n` +
       `- scenes: exactly one per product, in the order above, each with productId (the product's id exactly), ` +
       `caption (why a buyer would want it, from what the owner said or the photo shows; at most ${limits.caption.lines} lines ` +
       `of ${limits.caption.chars} characters), and setting (where it looks its best, one of: ${settings}).\n` +
       `- priceCardTitle: the title over all the products with their prices, at most ${limits.priceCardTitle.chars} characters.\n` +
-      `- ending: asks buyers to message the shop on WhatsApp, at most ${limits.ending.lines} lines of ${limits.ending.chars} characters.\n` +
+      `- endings: exactly three last words that ask buyers to message the shop on WhatsApp, for the owner to choose ` +
+      `from, one of each kind: order (to order one), ask (to ask the shop anything), reserve (to keep one for ` +
+      `themselves); each text at most ${limits.ending.lines} lines of ${limits.ending.chars} characters, with gloss: ` +
+      `the text in plain English for the owner, at most ${GLOSS_LIMIT.chars} characters.\n` +
+      `- ending: the ending you would show, its text copied exactly from endings.\n` +
       `- postIntro: the opening of the post that goes with the video, at most ${limits.postIntro.chars} characters; ` +
       `code adds each product's name and price after it.\n` +
       `- ctwa: Click-to-WhatsApp ad copy: headline (at most ${limits.ctwaHeadline.chars} characters), primaryText ` +
       `(at most ${limits.ctwaPrimaryText.chars}), greeting (the shop's first message to a buyer who taps the ad, ` +
       `at most ${limits.ctwaGreeting.chars}) and exactly ${PRODUCT_AD_CTWA_QUESTIONS} questions a buyer can tap ` +
       `(each at most ${limits.ctwaQuestion.chars}).`,
+    spokenLinesPrompt(request),
     `Rules: never write a price, a number, a digit or a currency in any text, not even in words; code adds the shelf's prices. ` +
       `Say only what the owner said or the photos show: no "best", "guaranteed", discounts, sizes or materials ` +
       `nobody mentioned. Write in Latin or Cyrillic letters with the language's normal punctuation, and no emoji: ` +
       `the post, the greeting and the questions are sentences with full stops, commas and question marks; the ` +
-      `sticker, captions, title and ending need no full stop. Write the shop's name exactly as given, and the app ` +
+      `openings, sticker, captions, title, endings and ending need no full stop (a question opening keeps its ` +
+      `question mark). These rules hold for every opening and ending too. Write the shop's name exactly as given, and the app ` +
       `as WhatsApp in Latin letters, joining a Kazakh ending with a hyphen (WhatsApp-қа). Keep every text within its length.`,
     isKazakh(request)
       ? `Spell Kazakh with its own letters (ә, ғ, қ, ң, ө, ұ, ү, һ, і), never with another language's, such as җ.`
@@ -402,6 +463,31 @@ export function adScriptPrompt(
 
 const clean = (value: unknown): string =>
   typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+
+/**
+ * Muse Spark's openings or endings as options: texts trimmed, only the
+ * kinds asked for, the first of each kind, in the kinds' order; at most
+ * PRODUCT_AD_OPTIONS_MAX. withCheckedOptions then drops any that fail.
+ */
+function parseOptions<K extends string>(
+  raw: unknown,
+  kinds: readonly K[],
+): ProductAdOption<K>[] {
+  const found = new Map<K, ProductAdOption<K>>();
+  for (const item of Array.isArray(raw) ? raw : []) {
+    const entry = (item && typeof item === "object" ? item : {}) as Record<
+      string,
+      unknown
+    >;
+    const kind = clean(entry.kind) as K;
+    const text = clean(entry.text);
+    if (!kinds.includes(kind) || !text || found.has(kind)) continue;
+    found.set(kind, { text, kind, gloss: clean(entry.gloss) });
+  }
+  return kinds
+    .flatMap((kind) => (found.has(kind) ? [found.get(kind)!] : []))
+    .slice(0, PRODUCT_AD_OPTIONS_MAX);
+}
 
 /**
  * Muse Spark's answer as a script: texts trimmed to one space between words,
@@ -422,10 +508,12 @@ export function parseAdScript(raw: unknown, productIds: string[]): AdScript {
         string,
         unknown
       >;
+      const spoken = clean(entry.spoken);
       return {
         productId: clean(entry.productId),
         caption: clean(entry.caption),
         setting: clean(entry.setting) as ProductAdSetting,
+        ...(spoken ? { spoken } : {}),
       };
     },
   );
@@ -439,6 +527,8 @@ export function parseAdScript(raw: unknown, productIds: string[]): AdScript {
       : scenes,
     priceCardTitle: clean(answer.priceCardTitle),
     ending: clean(answer.ending),
+    openings: parseOptions(answer.openings, PRODUCT_AD_OPENING_KINDS),
+    endings: parseOptions(answer.endings, PRODUCT_AD_ENDING_KINDS),
     postIntro: clean(answer.postIntro),
     ctwa: {
       headline: clean(ctwa.headline),
@@ -451,11 +541,117 @@ export function parseAdScript(raw: unknown, productIds: string[]): AdScript {
   };
 }
 
+/** The room an option's English gloss has; the studio shows it under the option. */
+export const GLOSS_LIMIT: ProductAdTextLimit = { chars: 80 };
+
+/**
+ * What's wrong with one text standing in for the sticker or the ending: the
+ * shared checks at `limit`, Kazakh's spelling and a price said in words.
+ */
+function wordsIssues(
+  field: string,
+  text: string,
+  limit: ProductAdTextLimit,
+  request: ScriptRequest,
+): string[] {
+  return [
+    ...productAdTextIssues(field, text, limit),
+    ...kazakhTextIssues([[field, text]], request),
+    ...spokenPriceTextIssues([[field, text]], request),
+  ];
+}
+
+/**
+ * The options that pass every check the words they stand in for pass,
+ * each with a gloss that holds no price (or none); and what was wrong with
+ * those dropped, for a repair call.
+ */
+function checkedOptions<K extends string>(
+  field: "openings" | "endings",
+  options: ReadonlyArray<ProductAdOption<K>>,
+  limit: ProductAdTextLimit,
+  request: ScriptRequest,
+): { kept: ProductAdOption<K>[]; issues: string[] } {
+  const kept: ProductAdOption<K>[] = [];
+  const issues: string[] = [];
+  options.forEach((option, index) => {
+    const found = [
+      ...wordsIssues(`${field}[${index}].text`, option.text, limit, request),
+      // One of each kind, at most three: parseOptions saw to it, but a
+      // script from elsewhere is checked the same way.
+      ...productAdOptionIssues(field, [...kept, option], limit).filter(
+        (issue) => !issue.startsWith(`${field}[`),
+      ),
+    ];
+    if (found.length) {
+      issues.push(...found);
+      return;
+    }
+    // The gloss is the owner's only, in English: a price or a digit in it is
+    // dropped, never the option.
+    const gloss =
+      productAdTextIssues("gloss", option.gloss, GLOSS_LIMIT).length === 0
+        ? option.gloss
+        : "";
+    kept.push({ ...option, gloss });
+  });
+  return { kept, issues };
+}
+
+/**
+ * The script with its openings and endings checked: a failing option is
+ * dropped. The sticker and the ending are Muse Spark's own picks; when one
+ * is missing, or fails its checks, the first opening (or ending) that
+ * passes takes its place. `issues` lists what was wrong with the options
+ * dropped, for a repair call the script needs anyway.
+ */
+export function withCheckedOptions(
+  script: AdScript,
+  request: ScriptRequest,
+): { script: AdScript; issues: string[] } {
+  const limits = PRODUCT_AD_TEXT_LIMITS;
+  const openings = checkedOptions(
+    "openings",
+    script.openings ?? [],
+    limits.sticker,
+    request,
+  );
+  const endings = checkedOptions(
+    "endings",
+    script.endings ?? [],
+    limits.ending,
+    request,
+  );
+  const fails = (field: string, text: string, limit: ProductAdTextLimit) =>
+    !text.trim() || wordsIssues(field, text, limit, request).length > 0;
+  const sticker =
+    fails("sticker", script.sticker, limits.sticker) && openings.kept[0]
+      ? openings.kept[0].text
+      : script.sticker;
+  const ending =
+    fails("ending", script.ending, limits.ending) && endings.kept[0]
+      ? endings.kept[0].text
+      : script.ending;
+  return {
+    script: {
+      ...script,
+      sticker,
+      ending,
+      openings: openings.kept,
+      endings: endings.kept,
+    },
+    issues: [...openings.issues, ...endings.issues],
+  };
+}
+
 type FallbackWords = {
   sticker: Record<"new" | "gift", string>;
   caption: Record<"new" | "gift", string>;
   priceCardTitle: string;
   ending: string;
+  /** The sticker's and the ending's English glosses, for the studio's options. */
+  stickerGloss: Record<"new" | "gift", string>;
+  endingGloss: string;
   postIntro: Record<"new" | "gift", string>;
   headline: Record<"new" | "gift", string>;
   primaryText: string;
@@ -471,6 +667,8 @@ const FALLBACK: Record<ProductShopWordsCode, FallbackWords> = {
     caption: { new: "Қазір сөреде бар", gift: "Сыйлыққа лайық" },
     priceCardTitle: "Біздің бағалар",
     ending: "Тапсырыс беру үшін жазыңыз",
+    stickerGloss: { new: "New on our shelf", gift: "Great as a gift" },
+    endingGloss: "Message us to order",
     postIntro: {
       new: "Сөремізде жаңа тауарлар бар.",
       gift: "Сыйлық іздеп жүрсеңіз, мына тауарларды қараңыз.",
@@ -492,6 +690,8 @@ const FALLBACK: Record<ProductShopWordsCode, FallbackWords> = {
     caption: { new: "Уже на полке", gift: "Отличный подарок" },
     priceCardTitle: "Наши цены",
     ending: "Пишите нам в WhatsApp",
+    stickerGloss: { new: "New on the shelf", gift: "A gift idea" },
+    endingGloss: "Message us on WhatsApp",
     postIntro: {
       new: "У нас на полке новинки.",
       gift: "Ищете подарок? Посмотрите эти товары.",
@@ -506,6 +706,8 @@ const FALLBACK: Record<ProductShopWordsCode, FallbackWords> = {
     caption: { new: "On the shelf now", gift: "A lovely gift" },
     priceCardTitle: "Our prices",
     ending: "Message us on WhatsApp",
+    stickerGloss: { new: "New on the shelf", gift: "A gift idea" },
+    endingGloss: "Message us on WhatsApp",
     postIntro: {
       new: "New on our shelf.",
       gift: "Looking for a gift? Have a look at these.",
@@ -526,7 +728,8 @@ const DEFAULT_SETTING: ProductAdSetting = "oak_table_window";
 /**
  * The code's own script, in the ad's fixed words' language: preset words for
  * the idea, the owner's own idea where it fits, and the oak table for every
- * scene. It always passes the checks.
+ * scene; one opening (its sticker, as news) and one ending (as order). It
+ * always passes the checks.
  */
 export function fallbackAdScript(request: ScriptRequest): AdScript {
   const words = FALLBACK[request.wordsCode ?? "en"];
@@ -536,13 +739,30 @@ export function fallbackAdScript(request: ScriptRequest): AdScript {
   const fits = (field: keyof typeof PRODUCT_AD_TEXT_LIMITS) =>
     own !== "" &&
     productAdTextIssues(field, own, PRODUCT_AD_TEXT_LIMITS[field]).length === 0;
+  const sticker = fits("sticker") ? own : words.sticker[kind];
+  const opening: ProductAdOption<ProductAdOpeningKind> = {
+    text: sticker,
+    kind: "news",
+    gloss: fits("sticker") ? "Your own idea" : words.stickerGloss[kind],
+  };
+  const ending: ProductAdOption<ProductAdEndingKind> = {
+    text: words.ending,
+    kind: "order",
+    gloss: words.endingGloss,
+  };
   return {
-    sticker: fits("sticker") ? own : words.sticker[kind],
-    scenes: request.products.map((product) => ({
-      productId: product.productId,
-      caption: words.caption[kind],
-      setting: DEFAULT_SETTING,
-    })),
+    openings: [opening],
+    endings: [ending],
+    sticker,
+    scenes: request.products.map((product) => {
+      const spoken = fallbackSpokenLine(request, product);
+      return {
+        productId: product.productId,
+        caption: words.caption[kind],
+        setting: DEFAULT_SETTING,
+        ...(spoken ? { spoken } : {}),
+      };
+    }),
     priceCardTitle: words.priceCardTitle,
     ending: words.ending,
     postIntro: fits("postIntro") ? own : words.postIntro[kind],
@@ -587,14 +807,24 @@ export async function writeAdScript(
       problems.push(`call ${call}: ${error.message}`);
       continue;
     }
-    const script = parseAdScript(answer, productIds);
+    // A failing opening or ending is dropped, and never fails the script on
+    // its own; a repair call the script needs anyway lists it too.
+    const checked = withCheckedOptions(
+      parseAdScript(answer, productIds),
+      request,
+    );
+    const script = checked.script;
     issues = [
       ...productAdScriptIssues(script, productIds),
       ...kazakhSpellingIssues(script, request),
       ...spokenPriceIssues(script, request),
+      ...spokenLineIssues(script, request),
     ];
-    if (issues.length === 0)
+    if (issues.length === 0) {
+      problems.push(...checked.issues.map((issue) => `call ${call}: ${issue}`));
       return { script, source: call === 1 ? "muse" : "repaired", problems };
+    }
+    issues.push(...checked.issues);
     problems.push(...issues.map((issue) => `call ${call}: ${issue}`));
   }
   return { script: fallbackAdScript(request), source: "fallback", problems };

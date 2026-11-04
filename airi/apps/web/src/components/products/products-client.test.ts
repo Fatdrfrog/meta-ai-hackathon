@@ -13,6 +13,7 @@ import {
   productsMadeUrl,
   productsWhatsAppLinkUrl,
   ProductVideoUploadError,
+  productVoiceUrl,
   sendForAnswer,
   unlinkProductsWhatsAppPhone,
   uploadProductVideo,
@@ -189,5 +190,38 @@ describe("kits and ads", () => {
     );
     expect(error).toBeInstanceOf(ProductDraftError);
     expect((error as ProductDraftError).code).toBe("whatsapp_not_connected");
+    expect((error as ProductDraftError).issues).toEqual([]);
+    expect((error as ProductDraftError).kit).toBeNull();
+  });
+
+  it("keeps a refusal's checks and carousel_found's kit, and nothing malformed", async () => {
+    const kit = { id: "kit-1", parts: {} };
+    global.fetch = jest.fn(async () =>
+      json(409, { code: "carousel_found", kit })
+    ) as typeof fetch;
+    const found = (await sendForAnswer("/edit", "POST", {}).catch(
+      (caught: unknown) => caught
+    )) as ProductDraftError;
+    expect(found.code).toBe("carousel_found");
+    expect(found.kit).toEqual(kit);
+
+    global.fetch = jest.fn(async () =>
+      json(400, {
+        code: "invalid_request",
+        issues: ["one", "two", "three", "four"],
+        kit: { id: 7 },
+      })
+    ) as typeof fetch;
+    const refused = (await sendForAnswer("/edit", "POST", {}).catch(
+      (caught: unknown) => caught
+    )) as ProductDraftError;
+    expect(refused.issues).toEqual(["one", "two", "three"]);
+    expect(refused.kit).toBeNull();
+  });
+
+  it("addresses the voice routes", () => {
+    expect(productVoiceUrl("workspace 1")).toBe(
+      "/api/workspaces/workspace%201/products/voice"
+    );
   });
 });

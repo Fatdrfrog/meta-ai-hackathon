@@ -8,12 +8,37 @@ export type StoredTemplateEditorDraft = {
   values: TemplateFormValues;
 };
 
-/** One unsaved new template per workspace, and one draft per existing template. */
+/** The longest scope a draft key carries, after sanitising. */
+const TEMPLATE_EDITOR_DRAFT_SCOPE_MAX = 64;
+
+/**
+ * A caller's own space for new-template drafts (lowercase letters, digits,
+ * ":", "_" and "-", at most 64), so another page's editor never restores,
+ * overwrites or clears the Templates page's one. Never empty.
+ */
+function sanitizeTemplateEditorDraftScope(scope: string): string {
+  const cleaned = scope
+    .toLowerCase()
+    .replace(/[^a-z0-9:_-]+/g, "-")
+    .slice(0, TEMPLATE_EDITOR_DRAFT_SCOPE_MAX);
+  return cleaned || "-";
+}
+
+/**
+ * One unsaved new template per workspace, and one draft per existing
+ * template. A `scope` gives a caller other than the Templates page its own
+ * new-template draft (`<ws>:new:<scope>`); without one the key is as before.
+ */
 export function getTemplateEditorDraftKey(params: {
   workspaceId: string;
   templateId?: string | null;
+  scope?: string | null;
 }): string {
-  const identity = params.templateId ? `edit:${params.templateId}` : "new";
+  const identity = params.templateId
+    ? `edit:${params.templateId}`
+    : params.scope != null
+      ? `new:${sanitizeTemplateEditorDraftScope(params.scope)}`
+      : "new";
   return `${TEMPLATE_EDITOR_DRAFT_KEY_PREFIX}${params.workspaceId}:${identity}`;
 }
 

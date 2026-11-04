@@ -16,6 +16,8 @@ const mockLoggerWarn = jest.fn();
 const mockSupabase = { client: "the owner's session" };
 
 jest.mock("@/models/product-kit", () => ({
+  PRODUCT_KIT_COMPONENTS_MAX_BYTES: 16 * 1024,
+  PRODUCT_KIT_EARLIER_MAX: 10,
   ProductKit: {
     findOne: (filter: Filter) => mockKits.findOne(filter),
     find: (filter: Filter) => mockKits.find(filter),
@@ -109,15 +111,20 @@ import { carouselTemplateComponents } from "./carousel-components";
 import { parseProductKitRequest, type ProductKitRequest } from "./kit-request";
 import {
   carouselTemplateName,
+  editProductKitPart,
   listProductKitRecords,
   loadShelfProducts,
   makeProductKit,
   orderFormName,
+  prepareProductKitDrafts,
+  productKitEditSource,
   readProductKit,
   readProductKitPlan,
   retryProductKitPart,
 } from "./kits";
-import type { ProductCarouselDraft } from "./types";
+import { buildOrderFormFlowConfig } from "./order-form-config";
+import { deleteMetaWhatsAppFlow } from "@/lib/whatsapp/flows/service";
+import type { ProductCarouselDraft, ProductKitDraftsResponse } from "./types";
 
 // Kits: a carousel sent to Meta and a published order form, made by one
 // press, each part saved as it settles.
@@ -186,6 +193,7 @@ const press = (
   make: { carousel: true, orderForm: true },
   language: null,
   timeZone: "Asia/Tokyo",
+  edits: null,
   ...overrides,
 });
 
@@ -308,6 +316,7 @@ describe("parseProductKitRequest", () => {
       make: { carousel: true, orderForm: false },
       language: "ru",
       timeZone: "Asia/Tokyo",
+      edits: null,
     });
     expect(
       parseProductKitRequest({ ...body, timeZone: "Mars/Olympus" })
@@ -1791,6 +1800,82 @@ describe("a carousel Meta is slow to answer", () => {
     expect(answeredAt - startedAt).toBeLessThanOrEqual(45_000);
   });
 
+  it("counts an edit's time from its press, so a slow look before the create never pushes the answer past the route's 60 s", async () => {
+    const kit = withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261103_055534",
+      metaStatus: null,
+      approvedAt: null,
+      submittedAt: null,
+      checkedAt: null,
+      error: { code: "timed_out", message: null },
+    });
+    mockKits.add(kit);
+    // The look for the lost carousel takes nearly its 5 s, and misses it.
+    mockFindTemplate.mockImplementationOnce(
+      () => new Promise(resolve => setTimeout(() => resolve(null), 4_900))
+    );
+    metaAnswersAfter(30_000);
+    const startedAt = Date.now();
+    let answeredAt = 0;
+
+    const result = editProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId: String(kit._id),
+      request: {
+        requestId: "edit-slow",
+        part: "carousel",
+        name: carouselTemplateName(new Date(), kit._id as Types.ObjectId),
+        components: editedCards(3) as never,
+      },
+    }).then(answer => {
+      answeredAt = Date.now();
+      return answer;
+    });
+    await flush();
+    await jest.advanceTimersByTimeAsync(60_000);
+    await flush();
+
+    // 40 s from the press, not from after the look.
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ metaDeadlineAt: startedAt + 40_000 })
+    );
+    expect(await result).toMatchObject({
+      kit: { parts: { carousel: { state: "checking" } } },
+    });
+    expect(answeredAt - startedAt).toBeLessThanOrEqual(45_000);
+  });
+
+  it("counts a press's time from its start, so a slow look at the owner's own name comes out of it", async () => {
+    mockFindTemplate.mockImplementationOnce(
+      () => new Promise(resolve => setTimeout(() => resolve(null), 4_900))
+    );
+    metaAnswersAfter(1_000);
+    const startedAt = Date.now();
+
+    const result = make({
+      make: { carousel: true, orderForm: false },
+      edits: {
+        carousel: { name: "summer_sale", components: editedCards(2) as never },
+      },
+    });
+    await flush();
+    await jest.advanceTimersByTimeAsync(10_000);
+    await flush();
+
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "summer_sale",
+        metaDeadlineAt: startedAt + 40_000,
+      })
+    );
+    expect(await result).toMatchObject({
+      kit: { parts: { carousel: { state: "submitted" } } },
+    });
+  });
+
   it("names two kits pressed in the same second apart, so a lost answer's look never takes the other's carousel", async () => {
     jest.setSystemTime(new Date("2026-11-03T05:55:34.100Z"));
     const first = (await make({ requestId: "press-a" })) as Made;
@@ -2303,3 +2388,1159 @@ function fakeKitStore() {
     },
   };
 }
+
+// ---------------------------------------------------------------- v2: editing
+
+const SUPABASE = "https://abcdefgh.supabase.co";
+const cardPicture = (n: number) =>
+  `${SUPABASE}/storage/v1/object/public/business-media/whatsapp-template-headers/${WS}/${n}-card.jpg`;
+
+/** Cards as the template editor saves them: the owner's words, pictures on this project's storage. */
+function editedCards(count: number, words = "Біздің жаңа тауарлар") {
+  return [
+    { type: "BODY", text: words },
+    {
+      type: "CAROUSEL",
+      cards: Array.from({ length: count }, (_, index) => ({
+        components: [
+          {
+            type: "HEADER",
+            format: "IMAGE",
+            example: { header_handle: [cardPicture(index)] },
+          },
+          { type: "BODY", text: `Шежіре ${index + 1}\n15 000 ₸` },
+          {
+            type: "BUTTONS",
+            buttons: [{ type: "QUICK_REPLY", text: "Тапсырыс беру" }],
+          },
+        ],
+      })),
+    },
+  ];
+}
+
+/** The shelf's form for the three products, with its title changed by the owner. */
+function editedForm(title = "Сіздің тапсырысыңыз") {
+  const config = buildOrderFormFlowConfig(
+    [1, 2, 3].map(n => ({
+      id: productId(n),
+      name: `Шежіре ${n}`,
+      price: 15500,
+      currency: "KZT",
+      priceIsFrom: false,
+    })),
+    "kk"
+  );
+  return {
+    ...config,
+    screens: [{ ...config.screens[0]!, title }],
+  };
+}
+
+/** A name airi made for a draft before Make: not this kit's. */
+const DRAFT_NAME = "products_20261103_091500_abcdef";
+const kitSuffix = (kitId: unknown) => String(kitId).slice(-6);
+
+const metaRefusal = (words: string) =>
+  wrapped(
+    new WhatsAppTemplateGraphRefusalError(`Invalid parameter - ${words}`, 400, {
+      message: "Invalid parameter",
+    })
+  );
+
+let savedSupabaseUrl: string | undefined;
+beforeAll(() => {
+  savedSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE;
+});
+afterAll(() => {
+  if (savedSupabaseUrl === undefined)
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  else process.env.NEXT_PUBLIC_SUPABASE_URL = savedSupabaseUrl;
+});
+
+describe("makeProductKit with the owner's edits", () => {
+  it("sends the edited cards, not the shelf's, under a name made for the kit, and keeps them", async () => {
+    const cards = editedCards(3);
+
+    const made = await make({
+      edits: { carousel: { name: DRAFT_NAME, components: cards } },
+    });
+
+    expect(mockPrepareCarousel).not.toHaveBeenCalled();
+    const [stored] = mockKits.docs;
+    const name = String(read(stored, "parts.carousel.templateName"));
+    // The draft's name is made again for this kit: a look by name only finds its own.
+    expect(name).toMatch(/^products_\d{8}_\d{6}_[0-9a-f]{6}$/);
+    expect(name.endsWith(`_${kitSuffix(stored!._id)}`)).toBe(true);
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name,
+        whatsappData: {
+          language: "kk",
+          category: "MARKETING",
+          components: cards,
+        },
+      })
+    );
+    expect(read(stored, "parts.carousel")).toMatchObject({
+      state: "submitted",
+      cardCount: 3,
+      components: cards,
+      edited: true,
+    });
+    expect(made).toMatchObject({
+      kit: { parts: { carousel: { edited: true, earlier: [] } } },
+    });
+    // The owner never typed a name: Meta isn't asked about it.
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+  });
+
+  it("publishes the edited questions, and keeps them on the kit", async () => {
+    const config = editedForm();
+
+    const made = await make({ edits: { orderForm: { config } } });
+
+    expect(mockCreateOrderForm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          screens: [expect.objectContaining({ title: "Сіздің тапсырысыңыз" })],
+        }),
+      })
+    );
+    const [stored] = mockKits.docs;
+    expect(read(stored, "parts.orderForm")).toMatchObject({
+      state: "ready",
+      productCount: 3,
+      edited: true,
+      version: 1,
+      config: expect.objectContaining({
+        screens: [expect.objectContaining({ title: "Сіздің тапсырысыңыз" })],
+      }),
+    });
+    expect(made).toMatchObject({
+      kit: { parts: { orderForm: { edited: true, version: 1, earlier: [] } } },
+    });
+  });
+
+  it("keeps what the shelf made too, for Edit and send again", async () => {
+    await make();
+
+    const [stored] = mockKits.docs;
+    expect(read(stored, "parts.carousel.edited")).toBe(false);
+    expect(read(stored, "parts.carousel.components")).toEqual(
+      carouselTemplateComponents(
+        draftFor({
+          language: "kk",
+          products: [1, 2, 3].map(n => ({
+            id: productId(n),
+            name: `Шежіре ${n}`,
+            photo: {},
+          })),
+        })
+      )
+    );
+    expect(read(stored, "parts.orderForm")).toMatchObject({
+      edited: false,
+      version: 1,
+      config: expect.objectContaining({ templateId: "products_order_form" }),
+    });
+  });
+
+  it("refuses edits that fail the checks, writing nothing", async () => {
+    const outcome = await make({
+      edits: {
+        carousel: { name: DRAFT_NAME, components: editedCards(1) },
+        orderForm: { config: { ...editedForm(), endpointUri: "https://x" } },
+      },
+    });
+
+    expect(outcome).toEqual({
+      invalid: [
+        expect.any(String),
+        "An order form can't use a data endpoint: it stays on WhatsApp.",
+      ],
+    });
+    expect(mockKits.docs).toHaveLength(0);
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+  });
+
+  it("uses the owner's own name once Meta has none under it, and refuses one Meta has", async () => {
+    const cards = editedCards(2);
+    await make({
+      edits: { carousel: { name: "summer_sale", components: cards } },
+    });
+    expect(mockFindTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "summer_sale", language: "kk" })
+    );
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "summer_sale" })
+    );
+
+    mockKits.reset();
+    mockCreateTemplate.mockClear();
+    mockFindTemplate.mockResolvedValue({ id: "tpl-other", status: "APPROVED" });
+    expect(
+      await make({
+        requestId: "press-0002",
+        edits: { carousel: { name: "summer_sale", components: cards } },
+      })
+    ).toEqual({ refused: "template_name_taken" });
+
+    mockFindTemplate.mockRejectedValue(new Error("Meta is down"));
+    expect(
+      await make({
+        requestId: "press-0003",
+        edits: { carousel: { name: "summer_sale", components: cards } },
+      })
+    ).toEqual({ refused: "meta_unavailable" });
+    expect(mockKits.docs).toHaveLength(0);
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+  });
+
+  it("makes an edited carousel alone even when fewer than 2 shelf products have photos", async () => {
+    shelf = [
+      shelfRow(1),
+      shelfRow(2, { options: [] }),
+      shelfRow(3, { options: [] }),
+    ];
+
+    const made = await make({
+      make: { carousel: true, orderForm: false },
+      edits: { carousel: { name: DRAFT_NAME, components: editedCards(2) } },
+    });
+
+    expect(made).toMatchObject({
+      kit: { parts: { carousel: { state: "submitted", cardCount: 2 } } },
+    });
+  });
+});
+
+describe("editProductKitPart", () => {
+  const editPart = (kitId: unknown, request: Stored) =>
+    editProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId: String(kitId),
+      request: { requestId: "edit-0001", ...request } as never,
+    });
+  const carouselEdit = (kitId: unknown, extra: Stored = {}) => ({
+    part: "carousel",
+    name: carouselTemplateName(new Date(), kitId as Types.ObjectId),
+    components: editedCards(3, "Жаңа сөздер"),
+    ...extra,
+  });
+
+  it("sends an approved carousel's edits to Meta as a new template, and remembers the first", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    mockCreateTemplate.mockResolvedValue({
+      id: "row-2",
+      metaTemplateId: "tpl-2",
+      metaTemplateStatus: "PENDING",
+    });
+    const request = carouselEdit(kit._id);
+
+    const outcome = await editPart(kit._id, request);
+
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: request.name,
+        whatsappData: expect.objectContaining({
+          components: request.components,
+        }),
+      })
+    );
+    expect(mockPrepareCarousel).not.toHaveBeenCalled();
+    // A name airi made for this kit: Meta isn't asked about it first.
+    expect(mockFindTemplate).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({
+      kit: {
+        status: "waiting_for_meta",
+        parts: {
+          carousel: {
+            state: "submitted",
+            templateId: "tpl-2",
+            templateName: request.name,
+            metaStatus: "PENDING",
+            edited: true,
+            earlier: [
+              {
+                templateId: "tpl-1",
+                templateName: "products_20261102_041405",
+                metaStatus: "APPROVED",
+              },
+            ],
+          },
+          // The other part is left as it is.
+          orderForm: { state: "ready", flowId: "flow-1" },
+        },
+      },
+    });
+    expect(read(mockKits.docs[0], "parts.carousel")).toMatchObject({
+      components: request.components,
+      lastEditRequestId: "edit-0001",
+    });
+  });
+
+  it("remembers at most 10 earlier templates, dropping the oldest, and sends a rejected one's edits too", async () => {
+    const earlier = Array.from({ length: 10 }, (_, index) => ({
+      templateId: `tpl-old-${index}`,
+      templateName: `products_old_${index}`,
+      metaStatus: "REJECTED",
+      replacedAt: ago(60_000 * (20 - index)),
+    }));
+    const kit = withCarousel({ metaStatus: "REJECTED", earlier });
+    mockKits.add(kit);
+
+    const outcome = (await editPart(kit._id, carouselEdit(kit._id))) as {
+      kit: { parts: { carousel: { earlier: Stored[] } } };
+    };
+
+    const kept = outcome.kit.parts.carousel.earlier;
+    expect(kept).toHaveLength(10);
+    expect(kept[0]).toMatchObject({ templateId: "tpl-old-1" });
+    expect(kept[9]).toMatchObject({
+      templateId: "tpl-1",
+      metaStatus: "REJECTED",
+    });
+  });
+
+  it("answers the same press again with the kit, sending nothing twice", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    const request = carouselEdit(kit._id);
+
+    await editPart(kit._id, request);
+    const again = await editPart(kit._id, request);
+
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+    expect(again).toMatchObject({
+      kit: { parts: { carousel: { state: "submitted", edited: true } } },
+    });
+  });
+
+  it("looks for a timed-out carousel at Meta first, and sends nothing when Meta has it", async () => {
+    const kit = withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261102_041405",
+      metaStatus: null,
+      error: { code: "timed_out", message: null },
+    });
+    mockKits.add(kit);
+    mockFindTemplate.mockResolvedValue({ id: "tpl-7", status: "PENDING" });
+
+    const outcome = await editPart(kit._id, carouselEdit(kit._id));
+
+    expect(mockFindTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "products_20261102_041405" })
+    );
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({
+      carouselFound: {
+        parts: {
+          carousel: {
+            state: "submitted",
+            templateId: "tpl-7",
+            templateName: "products_20261102_041405",
+            edited: false,
+          },
+        },
+      },
+    });
+  });
+
+  it("sends the edits under the new name once Meta hasn't the timed-out one, and waits when Meta can't say", async () => {
+    const lost = {
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261102_041405",
+      metaStatus: null,
+      error: { code: "timed_out", message: null },
+    };
+    const unsure = withCarousel(lost);
+    mockKits.add(unsure);
+    mockFindTemplate.mockRejectedValueOnce(new Error("Meta is down"));
+    expect(await editPart(unsure._id, carouselEdit(unsure._id))).toEqual({
+      refused: "meta_unavailable",
+    });
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+
+    const request = carouselEdit(unsure._id);
+    const outcome = await editPart(unsure._id, request);
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: request.name })
+    );
+    expect(outcome).toMatchObject({
+      kit: {
+        parts: {
+          carousel: { state: "submitted", templateId: "tpl-1", earlier: [] },
+        },
+      },
+    });
+  });
+
+  it("keeps the kit on its carousel when Meta refuses the edit, in Meta's words", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    mockCreateTemplate.mockRejectedValue(
+      metaRefusal("The card's text breaks a policy.")
+    );
+
+    const outcome = await editPart(kit._id, carouselEdit(kit._id));
+
+    expect(outcome).toMatchObject({
+      metaRefused: {
+        words: "Invalid parameter - The card's text breaks a policy.",
+        kit: {
+          parts: {
+            carousel: {
+              state: "submitted",
+              templateId: "tpl-1",
+              templateName: "products_20261102_041405",
+              metaStatus: "APPROVED",
+              edited: false,
+              earlier: [],
+              error: null,
+            },
+          },
+        },
+      },
+    });
+    // The same press may go again.
+    expect(
+      read(mockKits.docs[0], "parts.carousel.lastEditRequestId")
+    ).toBeNull();
+  });
+
+  it("refuses a name this kit already sent under", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+
+    expect(
+      await editPart(
+        kit._id,
+        carouselEdit(kit._id, { name: "products_20261102_041405" })
+      )
+    ).toEqual({ refused: "template_name_taken" });
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+  });
+
+  it("waits while the part is made or looked for at Meta", async () => {
+    for (const state of ["making", "checking"]) {
+      mockKits.reset();
+      const kit = withCarousel({
+        state,
+        templateId: null,
+        updatedAt: new Date(),
+      });
+      mockKits.add(kit);
+      expect(await editPart(kit._id, carouselEdit(kit._id))).toEqual({
+        refused: "kit_part_busy",
+      });
+    }
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+  });
+
+  it("refuses edits that fail the checks, and finds no other workspace's kit", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    expect(
+      await editPart(
+        kit._id,
+        carouselEdit(kit._id, { components: editedCards(11) })
+      )
+    ).toEqual({ invalid: [expect.any(String)] });
+
+    const theirs: Stored = { ...storedKit(), workspaceId: "workspace-2" };
+    mockKits.add(theirs);
+    expect(await editPart(theirs._id, carouselEdit(theirs._id))).toBeNull();
+    expect(await editPart("nope", carouselEdit(kit._id))).toBeNull();
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+  });
+
+  it("keeps checking with Meta when its answer to the edit is lost", async () => {
+    jest.useFakeTimers({
+      doNotFake: ["nextTick", "queueMicrotask", "setImmediate"],
+    });
+    try {
+      const kit = storedKit();
+      mockKits.add(kit);
+      mockCreateTemplate.mockRejectedValue(
+        wrapped(new DOMException("The operation timed out", "TimeoutError"))
+      );
+      const request = carouselEdit(kit._id);
+
+      const running = editPart(kit._id, request);
+      await flush();
+      await jest.advanceTimersByTimeAsync(6_000);
+      await flush();
+      const outcome = await running;
+
+      expect(mockFindTemplate).toHaveBeenCalledWith(
+        expect.objectContaining({ name: request.name })
+      );
+      expect(outcome).toMatchObject({
+        kit: {
+          status: "making",
+          parts: {
+            carousel: {
+              state: "checking",
+              templateName: request.name,
+              earlier: [{ templateId: "tpl-1" }],
+            },
+          },
+        },
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("publishes a published form's edits as a new Flow, its next version, and remembers the first", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    mockCreateOrderForm.mockResolvedValue({
+      ok: true,
+      flowId: "flow-2",
+      name: "Order form · 2 Nov 13:14 · v2",
+      leftOut: 0,
+    });
+
+    const outcome = await editPart(kit._id, {
+      part: "orderForm",
+      config: editedForm(),
+    });
+
+    const call = mockCreateOrderForm.mock.calls[0]![0];
+    expect(call).toMatchObject({
+      name: "Order form · 2 Nov 13:14 · v2",
+      config: expect.objectContaining({
+        screens: [expect.objectContaining({ title: "Сіздің тапсырысыңыз" })],
+      }),
+    });
+    expect(call.flowId).toBeUndefined();
+    expect(mockUpdateFlow).toHaveBeenCalledWith(
+      expect.objectContaining({ flowId: "flow-2", operation: "publish" })
+    );
+    expect(outcome).toMatchObject({
+      kit: {
+        parts: {
+          orderForm: {
+            state: "ready",
+            flowId: "flow-2",
+            flowName: "Order form · 2 Nov 13:14 · v2",
+            version: 2,
+            edited: true,
+            earlier: [
+              { flowId: "flow-1", flowName: "Order form · 2 Nov 13:14" },
+            ],
+          },
+          carousel: { state: "submitted", templateId: "tpl-1" },
+        },
+      },
+    });
+  });
+
+  it("gives a draft form its edits in place, then publishes it", async () => {
+    const kit = storedKit();
+    (kit.parts as Record<string, Stored>).orderForm = {
+      ...(kit.parts as Record<string, Stored>).orderForm,
+      state: "draft",
+      flowId: "flow-5",
+      error: { code: "meta_refused", message: "Not published" },
+    };
+    mockKits.add(kit);
+    mockGetFlow.mockResolvedValue({
+      ok: true,
+      status: 200,
+      flow: { id: "flow-5", status: "DRAFT" },
+    });
+
+    const outcome = await editPart(kit._id, {
+      part: "orderForm",
+      config: editedForm(),
+    });
+
+    expect(mockCreateOrderForm).toHaveBeenCalledWith(
+      expect.objectContaining({ flowId: "flow-5" })
+    );
+    expect(outcome).toMatchObject({
+      kit: {
+        parts: {
+          orderForm: {
+            state: "ready",
+            flowId: "flow-5",
+            version: 1,
+            edited: true,
+            earlier: [],
+            error: null,
+          },
+        },
+      },
+    });
+  });
+
+  it("deletes a new version Meta won't publish, and keeps the published form", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    mockCreateOrderForm.mockResolvedValue({
+      ok: true,
+      flowId: "flow-2",
+      name: "Order form · 2 Nov 13:14 · v2",
+      leftOut: 0,
+    });
+    mockUpdateFlow.mockResolvedValue({
+      ok: false,
+      status: 400,
+      error: "WhatsApp API error: Flow can't be published",
+    });
+
+    const outcome = await editPart(kit._id, {
+      part: "orderForm",
+      config: editedForm(),
+    });
+
+    expect(deleteMetaWhatsAppFlow).toHaveBeenCalledWith({
+      accessToken: "token",
+      flowId: "flow-2",
+    });
+    expect(outcome).toMatchObject({
+      metaRefused: {
+        words: "Flow can't be published",
+        kit: {
+          parts: {
+            orderForm: {
+              state: "ready",
+              flowId: "flow-1",
+              version: 1,
+              edited: false,
+              earlier: [],
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it("keeps the published form when Meta refuses a new version's questions", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+    mockCreateOrderForm.mockResolvedValue({
+      ok: false,
+      reason: "refused",
+      error: "WhatsApp API error: Invalid Flow JSON",
+    });
+
+    const outcome = await editPart(kit._id, {
+      part: "orderForm",
+      config: editedForm(),
+    });
+
+    // createOrderFormDraft deletes a Flow whose JSON Meta refused itself.
+    expect(deleteMetaWhatsAppFlow).not.toHaveBeenCalled();
+    expect(mockUpdateFlow).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({
+      metaRefused: {
+        words: "Invalid Flow JSON",
+        kit: {
+          parts: {
+            orderForm: {
+              state: "ready",
+              flowId: "flow-1",
+              version: 1,
+              earlier: [],
+            },
+          },
+        },
+      },
+    });
+    expect(
+      read(mockKits.docs[0], "parts.orderForm.lastEditRequestId")
+    ).toBeNull();
+  });
+});
+
+describe("editing again after a refused or lost send", () => {
+  const editPart = (kitId: unknown, request: Stored) =>
+    editProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId: String(kitId),
+      request: { requestId: "edit-0001", ...request } as never,
+    });
+  const retry = (kitId: unknown, part: "carousel" | "orderForm") =>
+    retryProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId: String(kitId),
+      part,
+    });
+  const withForm = (form: Stored) => {
+    const kit = storedKit();
+    const parts = kit.parts as Record<string, Stored>;
+    parts.orderForm = { ...parts.orderForm, ...form };
+    return kit;
+  };
+
+  it("sends the same name again after Meta refused the edit of a failed carousel", async () => {
+    const kit = withCarousel({
+      state: "failed",
+      templateId: null,
+      metaStatus: null,
+      error: { code: "meta_refused", message: "Invalid parameter" },
+    });
+    mockKits.add(kit);
+    const request = {
+      part: "carousel",
+      name: carouselTemplateName(new Date(), kit._id as Types.ObjectId),
+      components: editedCards(3, "Жаңа сөздер"),
+    };
+    mockCreateTemplate.mockRejectedValueOnce(
+      metaRefusal("The card's text breaks a policy.")
+    );
+    expect(await editPart(kit._id, request)).toMatchObject({
+      metaRefused: { kit: { parts: { carousel: { state: "failed" } } } },
+    });
+
+    // The owner fixes the card and presses again under the same name: Meta
+    // never made a template under it, so it isn't taken.
+    const outcome = await editPart(kit._id, {
+      ...request,
+      requestId: "edit-0002",
+    });
+
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(2);
+    for (const [call] of mockCreateTemplate.mock.calls)
+      expect(call).toMatchObject({ name: request.name });
+    expect(outcome).toMatchObject({
+      kit: {
+        parts: {
+          carousel: {
+            state: "submitted",
+            templateId: "tpl-1",
+            templateName: request.name,
+          },
+        },
+      },
+    });
+  });
+
+  it("sends the same name again after a lost edit of an approved carousel that Meta doesn't list", async () => {
+    const kit = storedKit();
+    const name = carouselTemplateName(
+      ago(10 * 60_000),
+      kit._id as Types.ObjectId
+    );
+    const parts = kit.parts as Record<string, Stored>;
+    parts.carousel = {
+      ...parts.carousel,
+      state: "failed",
+      templateId: null,
+      templateName: name,
+      metaStatus: null,
+      error: { code: "timed_out", message: null },
+      earlier: [
+        {
+          templateId: "tpl-1",
+          templateName: "products_20261102_041405",
+          metaStatus: "APPROVED",
+          replacedAt: ago(11 * 60_000),
+        },
+      ],
+    };
+    mockKits.add(kit);
+
+    const outcome = await editPart(kit._id, {
+      part: "carousel",
+      name,
+      components: editedCards(3, "Жаңа сөздер"),
+    });
+
+    expect(mockFindTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name })
+    );
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name })
+    );
+    expect(outcome).toMatchObject({
+      kit: { parts: { carousel: { state: "submitted", templateName: name } } },
+    });
+    // The approved one, kept in `earlier`, is still taken.
+    expect(
+      await editPart(kit._id, {
+        requestId: "edit-0002",
+        part: "carousel",
+        name: "products_20261102_041405",
+        components: editedCards(3),
+      })
+    ).toEqual({ refused: "template_name_taken" });
+  });
+
+  it("looks again for a carousel whose send failed moments ago, rather than send the edits under a new name", async () => {
+    const failedAt = ago(30_000);
+    const kit = withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261102_041405",
+      metaStatus: null,
+      error: { code: "failed", message: null },
+      updatedAt: failedAt,
+    });
+    mockKits.add(kit);
+
+    const outcome = await editPart(kit._id, carouselEditFor(kit._id));
+
+    expect(mockCreateTemplate).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({
+      refused: "kit_part_busy",
+      kit: {
+        parts: {
+          carousel: {
+            state: "checking",
+            templateName: "products_20261102_041405",
+          },
+        },
+      },
+    });
+    // Its 3 minutes count from the failure.
+    expect(read(mockKits.docs[0], "parts.carousel.updatedAt")).toEqual(
+      failedAt
+    );
+
+    // One that failed long ago goes as before.
+    mockKits.reset();
+    const old = withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261102_041405",
+      metaStatus: null,
+      error: { code: "failed", message: null },
+      updatedAt: ago(10 * 60_000),
+    });
+    mockKits.add(old);
+    expect(await editPart(old._id, carouselEditFor(old._id))).toMatchObject({
+      kit: { parts: { carousel: { state: "submitted" } } },
+    });
+    expect(mockCreateTemplate).toHaveBeenCalledTimes(1);
+  });
+
+  it("makes no second Flow while Meta can't say what became of a draft form's", async () => {
+    const kit = withForm({
+      state: "draft",
+      flowId: "flow-5",
+      error: { code: "meta_refused", message: "Not published" },
+    });
+    mockKits.add(kit);
+    mockGetFlow.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      error: "Service unavailable",
+    });
+
+    expect(
+      await editPart(kit._id, { part: "orderForm", config: editedForm() })
+    ).toEqual({ refused: "meta_unavailable" });
+    expect(mockCreateOrderForm).not.toHaveBeenCalled();
+    expect(read(mockKits.docs[0], "parts.orderForm")).toMatchObject({
+      state: "draft",
+      flowId: "flow-5",
+    });
+
+    // The read works, then a second one fails (a rate limit): the part
+    // fails with its Flow kept, so Try again finishes it.
+    mockGetFlow
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        flow: { id: "flow-5", status: "DRAFT" },
+      })
+      .mockResolvedValueOnce({ ok: false, status: 400, providerCode: 4 });
+    expect(
+      await editPart(kit._id, {
+        requestId: "edit-0002",
+        part: "orderForm",
+        config: editedForm(),
+      })
+    ).toMatchObject({
+      kit: {
+        parts: {
+          orderForm: {
+            state: "failed",
+            flowId: "flow-5",
+            error: { code: "failed" },
+          },
+        },
+      },
+    });
+    expect(mockCreateOrderForm).not.toHaveBeenCalled();
+  });
+
+  it("finishes a failed form's Flow on Try again only once Meta can say what became of it", async () => {
+    const kit = withForm({
+      state: "failed",
+      flowId: "flow-9",
+      error: { code: "failed", message: null },
+      updatedAt: ago(120_000),
+    });
+    mockKits.add(kit);
+    mockGetFlow.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      error: "fetch failed",
+    });
+
+    expect(await retry(kit._id, "orderForm")).toMatchObject({
+      kit: { parts: { orderForm: { state: "failed", flowId: "flow-9" } } },
+    });
+    expect(mockCreateOrderForm).not.toHaveBeenCalled();
+  });
+
+  it("makes a new Flow for a draft form Meta no longer has", async () => {
+    const kit = withForm({
+      state: "draft",
+      flowId: "flow-5",
+      error: { code: "meta_refused", message: "Not published" },
+    });
+    mockKits.add(kit);
+    // Graph's "no such object", twice: the edit's read and Make's.
+    mockGetFlow.mockResolvedValue({
+      ok: false,
+      status: 400,
+      providerCode: 100,
+      providerSubcode: 33,
+    });
+
+    const outcome = await editPart(kit._id, {
+      part: "orderForm",
+      config: editedForm(),
+    });
+
+    expect(mockCreateOrderForm).toHaveBeenCalledTimes(1);
+    expect(mockCreateOrderForm.mock.calls[0]![0].flowId).toBeUndefined();
+    expect(outcome).toMatchObject({
+      kit: { parts: { orderForm: { state: "ready", flowId: "flow-1" } } },
+    });
+  });
+
+  it("keeps a new form version's name when Try again makes it again", async () => {
+    // The new version's create failed on airi's side, before Meta made it.
+    const kit = storedKit();
+    mockKits.add(kit);
+    mockCreateOrderForm.mockRejectedValueOnce(new Error("socket hang up"));
+    expect(
+      await editPart(kit._id, { part: "orderForm", config: editedForm() })
+    ).toMatchObject({
+      kit: {
+        parts: {
+          orderForm: {
+            state: "failed",
+            flowId: null,
+            flowName: "Order form · 2 Nov 13:14 · v2",
+            version: 2,
+          },
+        },
+      },
+    });
+
+    const retried = await retry(kit._id, "orderForm");
+
+    expect(mockCreateOrderForm).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: "Order form · 2 Nov 13:14 · v2" })
+    );
+    expect(retried).toMatchObject({
+      kit: {
+        parts: {
+          orderForm: {
+            state: "ready",
+            flowName: "Order form · 2 Nov 13:14 · v2",
+            version: 2,
+          },
+        },
+      },
+    });
+  });
+
+  it("keeps a new form version's name when Try again follows Meta refusing it", async () => {
+    const kit = withForm({
+      state: "failed",
+      flowId: null,
+      flowName: "Order form · 2 Nov 13:14 · v2",
+      version: 2,
+      error: { code: "meta_refused", message: "Invalid Flow JSON" },
+    });
+    mockKits.add(kit);
+
+    const retried = await retry(kit._id, "orderForm");
+
+    expect(mockCreateOrderForm).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Order form · 2 Nov 13:14 · v2" })
+    );
+    expect(mockCreateOrderForm.mock.calls[0]![0].flowId).toBeUndefined();
+    expect(retried).toMatchObject({
+      kit: {
+        parts: {
+          orderForm: {
+            state: "ready",
+            flowName: "Order form · 2 Nov 13:14 · v2",
+            version: 2,
+          },
+        },
+      },
+    });
+  });
+});
+
+/** A carousel edit under a name airi made for this kit. */
+const carouselEditFor = (kitId: unknown) => ({
+  part: "carousel",
+  name: carouselTemplateName(new Date(), kitId as Types.ObjectId),
+  components: editedCards(3, "Жаңа сөздер"),
+});
+
+describe("retryProductKitPart with edits", () => {
+  it("sends the owner's edited cards again, not the shelf's", async () => {
+    const cards = editedCards(2);
+    const kit = withCarousel({
+      state: "failed",
+      templateId: null,
+      templateName: "products_20261102_041405",
+      metaStatus: null,
+      components: cards,
+      edited: true,
+      error: { code: "timed_out", message: null },
+    });
+    mockKits.add(kit);
+
+    const result = await retryProductKitPart({
+      workspaceId: WS,
+      userId: "user-1",
+      kitId: String(kit._id),
+      part: "carousel",
+    });
+
+    expect(mockPrepareCarousel).not.toHaveBeenCalled();
+    expect(mockCreateTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "products_20261102_041405",
+        whatsappData: expect.objectContaining({ components: cards }),
+      })
+    );
+    expect(result).toMatchObject({
+      kit: {
+        parts: { carousel: { state: "submitted", cardCount: 2, edited: true } },
+      },
+    });
+  });
+});
+
+describe("productKitEditSource", () => {
+  it("opens the cards as sent, under a new name for this kit", async () => {
+    const cards = editedCards(2);
+    const kit = withCarousel({ components: cards, edited: true });
+    mockKits.add(kit);
+
+    const source = await productKitEditSource({
+      workspaceId: WS,
+      kitId: String(kit._id),
+      part: "carousel",
+    });
+
+    expect(source).toMatchObject({
+      kit: { id: String(kit._id) },
+      carousel: { language: "kk", components: cards },
+    });
+    const name = (source as { carousel: { name: string } }).carousel.name;
+    expect(name).toMatch(/^products_\d{8}_\d{6}_[0-9a-f]{6}$/);
+    expect(name.endsWith(`_${kitSuffix(kit._id)}`)).toBe(true);
+    expect(mockPrepareCarousel).not.toHaveBeenCalled();
+  });
+
+  it("makes a kit from before v2's cards and questions again from the shelf", async () => {
+    const kit = storedKit();
+    mockKits.add(kit);
+
+    const cards = await productKitEditSource({
+      workspaceId: WS,
+      kitId: String(kit._id),
+      part: "carousel",
+    });
+    const form = await productKitEditSource({
+      workspaceId: WS,
+      kitId: String(kit._id),
+      part: "orderForm",
+    });
+
+    expect(mockPrepareCarousel).toHaveBeenCalledTimes(1);
+    expect(
+      (cards as { carousel: { components: unknown[] } }).carousel.components
+    ).toHaveLength(2);
+    const config = (form as { orderForm: { config: { screens: Stored[] } } })
+      .orderForm.config;
+    expect(
+      (
+        config.screens[0]!.fields as Array<{ id: string; options?: Stored[] }>
+      )[0]!.options!.map(option => option.id)
+    ).toEqual([productId(1), productId(2), productId(3)]);
+  });
+
+  it("finds no other workspace's kit", async () => {
+    const theirs: Stored = { ...storedKit(), workspaceId: "workspace-2" };
+    mockKits.add(theirs);
+    expect(
+      await productKitEditSource({
+        workspaceId: WS,
+        kitId: String(theirs._id),
+        part: "carousel",
+      })
+    ).toBeNull();
+  });
+});
+
+describe("prepareProductKitDrafts", () => {
+  it("puts the products on cards in the buyers' language, under a name made again at Make", async () => {
+    shelf = [shelfRow(1), shelfRow(2, { options: [] }), shelfRow(3)];
+
+    const drafts = await prepareProductKitDrafts(WS, {
+      productIds: [productId(1), productId(2), productId(3)],
+      language: "ru",
+    });
+
+    expect(mockPrepareCarousel).toHaveBeenCalledWith(
+      WS,
+      expect.objectContaining({ language: "ru" }),
+      expect.any(Date)
+    );
+    expect(drafts).toMatchObject({
+      carousel: {
+        language: "ru",
+        productIds: [productId(1), productId(3)],
+        leftOut: 0,
+        name: expect.stringMatching(/^products_\d{8}_\d{6}_[0-9a-f]{6}$/),
+      },
+    });
+    expect(
+      (drafts as ProductKitDraftsResponse).carousel.components
+    ).toHaveLength(2);
+  });
+
+  it("says when there aren't enough products", async () => {
+    shelf = [];
+    expect(
+      await prepareProductKitDrafts(WS, {
+        productIds: [productId(1)],
+        language: "kk",
+      })
+    ).toEqual({ refused: "not_enough_products" });
+    shelf = [shelfRow(1)];
+    mockPrepareCarousel.mockResolvedValue(null);
+    expect(
+      await prepareProductKitDrafts(WS, {
+        productIds: [productId(1)],
+        language: "kk",
+      })
+    ).toEqual({ refused: "not_enough_products" });
+  });
+});

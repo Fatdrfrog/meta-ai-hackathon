@@ -36,7 +36,25 @@ export const MAKE_COPY = {
         spoken
           ? `Written in ${language}, the language you spoke. Prices come from your shelf.`
           : `Written in ${language}. Prices come from your shelf.`,
+      // When the owner edited the cards or the questions before Make.
+      captionEdited:
+        "With your edits, as buyers will see them. Card prices are the words you wrote; your shelf prices don't change.",
       noCards: "The carousel needs products with photos.",
+      // A question of the owner's the preview can't draw as WhatsApp does.
+      otherField: (label: string) => label,
+      noQuestions: "This screen has no questions.",
+    },
+    // Edits made before Make go when the language or the products change.
+    confirmLanguage: {
+      body: (from: string, to: string) =>
+        `Your edits are in ${from}. Switching to ${to} starts the cards and the questions again from your shelf.`,
+      keep: (from: string) => `Keep ${from}`,
+      switch: (to: string) => `Switch to ${to}`,
+    },
+    confirmProducts: {
+      body: "Changing the products starts the cards and the questions again from your shelf.",
+      keep: "Keep my edits",
+      change: "Change products",
     },
   },
 
@@ -61,7 +79,7 @@ export const MAKE_COPY = {
     makeOrderForm: "Make the order form",
     chooseWhat: "Choose what to make",
     footnote:
-      "The order form is ready right away. Meta reviews the carousel first: usually minutes, at most 24 hours.",
+      "Change any words, pictures or questions first: nothing goes to WhatsApp or Meta until you press Make. Meta reviews the carousel: usually minutes, at most 24 hours.",
     notConnected: "Connect your WhatsApp number to make these.",
     connectWhatsApp: "Connect WhatsApp",
     // While the press is being made.
@@ -133,8 +151,124 @@ export const MAKE_COPY = {
         "Your company's media storage is full. Delete some files in Assets, then try again.",
       meta_refused: (message: string | null) =>
         message ? `Meta refused it: ${message}` : "Meta refused it.",
-      timed_out: "This took too long. Try again.",
+      timed_out:
+        "We couldn't confirm Meta got it. Try again looks for it at Meta first, so nothing is sent twice.",
       failed: "That didn't work. Try again.",
+    },
+
+    // Editing the parts: "Edit cards" and "Edit questions" before Make, and
+    // sending a made part again with edits after it.
+    edit: {
+      editCards: "Edit cards",
+      editQuestions: "Edit questions",
+      edited: "Edited",
+      reset: "Reset",
+      resetConfirm: {
+        carousel: "Reset the cards to your shelf? Your edits go.",
+        orderForm: "Reset the questions to your shelf? Your edits go.",
+      },
+      resetYes: "Reset",
+      resetKeep: "Keep my edits",
+      saved: {
+        carousel: "Carousel edited. It goes to Meta when you press Make.",
+        orderForm: "Order form edited. It's published when you press Make.",
+      },
+      reverted: {
+        carousel: "The cards are back to your shelf's.",
+        orderForm: "The questions are back to your shelf's.",
+      },
+      close: "Close",
+      cancel: "Cancel",
+      saveChanges: "Save changes",
+      sendForReview: "Send to Meta for review",
+      publish: "Publish",
+      tryAgain: "Try again",
+      editorLoadError:
+        "The editor couldn't load. Check your connection and try again.",
+      // The carousel's sheet.
+      carouselTitle: "Edit carousel",
+      carouselBefore: (n: number) =>
+        `airi's template editor, filled from your ${count(n, "shelf product", "shelf products")}. Nothing goes to Meta until you press Make.`,
+      carouselAfter: "A new template, from the one with Meta now.",
+      preparing: (n: number) =>
+        `Putting ${count(n, "product", "products")} on cards…`,
+      prepareFailed:
+        "Couldn't put your products on cards. Check your connection and try again.",
+      notEnoughPhotos: "A carousel needs at least 2 products with photos.",
+      loadingSent: "Opening what was sent…",
+      loadingEditor: "Opening the editor…",
+      sending: (elapsed: string) => `Sending… ${elapsed}`,
+      sendingNote: "Closing the sheet doesn't stop it.",
+      // Why it goes to Meta as a new template, by what Meta did with the first.
+      banner: {
+        pending: (name: string) =>
+          `Meta is checking ${name} and won't let it change, so this goes to Meta as a new template. The first one stays in Templates; the kit will show this one.`,
+        approved: (name: string) =>
+          `This goes to Meta as a new template; ${name} stays approved in Templates. The kit will show the new one.`,
+        turnedDown: (name: string) =>
+          `Meta turned ${name} down, so this goes to Meta as a new template. The first one stays in Templates; the kit will show this one.`,
+        failed:
+          "The first carousel didn't reach Meta. This sends your cards as a new template.",
+      },
+      carouselFound:
+        "Meta did get your first carousel after all; it's with Meta now. Your edits weren't sent. To send them as a new template, press Send to Meta for review again.",
+      nameTaken:
+        "This kit already used that template name. Change the template name and send again.",
+      // Meta's own words; a refusal about the name gets the fix.
+      metaRefused: (message: string | null, aboutName: boolean) =>
+        `${message ? `Meta refused it: ${message}` : "Meta refused it."}${aboutName ? " Change the template name and send again." : ""}`,
+      busy: "This part is still being made. Wait for it, then try again.",
+      notSent: (issue: string) => `It wasn't sent: ${issue}`,
+      sentCarousel: "Sent to Meta as a new template.",
+      // The order form's sheet.
+      formTitle: "Edit order form",
+      formBefore: (n: number) =>
+        `airi's form editor, with ${count(n, "shelf product", "shelf products")} to tick. Nothing goes to WhatsApp until you press Make.`,
+      formAfterReady: (version: number) =>
+        `Publishes a new form, version ${version}. Forms you already sent keep opening version ${version - 1}.`,
+      formAfterDraft:
+        "Saves your questions into the same form and publishes it.",
+      formFooter: "Nothing goes to WhatsApp until you press Make.",
+      formFooterAfter: "It's published on WhatsApp when you press Publish.",
+      lockNote:
+        "Each option of the products question is a product on your shelf, so it stays linked: rename it freely. Add or remove products with Change on the Make page.",
+      loadingForm: "Opening the questions…",
+      publishedForm: (version: number) =>
+        `Order form published as version ${version}.`,
+      // After Make, on the kit's rows.
+      editAndSendAgain: "Edit and send again",
+      editAndTryAgain: "Edit and try again",
+      editOrderForm: "Edit order form",
+      editAndPublish: "Edit and publish",
+      notes: {
+        pending:
+          "Meta doesn't let anyone change a template while it checks it, so your edits go to Meta as a new template.",
+        turnedDown:
+          "Fix it and send it as a new template. This one stays in Templates.",
+        paused:
+          "Your edits go to Meta as a new template; this one stays in Templates.",
+        approved:
+          "Your edits go to Meta as a new template; this one stays approved in Templates.",
+      },
+      version: (n: number) => `Version ${n}`,
+      versionNote: (n: number) =>
+        `Forms you already sent keep opening version ${n - 1}. New sends use version ${n}.`,
+      // "Send me the order form": the published form to the owner's test phone.
+      sendTest: "Send me the order form",
+      sendingTest: "Sending the order form…",
+      sentTest: "Sent to your test number. Open WhatsApp to try the form.",
+      testErrors: {
+        test_phone_missing:
+          "Add your test number in a campaign's Test send first.",
+        test_phone_is_shop:
+          "Your test number is the shop's own WhatsApp number. Use another phone.",
+        test_phone_unreachable:
+          "Your test number can't get WhatsApp messages. Check it in a campaign's Test send.",
+        test_phone_not_allowed:
+          "Meta doesn't let this WhatsApp number message your test number yet.",
+        rate_limited: "That's a lot of test sends this hour. Try again later.",
+        failed: "The order form couldn't be sent. Try again.",
+      },
     },
   },
 

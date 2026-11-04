@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { PRODUCTS_COPY } from "@/lib/products/copy";
 import type { ProductAdRecord } from "@/lib/products/types";
-import { useCallback, useId } from "react";
+import { useCallback, useId, useState } from "react";
 import { AdBrief } from "./product-ad-brief";
 import { AdFailed } from "./product-ad-failed";
 import { AdMaking } from "./product-ad-making";
@@ -68,6 +68,16 @@ export function AdStudio({
   );
 }
 
+/**
+ * Whether the ad is being changed rather than made: an edit run (Update the
+ * video, New picture, a new voice) on an ad that has a video. The finished
+ * view stays for it, with the earlier video playing.
+ */
+export const isEditing = (ad: ProductAdRecord) =>
+  ad.status === "making" &&
+  ad.video !== null &&
+  (ad.runKind === "render" || ad.runKind === "scene" || ad.runKind === "voice");
+
 /** An ad already made: loaded, then kept current while it's being made. */
 function AdView({
   workspaceId,
@@ -82,10 +92,23 @@ function AdView({
 }) {
   const titleId = useId();
   const { data: ad, error, mutate } = useProductAd(workspaceId, adId);
+  // The scene the owner works on, kept while each run draws the view again.
+  const [sceneId, setSceneId] = useState<string | null>(null);
   // An edit or a retry answers with the ad as it now is.
   const onChanged = useCallback(
     (next: ProductAdRecord) => void mutate(next, { revalidate: false }),
     [mutate]
+  );
+  // The run "Make the video with this voice" started: it draws the view
+  // again, without the press the keyboard's focus was on, so the voice
+  // panel takes the focus when it's back.
+  const [voiceRunNo, setVoiceRunNo] = useState<number | null>(null);
+  const onVoiceChanged = useCallback(
+    (next: ProductAdRecord) => {
+      setVoiceRunNo(next.renderNo);
+      onChanged(next);
+    },
+    [onChanged]
   );
 
   if (!ad)
@@ -120,15 +143,19 @@ function AdView({
     <>
       {/* Said once when the ad turns ready or fails, wherever the focus is. */}
       <p className="sr-only" aria-live="polite">
-        {COPY.announce[ad.status]}
+        {isEditing(ad) ? COPY.announceUpdating : COPY.announce[ad.status]}
       </p>
-      {ad.status === "ready" ? (
+      {ad.status === "ready" || isEditing(ad) ? (
         <AdReady
           key={ad.renderNo}
           workspaceId={workspaceId}
           ad={ad}
           onChanged={onChanged}
           onChangeProducts={onChangeProducts}
+          sceneId={sceneId}
+          onSceneId={setSceneId}
+          voiceRunNo={voiceRunNo}
+          onVoiceChanged={onVoiceChanged}
         />
       ) : ad.status === "failed" ? (
         <AdFailed workspaceId={workspaceId} ad={ad} onChanged={onChanged} />

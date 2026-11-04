@@ -1,0 +1,281 @@
+/*
+ * The sheet "Edit cards" and "Edit questions" open in. airi's template and
+ * Flow editors keep their own markup; .skin only maps the colour and radius
+ * tokens they read (airi's shadcn tokens) to Paper's, on the portaled
+ * dialog, which also carries the theme's .theme for the --p-* tokens. The
+ * Flow editor's own emerald accents stay, by design.
+ */
+
+.skin {
+  --background: var(--p-raised);
+  --foreground: var(--p-ink);
+  --card: var(--p-raised);
+  --card-foreground: var(--p-ink);
+  --popover: var(--p-raised);
+  --popover-foreground: var(--p-ink);
+  --muted: var(--p-sunk);
+  --muted-foreground: var(--p-ink-2);
+  --accent: var(--p-sunk);
+  --accent-foreground: var(--p-ink);
+  --border: var(--p-line-strong);
+  --input: var(--p-line-strong);
+  --ring: var(--p-accent-line);
+  --radius: var(--p-r-control);
+
+  background: var(--p-raised);
+  border-color: var(--p-line);
+  color: var(--p-ink);
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.headText {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  text-wrap: pretty;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--p-r-control);
+  background: none;
+  color: var(--p-ink-2);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--p-sunk);
+  color: var(--p-ink);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Why this goes to Meta as a new template: an accent wash, not an alarm. */
+.banner {
+  margin: 12px 20px 0;
+  padding: 10px 12px;
+  border-radius: var(--p-r-control);
+  background: var(--p-accent-wash);
+  box-shadow: inset 0 0 0 1px var(--p-accent-line);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink);
+  text-wrap: pretty;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The template editor fills the sheet; its own title bar is the sheet's. */
+.carouselEditor {
+  flex: 1;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.carouselEditor > :first-child {
+  display: none;
+}
+
+.loadingBody {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 20px;
+}
+
+.loading {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink-2);
+}
+
+/* Static placeholders, no pulse. */
+.ghost {
+  display: block;
+  height: 120px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+}
+
+.failure {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin: 20px;
+  padding: 14px 16px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-danger-wash);
+  box-shadow: inset 0 0 0 1px var(--p-danger-line);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.failure > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--p-danger-ink);
+}
+
+/* The Flow editor, with its own footer under it. */
+.formEditor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lockNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 20px 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  text-wrap: pretty;
+}
+
+.lockNote svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.formEditorBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 20px 8px;
+  padding: 10px 12px;
+  border-radius: var(--p-r-control);
+  background: var(--p-danger-wash);
+  box-shadow: inset 0 0 0 1px var(--p-danger-line);
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.alert svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--p-danger-ink);
+}
+
+/* A refused send, under the template editor's own buttons. */
+.sendAlert {
+  flex: none;
+  margin-bottom: 14px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--p-line);
+}
+
+.footerNote {
+  flex: 1 1 240px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+}
+
+.footerActions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+@media (max-width: 639px) {
+  .head {
+    padding: 14px 16px 12px;
+  }
+
+  .banner,
+  .lockNote,
+  .alert {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .footer {
+    padding: 12px 16px;
+  }
+
+  .footerActions {
+    width: 100%;
+  }
+
+  .footerActions > * {
+    flex: 1;
+  }
+}

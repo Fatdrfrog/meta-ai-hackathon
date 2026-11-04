@@ -58,6 +58,7 @@ import { readWhatsAppTemplateNamedParamExamples } from "@/lib/whatsapp/templates
 import { WHATSAPP_TEMPLATE_HEADER_MEDIA_ACCEPT_BY_FORMAT } from "@/lib/whatsapp/media-types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  SUPPORTED_LANGUAGES,
   TEMPLATE_CATEGORY_METADATA,
   WHATSAPP_TEMPLATE_LIMITS,
   canEditTemplate,
@@ -67,7 +68,10 @@ import type {
   TelegramTemplateData,
   TemplateChannel,
 } from "@icecore/shared/types/templates";
-import type { WhatsAppTemplate } from "@icecore/shared/types/whatsapp";
+import type {
+  WhatsAppComponent,
+  WhatsAppTemplate,
+} from "@icecore/shared/types/whatsapp";
 import {
   extractTemplateVariables,
   isValidTemplateName,
@@ -261,6 +265,69 @@ interface TemplateEditorFormProps {
   platformScope?: "all" | "whatsapp";
   /** Query parameters that reopen this editor when the page reloads. */
   reopenSearchParams?: Record<string, string>;
+  /**
+   * Keeps a new template's unsaved draft under its own key, so an editor
+   * opened elsewhere (Products) never restores, overwrites or clears the
+   * Templates page's new-template draft.
+   */
+  draftScope?: string;
+  /**
+   * Creating only: called with what the form would send Meta instead of
+   * creating the template here. `toast: null` shows no success toast; a
+   * refusal keeps the form as it is and shows its error, unless its
+   * `toast: null` leaves the error to the caller (a toast would cover the
+   * buttons of a dialog the editor sits in).
+   */
+  onCreate?: (
+    input: TemplateEditorCreateInput
+  ) => Promise<
+    | { success: true; toast?: string | null; warning?: string }
+    | { success: false; error: string; toast?: null }
+  >;
+  /** The submit button's words, instead of "Create Template". */
+  submitLabel?: string;
+  /**
+   * A template whose shape is decided by its caller: the category, layout
+   * and language are set and shown as a read-only line, not picked.
+   */
+  fixedShape?: TemplateEditorFixedShape;
+}
+
+/** What a create sends: the template as Meta takes it. */
+export type TemplateEditorCreateInput = {
+  name: string;
+  language: string;
+  category: string;
+  components: WhatsAppComponent[];
+};
+
+export type TemplateEditorFixedShape = {
+  category: "MARKETING";
+  layout: "carousel";
+  language: string;
+};
+
+/** The form's values with a caller's fixed shape forced over them. */
+function withFixedTemplateShape(
+  values: TemplateFormValues,
+  shape: TemplateEditorFixedShape | undefined
+): TemplateFormValues {
+  if (!shape) return values;
+  return {
+    ...values,
+    targetPlatform: "whatsapp",
+    category: shape.category,
+    hasCarousel: shape.layout === "carousel",
+    language:
+      normalizeWhatsAppTemplateLanguageCode(shape.language) || shape.language,
+  };
+}
+
+/** A template language's English name, as the language picker lists it. */
+function templateLanguageName(code: string): string {
+  return (
+    SUPPORTED_LANGUAGES.find(language => language.code === code)?.name ?? code
+  );
 }
 
 /** Typing pauses this long before the draft is written to the browser. */
@@ -710,6 +777,10 @@ export function TemplateEditorForm({
   layout = "default",
   platformScope = "all",
   reopenSearchParams,
+  draftScope,
+  onCreate,
+  submitLabel,
+  fixedShape,
 }: TemplateEditorFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const submissionOwnerRef = useRef<{ pending: boolean } | null>(null);
@@ -771,6 +842,11 @@ export function TemplateEditorForm({
   );
 
   const getDefaultValues = (
+    source?: (WhatsAppTemplate & EditableTemplate) | undefined
+  ): TemplateFormValues =>
+    withFixedTemplateShape(getSourceDefaultValues(source), fixedShape);
+
+  const getSourceDefaultValues = (
     source?: (WhatsAppTemplate & EditableTemplate) | undefined
   ): TemplateFormValues => ({
     name: source?.name || "",
@@ -1329,6 +1405,9 @@ export function TemplateEditorForm({
 
   const showWhatsApp =
     targetPlatform === "whatsapp" || targetPlatform === "both";
+  // A caller's fixed shape decides the layout; the picker isn't shown.
+  const showMarketingLayoutPicker =
+    showWhatsApp && selectedCategory === "MARKETING" && !fixedShape;
   const templateStatus = template?.status || "PENDING";
   const canEditMetaTemplate =
     !isEdit || !showWhatsApp || canEditTemplate(templateStatus);
@@ -2083,14 +2162,22 @@ export function TemplateEditorForm({
   const draftStorageKey = getTemplateEditorDraftKey({
     workspaceId,
     templateId: dbTemplateId || metaTemplateId,
+    scope: draftScope,
   });
   // Read once as the editor opens, so the form and notice start from it.
-  const [restoredDraft] = useState(() =>
-    readRestorableTemplateEditorDraft(
+  const [restoredDraft] = useState(() => {
+    const restored = readRestorableTemplateEditorDraft(
       draftStorageKey,
       getDefaultValues(template)
-    )
-  );
+    );
+    // A caller's fixed shape holds over whatever the draft was saved with.
+    return restored && fixedShape
+      ? {
+          ...restored,
+          values: withFixedTemplateShape(restored.values, fixedShape),
+        }
+      : restored;
+  });
   // Shown in the footer: toast buttons can't be clicked under a modal dialog.
   // Reopening within this page load just keeps the edits; a draft from before
   // a reload (or another tab) is announced so it can be discarded.
@@ -2438,12 +2525,15 @@ export function TemplateEditorForm({
     if (!owner || owner.pending) return;
     owner.pending = true;
     const ownsPresentation = () => submissionOwnerRef.current === owner;
-    const values = isWhatsAppOnly
-      ? ({
-          ...submittedValues,
-          targetPlatform: "whatsapp",
-        } satisfies TemplateFormValues)
-      : submittedValues;
+    const values = withFixedTemplateShape(
+      isWhatsAppOnly
+        ? ({
+            ...submittedValues,
+            targetPlatform: "whatsapp",
+          } satisfies TemplateFormValues)
+        : submittedValues,
+      fixedShape
+    );
 
     setSubmitting(true);
     setDraftNotice(null);
@@ -2492,6 +2582,10 @@ export function TemplateEditorForm({
 
       let result;
       let metaTemplateWarning: string | undefined;
+      // A caller's onCreate may name its own success toast, or none (null),
+      // and may show its refusal itself.
+      let successToast: string | null | undefined;
+      let callerShowsRefusal = false;
       if (isEdit) {
         const shouldUpdateWhatsApp =
           values.targetPlatform === "whatsapp" ||
@@ -2587,6 +2681,30 @@ export function TemplateEditorForm({
             error: tTemplates("form.editDisabledMissingDbId"),
           };
         }
+      } else if (onCreate) {
+        // The caller creates it (Products keeps the cards until its Make);
+        // it takes WhatsApp templates only.
+        const created = whatsappData
+          ? await onCreate({
+              name: values.name,
+              language: whatsappData.language,
+              category: whatsappData.category,
+              components: whatsappData.components,
+            })
+          : {
+              success: false as const,
+              error: tTemplates("alerts.saveFailed"),
+            };
+        if (created.success) {
+          successToast = created.toast;
+          result = {
+            success: true as const,
+            data: created.warning ? { warning: created.warning } : {},
+          };
+        } else {
+          result = { success: false as const, error: created.error };
+          callerShowsRefusal = "toast" in created && created.toast === null;
+        }
       } else {
         // Creating new template - use unified action
         result = await createUnifiedTemplateAction({
@@ -2600,11 +2718,13 @@ export function TemplateEditorForm({
 
       if (!ownsPresentation()) return;
       if (result.success) {
-        toast.success(
-          isEdit
-            ? tTemplates("alerts.updateSuccess")
-            : tTemplates("alerts.createSuccess")
-        );
+        const successMessage =
+          successToast !== undefined
+            ? successToast
+            : isEdit
+              ? tTemplates("alerts.updateSuccess")
+              : tTemplates("alerts.createSuccess");
+        if (successMessage) toast.success(successMessage);
         const resultWarning =
           result.data &&
           typeof result.data === "object" &&
@@ -2623,7 +2743,7 @@ export function TemplateEditorForm({
         setUploadedHeaderMedia(null);
         setHeaderMediaUploadError(null);
         onSuccess();
-      } else {
+      } else if (!callerShowsRefusal) {
         toast.error(result.error);
       }
     } catch (error) {
@@ -2995,7 +3115,23 @@ export function TemplateEditorForm({
                       )}
                     />
 
-                    {showWhatsApp && (
+                    {showWhatsApp && fixedShape ? (
+                      <p
+                        className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
+                        data-testid="template-fixed-shape"
+                      >
+                        {[
+                          tTemplates(`categories.${fixedShape.category}`),
+                          tTemplates("form.layoutCarousel"),
+                          templateLanguageName(
+                            normalizeWhatsAppTemplateLanguageCode(
+                              fixedShape.language
+                            ) || fixedShape.language
+                          ),
+                        ].join(" · ")}
+                      </p>
+                    ) : null}
+                    {showWhatsApp && !fixedShape && (
                       <>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <FormField
@@ -3115,7 +3251,7 @@ export function TemplateEditorForm({
                   </div>
                 </TemplateFormSection>
 
-                {showWhatsApp && selectedCategory === "MARKETING" && (
+                {showMarketingLayoutPicker && (
                   <TemplateFormSection title={tTemplates("form.layout")}>
                     <FormField
                       control={form.control}
@@ -4636,9 +4772,10 @@ export function TemplateEditorForm({
                   {submitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {isEdit
-                    ? tTemplates("form.updateTemplate")
-                    : tTemplates("form.createTemplate")}
+                  {submitLabel ??
+                    (isEdit
+                      ? tTemplates("form.updateTemplate")
+                      : tTemplates("form.createTemplate"))}
                 </Button>
               </div>
             </div>

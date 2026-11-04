@@ -7,8 +7,8 @@ import {
   KIT_CAROUSEL_MAX_CARDS,
   KIT_CAROUSEL_MIN_CARDS,
   ORDER_FORM_MAX_PRODUCTS,
-  orderFormOption,
 } from "@/lib/products/kit-text";
+import { buildOrderFormFlowConfig } from "@/lib/products/order-form-config";
 import {
   productPhotoUrl,
   withProductPhotoUrls,
@@ -261,65 +261,10 @@ export async function prepareCarouselDraft(
   };
 }
 
-/**
- * The order form, one screen: the products to tick (by product id), the
- * buyer's name, where to deliver, and a comment. WhatsApp already gives the
- * buyer's number.
- */
-export function buildOrderFormFlowConfig(
-  products: AddedProduct[],
-  language: string | null
-): WhatsAppFlowConfig {
-  const words = shopWords(language);
-  return {
-    templateId: "products_order_form",
-    ctaText: words.form.cta,
-    flowSubmitLabel: words.form.submit,
-    flowNavigationMode: "linear",
-    flowJsonVersion: "6.3",
-    categories: ["OTHER"],
-    screens: [
-      {
-        id: "ORDER",
-        title: words.form.title,
-        fields: [
-          {
-            id: "products",
-            label: words.form.products,
-            fieldType: "CheckboxGroup",
-            required: true,
-            options: products.slice(0, ORDER_FORM_MAX_PRODUCTS).map(product => {
-              const { title, description } = orderFormOption(product, words);
-              return {
-                id: product.id,
-                title,
-                ...(description ? { description } : {}),
-              };
-            }),
-          },
-          {
-            id: "name",
-            label: words.form.name,
-            fieldType: "TextInput",
-            required: true,
-          },
-          {
-            id: "address",
-            label: words.form.address,
-            fieldType: "TextArea",
-            required: false,
-          },
-          {
-            id: "comment",
-            label: words.form.comment,
-            fieldType: "TextArea",
-            required: false,
-          },
-        ],
-      },
-    ],
-  };
-}
+// The order form's config moved to order-form-config.ts (client safe), so
+// "Edit questions" builds it in the page; it's re-exported here for the
+// server code that imported it from this file.
+export { buildOrderFormFlowConfig } from "@/lib/products/order-form-config";
 
 const failureMessage = (result: WhatsAppFlowServiceResult) =>
   result.error ||
@@ -346,6 +291,11 @@ export async function createOrderFormDraft(params: {
   /** A draft Flow an earlier attempt created and never finished. */
   flowId?: string;
   /**
+   * The questions to send instead of the shelf's: the owner's edit, as
+   * parseOrderFormConfig passed it. `products` still counts what it lists.
+   */
+  config?: WhatsAppFlowConfig;
+  /**
    * Told the new Flow's id as soon as Meta made it, before its JSON: a
    * caller stopped after this point can finish that Flow next time.
    */
@@ -354,7 +304,8 @@ export async function createOrderFormDraft(params: {
   | { ok: true; flowId: string; name: string; leftOut: number }
   | { ok: false; reason: "invalid" | "refused"; error: string }
 > {
-  const config = buildOrderFormFlowConfig(params.products, params.language);
+  const config =
+    params.config ?? buildOrderFormFlowConfig(params.products, params.language);
   const { isValid, issues } = validateWhatsAppFlowConfig(config);
   if (!isValid)
     return {

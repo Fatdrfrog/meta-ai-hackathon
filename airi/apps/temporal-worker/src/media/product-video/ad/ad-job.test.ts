@@ -3,6 +3,7 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test, { type TestContext } from "node:test";
+import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 import type { SegmentationMaskRecord } from "@icecore/airi-runtime/meta-sam";
 import { WorkspaceAiSpendError } from "@icecore/airi-runtime/workspace-ai-spend";
 import type { ProductAdFileRef, ProductAdScript } from "@icecore/temporal";
@@ -13,6 +14,9 @@ import {
   ProductAdFailure,
   removeWorkDir,
   runProductAd,
+  SCRIPT_MAX_COST_MICROS,
+  SCRIPT_MAX_OUTPUT_TOKENS,
+  scriptResponse,
   type AdJobPorts,
   type AdRecord,
 } from "./ad-job";
@@ -77,6 +81,8 @@ function baseAd(overrides: Partial<AdRecord> = {}): AdRecord {
     wordsCode: "kk",
     idea: { kind: "new", text: null },
     voice: "own",
+    stockVoiceId: null,
+    voiceOver: null,
     presenter: null,
     ending: { phone: null, shopName: "Demo Shop" },
     products: ["p1", "p2"].map((productId) => ({
@@ -121,6 +127,7 @@ type Harness = {
     sam: number;
     script: number;
     isolate: number;
+    place: number;
   };
   rendered: number;
 };
@@ -134,11 +141,15 @@ async function harness(
     refuse?: (
       operationId: string,
     ) => "workspace_ai_spend_limit" | "own_ai_source_required" | null;
+    /** Any other error a reservation throws (the company's AI switch). */
+    reserveError?: (operationId: string) => Error | null;
     allowance?: Partial<AdSpendAllowance>;
     /** Muse Spark's verdicts per product description, in order; "same" after them. */
     checks?: Record<string, boolean[]>;
     isolate?: boolean;
     missing?: string[];
+    /** Muse Spark's reading of a described place. */
+    place?: unknown;
   } = {},
 ): Promise<Harness> {
   const workDir = await mkdtemp(join(tmpdir(), "product-ad-job-"));
@@ -164,7 +175,14 @@ async function harness(
   const voices = new Map<string, Buffer>();
   const ops: string[] = [];
   const settled: Array<[string, number | null]> = [];
-  const muse = { scenes: 0, checks: 0, sam: 0, script: 0, isolate: 0 };
+  const muse = {
+    scenes: 0,
+    checks: 0,
+    sam: 0,
+    script: 0,
+    isolate: 0,
+    place: 0,
+  };
   const checks = new Map(
     Object.entries(options.checks ?? {}).map(([product, verdicts]) => [
       product,
@@ -238,6 +256,8 @@ async function harness(
         };
       },
       async reserve(operationId) {
+        const thrown = options.reserveError?.(operationId);
+        if (thrown) throw thrown;
         const refused = options.refuse?.(operationId);
         if (refused) throw new WorkspaceAiSpendError(refused);
         ops.push(operationId);
@@ -265,9 +285,16 @@ async function harness(
     pulse: () => undefined,
     now: () => new Date("2026-11-02T10:00:00Z"),
     askMuse: (async (
-      _request: unknown,
+      request: { purpose?: string },
       deps: { onCost?: (usd: number, what: string) => void },
     ) => {
+      if (request.purpose === "ad place") {
+        muse.place++;
+        // An error in its place is Muse Spark's answer failing.
+        if (options.place instanceof Error) throw options.place;
+        deps.onCost?.(0.002, "ad place");
+        return options.place ?? { ok: true, place: "a place", reason: "none" };
+      }
       muse.script++;
       deps.onCost?.(0.016, "ad script");
       return GOOD_SCRIPT;
@@ -317,6 +344,11 @@ async function harness(
       feed: await sharp(await png(108, 135, "#ffffff"))
         .jpeg()
         .toBuffer(),
+      textOverlap: input.products.map((product) =>
+        product.textZone === "bottom"
+          ? { covers: false, suggested: null }
+          : { covers: true, suggested: "bottom" as const },
+      ),
       // Keep what it was given, for the assertions.
       ...({ input } as object),
     })) as typeof composeAd,
@@ -508,6 +540,28 @@ test("the first reservation refused: the ad fails with the import's own reason",
   }
 });
 
+test("new words that can't be read fall back to the recording, and the ad says why", async (t) => {
+  const h = await harness(t, { ad: baseAd({ voice: "clone" }) });
+  if (!(await withClips(h, t))) return;
+  await runProductAd(h.ports);
+  assert.equal(h.doc.status, "ready");
+  // voice.ts reads nothing yet: the owner's own clips stand in, polished.
+  assert.equal(h.muse.isolate, 1);
+  assert.deepEqual(h.doc.voiceResult, { used: "own", fallback: "unavailable" });
+  assert.equal(h.doc.voiceOver, null);
+});
+
+test("new words with no recording to fall back to leave the ad silent, and say why", async (t) => {
+  const h = await harness(t, { ad: baseAd({ voice: "stock" }) });
+  await runProductAd(h.ports);
+  assert.equal(h.doc.status, "ready");
+  assert.equal(h.muse.isolate, 0);
+  assert.deepEqual(h.doc.voiceResult, {
+    used: "none",
+    fallback: "unavailable",
+  });
+});
+
 test("refused after the action started: the script is the code's own, the ad finishes", async (t) => {
   const h = await harness(t, {
     ad: baseAd({ costMicros: 16_000, voice: "none" }),
@@ -562,6 +616,7 @@ test("a retried run pays for nothing saved; a render run calls no model at all",
     sam: 0,
     script: 0,
     isolate: 0,
+    place: 0,
   });
   assert.equal(render.doc.status, "ready");
   assert.equal(render.doc.render.renderNo, 2);
@@ -616,6 +671,43 @@ test("a shop's name the fonts can't draw isn't given to Muse Spark to write", as
   assert.doesNotMatch(questions[0]!, /The shop is called/);
   assert.doesNotMatch(questions[0]!, /🌸/);
   assert.equal(h.doc.status, "ready");
+});
+
+test("the script call may write SCRIPT_MAX_OUTPUT_TOKENS, past ask-muse's 3 000", async () => {
+  const sent: unknown[] = [];
+  const create = scriptResponse((async (request: unknown) => {
+    sent.push(request);
+    return { status: "completed", output: [] };
+  }) as never);
+  await create(
+    { model: "muse", input: [], max_output_tokens: 3000 } as never,
+    undefined,
+  );
+  assert.equal(SCRIPT_MAX_OUTPUT_TOKENS, 6000);
+  assert.deepEqual(sent, [
+    { model: "muse", input: [], max_output_tokens: SCRIPT_MAX_OUTPUT_TOKENS },
+  ]);
+  // Its reservation still covers the most it can write, with 8k tokens in.
+  assert.ok(
+    SCRIPT_MAX_OUTPUT_TOKENS * 4.25 + 8000 * 1.25 <= SCRIPT_MAX_COST_MICROS,
+  );
+});
+
+test("the script's Muse Spark call gets the roomier Responses call; the place's doesn't need it", async (t) => {
+  const h = await harness(t, { ad: baseAd({ voice: "none" }) });
+  const seen: Array<{ purpose: string; create: unknown }> = [];
+  const ask = h.ports.askMuse!;
+  h.ports.askMuse = (async (request, deps, options) => {
+    seen.push({
+      purpose: (request as { purpose: string }).purpose,
+      create: (deps as { createMetaResponse?: unknown }).createMetaResponse,
+    });
+    return ask(request, deps, options);
+  }) as typeof ask;
+  await runProductAd(h.ports);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0]!.purpose, "ad script");
+  assert.equal(typeof seen[0]!.create, "function");
 });
 
 test("a product's cut-out gone from storage fails the ad as photo_missing", async (t) => {
@@ -674,8 +766,436 @@ test("errors map to what the owner sees, and whether a retry can help", () => {
   assert.deepEqual([policy.code, policy.retryable], ["failed", true]);
   const ffmpeg = classifyAdError(new Error("ffmpeg exited with code 1"));
   assert.deepEqual([ffmpeg.code, ffmpeg.retryable], ["failed", true]);
+  // The company turned AI off: its own code, never retried, by the code
+  // alone (the web host's error class isn't this realm's), wrapped or not.
+  const off = classifyAdError({ code: "workspace_ai_disabled" });
+  assert.deepEqual([off.code, off.retryable], ["ai_disabled", false]);
+  const wrapped = classifyAdError(
+    new Error("Activity failed", {
+      cause: Object.assign(new Error("AI is disabled for this company."), {
+        code: "workspace_ai_disabled",
+      }),
+    }),
+  );
+  assert.deepEqual([wrapped.code, wrapped.retryable], ["ai_disabled", false]);
+});
+
+test("a company that turned AI off: the ad fails as ai_disabled, before any model is paid", async (t) => {
+  const h = await harness(t, {
+    reserveError: () =>
+      Object.assign(new Error("AI is disabled for this company."), {
+        code: "workspace_ai_disabled",
+      }),
+  });
+  h.doc.voice = "none";
+  const error = await runProductAd(h.ports).then(
+    () => null,
+    (thrown: unknown) => thrown,
+  );
+  assert.ok(error, "the run must not finish");
+  const failure = classifyAdError(error);
+  assert.deepEqual([failure.code, failure.retryable], ["ai_disabled", false]);
+  assert.equal(h.muse.script, 0);
+  assert.equal(h.muse.scenes, 0);
+  assert.deepEqual(h.ops, []);
 });
 
 // The ad's own file refs are plain bucket and path pairs.
 const _ref: ProductAdFileRef = { bucket: "b", path: "p" };
 void _ref;
+
+// ---------------------------------------------------------------------------
+// Studio v2: edit runs.
+
+/** A whole first make, silent, so its saved state can be edited. */
+async function afterFirstMake(t: TestContext) {
+  const first = await harness(t, { ad: baseAd({ voice: "none" }) });
+  await runProductAd(first.ports);
+  assert.equal(first.doc.status, "ready");
+  return first;
+}
+
+/**
+ * The ad as the web leaves it after a "New picture" press on p1: render 2,
+ * a scene run, p1 back on its exact still with the press's `redo`.
+ */
+function pressed(
+  saved: Record<string, any>,
+  place: Record<string, unknown>,
+  scene: Record<string, unknown> = {},
+): AdRecord {
+  const p1 = saved.scenes[0];
+  return {
+    ...(structuredClone(saved) as AdRecord),
+    status: "making",
+    renderNo: 2,
+    runKind: "scene",
+    scenes: [
+      {
+        ...structuredClone(p1),
+        method: "exact",
+        muse: null,
+        check: null,
+        box: p1.exactBox,
+        place: { setting: null, words: null, englishPlace: null, ...place },
+        redo: {
+          requestId: "press-1",
+          renderNo: 2,
+          from: {
+            muse: p1.muse,
+            box: p1.box,
+            method: p1.method,
+            check: p1.check,
+          },
+          outcome: null,
+          reason: null,
+        },
+        ...scene,
+      },
+      structuredClone(saved.scenes[1]),
+    ],
+  };
+}
+
+/** A harness on the first make's files. */
+async function next(
+  t: TestContext,
+  first: Harness,
+  options: Parameters<typeof harness>[1],
+) {
+  const h = await harness(t, options);
+  for (const [key, value] of first.files) h.files.set(key, value);
+  for (const [key, value] of first.voices) h.voices.set(key, value);
+  return h;
+}
+
+test("a first make keeps each passed picture with its place, and records the run", async (t) => {
+  const first = await afterFirstMake(t);
+  const p1 = first.doc.scenes[0];
+  assert.equal(p1.pictures.length, 1);
+  assert.deepEqual(p1.pictures[0].ref, p1.muse);
+  assert.deepEqual(
+    p1.pictures[0].box,
+    p1.box,
+    "framing boxed the kept picture",
+  );
+  assert.equal(
+    p1.pictures[0].place,
+    "a white shelf in a bright children's playroom",
+  );
+  assert.deepEqual(p1.place, {
+    setting: "playroom_shelf",
+    words: null,
+    englishPlace: null,
+  });
+  assert.ok(p1.exactBox, "the exact still's box is kept beside it");
+  assert.deepEqual(first.doc.lastRun, {
+    renderNo: 1,
+    kind: "make",
+    outcome: "ready",
+    errorCode: null,
+    message: null,
+    at: new Date("2026-11-02T10:00:00Z"),
+  });
+  // The words' overlap is saved with the video it describes.
+  assert.deepEqual(p1.textOverlap, { covers: true, suggested: "bottom" });
+});
+
+test("a New picture press pays only for its scene, and keeps the earlier picture", async (t) => {
+  const first = await afterFirstMake(t);
+  const h = await next(t, first, {
+    ad: pressed(first.doc, { setting: "stone_counter" }),
+    renderNo: 2,
+  });
+  await runProductAd(h.ports);
+  // p1 had one Muse Image call: this press's first try is its second.
+  assert.deepEqual(h.ops.sort(), [
+    "check:p1:a2:r2:t1",
+    "sam:p1:r2:t1",
+    "scene:p1:a2:r2:t1",
+  ]);
+  assert.equal(h.muse.script, 0);
+  const p1 = h.doc.scenes[0];
+  assert.equal(p1.method, "muse");
+  assert.match(p1.muse.path, /scene-p1-a2\.jpg$/);
+  assert.ok(p1.box);
+  assert.equal(p1.allowance, 3);
+  assert.equal(p1.redo.allowance, 3);
+  assert.equal(p1.redo.outcome, "new");
+  assert.deepEqual(
+    p1.pictures.map((picture: any) => [picture.place, Boolean(picture.box)]),
+    [
+      ["a white shelf in a bright children's playroom", true],
+      ["a pale stone counter", true],
+    ],
+  );
+  // p2 is untouched and paid nothing.
+  assert.deepEqual(h.doc.scenes[1], {
+    ...first.doc.scenes[1],
+    textOverlap: h.doc.scenes[1].textOverlap,
+  });
+  assert.equal(h.doc.status, "ready");
+  assert.equal(h.doc.render.renderNo, 2);
+  assert.equal(h.doc.lastRun.kind, "scene");
+  assert.equal(h.doc.lastRun.outcome, "ready");
+  assert.ok(h.doc.timings.framing.finishedAt);
+});
+
+test("a press whose picture fails the check gives the scene back its picture", async (t) => {
+  const first = await afterFirstMake(t);
+  const h = await next(t, first, {
+    ad: pressed(first.doc, { setting: "gift_table" }),
+    renderNo: 2,
+    checks: { "blonde doll": [false, false] },
+  });
+  await runProductAd(h.ports);
+  assert.deepEqual(h.ops.sort(), [
+    "check:p1:a2:r2:t1",
+    "check:p1:a3:r2:t1",
+    "scene:p1:a2:r2:t1",
+    "scene:p1:a3:r2:t1",
+  ]);
+  const before = first.doc.scenes[0];
+  const p1 = h.doc.scenes[0];
+  assert.equal(p1.redo.outcome, "kept_check");
+  assert.deepEqual(
+    [p1.method, p1.muse, p1.box, p1.check],
+    [before.method, before.muse, before.box, before.check],
+  );
+  assert.equal(p1.pictures.length, 1);
+  // The video still renders, with any free changes that went in.
+  assert.equal(h.doc.status, "ready");
+  assert.equal(h.doc.render.renderNo, 2);
+});
+
+test("a press the ledger refuses ends as no_budget, the scene as it was", async (t) => {
+  const first = await afterFirstMake(t);
+  const h = await next(t, first, {
+    ad: pressed(first.doc, { setting: "linen_shelf" }),
+    renderNo: 2,
+    refuse: (op) =>
+      op.startsWith("scene:") ? "workspace_ai_spend_limit" : null,
+  });
+  await runProductAd(h.ports);
+  const p1 = h.doc.scenes[0];
+  assert.equal(p1.redo.outcome, "no_budget");
+  assert.deepEqual(p1.muse, first.doc.scenes[0].muse);
+  assert.equal(h.doc.status, "ready");
+});
+
+test("Describe a place: Muse Spark reads it once, and Muse Image sets the product there", async (t) => {
+  const first = await afterFirstMake(t);
+  const h = await next(t, first, {
+    ad: pressed(first.doc, { words: "киіз үйдегі кілемде" }),
+    renderNo: 2,
+    place: { ok: true, place: "a felt rug inside a yurt", reason: "none" },
+  });
+  await runProductAd(h.ports);
+  assert.equal(h.muse.place, 1);
+  assert.ok(h.ops.includes("place:p1:p2:r2:t1"), h.ops.join());
+  const p1 = h.doc.scenes[0];
+  assert.equal(p1.place.englishPlace, "a felt rug inside a yurt");
+  assert.equal(p1.redo.outcome, "new");
+  assert.equal(p1.pictures.at(-1).place, "a felt rug inside a yurt");
+});
+
+test("a described place Muse Spark refuses ends the press before any picture is paid for", async (t) => {
+  const first = await afterFirstMake(t);
+  const h = await next(t, first, {
+    ad: pressed(first.doc, { words: "a woman holding it" }),
+    renderNo: 2,
+    place: { ok: false, place: "", reason: "people" },
+  });
+  await runProductAd(h.ports);
+  assert.equal(h.muse.scenes, 0);
+  assert.deepEqual(h.ops, ["place:p1:p2:r2:t1"]);
+  const p1 = h.doc.scenes[0];
+  assert.deepEqual(
+    [p1.redo.outcome, p1.redo.reason],
+    ["place_refused", "people"],
+  );
+  assert.deepEqual(p1.muse, first.doc.scenes[0].muse);
+  assert.equal(h.doc.status, "ready");
+  assert.ok(h.doc.timings.pictures.finishedAt, "the press's step ended");
+});
+
+test("a retried press never raises its allowance twice", async (t) => {
+  const first = await afterFirstMake(t);
+  // The press's last try was made (attempts at its allowance) when the run
+  // crashed; the retry finds the raise recorded.
+  const ad = pressed(
+    first.doc,
+    { setting: "stone_counter" },
+    {
+      attempts: 3,
+      allowance: 3,
+      check: { same: false, difference: "The dress is red." },
+    },
+  );
+  ad.scenes[0]!.redo!.allowance = 3;
+  const h = await next(t, first, { ad, renderNo: 2 });
+  await runProductAd(h.ports);
+  assert.deepEqual(h.ops, []);
+  assert.equal(h.doc.scenes[0].redo.outcome, "kept_check");
+  assert.equal(h.doc.scenes[0].allowance, 3);
+});
+
+test("an ad from before keeps the picture a press replaces, to pick again", async (t) => {
+  const first = await afterFirstMake(t);
+  const saved = structuredClone(first.doc);
+  delete saved.scenes[0].pictures;
+  // The web writes the pressed chip into the script, and the setting the
+  // replaced picture was made in onto the press.
+  saved.script.scenes[0].setting = "stone_counter";
+  const ad = pressed(saved, { setting: "stone_counter" });
+  ad.scenes[0]!.redo!.from.setting = "playroom_shelf";
+  const h = await next(t, first, { ad, renderNo: 2 });
+  await runProductAd(h.ports);
+  assert.deepEqual(
+    h.doc.scenes[0].pictures.map((picture: any) => picture.ref),
+    [first.doc.scenes[0].muse, h.doc.scenes[0].muse],
+  );
+  // Each picture is named by the place it shows.
+  assert.deepEqual(
+    h.doc.scenes[0].pictures.map((picture: any) => picture.place),
+    ["a white shelf in a bright children's playroom", "a pale stone counter"],
+  );
+});
+
+test("a described place Muse Spark refuses outright ends as a refused place, not an outage", async (t) => {
+  const first = await afterFirstMake(t);
+  const h = await next(t, first, {
+    ad: pressed(first.doc, { words: "something Muse Spark won't touch" }),
+    renderNo: 2,
+    place: new MetaModelApiError({
+      kind: "invalid_request",
+      transient: false,
+      code: "refusal",
+      message: "The model refused to answer",
+    }),
+  });
+  await runProductAd(h.ports);
+  const p1 = h.doc.scenes[0];
+  assert.deepEqual(
+    [p1.redo.outcome, p1.redo.reason],
+    ["place_refused", "unclear"],
+  );
+  assert.equal(h.muse.scenes, 0);
+  assert.deepEqual(p1.muse, first.doc.scenes[0].muse);
+  assert.equal(h.doc.status, "ready");
+
+  // Meta down is still "try again in a minute".
+  const down = await next(t, first, {
+    ad: pressed(first.doc, { words: "a felt rug inside a yurt" }),
+    renderNo: 2,
+    place: new MetaModelApiError({
+      kind: "server",
+      transient: true,
+      message: "Service unavailable",
+    }),
+  });
+  await runProductAd(down.ports);
+  assert.equal(down.doc.scenes[0].redo.outcome, "unavailable");
+});
+
+test("a voice run back to the recording or no voice clears the old voice's fallback", async (t) => {
+  const first = await afterFirstMake(t);
+  for (const voice of ["own", "none"] as const) {
+    const h = await next(t, first, {
+      ad: {
+        ...(structuredClone(first.doc) as AdRecord),
+        status: "making",
+        renderNo: 2,
+        runKind: "voice",
+        voice,
+        stockVoiceId: null,
+        voiceResult: { used: "own", fallback: "no_voice" },
+      } as AdRecord,
+      renderNo: 2,
+    });
+    await runProductAd(h.ports);
+    assert.equal(h.doc.status, "ready", voice);
+    assert.equal(h.doc.voiceResult, null, voice);
+  }
+});
+
+test("Update renders the exact photo where asked, with its box, worked out for ads from before", async (t) => {
+  const first = await afterFirstMake(t);
+  const saved = structuredClone(first.doc);
+  const exactBox = saved.scenes[0].exactBox;
+  saved.scenes[0].useExact = true;
+  delete saved.scenes[0].exactBox;
+  saved.scenes[1].textZone = "bottom";
+  const h = await next(t, first, {
+    ad: {
+      ...(saved as AdRecord),
+      status: "making",
+      renderNo: 2,
+      runKind: "render",
+    },
+    mode: "render",
+    renderNo: 2,
+  });
+  let given: Parameters<typeof composeAd>[0] | null = null;
+  const compose = h.ports.compose!;
+  h.ports.compose = async (input, deps) => {
+    given = input;
+    return compose(input, deps);
+  };
+  await runProductAd(h.ports);
+  assert.deepEqual(h.ops, []);
+  const products = (given as unknown as Parameters<typeof composeAd>[0])
+    .products;
+  assert.ok(
+    products[0]!.picture.equals(h.files.get(saved.scenes[0].exact.path)!),
+    "the exact still, not Muse Image's scene",
+  );
+  assert.deepEqual(products[0]!.box, exactBox);
+  assert.deepEqual(
+    h.doc.scenes[0].exactBox,
+    exactBox,
+    "kept for the next press",
+  );
+  // The zone reaches compose, and the overlap comes back with the video.
+  assert.deepEqual(
+    products.map((product) => product.textZone),
+    ["auto", "bottom"],
+  );
+  assert.deepEqual(h.doc.scenes[1].textOverlap, {
+    covers: false,
+    suggested: null,
+  });
+  assert.equal(h.doc.lastRun.kind, "render");
+});
+
+test("a voice run pays for no scene and no words, even a scene left without its picture", async (t) => {
+  const first = await afterFirstMake(t);
+  const saved = structuredClone(first.doc);
+  // p2 kept its exact still after a refusal in the first make.
+  Object.assign(saved.scenes[1], {
+    method: "exact",
+    muse: null,
+    box: saved.scenes[1].exactBox,
+    attempts: 0,
+  });
+  const h = await next(t, first, {
+    ad: {
+      ...(saved as AdRecord),
+      status: "making",
+      renderNo: 2,
+      runKind: "voice",
+      voice: "stock",
+      stockVoiceId: "airi-1",
+    },
+    renderNo: 2,
+  });
+  await runProductAd(h.ports);
+  assert.deepEqual(h.ops, []);
+  assert.deepEqual(
+    [h.muse.scenes, h.muse.checks, h.muse.sam, h.muse.script],
+    [0, 0, 0, 0],
+  );
+  assert.equal(h.doc.scenes[1].method, "exact");
+  assert.equal(h.doc.status, "ready");
+  assert.equal(h.doc.lastRun.kind, "voice");
+});

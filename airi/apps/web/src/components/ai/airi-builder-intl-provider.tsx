@@ -25,22 +25,33 @@ type AiriBuilderMessagesState =
  * catalogs download with the builder (once per locale) and the builder waits
  * on `fallback` instead of rendering raw message keys. A failed download
  * shows `renderFailure` (the builder's message by default) with a retry.
+ * A `locale` other than the page's gives the builders that locale's
+ * catalogs (the English-only Products section passes "en").
  */
 export function AiriBuilderIntlProvider({
   children,
   fallback,
   renderFailure,
+  locale: localeOverride,
 }: {
   children: ReactNode;
   fallback: ReactNode;
   /** What a failed download shows, for callers that are not the builder. */
   renderFailure?: (retry: () => void) => ReactNode;
+  /** The builders' locale, instead of the page's. */
+  locale?: string;
 }) {
-  const locale = resolveAiriBuilderMessagesLocale(useLocale());
-  const parentMessages = useMessages() as MessageMap | null | undefined;
-  const hasCatalogs = AIRI_BUILDER_MESSAGE_NAMESPACES.every(
-    namespace => parentMessages?.[namespace] !== undefined
+  const parentLocale = useLocale();
+  const locale = resolveAiriBuilderMessagesLocale(
+    localeOverride ?? parentLocale
   );
+  const parentMessages = useMessages() as MessageMap | null | undefined;
+  // The page's catalogs are in the page's locale; another one downloads its own.
+  const hasCatalogs =
+    (localeOverride === undefined || localeOverride === parentLocale) &&
+    AIRI_BUILDER_MESSAGE_NAMESPACES.every(
+      namespace => parentMessages?.[namespace] !== undefined
+    );
   const [attempt, setAttempt] = useState(0);
   const requestKey = `${locale}\u0000${attempt}`;
   const [state, setState] = useState<AiriBuilderMessagesState | null>(null);
@@ -75,7 +86,12 @@ export function AiriBuilderIntlProvider({
       : null);
   if (messages) {
     return (
-      <ScopedIntlProvider messages={messages}>{children}</ScopedIntlProvider>
+      <ScopedIntlProvider
+        messages={messages}
+        locale={localeOverride === undefined ? undefined : locale}
+      >
+        {children}
+      </ScopedIntlProvider>
     );
   }
 

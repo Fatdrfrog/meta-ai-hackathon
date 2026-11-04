@@ -50,6 +50,15 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+describe("productImportSpend.assertAiEnabled", () => {
+  it("admits the work: this copy has no company-wide AI switch", async () => {
+    await expect(
+      productImportSpend.assertAiEnabled("workspace-1")
+    ).resolves.toBeUndefined();
+    expect(mockWorkspaceFilters).toEqual([]);
+  });
+});
+
 describe("productImportSpend.allowance", () => {
   it("says the trial ended for a free company the ledger won't admit", async () => {
     // The trial ended yesterday, or never started: the ledger refuses every

@@ -5,14 +5,16 @@
 //
 // Each part of the section keeps its copy in its own file: copy-shelf.ts (the
 // page, its shelf and the review), copy-stage.ts (adding products from a
-// video), copy-make.ts (what the owner makes for WhatsApp, and the list of
-// what was made) and copy-ad.ts (video ads). PRODUCTS_COPY joins them, and a
-// key in two parts fails the type check rather than replacing the other.
+// video), copy-make.ts (what the owner makes for WhatsApp, editing it, and
+// the list of what was made), copy-ad.ts (video ads) and copy-voice.ts (the
+// ad's voices). PRODUCTS_COPY joins them, and a key in two parts fails the
+// type check rather than replacing the other.
 
 import { AD_COPY } from "./copy-ad";
 import { MAKE_COPY } from "./copy-make";
 import { SHELF_COPY } from "./copy-shelf";
 import { STAGE_COPY } from "./copy-stage";
+import { VOICE_COPY } from "./copy-voice";
 
 const BASE_COPY = {
   navLabel: "Products",
@@ -91,6 +93,7 @@ export const PRODUCTS_COPY = {
   ...STAGE_COPY,
   ...MAKE_COPY,
   ...AD_COPY,
+  ...VOICE_COPY,
 } as const;
 
 type Overlap<A, B> = Extract<keyof A, keyof B>;
@@ -99,12 +102,17 @@ type SharedKeys =
   | Overlap<typeof BASE_COPY, typeof STAGE_COPY>
   | Overlap<typeof BASE_COPY, typeof MAKE_COPY>
   | Overlap<typeof BASE_COPY, typeof AD_COPY>
+  | Overlap<typeof BASE_COPY, typeof VOICE_COPY>
   | Overlap<typeof SHELF_COPY, typeof STAGE_COPY>
   | Overlap<typeof SHELF_COPY, typeof MAKE_COPY>
   | Overlap<typeof SHELF_COPY, typeof AD_COPY>
+  | Overlap<typeof SHELF_COPY, typeof VOICE_COPY>
   | Overlap<typeof STAGE_COPY, typeof MAKE_COPY>
   | Overlap<typeof STAGE_COPY, typeof AD_COPY>
-  | Overlap<typeof MAKE_COPY, typeof AD_COPY>;
+  | Overlap<typeof STAGE_COPY, typeof VOICE_COPY>
+  | Overlap<typeof MAKE_COPY, typeof AD_COPY>
+  | Overlap<typeof MAKE_COPY, typeof VOICE_COPY>
+  | Overlap<typeof AD_COPY, typeof VOICE_COPY>;
 type OnlyTrue<T extends true> = T;
 /**
  * A key in two parts would silently replace the earlier part's: the type

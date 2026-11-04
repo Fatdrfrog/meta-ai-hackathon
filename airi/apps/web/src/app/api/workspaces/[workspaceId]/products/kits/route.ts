@@ -15,6 +15,7 @@ import type {
   ProductKitPlanResponse,
   ProductKitResponse,
 } from "@/lib/products/types";
+import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,10 +61,13 @@ export async function GET(request: Request, { params }: Context) {
 
 /**
  * Makes a kit: the carousel (sent to Meta for review) and the order form
- * (published), whichever were asked for, at once. Answers 201 with the kit
- * once both have settled, or 200 with the kit an earlier send of the same
- * press made. Nothing is made without products on the shelf and a
- * connected WhatsApp number.
+ * (published), whichever were asked for, at once, from the owner's edits
+ * when the press carries them. Answers 201 with the kit once both have
+ * settled, or 200 with the kit an earlier send of the same press made.
+ * Nothing is made without products on the shelf and a connected WhatsApp
+ * number; edits that fail their checks are a 400 with the first 3 issues,
+ * and an edited carousel's name Meta or this kit has is a 409
+ * template_name_taken.
  */
 export async function POST(request: Request, { params }: Context) {
   const { workspaceId } = await params;
@@ -80,12 +84,23 @@ export async function POST(request: Request, { params }: Context) {
       userId: access.userId,
       request: kitRequest,
     });
-    if ("refused" in outcome) return productsFail(outcome.refused, 409);
+    if ("invalid" in outcome)
+      return productsFail("invalid_request", 400, {
+        issues: outcome.invalid.slice(0, 3),
+      });
+    if ("refused" in outcome)
+      // Meta couldn't say whether it has the owner's name: try again.
+      return outcome.refused === "meta_unavailable"
+        ? productsFail("draft_failed", 503)
+        : productsFail(outcome.refused, 409);
     return productsJson(
       { kit: outcome.kit } satisfies ProductKitResponse,
       outcome.repeated ? 200 : 201
     );
   } catch (error) {
+    // The edited cards' pictures from Assets couldn't be kept.
+    if (error instanceof StorageQuotaError)
+      return productsFail("storage_full", 409);
     logger.error("[Products API] kit POST failed", error, {
       event: "products.kit_failed",
       workspaceId,

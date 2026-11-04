@@ -69,7 +69,7 @@ describe("trying a failed ad again", () => {
     expect((await post()).status).toBe(200);
   });
 
-  it.each(["trial_ended", "spend_limit", "ai_actions_used"])(
+  it.each(["trial_ended", "spend_limit", "ai_actions_used", "ai_disabled"])(
     "refuses with 409 %s when the workspace can't pay for AI",
     async code => {
       mockRetry.mockResolvedValue({ refused: code });

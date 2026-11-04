@@ -4,6 +4,7 @@ import type {
   ProductAdCreateRequest,
   ProductAdRecord,
   ProductAdResponse,
+  ProductAdSceneRequest,
   ProductAdUpdateRequest,
 } from "@/lib/products/types";
 import {
@@ -81,6 +82,35 @@ export async function updateProductAd(
       productAdUrl(workspaceId, adId),
       "PATCH",
       changes
+    )
+  );
+}
+
+/** "New picture" on one of the ad's scenes. */
+export function productAdSceneUrl(
+  workspaceId: string,
+  adId: string,
+  productId: string
+): string {
+  return `${productAdUrl(workspaceId, adId)}/scenes/${encodeURIComponent(productId)}`;
+}
+
+/**
+ * "New picture": a new Muse Image picture for one scene, in a tested setting
+ * or a described place, with any pending free changes; the ad, its scene run
+ * started.
+ */
+export async function redoProductAdScene(
+  workspaceId: string,
+  adId: string,
+  productId: string,
+  request: ProductAdSceneRequest
+): Promise<ProductAdRecord> {
+  return adOf(
+    await sendForAnswer<ProductAdResponse>(
+      productAdSceneUrl(workspaceId, adId, productId),
+      "POST",
+      request
     )
   );
 }

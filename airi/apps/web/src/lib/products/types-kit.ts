@@ -3,6 +3,8 @@
 // kit API answers and takes. Re-exported by types.ts, so the page and the API
 // import it from there.
 
+import type { WhatsAppFlowConfig } from "@icecore/scenario-contracts";
+import type { WhatsAppComponent } from "@icecore/shared/types/whatsapp";
 import type { ProductShopWordsCode } from "@icecore/temporal";
 import type { ProductAdRecord } from "./types-ad";
 
@@ -76,6 +78,12 @@ export type ProductKitOrderFormPart = {
   /** Products the form lists (it holds the first 20). */
   productCount: number;
   error: ProductKitPartError | null;
+  /** Whether the owner's own questions went out instead of the shelf's; false for kits from before. */
+  edited: boolean;
+  /** 1 for the form Make published; one more for each "Edit order form" on a ready one. */
+  version: number;
+  /** The Flows earlier versions published, oldest first (at most 10); they still open for forms already sent. */
+  earlier: ProductKitEarlierFlow[];
 };
 
 export type ProductKitCarouselPart = {
@@ -90,6 +98,25 @@ export type ProductKitCarouselPart = {
   metaReason: string | null;
   approvedAt: string | null;
   error: ProductKitPartError | null;
+  /** Whether the owner's edited cards went to Meta instead of the shelf's; false for kits from before. */
+  edited: boolean;
+  /** Templates earlier sends left at Meta, oldest first (at most 10); they stay in Templates. */
+  earlier: ProductKitEarlierTemplate[];
+};
+
+/** A template the kit pointed at before "Edit and send again" sent a new one. */
+export type ProductKitEarlierTemplate = {
+  templateId: string | null;
+  templateName: string | null;
+  metaStatus: string | null;
+  replacedAt: string;
+};
+
+/** A published Flow the kit pointed at before "Edit order form" published a new version. */
+export type ProductKitEarlierFlow = {
+  flowId: string | null;
+  flowName: string | null;
+  replacedAt: string;
 };
 
 /** A carousel and an order form made by one press. */
@@ -124,7 +151,79 @@ export type ProductKitCreateRequest = {
   language?: ProductShopWordsCode;
   /** The owner's IANA time zone, so the form's name has their clock's time; UTC without it. */
   timeZone?: string;
+  /**
+   * The owner's edits from "Edit cards" and "Edit questions", sent instead
+   * of what the shelf would make. Only for parts in `make`.
+   */
+  edits?: ProductKitEdits;
 };
+
+// ------------------------------------------------------------ kit editing
+// The owner edits the carousel in airi's template editor and the order form
+// in airi's Flow editor, inside Products, before Make or after it.
+
+/** The cards as the template editor saved them: Meta's template components. */
+export type ProductKitCarouselEdit = {
+  /** The template name: ^[a-z0-9_]{1,512}$. */
+  name: string;
+  /** One BODY and one CAROUSEL of 2 to 10 IMAGE cards, the images on this project's storage. */
+  components: WhatsAppComponent[];
+};
+
+/** The questions as the Flow editor saved them; its products question stays the shelf's. */
+export type ProductKitOrderFormEdit = { config: WhatsAppFlowConfig };
+
+/** The owner's edits to a kit's parts; a part without one is made from the shelf. */
+export type ProductKitEdits = {
+  carousel?: ProductKitCarouselEdit;
+  orderForm?: ProductKitOrderFormEdit;
+};
+
+/** POST /products/kits/drafts: the carousel the shelf would make, for "Edit cards" before Make. */
+export type ProductKitDraftsRequest = {
+  /** 1 to 60, in shelf order. */
+  productIds: string[];
+  language: ProductShopWordsCode;
+};
+
+export type ProductKitDraftsResponse = {
+  carousel: {
+    name: string;
+    language: ProductShopWordsCode;
+    components: WhatsAppComponent[];
+    /** The products on cards, in card order. */
+    productIds: string[];
+    /** Products asked for that aren't on a card: past the 10 a carousel holds, or without a photo. */
+    leftOut: number;
+  };
+};
+
+/** GET /products/kits/[kitId]/edit?part=…: what "Edit and send again" opens with. */
+export type ProductKitEditSourceResponse = {
+  kit: ProductKitRecord;
+  /** For part=carousel: what was sent (rebuilt from the shelf for kits from before), under a new name. */
+  carousel?: {
+    name: string;
+    language: ProductShopWordsCode;
+    components: WhatsAppComponent[];
+  };
+  /** For part=orderForm: what was published (rebuilt from the shelf for kits from before). */
+  orderForm?: { config: WhatsAppFlowConfig };
+};
+
+/**
+ * POST /products/kits/[kitId]/edit: send a made part again with the owner's
+ * edits; answers `ProductKitResponse`. A repeat of the same requestId
+ * returns the kit as it is.
+ */
+export type ProductKitEditRequest =
+  | ({ requestId: string; part: "carousel" } & ProductKitCarouselEdit)
+  | ({ requestId: string; part: "orderForm" } & ProductKitOrderFormEdit);
+
+/** POST /products/kits/[kitId]/send-test (stretch S1): the published form to the owner's test phone. */
+export type ProductKitSendTestRequest = { part: "orderForm" };
+
+export type ProductKitSendTestResponse = { sent: true };
 
 /** The most products one kit is made from. */
 export const PRODUCT_KIT_MAX_PRODUCTS = 60;

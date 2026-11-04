@@ -20,6 +20,9 @@ const form = (
   flowName: "Order form · 2 Nov 09:14",
   productCount: 7,
   error: null,
+  edited: false,
+  version: 1,
+  earlier: [],
   ...overrides,
 });
 
@@ -34,6 +37,8 @@ const carousel = (
   metaReason: null,
   approvedAt: null,
   error: null,
+  edited: false,
+  earlier: [],
   ...overrides,
 });
 
@@ -304,7 +309,10 @@ describe("the carousel's row", () => {
         { code: "meta_refused", message: "Invalid parameter" },
         "Meta refused it: Invalid parameter",
       ],
-      [{ code: "timed_out", message: null }, "This took too long. Try again."],
+      [
+        { code: "timed_out", message: null },
+        "We couldn't confirm Meta got it. Try again looks for it at Meta first, so nothing is sent twice.",
+      ],
       [{ code: "failed", message: null }, "That didn't work. Try again."],
       [
         { code: "not_enough_products", message: null },
@@ -411,4 +419,169 @@ test("nothing is said to be kept when both parts hold, or neither does", () => {
       )
     )
   ).toBeNull();
+});
+
+// After Make, the make view offers each made part's editor: the carousel
+// always goes to Meta as a new template, the order form is published again.
+describe("editing a made part", () => {
+  const editButton = (name: string) =>
+    within(row(name)).queryByRole("button", {
+      name: /^(Edit and send again|Edit and try again|Edit order form|Edit and publish)$/,
+    });
+
+  test("the carousel: send again with edits, in words for what Meta did", () => {
+    const cases = [
+      [
+        { metaStatus: "PENDING" },
+        "Meta doesn't let anyone change a template while it checks it, so your edits go to Meta as a new template.",
+      ],
+      [
+        { metaStatus: "APPROVED" },
+        "Your edits go to Meta as a new template; this one stays approved in Templates.",
+      ],
+      [
+        { metaStatus: "REJECTED", metaReason: "INVALID_FORMAT" },
+        "Fix it and send it as a new template. This one stays in Templates.",
+      ],
+      [
+        { metaStatus: "PAUSED" },
+        "Your edits go to Meta as a new template; this one stays in Templates.",
+      ],
+    ] as const;
+    for (const [overrides, note] of cases) {
+      const onEdit = jest.fn();
+      const view = render(
+        <KitStatus
+          workspaceId={WS}
+          kit={kit({ carousel: carousel(overrides) })}
+          remaking={null}
+          refusal={null}
+          onRetry={jest.fn()}
+          onEdit={onEdit}
+        />
+      );
+      expect(within(row("Carousel")).getByText(note)).toBeInTheDocument();
+      fireEvent.click(editButton("Carousel")!);
+      expect(onEdit).toHaveBeenCalledWith(
+        "carousel",
+        screen.getByRole("button", { name: "Edit and send again" })
+      );
+      view.unmount();
+    }
+  });
+
+  test("a carousel that wasn't made: Try again, or Edit and try again", () => {
+    const onEdit = jest.fn();
+    const { onRetry } = renderStatus(
+      kit({
+        carousel: carousel({
+          state: "failed",
+          error: { code: "timed_out", message: null },
+        }),
+      }),
+      { onEdit }
+    );
+
+    expect(
+      within(row("Carousel")).getByRole("button", { name: "Try again" })
+    ).toBeInTheDocument();
+    fireEvent.click(
+      within(row("Carousel")).getByRole("button", {
+        name: "Edit and try again",
+      })
+    );
+    expect(onEdit).toHaveBeenCalledWith("carousel", expect.any(HTMLElement));
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
+  test("a carousel being made or looked for can't be edited", () => {
+    for (const state of ["making", "checking"] as const) {
+      const view = render(
+        <KitStatus
+          workspaceId={WS}
+          kit={kit({ carousel: carousel({ state }) })}
+          remaking={null}
+          refusal={null}
+          onRetry={jest.fn()}
+          onEdit={jest.fn()}
+        />
+      );
+      expect(editButton("Carousel")).toBeNull();
+      view.unmount();
+    }
+  });
+
+  test("the order form: a new version when ready, publish when a draft or not made", () => {
+    const states = [
+      ["ready", "Edit order form"],
+      ["draft", "Edit and publish"],
+      ["failed", "Edit and publish"],
+    ] as const;
+    for (const [state, label] of states) {
+      const view = render(
+        <KitStatus
+          workspaceId={WS}
+          kit={kit({ orderForm: form({ state }) })}
+          remaking={null}
+          refusal={null}
+          onRetry={jest.fn()}
+          onEdit={jest.fn()}
+        />
+      );
+      expect(editButton("Order form")).toHaveTextContent(label);
+      view.unmount();
+    }
+    renderStatus(kit({ orderForm: form({ state: "making" }) }), {
+      onEdit: jest.fn(),
+    });
+    expect(editButton("Order form")).toBeNull();
+  });
+
+  test("a form an edit published again shows its version", () => {
+    renderStatus(kit({ orderForm: form({ version: 2, edited: true }) }), {
+      onEdit: jest.fn(),
+    });
+
+    expect(
+      within(row("Order form")).getByText("Version 2")
+    ).toBeInTheDocument();
+    expect(
+      within(row("Order form")).getByText(
+        "Forms you already sent keep opening version 1. New sends use version 2."
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("a part being made again offers no edit while it's made", () => {
+    renderStatus(
+      kit({ carousel: carousel({ state: "failed", error: null }) }),
+      { onEdit: jest.fn(), remaking: "carousel" }
+    );
+    expect(editButton("Carousel")).toBeNull();
+  });
+
+  test("without onEdit (the made list's rows), nothing to edit is offered", () => {
+    renderStatus(
+      kit({
+        orderForm: form(),
+        carousel: carousel({ metaStatus: "REJECTED" }),
+      })
+    );
+    expect(editButton("Carousel")).toBeNull();
+    expect(editButton("Order form")).toBeNull();
+    expect(
+      screen.queryByText(
+        "Fix it and send it as a new template. This one stays in Templates."
+      )
+    ).not.toBeInTheDocument();
+    // The v1 actions are as they were.
+    expect(
+      within(row("Carousel")).getByRole("link", {
+        name: "Edit it in Templates",
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(row("Carousel")).getByRole("button", { name: "Make it again" })
+    ).toBeInTheDocument();
+  });
 });

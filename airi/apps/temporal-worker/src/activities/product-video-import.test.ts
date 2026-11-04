@@ -10,6 +10,7 @@ const IMPORT = "6ae43246b2009b6f5799236e";
 function recordingSpend() {
   const calls: string[] = [];
   const spend: Parameters<typeof importSpendPort>[0] = {
+    assertAiEnabled: async () => undefined,
     async allowance(workspaceId) {
       calls.push(`allowance ${workspaceId}`);
       return {

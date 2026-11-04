@@ -8,11 +8,15 @@ import {
   bestMetaSamMask,
   segmentMetaImage as samImage,
 } from "@icecore/airi-runtime/meta-sam";
-import type {
-  ProductAdBox,
-  ProductAdFileRef,
-  ProductAdSetting,
-  ProductAdStoredScene,
+import {
+  PRODUCT_AD_MAX_SCENE_ATTEMPTS,
+  PRODUCT_AD_PICTURES_KEPT,
+  type ProductAdBox,
+  type ProductAdFileRef,
+  type ProductAdRedoOutcome,
+  type ProductAdScenePicture,
+  type ProductAdSetting,
+  type ProductAdStoredScene,
 } from "@icecore/temporal";
 import sharp from "sharp";
 import type { AskMuseDeps } from "../ask-muse";
@@ -27,15 +31,42 @@ import { settingWords } from "./script";
 import { AdSpendRefusal, type PaidCall } from "./spend";
 
 // Each product's scene: Muse Image 1.0 places the owner's real, restored
-// product in a setting the script chose, then Muse Spark checks the scene
-// still shows the same product. A mismatch gets one more try with the
-// difference named; a refusal, a second mismatch or a spend refusal leaves
-// the exact still (the cut-out on the code-drawn wall), so the price is never
-// shown on a product that isn't the owner's. SAM 3.1 then boxes the product
-// in the chosen scene, for the camera's push-in and the words' places.
+// product in a setting the script chose (or, after "New picture", a place
+// the owner picked or described), then Muse Spark checks the scene still
+// shows the same product. A mismatch gets one more try with the difference
+// named; a refusal, a second mismatch or a spend refusal leaves the exact
+// still (the cut-out on the code-drawn wall), so the price is never shown on
+// a product that isn't the owner's. SAM 3.1 then boxes the product in the
+// chosen scene, for the camera's push-in and the words' places. Every
+// picture that passed is kept (the newest PRODUCT_AD_PICTURES_KEPT), so the
+// owner can pick it again for free.
 
-/** Muse Image calls per product per ad: the first and one retry. */
-export const MAX_SCENE_ATTEMPTS = 2;
+/** Muse Image calls per product per ad before any "New picture": the first and one retry. */
+export const MAX_SCENE_ATTEMPTS = PRODUCT_AD_MAX_SCENE_ATTEMPTS;
+
+/**
+ * Where Muse Image sets the product: one of the tested settings, or Muse
+ * Spark's English reading of a place the owner described (place.ts).
+ */
+export type ScenePlace =
+  | { setting: ProductAdSetting }
+  | { englishPlace: string };
+
+/** The place in English, as a kept picture names it: "a pale stone counter". */
+export function placeName(place: ScenePlace): string {
+  return "setting" in place ? settingWords(place.setting) : place.englishPlace;
+}
+
+/**
+ * The place as Muse Image's prompt says it. The tested settings keep v1's
+ * exact words ("on a pale stone counter"); a described place is named as
+ * the setting it is, whatever its preposition would be.
+ */
+function placeWords(place: ScenePlace): string {
+  return "setting" in place
+    ? `on ${settingWords(place.setting)},`
+    : `in this setting: ${place.englishPlace},`;
+}
 
 // Reservations per call, in micro-dollars: Muse Image's list price, a Muse
 // Spark look at two pictures, and SAM's list price for an image.
@@ -64,12 +95,12 @@ export type SceneDeps = AskMuseDeps & {
  * at 25%, from 19%).
  */
 export function scenePrompt(
-  setting: ProductAdSetting,
+  place: ScenePlace,
   product: string,
   difference: string | null,
 ): string {
   return (
-    `Advertising photo of a shop's product. Place this exact ${product} unchanged on ${settingWords(setting)}, ` +
+    `Advertising photo of a shop's product. Place this exact ${product} unchanged ${placeWords(place)} ` +
     `in soft daylight from the left. Show the whole product upright, including anything that stands on it, in the lower ` +
     `half of the picture: it takes up about half of the picture's height, its base about nine tenths of the way down, with ` +
     `empty space on its left and right, so nothing of it is cut off. Keep the upper part of the picture, above the product, ` +
@@ -105,7 +136,21 @@ export type SceneJob = {
   ): Promise<ProductAdFileRef>;
   deps?: SceneDeps;
   options?: MetaRequestOptions;
+  /** When a kept picture was made; the run's clock. */
+  now?: () => Date;
 };
+
+/**
+ * How a scene's Muse Image attempts ended, as a "New picture" press reports
+ * it: new, a picture passed the check; kept_check, the last one changed the
+ * product; image_refused, Muse Image wouldn't make it; no_budget, the
+ * ledger refused the spend; unavailable, a Meta model didn't answer (or no
+ * attempt was left).
+ */
+export type SceneStop = Extract<
+  ProductAdRedoOutcome,
+  "new" | "kept_check" | "image_refused" | "no_budget" | "unavailable"
+>;
 
 export type SceneOutcome = {
   scene: ProductAdStoredScene;
@@ -113,6 +158,7 @@ export type SceneOutcome = {
   picture: Buffer | null;
   /** The ledger refused a reservation: the other products should stop paying too. */
   refused: AdSpendRefusal | null;
+  stop: SceneStop;
 };
 
 const asJpeg = (image: Buffer) =>
@@ -122,20 +168,51 @@ const asJpeg = (image: Buffer) =>
     .toBuffer();
 
 /**
+ * Keeps a picture that passed the check as the scene's newest, to pick
+ * again for free: at most PRODUCT_AD_PICTURES_KEPT, the oldest one that
+ * isn't the scene's current picture dropped first.
+ */
+export function keepPicture(
+  scene: ProductAdStoredScene,
+  picture: ProductAdScenePicture,
+): void {
+  const pictures = [...(scene.pictures ?? []), picture];
+  while (pictures.length > PRODUCT_AD_PICTURES_KEPT) {
+    const index = pictures.findIndex((kept) => !sameRef(kept.ref, scene.muse));
+    pictures.splice(index < 0 ? 0 : index, 1);
+  }
+  scene.pictures = pictures;
+}
+
+/** Gives the kept picture the scene now uses the scene's box, once SAM framed it. */
+export function framePicture(scene: ProductAdStoredScene): void {
+  const kept = scene.pictures?.find((picture) =>
+    sameRef(picture.ref, scene.muse),
+  );
+  if (kept) kept.box = scene.box;
+}
+
+const sameRef = (a: ProductAdFileRef | null, b: ProductAdFileRef | null) =>
+  Boolean(a && b && a.bucket === b.bucket && a.path === b.path);
+
+/**
  * Makes one product's Muse Image scene, from where its saved state left it:
- * a scene already checked is kept; otherwise up to the attempts left, each
- * counted (and saved) before its call so a retried run never reuses one.
- * Anything short of a checked scene leaves the exact still.
+ * a scene already checked is kept; otherwise up to the attempts its
+ * allowance leaves (PRODUCT_AD_MAX_SCENE_ATTEMPTS, raised by each "New
+ * picture"), each counted (and saved) before its call so a retried run
+ * never reuses one, and attempt numbers keep counting across presses. A
+ * picture that passes is kept among the scene's pictures. Anything short of
+ * a checked scene leaves the exact still.
  */
 export async function makeMuseScene(
   product: SceneProduct,
-  setting: ProductAdSetting,
+  place: ScenePlace,
   saved: ProductAdStoredScene,
   job: SceneJob,
 ): Promise<SceneOutcome> {
   const scene: ProductAdStoredScene = { ...saved };
   if (scene.method === "muse" && scene.muse)
-    return { scene, picture: null, refused: null };
+    return { scene, picture: null, refused: null, stop: "new" };
   const photo = await cutoutForMuse(product.cutout);
   const original = product.original
     ? await sharp(product.original).jpeg({ quality: 90 }).toBuffer()
@@ -144,8 +221,10 @@ export async function makeMuseScene(
   let difference =
     scene.check && !scene.check.same ? scene.check.difference : null;
   let refused: AdSpendRefusal | null = null;
+  let stop: SceneStop = difference ? "kept_check" : "unavailable";
+  const allowance = scene.allowance ?? MAX_SCENE_ATTEMPTS;
 
-  while (scene.attempts < MAX_SCENE_ATTEMPTS) {
+  while (scene.attempts < allowance) {
     const attempt = scene.attempts + 1;
     scene.attempts = attempt;
     await job.save({ ...scene });
@@ -159,7 +238,7 @@ export async function makeMuseScene(
           const result = await whilePulsing(deps.pulse, () =>
             (deps.editMetaImage ?? editMetaImage)(
               {
-                prompt: scenePrompt(setting, product.description, difference),
+                prompt: scenePrompt(place, product.description, difference),
                 images: [{ data: photo, mimeType: "image/jpeg" }],
               },
               { ...job.options, size: SCENE_SIZE },
@@ -172,12 +251,19 @@ export async function makeMuseScene(
     } catch (error) {
       if (error instanceof AdSpendRefusal) {
         refused = error;
+        stop = "no_budget";
         break;
       }
       // A refusal of the content is final for this product; an outage may
       // pass on the next try.
-      if (isMetaModelRefusal(error)) break;
-      if (error instanceof MetaModelApiError) continue;
+      if (isMetaModelRefusal(error)) {
+        stop = "image_refused";
+        break;
+      }
+      if (error instanceof MetaModelApiError) {
+        stop = "unavailable";
+        continue;
+      }
       throw error;
     }
 
@@ -198,10 +284,14 @@ export async function makeMuseScene(
     } catch (error) {
       if (error instanceof AdSpendRefusal) {
         refused = error;
+        stop = "no_budget";
         break;
       }
       // An unchecked scene is never shown.
-      if (error instanceof MetaModelApiError) continue;
+      if (error instanceof MetaModelApiError) {
+        stop = "unavailable";
+        continue;
+      }
       throw error;
     }
     scene.check = { same: check.same, difference: check.difference };
@@ -210,15 +300,22 @@ export async function makeMuseScene(
       scene.method = "muse";
       // The exact still's box doesn't describe this picture: framing finds it.
       scene.box = null;
+      keepPicture(scene, {
+        ref: scene.muse,
+        box: null,
+        place: placeName(place),
+        madeAt: (job.now ?? (() => new Date()))(),
+      });
       await job.save({ ...scene });
-      return { scene, picture, refused: null };
+      return { scene, picture, refused: null, stop: "new" };
     }
     difference = check.difference;
+    stop = "kept_check";
     await job.save({ ...scene });
   }
   scene.method = "exact";
   await job.save({ ...scene });
-  return { scene, picture: null, refused };
+  return { scene, picture: null, refused, stop };
 }
 
 /** How much taller than SAM's box the product's own shape must be to grow it. */

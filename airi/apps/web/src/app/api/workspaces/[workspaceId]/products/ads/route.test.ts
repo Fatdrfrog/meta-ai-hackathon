@@ -131,6 +131,7 @@ describe("making a video ad", () => {
     ["trial_ended", "The free trial has ended"],
     ["spend_limit", "The company's AI spending limit has been reached"],
     ["ai_actions_used", "The plan's included AI actions are used up"],
+    ["ai_disabled", "AI is disabled for this company"],
   ])("answers 409 %s with its message", async (code, error) => {
     mockCreate.mockResolvedValue({ refused: code });
 

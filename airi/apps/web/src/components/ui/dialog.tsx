@@ -107,6 +107,7 @@ function DialogOverlay({
 
 function DialogContent({
   className,
+  overlayClassName,
   children,
   showCloseButton = true,
   ...props
@@ -122,6 +123,7 @@ function DialogContent({
       <DrawerContent
         data-slot="dialog-content"
         className={cn("gap-4 p-6", className)}
+        overlayClassName={overlayClassName}
         {...props}
       >
         {children}
@@ -140,7 +142,7 @@ function DialogContent({
 
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(

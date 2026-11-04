@@ -10,6 +10,7 @@ import {
   type ProductCarouselDraft,
   type ProductCarouselDraftResponse,
   type ProductChanges,
+  type ProductKitRecord,
   type ProductOrderFormResponse,
   type ProductReviewResponse,
   type ProductsErrorCode,
@@ -79,16 +80,51 @@ async function sendJson<T>(url: string, method: string, body: unknown) {
   return (await response.json()) as T;
 }
 
+/** The workspace's cloned voice, and airi's voices (Part V; voices-client.ts asks them). */
+export function productVoiceUrl(workspaceId: string): string {
+  return `${productsApiUrl(workspaceId)}/voice`;
+}
+
 /**
  * Why a Products request the page explains failed (a WhatsApp draft, the
  * "Send from WhatsApp" panel, a kit or an ad), as the API's code; "failed"
- * for anything else.
+ * for anything else. `issues` are a 400's failed checks (in English), and
+ * `kit` is the kit a 409 carousel_found answers with.
  */
 export class ProductDraftError extends Error {
-  constructor(readonly code: ProductsErrorCode | "failed") {
+  readonly issues: string[];
+  readonly kit: ProductKitRecord | null;
+
+  constructor(
+    readonly code: ProductsErrorCode | "failed",
+    details: { issues?: string[]; kit?: ProductKitRecord | null } = {}
+  ) {
     super(`Product draft failed: ${code}`);
     this.name = "ProductDraftError";
+    this.issues = details.issues ?? [];
+    this.kit = details.kit ?? null;
   }
+}
+
+/** A failed answer's details, kept only when they have the right shape. */
+function failureDetails(data: unknown): {
+  issues?: string[];
+  kit?: ProductKitRecord;
+} {
+  if (!data || typeof data !== "object") return {};
+  const { issues, kit } = data as { issues?: unknown; kit?: unknown };
+  return {
+    ...(Array.isArray(issues) &&
+    issues.every(issue => typeof issue === "string")
+      ? { issues: issues.slice(0, 3) }
+      : {}),
+    ...(kit &&
+    typeof kit === "object" &&
+    typeof (kit as ProductKitRecord).id === "string" &&
+    typeof (kit as ProductKitRecord).parts === "object"
+      ? { kit: kit as ProductKitRecord }
+      : {}),
+  };
 }
 
 /**
@@ -119,7 +155,7 @@ export async function sendForAnswer<T>(
     | (T & { code?: ProductsErrorCode })
     | null;
   if (!response.ok || !data)
-    throw new ProductDraftError(data?.code ?? "failed");
+    throw new ProductDraftError(data?.code ?? "failed", failureDetails(data));
   return data;
 }
 

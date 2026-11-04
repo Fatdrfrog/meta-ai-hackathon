@@ -561,6 +561,37 @@ export async function encodeFlac(
   return readFile(outPath);
 }
 
+/**
+ * The voice said faster by `factor` (1 to 1.25), its pitch kept: ffmpeg's
+ * atempo, in every ffmpeg since long before 5.1. New words read by
+ * ElevenLabs that run a little over their scene are fitted this way.
+ */
+export async function changeTempo(
+  voice: Pcm,
+  factor: number,
+  workDir: string,
+  name: string,
+  deps: VoiceDeps = {},
+): Promise<Pcm> {
+  if (!Number.isFinite(factor) || factor < 1 || factor > 1.25)
+    throw new RangeError("A tempo change is between 1 and 1.25");
+  if (factor === 1) return voice;
+  const inPath = join(workDir, `${name}-tempo-in.wav`);
+  const outPath = join(workDir, `${name}-tempo.wav`);
+  await writeFile(inPath, writeWav(voice));
+  await ffmpeg(
+    [
+      ...input(inPath),
+      "-af",
+      `atempo=${factor.toFixed(4)}`,
+      ...PCM_OUT,
+      outPath,
+    ],
+    deps,
+  );
+  return readWav(await readFile(outPath));
+}
+
 /** A kept voice back as samples. */
 export async function decodeVoice(
   path: string,

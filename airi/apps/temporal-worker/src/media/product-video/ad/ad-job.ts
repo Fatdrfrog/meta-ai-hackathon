@@ -2,23 +2,34 @@ import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { isElevenLabsSttAcceptedRequest } from "@icecore/airi-runtime/elevenlabs-stt";
 import {
+  createMetaResponse,
   isMetaModelApiTransientError,
+  isMetaModelRefusal,
   MetaModelApiError,
   type MetaRequestOptions,
 } from "@icecore/airi-runtime/meta-model-api";
+import { getWorkspaceAiRequiredDetails } from "@icecore/shared/lib/workspace-ai-errors";
 import {
+  PRODUCT_AD_PLACE_MAX_COST_MICROS,
+  PRODUCT_AD_REDO_ATTEMPTS,
   productAdShopName,
+  type ProductAdBox,
   type ProductAdErrorCode,
   type ProductAdFileRef,
   type ProductAdIdeaKind,
   type ProductAdMode,
+  type ProductAdRedoOutcome,
+  type ProductAdRunKind,
+  type ProductAdScenePlace,
   type ProductAdScript,
+  type ProductAdSetting,
   type ProductAdStatus,
   type ProductAdStep,
   type ProductAdStills,
   type ProductAdStoredProduct,
   type ProductAdStoredScene,
-  type ProductAdVoice,
+  type ProductAdVoiceMode,
+  type ProductAdVoiceOver,
   type ProductShopWordsCode,
 } from "@icecore/temporal";
 import sharp from "sharp";
@@ -32,8 +43,15 @@ import {
   type VoiceSource,
 } from "./audio";
 import { composeAd } from "./compose";
-import { alphaBox, composeStill, exactScene, priceCardLayers } from "./layers";
+import {
+  alphaBox,
+  composeStill,
+  exactScene,
+  exactSceneBox,
+  priceCardLayers,
+} from "./layers";
 import { AD_FRAME } from "./layout";
+import { readPlace, type PlaceReading } from "./place";
 import { AdTooBigError, posterFrame, renderAd } from "./render";
 import {
   adScriptSchema,
@@ -44,10 +62,15 @@ import {
   type ScriptRequest,
 } from "./script";
 import {
+  framePicture,
   frameScene,
   makeMuseScene,
+  placeName,
   SAM_MAX_COST_MICROS,
   type SceneDeps,
+  type SceneJob,
+  type ScenePlace,
+  type SceneProduct,
 } from "./scenes";
 import {
   adSpender,
@@ -57,6 +80,7 @@ import {
   type AdSpendPort,
   type PaidCall,
 } from "./spend";
+import { newWordsVoices, type VoiceOverPorts } from "./voice";
 
 // One run of a video ad, start to finish, written against small ports so the
 // Temporal activity supplies Mongo, storage, the ledger and ElevenLabs, and
@@ -65,10 +89,35 @@ import {
 // with SAM, polishes the owner's words and renders; every step is saved as it
 // finishes, so a retried run skips what's done and pays only for what isn't.
 // "render" makes the video again from what's saved, after the owner edited
-// the words: it calls no model and spends nothing.
+// the words, their place, the exact photo or an earlier picture: it calls no
+// model and spends nothing. The ad's `runKind` says which edit a "make" run
+// is: "scene" ("New picture") pays only for its one scene, "voice" only for
+// the voice-over (voice.ts). Every finished run records itself (`lastRun`).
 
-/** A Muse Spark script call's reservation: about 5k tokens in, 2.5k out, with room. */
+/**
+ * A Muse Spark script call's reservation: up to about 8k tokens in (three
+ * products' photos and the narration) and SCRIPT_MAX_OUTPUT_TOKENS out.
+ */
 export const SCRIPT_MAX_COST_MICROS = 40_000;
+/**
+ * Tokens the script call may write, its reasoning included. ask-muse's
+ * 3 000 cut off the v2 script (three openings, three endings and the
+ * spoken lines) twice for QazOner's Kazakh promo in the paid gate
+ * (2026-11-03), and the ad fell back to the code's words; the toy shelf's
+ * took about 2 200.
+ */
+export const SCRIPT_MAX_OUTPUT_TOKENS = 6_000;
+
+/** Muse Spark's Responses call for the script, with SCRIPT_MAX_OUTPUT_TOKENS of room. */
+export function scriptResponse(
+  create: typeof createMetaResponse = createMetaResponse,
+): typeof createMetaResponse {
+  return (request, options) =>
+    create(
+      { ...request, max_output_tokens: SCRIPT_MAX_OUTPUT_TOKENS },
+      options,
+    );
+}
 const ELEVENLABS_ISOLATION_MIN_MICROS = 10_000;
 /** The import's videos this size or smaller are cut for the words; bigger ones use the saved clip. */
 const SOURCE_VIDEO_MAX_BYTES = 64 * 1024 * 1024;
@@ -100,10 +149,19 @@ export class AdRunSuperseded extends Error {
 export type AdRecord = {
   status: ProductAdStatus;
   renderNo: number;
+  /**
+   * What this run does: make, or an edit run (render, scene, voice) on an
+   * ad that has a video. "make" when absent (ads from before edit runs).
+   */
+  runKind?: ProductAdRunKind;
   language: string | null;
   wordsCode: ProductShopWordsCode | null;
   idea: { kind: ProductAdIdeaKind; text: string | null };
-  voice: ProductAdVoice;
+  voice: ProductAdVoiceMode;
+  /** With "stock": the Airi voice asked for; null otherwise. */
+  stockVoiceId: string | null;
+  /** The new words a run read before, which a later one reuses (voice.ts). */
+  voiceOver: ProductAdVoiceOver | null;
   presenter: {
     use: boolean;
     consentAt: Date | null;
@@ -164,6 +222,8 @@ export type AdJobPorts = {
   isolate: ((wav: Buffer) => Promise<Buffer>) | null;
   /** The isolator's list price for `seconds` of audio, in micro-dollars. */
   isolationCostMicros: (seconds: number) => number;
+  /** New words read by ElevenLabs ("clone" and "stock", voice.ts); null or absent when not set up. */
+  voiceOver?: VoiceOverPorts | null;
   mode: ProductAdMode;
   renderNo: number;
   /** The activity's attempt, so each retry reserves its own operations. */
@@ -247,15 +307,46 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
   );
   // Scene saves go one at a time, the latest state last.
   let sceneWrites: Promise<void> = Promise.resolve();
+  const sceneSnapshot = () =>
+    structuredClone(
+      ad.products
+        .map((product) => scenes.get(product.productId))
+        .filter(Boolean),
+    );
   const saveScenes = () => {
-    const snapshot = ad.products
-      .map((product) => scenes.get(product.productId))
-      .filter(Boolean);
+    const snapshot = sceneSnapshot();
     sceneWrites = sceneWrites.then(() => update({ scenes: snapshot }));
     return sceneWrites;
   };
 
-  if (ports.mode === "make") {
+  // What this run may pay for (render, scene and voice are edit runs on an
+  // ad that has a video): a make run, every step not saved yet; a scene run
+  // ("New picture"), only its one scene; a voice run, only the voice-over
+  // (voice.ts); a render run, nothing.
+  const runKind: ProductAdRunKind = ad.runKind ?? "make";
+  if (ports.mode === "make" && runKind !== "make") {
+    if (!script)
+      throw new ProductAdFailure(
+        "failed",
+        "The ad has no words to change",
+        false,
+      );
+    // The exact stills cost nothing: drawn here if a run before never got to them.
+    await exactStills(ports, products, scenes, saveScenes);
+    if (runKind === "scene")
+      await redoScene({
+        ports,
+        products,
+        scenes,
+        script,
+        paid,
+        saveScenes,
+        begin,
+        finish,
+        options,
+        now,
+      });
+  } else if (ports.mode === "make") {
     // 1. The words.
     if (!script) {
       await begin("script");
@@ -275,27 +366,7 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
     // 2. The pictures: the exact stills first, so a result always exists,
     // and the Status picture from them; then Muse Image's scenes.
     await begin("pictures");
-    for (const { product, cutout } of products) {
-      const scene = scenes.get(product.productId);
-      if (scene?.exact) continue;
-      const exact = await exactScene(cutout);
-      const ref = await ports.storage.save({
-        buffer: exact.image,
-        mimeType: "image/jpeg",
-        fileName: `exact-${product.productId}.jpg`,
-        kind: "image",
-      });
-      scenes.set(product.productId, {
-        productId: product.productId,
-        exact: ref,
-        muse: scene?.muse ?? null,
-        method: scene?.method === "muse" && scene.muse ? "muse" : "exact",
-        check: scene?.check ?? null,
-        box: scene?.method === "muse" && scene.muse ? scene.box : exact.box,
-        attempts: scene?.attempts ?? 0,
-      });
-    }
-    await saveScenes();
+    await exactStills(ports, products, scenes, saveScenes);
     if (!ad.stills.status) {
       const status = await statusStill(products, script!.priceCardTitle);
       await update({
@@ -319,38 +390,14 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
           // The ledger refused another product's spend: this one keeps its exact still.
           return;
         }
-        const setting =
-          script!.scenes.find((entry) => entry.productId === productId)
-            ?.setting ?? "oak_table_window";
+        const setting = scriptSetting(script!, productId);
+        if (!scene.place)
+          scene.place = { setting, words: null, englishPlace: null };
         const outcome = await makeMuseScene(
-          {
-            productId,
-            description:
-              loaded.product.description ||
-              loaded.product.englishName ||
-              loaded.product.name,
-            samPhrase: loaded.product.samPhrase,
-            cutout: loaded.cutout,
-            original: loaded.original,
-          },
-          setting,
+          sceneProduct(loaded),
+          { setting },
           scene,
-          {
-            paid,
-            save: async (next) => {
-              scenes.set(productId, { ...next });
-              await saveScenes();
-            },
-            storeScene: (id, attempt, jpeg) =>
-              ports.storage.save({
-                buffer: jpeg,
-                mimeType: "image/jpeg",
-                fileName: `scene-${id}-a${attempt}.jpg`,
-                kind: "image",
-              }),
-            deps: { ...ports.sceneDeps, pulse: ports.pulse },
-            options,
-          },
+          sceneJob(ports, scenes, saveScenes, paid, options, now),
         );
         scenes.set(productId, outcome.scene);
         if (outcome.refused) refused = true;
@@ -366,34 +413,11 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
     });
     if (unframed.length > 0) {
       await begin("framing");
-      for (const { product, cutout } of unframed) {
+      for (const loaded of unframed) {
         if (refused) break;
-        const scene = scenes.get(product.productId)!;
-        const path = join(ports.workDir, `frame-${product.productId}.jpg`);
-        await ports.storage.download(scene.muse!, path, PHOTO_MAX_BYTES);
-        const picture = await readFile(path);
-        // The whole product's shape, for a box SAM drew round only part of it.
-        const shape = await alphaBox(cutout);
-        try {
-          scene.box = await paid(
-            `sam:${product.productId}`,
-            "meta",
-            SAM_MAX_COST_MICROS,
-            async (onCost) => ({
-              value: await frameScene(
-                picture,
-                product.samPhrase || product.englishName || product.name,
-                { ...ports.sceneDeps, pulse: ports.pulse, onCost },
-                options,
-                shape && { width: shape.width, height: shape.height },
-              ),
-            }),
-          );
-        } catch (error) {
-          if (error instanceof AdSpendRefusal) refused = true;
-          else if (!(error instanceof MetaModelApiError)) throw error;
-          // Without a box the scene is cut around its centre.
-        }
+        const scene = scenes.get(loaded.product.productId)!;
+        if ((await frame(ports, loaded, scene, paid, options)) === "refused")
+          refused = true;
         await saveScenes();
       }
       await finish("framing");
@@ -408,28 +432,28 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
       false,
     );
   await begin("video");
-  const voices =
-    ad.voice === "own"
-      ? await ownVoices(ports, ad, paid)
-      : new Map<string, Pcm>();
+  const { voices, lines } = await adVoices(ports, ad, script, paid, update);
   const pictures = await scenePictures(ports, products, scenes, saveScenes);
   const presenter = await presenterPhoto(ports, ad);
   const composed = await (ports.compose ?? composeAd)(
     {
       products: products.map(({ product, cutout }) => {
         const scene = scenes.get(product.productId)!;
+        const picture = pictures.get(product.productId)!;
         return {
           productId: product.productId,
           name: product.name,
           priceText: product.priceText,
           cutout,
-          picture: pictures.get(product.productId)!,
-          box: scene.box,
+          picture: picture.image,
+          box: picture.box,
           caption:
             script!.scenes.find(
               (entry) => entry.productId === product.productId,
             )?.caption ?? "",
           voice: voices.get(product.productId) ?? null,
+          spoken: lines.get(product.productId) ?? null,
+          textZone: scene.textZone ?? "auto",
         };
       }),
       sticker: script.sticker,
@@ -479,7 +503,23 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
     }),
   ]);
   await costs;
+  // Whether each scene's words cover its product, for the studio's hint,
+  // saved with the video it describes.
+  products.forEach(({ product }, index) => {
+    const scene = scenes.get(product.productId)!;
+    scene.textOverlap = composed.textOverlap?.[index] ?? null;
+  });
+  await sceneWrites;
   await update({
+    scenes: sceneSnapshot(),
+    lastRun: {
+      renderNo: ports.renderNo,
+      kind: runKind,
+      outcome: "ready",
+      errorCode: null,
+      message: null,
+      at: now(),
+    },
     render: {
       renderNo: ports.renderNo,
       video,
@@ -577,8 +617,8 @@ export async function removeWorkDir(
   }
 }
 
-/** A storage error for a file that isn't there. */
-function isMissingFile(error: unknown): boolean {
+/** A storage error for a file that isn't there (also voice-clone.ts's). */
+export function isMissingFile(error: unknown): boolean {
   const code =
     error && typeof error === "object"
       ? (error as { code?: unknown }).code
@@ -656,7 +696,11 @@ async function writeScript(
               schema: adScriptSchema(ids),
               purpose: "ad script",
             },
-            { onCost, pulse: ports.pulse },
+            {
+              onCost,
+              pulse: ports.pulse,
+              createMetaResponse: scriptResponse(),
+            },
             options,
           ),
         }),
@@ -690,6 +734,275 @@ async function admissionFailure(
   return new ProductAdFailure(stop, messages[stop], false);
 }
 
+/** The script's setting for a product's scene; the oak table when it names none. */
+function scriptSetting(
+  script: ProductAdScript,
+  productId: string,
+): ProductAdSetting {
+  return (
+    script.scenes.find((entry) => entry.productId === productId)?.setting ??
+    "oak_table_window"
+  );
+}
+
+/** A product as its Muse Image scene is asked for. */
+function sceneProduct({ product, cutout, original }: Loaded): SceneProduct {
+  return {
+    productId: product.productId,
+    description: product.description || product.englishName || product.name,
+    samPhrase: product.samPhrase,
+    cutout,
+    original,
+  };
+}
+
+/** What makeMuseScene needs from the run: its spend, its saves and its storage. */
+function sceneJob(
+  ports: AdJobPorts,
+  scenes: Map<string, ProductAdStoredScene>,
+  saveScenes: () => Promise<void>,
+  paid: PaidCall,
+  options: MetaRequestOptions,
+  now: () => Date,
+): SceneJob {
+  return {
+    paid,
+    save: async (next) => {
+      scenes.set(next.productId, { ...next });
+      await saveScenes();
+    },
+    storeScene: (id, attempt, jpeg) =>
+      ports.storage.save({
+        buffer: jpeg,
+        mimeType: "image/jpeg",
+        fileName: `scene-${id}-a${attempt}.jpg`,
+        kind: "image",
+      }),
+    deps: { ...ports.sceneDeps, pulse: ports.pulse },
+    options,
+    now,
+  };
+}
+
+/**
+ * Each product's exact still (its cut-out on the code-drawn wall) and the
+ * product's box in it, drawn and saved for any scene without one, so a
+ * result always exists. Code only, no model call.
+ */
+async function exactStills(
+  ports: AdJobPorts,
+  products: Loaded[],
+  scenes: Map<string, ProductAdStoredScene>,
+  saveScenes: () => Promise<void>,
+): Promise<void> {
+  let changed = false;
+  for (const { product, cutout } of products) {
+    const scene = scenes.get(product.productId);
+    if (scene?.exact) continue;
+    const exact = await exactScene(cutout);
+    const ref = await ports.storage.save({
+      buffer: exact.image,
+      mimeType: "image/jpeg",
+      fileName: `exact-${product.productId}.jpg`,
+      kind: "image",
+    });
+    const muse = scene?.method === "muse" && scene.muse;
+    scenes.set(product.productId, {
+      ...scene,
+      productId: product.productId,
+      exact: ref,
+      exactBox: exact.box,
+      muse: scene?.muse ?? null,
+      method: muse ? "muse" : "exact",
+      check: scene?.check ?? null,
+      box: muse ? (scene?.box ?? null) : exact.box,
+      attempts: scene?.attempts ?? 0,
+    });
+    changed = true;
+  }
+  if (changed) await saveScenes();
+}
+
+/**
+ * SAM 3.1's box of the product in its Muse Image scene, grown to the whole
+ * product's shape, set on the scene and its kept picture. "unframed" when a
+ * Meta model didn't answer (the scene is then cut around its centre);
+ * "refused" when the ledger refused the spend.
+ */
+async function frame(
+  ports: AdJobPorts,
+  { product, cutout }: Loaded,
+  scene: ProductAdStoredScene,
+  paid: PaidCall,
+  options: MetaRequestOptions,
+): Promise<"framed" | "unframed" | "refused"> {
+  const path = join(ports.workDir, `frame-${product.productId}.jpg`);
+  await ports.storage.download(scene.muse!, path, PHOTO_MAX_BYTES);
+  const picture = await readFile(path);
+  // The whole product's shape, for a box SAM drew round only part of it.
+  const shape = await alphaBox(cutout);
+  try {
+    scene.box = await paid(
+      `sam:${product.productId}`,
+      "meta",
+      SAM_MAX_COST_MICROS,
+      async (onCost) => ({
+        value: await frameScene(
+          picture,
+          product.samPhrase || product.englishName || product.name,
+          { ...ports.sceneDeps, pulse: ports.pulse, onCost },
+          options,
+          shape && { width: shape.width, height: shape.height },
+        ),
+      }),
+    );
+    framePicture(scene);
+    return "framed";
+  } catch (error) {
+    if (error instanceof AdSpendRefusal) return "refused";
+    if (!(error instanceof MetaModelApiError)) throw error;
+    return "unframed";
+  }
+}
+
+type RedoRun = {
+  ports: AdJobPorts;
+  products: Loaded[];
+  scenes: Map<string, ProductAdStoredScene>;
+  script: ProductAdScript;
+  paid: PaidCall;
+  saveScenes: () => Promise<void>;
+  begin: (step: ProductAdStep) => Promise<void>;
+  finish: (step: ProductAdStep) => Promise<void>;
+  options: MetaRequestOptions;
+  now: () => Date;
+};
+
+/**
+ * A "New picture" press (a scene run): only the scene whose `redo` is still
+ * running pays, nothing else. The described place is read by Muse Spark
+ * first (place.ts; a refusal ends the press), then Muse Image makes the
+ * scene there with this press's PRODUCT_AD_REDO_ATTEMPTS tries, each
+ * checked by Muse Spark, and SAM 3.1 frames the one that passes. Short of a
+ * new picture the scene gets back what it had (`redo.from`), and the press
+ * says why (`redo.outcome`); the video then renders either way.
+ */
+async function redoScene(run: RedoRun): Promise<void> {
+  const { ports, scenes, script, paid, saveScenes } = run;
+  const loaded = run.products.find(
+    ({ product }) => scenes.get(product.productId)?.redo?.outcome === null,
+  );
+  if (!loaded) return;
+  const productId = loaded.product.productId;
+  let scene = scenes.get(productId)!;
+  const redo = scene.redo!;
+  let picturesDone = false;
+  const end = async (
+    outcome: ProductAdRedoOutcome,
+    reason: string | null = null,
+  ) => {
+    // The step list's pictures step ends with the press, however it ends.
+    if (!picturesDone) await run.finish("pictures");
+    if (outcome !== "new")
+      Object.assign(scene, {
+        muse: redo.from.muse,
+        box: redo.from.box,
+        method: redo.from.method,
+        check: redo.from.check,
+      });
+    // The owner asked for a new picture: they see it, not their exact photo.
+    else scene.useExact = false;
+    scene.redo = { ...scene.redo!, outcome, reason };
+    scenes.set(productId, scene);
+    await saveScenes();
+  };
+  await run.begin("pictures");
+  // The picture it replaces stays one to pick again (ads from before kept
+  // none), named by the place it was made in, not the one just pressed.
+  if (!scene.pictures?.length && redo.from.method === "muse" && redo.from.muse)
+    scene.pictures = [
+      {
+        ref: redo.from.muse,
+        box: redo.from.box,
+        place: placeName({
+          setting: redo.from.setting ?? scriptSetting(script, productId),
+        }),
+        madeAt: run.now(),
+      },
+    ];
+
+  // 1. Where: a tested setting, or the owner's words as Muse Spark reads them.
+  const asked: ProductAdScenePlace = scene.place ?? {
+    setting: scriptSetting(script, productId),
+    words: null,
+    englishPlace: null,
+  };
+  let place: ScenePlace;
+  if (asked.words && asked.englishPlace) {
+    place = { englishPlace: asked.englishPlace };
+  } else if (asked.words) {
+    let reading: PlaceReading;
+    try {
+      reading = await paid(
+        `place:${productId}:p${redo.renderNo}`,
+        "meta",
+        PRODUCT_AD_PLACE_MAX_COST_MICROS,
+        async (onCost) => ({
+          value: await readPlace(
+            asked.words!,
+            {
+              ...ports.sceneDeps,
+              askMuse: ports.askMuse,
+              pulse: ports.pulse,
+              onCost,
+            },
+            run.options,
+          ),
+        }),
+      );
+    } catch (error) {
+      if (error instanceof AdSpendRefusal) return end("no_budget");
+      // Muse Spark refusing the words outright is a refused place, not an
+      // outage: the same words pressed again would only be refused again.
+      if (isMetaModelRefusal(error)) return end("place_refused", "unclear");
+      if (error instanceof MetaModelApiError) return end("unavailable");
+      throw error;
+    }
+    if (!reading.ok) return end("place_refused", reading.reason);
+    scene.place = { ...asked, englishPlace: reading.place };
+    place = { englishPlace: reading.place };
+  } else {
+    place = { setting: asked.setting ?? scriptSetting(script, productId) };
+  }
+
+  // 2. This press's tries, raised once however often the run is retried.
+  if (redo.allowance == null) {
+    scene.allowance = scene.attempts + PRODUCT_AD_REDO_ATTEMPTS;
+    scene.redo = { ...redo, allowance: scene.allowance };
+  }
+  scenes.set(productId, scene);
+  await saveScenes();
+  const made = await makeMuseScene(
+    sceneProduct(loaded),
+    place,
+    scene,
+    sceneJob(ports, scenes, saveScenes, paid, run.options, run.now),
+  );
+  scene = made.scene;
+  scenes.set(productId, scene);
+  await run.finish("pictures");
+  picturesDone = true;
+  if (made.stop !== "new" || !scene.muse) return end(made.stop);
+
+  // 3. SAM 3.1 frames the new picture; without a box it's cut around its centre.
+  if (!scene.box) {
+    await run.begin("framing");
+    await frame(ports, loaded, scene, paid, run.options);
+    await run.finish("framing");
+  }
+  await end("new");
+}
+
 /** The Status picture: the price card, with every product on the plank. */
 async function statusStill(products: Loaded[], title: string): Promise<Buffer> {
   const card = await priceCardLayers({
@@ -704,6 +1017,72 @@ async function statusStill(products: Loaded[], title: string): Promise<Buffer> {
 }
 
 /**
+ * The ad's voice per product's scene: the owner's polished recording
+ * ("own"), the script's spoken lines read by ElevenLabs ("clone" in the
+ * owner's cloned voice, "stock" in an Airi voice; voice.ts), or silence.
+ * New words that can't be read fall back to the recording, else silence,
+ * and the ad keeps why (`voiceResult`). `lines` holds the words each new
+ * voice reads, for the plan's record of the voice-over; empty otherwise.
+ */
+async function adVoices(
+  ports: AdJobPorts,
+  ad: AdRecord,
+  script: ProductAdScript,
+  paid: PaidCall,
+  update: (set: Record<string, unknown>) => Promise<void>,
+): Promise<{ voices: Map<string, Pcm>; lines: Map<string, string> }> {
+  const lines = new Map<string, string>();
+  // Only a make or a voice run pays for the voice; a scene run ("New
+  // picture") or a render reuses what's kept, as a render does.
+  const runKind = ad.runKind ?? "make";
+  const mode: ProductAdMode =
+    ports.mode === "make" && (runKind === "make" || runKind === "voice")
+      ? "make"
+      : "render";
+  if (ad.voice !== "clone" && ad.voice !== "stock") {
+    // The video's voice is exactly the one asked for: an earlier voice's
+    // fallback no longer describes it.
+    await update({ voiceResult: null });
+    return {
+      voices:
+        ad.voice === "own"
+          ? await ownVoices(ports, ad, paid, mode)
+          : new Map<string, Pcm>(),
+      lines,
+    };
+  }
+  const read = await newWordsVoices({
+    ad,
+    script,
+    ports: ports.voiceOver ?? null,
+    storage: ports.storage,
+    paid,
+    mode,
+    workDir: ports.workDir,
+    signal: ports.signal,
+    pulse: ports.pulse,
+    log: ports.log,
+  });
+  if (read.ok) {
+    await update({
+      voiceOver: read.voiceOver,
+      voiceResult: { used: ad.voice, fallback: null },
+    });
+    for (const line of read.voiceOver.lines)
+      if (read.voices.has(line.productId)) lines.set(line.productId, line.text);
+    return { voices: read.voices, lines };
+  }
+  const recording = await ownVoices(ports, ad, paid, mode);
+  await update({
+    voiceResult: {
+      used: recording.size > 0 ? "own" : "none",
+      fallback: read.fallback,
+    },
+  });
+  return { voices: recording, lines };
+}
+
+/**
  * The owner's polished words per product: kept from an earlier run, or, in
  * a "make" run, polished now (the Voice Isolator booked in the ad's action)
  * and kept. A "render" run never pays: a product without kept words is
@@ -713,6 +1092,7 @@ async function ownVoices(
   ports: AdJobPorts,
   ad: AdRecord,
   paid: PaidCall,
+  mode: ProductAdMode,
 ): Promise<Map<string, Pcm>> {
   const voices = new Map<string, Pcm>();
   const missing: ProductAdStoredProduct[] = [];
@@ -732,7 +1112,7 @@ async function ownVoices(
       );
     else missing.push(product);
   }
-  if (ports.mode === "render" || missing.length === 0) return voices;
+  if (mode === "render" || missing.length === 0) return voices;
 
   const sources = new Map(
     (
@@ -835,32 +1215,58 @@ async function ownVoices(
 }
 
 /**
- * Each product's scene picture as saved: Muse Image's when its scene passed
- * the check, else the exact still, which is drawn again (and saved) if a
- * run before this one never got to it.
+ * Each product's scene picture as saved, and the product's box in it:
+ * Muse Image's when its scene passed the check, else the exact still; the
+ * exact still also when the owner asked for their exact photo there
+ * (`useExact`), with its own box (worked out from the cut-out for ads made
+ * before it was kept). An exact still a run before this one never drew, or
+ * that's gone, is drawn again and saved; a Muse Image picture that's gone
+ * leaves the exact still.
  */
 async function scenePictures(
   ports: AdJobPorts,
   products: Loaded[],
   scenes: Map<string, ProductAdStoredScene>,
   saveScenes: () => Promise<void>,
-): Promise<Map<string, Buffer>> {
-  const pictures = new Map<string, Buffer>();
+): Promise<Map<string, { image: Buffer; box: ProductAdBox | null }>> {
+  const pictures = new Map<
+    string,
+    { image: Buffer; box: ProductAdBox | null }
+  >();
   let changed = false;
   for (const [index, { product, cutout }] of products.entries()) {
     let scene = scenes.get(product.productId);
-    const ref =
-      scene?.method === "muse" && scene.muse ? scene.muse : scene?.exact;
-    if (ref) {
+    if (scene && scene.exactBox === undefined) {
+      scene.exactBox = await exactSceneBox(cutout);
+      changed = true;
+    }
+    const exactOnly = scene?.useExact === true;
+    const muse = !exactOnly && scene?.method === "muse" ? scene.muse : null;
+    for (const ref of [muse, scene?.exact ?? null]) {
+      if (!ref) continue;
       const path = join(ports.workDir, `picture-${index}.jpg`);
       try {
         await ports.storage.download(ref, path, PHOTO_MAX_BYTES);
-        pictures.set(product.productId, await readFile(path));
-        continue;
       } catch (error) {
         if (!isMissingFile(error)) throw error;
+        continue;
       }
+      if (ref !== muse && muse) {
+        // Muse Image's picture is gone from storage: the exact still stands in.
+        Object.assign(scene!, {
+          muse: null,
+          method: "exact",
+          box: scene!.exactBox ?? null,
+        });
+        changed = true;
+      }
+      pictures.set(product.productId, {
+        image: await readFile(path),
+        box: ref === muse ? scene!.box : (scene!.exactBox ?? null),
+      });
+      break;
     }
+    if (pictures.has(product.productId)) continue;
     const exact = await exactScene(cutout);
     const saved = await ports.storage.save({
       buffer: exact.image,
@@ -869,8 +1275,10 @@ async function scenePictures(
       kind: "image",
     });
     scene = {
+      ...scene,
       productId: product.productId,
       exact: saved,
+      exactBox: exact.box,
       muse: null,
       method: "exact",
       check: scene?.check ?? null,
@@ -878,7 +1286,7 @@ async function scenePictures(
       attempts: scene?.attempts ?? 0,
     };
     scenes.set(product.productId, scene);
-    pictures.set(product.productId, exact.image);
+    pictures.set(product.productId, { image: exact.image, box: exact.box });
     changed = true;
   }
   if (changed) await saveScenes();
@@ -935,6 +1343,14 @@ function messageOf(error: unknown): string {
 /** Maps any error from a run to what the owner sees and whether to retry. */
 export function classifyAdError(error: unknown): ProductAdFailure {
   if (error instanceof ProductAdFailure) return error;
+  // The company turned AI off (a reservation, or the clone's own check):
+  // by its code, as the web host's error crosses the ESM/CJS boundary.
+  if (getWorkspaceAiRequiredDetails(error)?.code === "workspace_ai_disabled")
+    return new ProductAdFailure(
+      "ai_disabled",
+      "AI is turned off for this company",
+      false,
+    );
   if (error instanceof AdTooBigError)
     return new ProductAdFailure("too_big", error.message, false);
   if (error instanceof AdSpendRefusal)

@@ -68,6 +68,7 @@ import {
   type ProductVideoImportPhotoStop,
   type ProductVideoImportStage,
 } from "@icecore/temporal";
+import type { ProductKitRecord } from "./types-kit";
 
 /** A file in the workspace's private media storage. */
 export type StoredFileRef = { bucket: string; path: string };
@@ -343,16 +344,46 @@ export const PRODUCTS_ERROR_CODES = [
   "ai_actions_used",
   "spend_limit",
   "trial_ended",
+  // The company turned AI off (main's workspace_ai_disabled).
+  "ai_disabled",
+  // Studio v2: editing a kit's parts.
+  "kit_part_busy",
+  "carousel_found",
+  "template_name_taken",
+  "test_phone_missing",
+  "rate_limited",
+  // Meta refused an edited part; its words are in `issues`, the kit as it now is in `kit`.
+  "meta_refused",
+  // S1: Meta's refusals of a test send to the owner's phone (131021, 131026, 131030).
+  "test_phone_is_shop",
+  "test_phone_unreachable",
+  "test_phone_not_allowed",
+  // Studio v2: the ad's "New picture".
+  "no_pictures_left",
+  // Studio v2: voices.
+  "voice_consent_required",
+  "voice_not_found",
+  "voice_unavailable",
 ] as const;
 export type ProductsErrorCode = (typeof PRODUCTS_ERROR_CODES)[number];
 
-// Kits (carousel + order form) and video ads, each in its own file.
+// Kits (carousel + order form), video ads and voices, each in its own file.
 export * from "./types-kit";
 export * from "./types-ad";
+export * from "./types-voice";
 
 export type ProductsErrorBody = {
   error: string;
   code: ProductsErrorCode;
+  /** What failed a 400 invalid_request's checks, the first 3, in English (for support and the sheets). */
+  issues?: string[];
+  /**
+   * The kit as it now is, with 409 carousel_found: Meta got the carousel an
+   * earlier send timed out on, so the edits weren't sent. Also with 409
+   * meta_refused: Meta refused the edited part (its words in `issues`), and
+   * the kit keeps what it held before.
+   */
+  kit?: ProductKitRecord;
 };
 
 const NO_BREAK_SPACE = "\u00a0";

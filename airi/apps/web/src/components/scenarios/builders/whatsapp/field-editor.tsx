@@ -378,6 +378,10 @@ type FlowFieldOptionHandlers = {
   canEditOptionIds?: boolean;
   isOptionIdLocked?: (id: string) => boolean;
   collapseIdentifiers?: boolean;
+  /** False hides "Add option": the options are set by the caller. */
+  canAddOptions?: boolean;
+  /** False hides each option's delete. */
+  canRemoveOptions?: boolean;
 };
 
 /** Radio or checkbox options; a radio option can lead to its own route. */
@@ -392,6 +396,8 @@ function FlowFieldChoiceOptions({
   canEditOptionIds,
   isOptionIdLocked,
   collapseIdentifiers,
+  canAddOptions = true,
+  canRemoveOptions = true,
 }: FlowFieldOptionHandlers & {
   field: WhatsAppFlowFieldConfig;
   header: ReactNode;
@@ -423,7 +429,7 @@ function FlowFieldChoiceOptions({
                 })
               : undefined
           }
-          canDelete={options.length > 1}
+          canDelete={canRemoveOptions && options.length > 1}
           onUpdateOption={onUpdateOption}
           canEditOptionIds={canEditOptionIds}
           isOptionIdLocked={isOptionIdLocked}
@@ -432,14 +438,16 @@ function FlowFieldChoiceOptions({
           error={fieldErrors?.[`options.${optIndex}.title`]}
         />
       ))}
-      <button
-        type="button"
-        onClick={onAddOption}
-        className="mt-0.5 flex h-8 items-center gap-1 rounded-md border border-dashed border-emerald-100/80 px-2 text-[10px] font-medium text-gray-500 transition-colors hover:border-green-300/70 hover:bg-green-50 hover:text-green-600 dark:border-emerald-900/45 dark:text-gray-300 dark:hover:border-green-700/60 dark:hover:bg-green-900/30 dark:hover:text-green-400"
-      >
-        <Plus className="h-2.5 w-2.5" />
-        {t("flowAddOption")}
-      </button>
+      {canAddOptions ? (
+        <button
+          type="button"
+          onClick={onAddOption}
+          className="mt-0.5 flex h-8 items-center gap-1 rounded-md border border-dashed border-emerald-100/80 px-2 text-[10px] font-medium text-gray-500 transition-colors hover:border-green-300/70 hover:bg-green-50 hover:text-green-600 dark:border-emerald-900/45 dark:text-gray-300 dark:hover:border-green-700/60 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+        >
+          <Plus className="h-2.5 w-2.5" />
+          {t("flowAddOption")}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -454,6 +462,8 @@ function FlowFieldDropdownOptions({
   canEditOptionIds,
   isOptionIdLocked,
   collapseIdentifiers,
+  canAddOptions = true,
+  canRemoveOptions = true,
 }: FlowFieldOptionHandlers & {
   options: NonNullable<WhatsAppFlowFieldConfig["options"]>;
   fieldErrors?: FlowFieldErrors;
@@ -469,7 +479,7 @@ function FlowFieldDropdownOptions({
           key={optIndex}
           option={opt}
           optionIndex={optIndex}
-          canDelete={options.length > 1}
+          canDelete={canRemoveOptions && options.length > 1}
           onUpdateOption={onUpdateOption}
           canEditOptionIds={canEditOptionIds}
           isOptionIdLocked={isOptionIdLocked}
@@ -478,14 +488,16 @@ function FlowFieldDropdownOptions({
           error={fieldErrors?.[`options.${optIndex}.title`]}
         />
       ))}
-      <button
-        type="button"
-        onClick={onAddOption}
-        className="mt-0.5 flex h-8 items-center gap-1 rounded-md border border-dashed border-gray-300 px-2 text-[10px] font-medium text-gray-500 transition-colors hover:border-green-400 hover:text-green-600 dark:border-gray-600 dark:text-gray-300 dark:hover:border-green-500 dark:hover:text-green-400"
-      >
-        <Plus className="h-2.5 w-2.5" />
-        {t("flowAddOption")}
-      </button>
+      {canAddOptions ? (
+        <button
+          type="button"
+          onClick={onAddOption}
+          className="mt-0.5 flex h-8 items-center gap-1 rounded-md border border-dashed border-gray-300 px-2 text-[10px] font-medium text-gray-500 transition-colors hover:border-green-400 hover:text-green-600 dark:border-gray-600 dark:text-gray-300 dark:hover:border-green-500 dark:hover:text-green-400"
+        >
+          <Plus className="h-2.5 w-2.5" />
+          {t("flowAddOption")}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -509,11 +521,16 @@ function EditablePhoneField({
   canEditOptionIds,
   isOptionIdLocked,
   fieldIdReadOnly = false,
+  typeLocked = false,
+  canAddOptions = true,
+  canRemoveOptions = true,
 }: FlowFieldOptionHandlers & {
   field: WhatsAppFlowFieldConfig;
   authoringContext?: "scenario" | "manager";
   fieldKeyLabel?: string;
   canDelete: boolean;
+  /** The component type can't be changed (its select is disabled). */
+  typeLocked?: boolean;
   renderFlowBranchHandle?: (
     params: FlowBranchOptionHandleRenderParams
   ) => ReactNode;
@@ -538,6 +555,8 @@ function EditablePhoneField({
     canEditOptionIds,
     isOptionIdLocked,
     collapseIdentifiers: inspector,
+    canAddOptions,
+    canRemoveOptions,
   };
 
   const answerKey = (
@@ -622,7 +641,11 @@ function EditablePhoneField({
         {!inspector ? answerKey : null}
 
         <div className="flex items-center gap-2">
-          <Select value={field.fieldType} onValueChange={handleFieldTypeChange}>
+          <Select
+            value={field.fieldType}
+            onValueChange={handleFieldTypeChange}
+            disabled={typeLocked}
+          >
             <SelectTrigger
               aria-label={t("flowAuthoring.fieldType")}
               className="h-8 min-w-0 flex-1 border-input/60 bg-background px-2 text-[11px] shadow-none"
@@ -727,7 +750,46 @@ type FlowFormEditorContentProps = {
   renderFlowBranchHandle?: (
     params: FlowBranchOptionHandleRenderParams
   ) => ReactNode;
+  /**
+   * Fields the caller owns (Products' products question): their titles and
+   * descriptions can be renamed, but their field id, option ids, type and
+   * option count stay, and they can't be deleted.
+   */
+  protectedFieldIds?: readonly string[];
 };
+
+/** A field's identity: its type and option ids, which a protected field keeps. */
+function protectedFieldIdentity(
+  config: WhatsAppFlowConfig,
+  fieldId: string
+): string | null {
+  for (const screen of config.screens) {
+    const field = screen.fields.find(candidate => candidate.id === fieldId);
+    if (field)
+      return JSON.stringify([
+        field.fieldType,
+        (field.options ?? []).map(option => option.id),
+      ]);
+  }
+  return null;
+}
+
+/**
+ * Whether `next` drops a protected field, or changes its type or option ids:
+ * such a change is ignored (the caller's server checks again).
+ */
+function breaksProtectedFields(
+  before: WhatsAppFlowConfig,
+  next: WhatsAppFlowConfig,
+  protectedFieldIds: readonly string[]
+): boolean {
+  return protectedFieldIds.some(fieldId => {
+    const identity = protectedFieldIdentity(before, fieldId);
+    return (
+      identity !== null && protectedFieldIdentity(next, fieldId) !== identity
+    );
+  });
+}
 
 function resolveEndpointRoutes(
   flowConfig: WhatsAppFlowConfig,
@@ -1086,6 +1148,7 @@ export function FlowFormEditorContent({
   renderPreview,
   fillAvailableHeight = false,
   connectedBranchIds,
+  protectedFieldIds,
 }: FlowFormEditorContentProps) {
   const t = useTranslations("Scenarios");
   const [activeScreenIndex, setActiveScreenIndex] = useState(0);
@@ -1102,8 +1165,14 @@ export function FlowFormEditorContent({
   const protectedBranchIds =
     authoringContext === "scenario" && graph ? connectedBranchIds : undefined;
   const protectedBranches = new Set(protectedBranchIds);
+  const protectedFields = new Set(protectedFieldIds);
   const onChange = useCallback(
     (next: WhatsAppFlowConfig) => {
+      if (
+        protectedFieldIds?.length &&
+        breaksProtectedFields(flowConfig, next, protectedFieldIds)
+      )
+        return;
       if (protectedBranchIds?.length) {
         const branchIds = (config: WhatsAppFlowConfig) =>
           new Set(
@@ -1121,7 +1190,7 @@ export function FlowFormEditorContent({
       setConnectedMutationBlocked(false);
       onConfigChange(next);
     },
-    [flowConfig, onConfigChange, protectedBranchIds]
+    [flowConfig, onConfigChange, protectedBranchIds, protectedFieldIds]
   );
 
   const selectActiveScreen = useCallback(
@@ -1396,13 +1465,18 @@ export function FlowFormEditorContent({
                     .filter(([, value]) => value === `\${form.${field.id}}`)
                     .map(([key]) => key)
                 : [];
+            const isProtected = protectedFields.has(field.id);
             const isOptionIdLocked = (optionId: string) =>
+              isProtected ||
               aliases.some(alias =>
                 protectedBranches.has(buildFlowBranchOptionKey(alias, optionId))
               );
             const fieldIdReadOnly =
-              field.fieldType === "RadioButtonsGroup" &&
-              (field.options ?? []).some(option => isOptionIdLocked(option.id));
+              isProtected ||
+              (field.fieldType === "RadioButtonsGroup" &&
+                (field.options ?? []).some(option =>
+                  isOptionIdLocked(option.id)
+                ));
             return (
               <EditablePhoneField
                 key={`${resolvedActiveScreenIndex}-${fieldIndex}`}
@@ -1413,7 +1487,12 @@ export function FlowFormEditorContent({
                 field={field}
                 authoringContext={authoringContext}
                 fieldKeyLabel={fieldKeyLabel}
-                canDelete={graph || activeScreen.fields.length > 1}
+                canDelete={
+                  !isProtected && (graph || activeScreen.fields.length > 1)
+                }
+                typeLocked={isProtected}
+                canAddOptions={!isProtected}
+                canRemoveOptions={!isProtected}
                 canEditOptionIds={authoringContext === "manager" || graph}
                 isOptionIdLocked={isOptionIdLocked}
                 fieldIdReadOnly={fieldIdReadOnly}
@@ -1540,14 +1619,20 @@ export function FlowFormEditorContent({
               errorsForField[key.slice(prefix.length)] = msg;
             }
           }
+          const isProtected = protectedFields.has(field.id);
           return (
             <EditablePhoneField
               key={`${resolvedActiveScreenIndex}-${fieldIndex}`}
               field={field}
               authoringContext={authoringContext}
               canEditOptionIds={authoringContext === "manager"}
+              isOptionIdLocked={isProtected ? () => true : undefined}
+              fieldIdReadOnly={isProtected}
+              typeLocked={isProtected}
+              canAddOptions={!isProtected}
+              canRemoveOptions={!isProtected}
               fieldKeyLabel={fieldKeyLabel}
-              canDelete={activeScreen.fields.length > 1}
+              canDelete={!isProtected && activeScreen.fields.length > 1}
               renderFlowBranchHandle={renderFlowBranchHandle}
               onUpdate={patch =>
                 updateField(resolvedActiveScreenIndex, fieldIndex, patch)

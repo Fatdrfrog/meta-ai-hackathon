@@ -1674,3 +1674,172 @@ describe("FlowFormEditorContent branch handles", () => {
     );
   });
 });
+
+// Products' order form: its products question is the caller's (each option
+// a shelf product), so only its words change; other questions stay free.
+describe("FlowFormEditorContent protected fields", () => {
+  const orderFormConfig = {
+    templateId: "custom",
+    ctaText: "Order",
+    flowNavigationMode: "linear",
+    screens: [
+      {
+        id: "ORDER",
+        title: "Order",
+        fields: [
+          {
+            id: "products",
+            label: "What would you like?",
+            fieldType: "CheckboxGroup",
+            required: true,
+            options: [
+              { id: "651f1f77bcf86cd799439011", title: "Doll" },
+              { id: "651f1f77bcf86cd799439012", title: "Mug" },
+            ],
+          },
+          {
+            id: "name",
+            label: "Your name",
+            fieldType: "TextInput",
+            required: true,
+          },
+        ],
+      },
+      {
+        id: "DELIVERY",
+        title: "Delivery",
+        fields: [
+          {
+            id: "address",
+            label: "Address",
+            fieldType: "TextArea",
+            required: false,
+          },
+        ],
+      },
+    ],
+  } as Parameters<typeof FlowFormEditorContent>[0]["flowConfig"];
+
+  function renderOrderForm(
+    props: Partial<Parameters<typeof FlowFormEditorContent>[0]> = {}
+  ) {
+    return renderEditableFlow(orderFormConfig, {
+      authoringContext: "manager",
+      fieldKeyLabel: "Field key",
+      renderPreview: id => <p>Preview {id}</p>,
+      protectedFieldIds: ["products"],
+      ...props,
+    });
+  }
+
+  const editor = () => screen.getByTestId("flow-authoring-editor");
+
+  it("locks a protected question's ids, type and options but lets its words change", () => {
+    const current = renderOrderForm();
+
+    // The first question is selected as the editor opens.
+    const inspector = within(editor());
+    expect(
+      (
+        inspector.getByRole("textbox", {
+          name: "Field key What would you like?",
+        }) as HTMLInputElement
+      ).readOnly
+    ).toBe(true);
+    for (const index of [1, 2])
+      expect(
+        (
+          inspector.getByRole("textbox", {
+            name: `flowAuthoring.optionId ${index}`,
+          }) as HTMLInputElement
+        ).readOnly
+      ).toBe(true);
+    expect(
+      inspector.getByRole("combobox", { name: "flowAuthoring.fieldType" })
+    ).toHaveProperty("disabled", true);
+    expect(inspector.queryByRole("button", { name: "delete" })).toBeNull();
+    expect(
+      inspector.queryByRole("button", { name: "flowAddOption" })
+    ).toBeNull();
+
+    // Renaming an option goes through.
+    fireEvent.change(inspector.getByRole("textbox", { name: "Option 2" }), {
+      target: { value: "Кружка Web UMN" },
+    });
+    expect(current().screens[0].fields[0].options).toEqual([
+      { id: "651f1f77bcf86cd799439011", title: "Doll" },
+      { id: "651f1f77bcf86cd799439012", title: "Кружка Web UMN" },
+    ]);
+  });
+
+  it("leaves other questions as editable as before", () => {
+    renderOrderForm();
+    fireEvent.click(screen.getByRole("button", { name: "Your name" }));
+
+    const inspector = within(editor());
+    expect(
+      (
+        inspector.getByRole("textbox", {
+          name: "Field key Your name",
+        }) as HTMLInputElement
+      ).readOnly
+    ).toBe(false);
+    expect(
+      inspector.getByRole("combobox", { name: "flowAuthoring.fieldType" })
+    ).toHaveProperty("disabled", false);
+    expect(inspector.getByRole("button", { name: "delete" })).toBeTruthy();
+  });
+
+  it("ignores a change that would drop a protected question", () => {
+    const current = renderOrderForm();
+    fireEvent.click(
+      screen.getByRole("button", { name: "flowAuthoring.screen" })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "flowRemoveScreen" }));
+
+    expect(current()).toBe(orderFormConfig);
+
+    // A screen without it can still go.
+    fireEvent.click(screen.getByRole("button", { name: "DELIVERY Delivery" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "flowAuthoring.screen" })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "flowRemoveScreen" }));
+    expect(current().screens.map(screen => screen.id)).toEqual(["ORDER"]);
+  });
+
+  it("without protected fields, the same question keeps its delete, type and Add option", () => {
+    renderOrderForm({ protectedFieldIds: undefined });
+
+    const inspector = within(editor());
+    expect(
+      (
+        inspector.getByRole("textbox", {
+          name: "Field key What would you like?",
+        }) as HTMLInputElement
+      ).readOnly
+    ).toBe(false);
+    expect(
+      inspector.getByRole("combobox", { name: "flowAuthoring.fieldType" })
+    ).toHaveProperty("disabled", false);
+    expect(inspector.getAllByRole("button", { name: "delete" }).length).toBe(3);
+    expect(
+      inspector.getByRole("button", { name: "flowAddOption" })
+    ).toBeTruthy();
+  });
+
+  it("locks the same question in the inline form editor", () => {
+    renderOrderForm({ renderPreview: undefined });
+
+    expect(
+      (
+        screen.getByRole("textbox", {
+          name: "Field key What would you like?",
+        }) as HTMLInputElement
+      ).readOnly
+    ).toBe(true);
+    expect(screen.queryByRole("button", { name: "flowAddOption" })).toBeNull();
+    // Only the free question can be deleted.
+    expect(screen.getAllByRole("button", { name: "delete" })).toHaveLength(1);
+  });
+});

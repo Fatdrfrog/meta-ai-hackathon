@@ -14,6 +14,7 @@ import {
   PRODUCT_AD_ACTIVITY_CONTRACT_VERSION,
   type ProductAdActivityInput,
   type ProductAdActivityResult,
+  type ProductAdErrorCode,
   type ProductAdFailActivityInput,
   type ProductAdFileRef,
 } from "@icecore/temporal";
@@ -40,6 +41,7 @@ import {
   type AdRecord,
 } from "../media/product-video/ad/ad-job.js";
 import type { AdSpendPort } from "../media/product-video/ad/spend.js";
+import { productAdVoiceOverPorts } from "./product-ad-voice.js";
 
 /** The web code this activity uses, through its one host module. */
 async function loadWebHost() {
@@ -99,10 +101,13 @@ function mongoStore(
       return {
         status: doc.status,
         renderNo: doc.renderNo ?? 1,
+        runKind: doc.runKind ?? "make",
         language: doc.language ?? null,
         wordsCode: doc.wordsCode ?? null,
         idea: { kind: doc.idea?.kind ?? "new", text: doc.idea?.text ?? null },
         voice: doc.voice ?? "none",
+        stockVoiceId: doc.stockVoiceId ?? null,
+        voiceOver: doc.voiceOver ?? null,
         presenter: doc.presenter
           ? {
               use: Boolean(doc.presenter.use),
@@ -141,6 +146,20 @@ function mongoStore(
             : null,
           box: scene.box ?? null,
           attempts: scene.attempts ?? 0,
+          // v2's fields ride along as stored, so a run's scene saves keep
+          // them (ad-job.ts writes whole scenes back).
+          ...(scene.textZone !== undefined ? { textZone: scene.textZone } : {}),
+          ...(scene.useExact !== undefined ? { useExact: scene.useExact } : {}),
+          ...(scene.exactBox !== undefined ? { exactBox: scene.exactBox } : {}),
+          ...(scene.pictures !== undefined ? { pictures: scene.pictures } : {}),
+          ...(scene.place !== undefined ? { place: scene.place } : {}),
+          ...(scene.allowance !== undefined
+            ? { allowance: scene.allowance }
+            : {}),
+          ...(scene.redo !== undefined ? { redo: scene.redo } : {}),
+          ...(scene.textOverlap !== undefined
+            ? { textOverlap: scene.textOverlap }
+            : {}),
         })),
         stills: {
           status: ref(doc.stills?.status),
@@ -332,6 +351,10 @@ export async function productAdActivity(
             ).audio
         : null,
       isolationCostMicros: elevenLabsAudioIsolationCostMicros,
+      voiceOver: await productAdVoiceOverPorts(
+        input,
+        context.cancellationSignal,
+      ),
       mode: input.mode,
       renderNo: input.renderNo,
       attempt,
@@ -374,11 +397,9 @@ export async function productAdActivity(
       code: failure.code,
       error: failure.message,
     });
-    await store.updateAd({
-      status: "failed",
-      step: null,
-      errorCode: failure.code,
-      errorMessage: failure.message.slice(0, 500),
+    await recordAdRunFailure(host.ProductAd, input, {
+      code: failure.code,
+      message: failure.message,
     });
     throw ApplicationFailure.nonRetryable(failure.message, "ProductAdRejected");
   } finally {
@@ -404,24 +425,108 @@ export async function productAdFailActivity(
   );
   const host = await loadWebHost();
   await host.connectDB();
-  await host.ProductAd.updateOne(
-    {
-      _id: input.adId,
-      workspaceId: input.workspaceId,
-      renderNo: input.renderNo,
-      status: { $ne: "ready" },
-    },
-    [
-      {
-        $set: {
-          status: "failed",
-          step: null,
-          // The activity's own code, when it recorded one before giving up.
-          errorCode: { $ifNull: ["$errorCode", "failed"] },
-          errorMessage: input.error.slice(0, 500),
-        },
+  const outcome = await recordAdRunFailure(host.ProductAd, input, {
+    // The activity's own code, when it recorded one before giving up.
+    code: null,
+    message: input.error,
+  });
+  return {
+    adId: input.adId,
+    renderNo: input.renderNo,
+    // An edit run that fell back is ready again, with its earlier video.
+    status: outcome === "failed" ? "failed" : "ready",
+  };
+}
+
+/** The two calls recordAdRunFailure makes on the product_ads model. */
+export type AdFailureModel = Pick<
+  WebHost["ProductAd"],
+  "findOne" | "updateOne"
+>;
+
+/**
+ * Records that this run of the ad failed for good. An edit run (render,
+ * scene or voice) on an ad that has a video never fails the ad: it goes
+ * back to ready with its earlier video, `lastRun` says why, and a "New
+ * picture" press still running gets its scene back (`redo.from`) and ends
+ * as unavailable (ai_disabled when the company turned AI off). A first make
+ * (or an ad without a video) fails as v1 did.
+ * `code` null keeps a code an earlier write recorded, else "failed". Only
+ * this run's render is touched, and an ad already ready is left alone.
+ * Answers how the ad was left, or null when there was nothing to write.
+ */
+export async function recordAdRunFailure(
+  ProductAd: AdFailureModel,
+  input: Pick<ProductAdActivityInput, "adId" | "workspaceId" | "renderNo">,
+  failure: { code: ProductAdErrorCode | null; message: string },
+  now: () => Date = () => new Date(),
+): Promise<"ready" | "failed" | null> {
+  const filter = {
+    _id: input.adId,
+    workspaceId: input.workspaceId,
+    renderNo: input.renderNo,
+    status: { $ne: "ready" },
+  };
+  const doc = await ProductAd.findOne(filter)
+    .select("status runKind render errorCode scenes")
+    .lean();
+  if (!doc) return null;
+  const kind = doc.runKind ?? "make";
+  const errorCode = failure.code ?? doc.errorCode ?? "failed";
+  const message = failure.message.slice(0, 500);
+  const lastRun = {
+    renderNo: input.renderNo,
+    kind,
+    outcome: "failed",
+    errorCode,
+    message,
+    at: now(),
+  };
+  if (kind === "make" || !doc.render) {
+    await ProductAd.updateOne(filter, {
+      $set: {
+        status: "failed",
+        step: null,
+        errorCode,
+        errorMessage: message,
+        lastRun,
       },
-    ],
-  );
-  return { adId: input.adId, renderNo: input.renderNo, status: "failed" };
+    });
+    return "failed";
+  }
+  const scenes = doc.scenes ?? [];
+  const running = scenes.some((scene) => scene.redo && !scene.redo.outcome);
+  await ProductAd.updateOne(filter, {
+    $set: {
+      status: "ready",
+      step: null,
+      errorCode: null,
+      errorMessage: null,
+      lastRun,
+      ...(running
+        ? {
+            scenes: scenes.map((scene) =>
+              scene.redo && !scene.redo.outcome
+                ? {
+                    ...scene,
+                    muse: scene.redo.from.muse,
+                    box: scene.redo.from.box,
+                    method: scene.redo.from.method,
+                    check: scene.redo.from.check,
+                    redo: {
+                      ...scene.redo,
+                      // AI turned off mid-run isn't an outage to wait out.
+                      outcome:
+                        errorCode === "ai_disabled"
+                          ? "ai_disabled"
+                          : "unavailable",
+                    },
+                  }
+                : scene,
+            ),
+          }
+        : {}),
+    },
+  });
+  return "ready";
 }

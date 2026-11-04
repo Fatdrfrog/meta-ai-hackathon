@@ -82,6 +82,7 @@ const mockProductWhatsAppLinkRequestCreateIndexes = jest.fn();
 const mockProductWhatsAppLinkMissCreateIndexes = jest.fn();
 const mockProductKitCreateIndexes = jest.fn();
 const mockProductAdCreateIndexes = jest.fn();
+const mockProductVoiceCreateIndexes = jest.fn();
 const mockCreativeVideoPlanCreateIndexes = jest.fn();
 const mockBehaviorIndexes = jest.fn();
 const mockAnalyticsIndexes = jest.fn();
@@ -641,6 +642,9 @@ jest.mock("@/models/product-kit", () => ({
 jest.mock("@/models/product-ad", () => ({
   ProductAd: { createIndexes: mockProductAdCreateIndexes },
 }));
+jest.mock("@/models/product-voice", () => ({
+  ProductVoice: { createIndexes: mockProductVoiceCreateIndexes },
+}));
 
 jest.mock("@/models/cross-store-outbox", () => {
   const actual = jest.requireActual("@/models/cross-store-outbox");
@@ -839,6 +843,7 @@ describe("ensureIndexes", () => {
       mockProductWhatsAppLinkMissCreateIndexes,
       mockProductKitCreateIndexes,
       mockProductAdCreateIndexes,
+      mockProductVoiceCreateIndexes,
       mockCreativeVideoPlanCreateIndexes,
     ]) {
       createIndexes.mockClear();
@@ -1914,6 +1919,7 @@ describe("ensureIndexes", () => {
         mockProductWhatsAppLinkMissCreateIndexes,
         mockProductKitCreateIndexes,
         mockProductAdCreateIndexes,
+        mockProductVoiceCreateIndexes,
       ]) {
         expect(createIndexes).toHaveBeenCalledTimes(1);
       }

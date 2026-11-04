@@ -4,14 +4,19 @@
 // script and applied to it.
 
 import {
+  adSceneChangeIssues,
   adWordsIssues,
+  applyAdSceneChanges,
   applyAdWords,
   parseAdProductIds,
   parseProductAdCreateRequest,
+  parseProductAdSceneRequest,
   parseProductAdUpdateRequest,
+  sameAdScenes,
   sameAdWords,
 } from "./ad-request";
 import type { ProductAdScript } from "./types";
+import type { ProductAdStoredScene } from "@icecore/temporal";
 
 const DOLL = "651f1f77bcf86cd799439011";
 const MUG = "651f1f77bcf86cd799439012";
@@ -59,6 +64,26 @@ describe("what the ad API takes", () => {
     expect(parseAdProductIds([DOLL, DOLL])).toBeNull();
     expect(parseAdProductIds(["../products"])).toBeNull();
     expect(parseAdProductIds("651f")).toBeNull();
+  });
+
+  it("takes every voice mode, and an Airi voice only from the curated list", () => {
+    for (const voice of ["own", "clone", "none"] as const)
+      expect(parseProductAdCreateRequest(brief({ voice }))?.voice).toBe(voice);
+    expect(parseProductAdCreateRequest(brief({ voice: "robot" }))).toBeNull();
+    // No voice is curated yet, so no Airi voice is taken.
+    expect(
+      parseProductAdCreateRequest(
+        brief({ voice: "stock", stockVoiceId: "unlisted" })
+      )
+    ).toBeNull();
+    expect(parseProductAdCreateRequest(brief({ voice: "stock" }))).toBeNull();
+    // A voice id belongs only to "stock"; an empty one is no id.
+    expect(
+      parseProductAdCreateRequest(brief({ voice: "own", stockVoiceId: "x" }))
+    ).toBeNull();
+    expect(
+      parseProductAdCreateRequest(brief({ voice: "own", stockVoiceId: null }))
+    ).toEqual(brief());
   });
 
   it("takes a brief, its own words in one line, and the presenter only with consent", () => {
@@ -150,6 +175,203 @@ describe("what the ad API takes", () => {
     expect(edited.scenes[1]!.setting).toBe("linen_shelf");
     expect(edited.priceCardTitle).toBe("Екеуі де сөреде");
     expect(edited.edited).toBe(true);
+  });
+});
+
+describe("the scenes' free changes", () => {
+  it("takes a word zone, the exact photo and a kept picture per scene, and no other keys", () => {
+    expect(
+      parseProductAdUpdateRequest({
+        scenes: [
+          { productId: DOLL.toUpperCase(), textZone: "bottom" },
+          { productId: MUG, useExact: true },
+        ],
+      })
+    ).toEqual({
+      scenes: [
+        { productId: DOLL, textZone: "bottom" },
+        { productId: MUG, useExact: true },
+      ],
+    });
+    expect(
+      parseProductAdUpdateRequest({
+        sticker: "Жаңа",
+        scenes: [{ productId: DOLL, pictureIndex: 3, useExact: false }],
+      })
+    ).toEqual({
+      sticker: "Жаңа",
+      scenes: [{ productId: DOLL, pictureIndex: 3, useExact: false }],
+    });
+    for (const bad of [
+      { scenes: [] },
+      { scenes: "x" },
+      { scenes: [{ productId: DOLL }] },
+      { scenes: [{ productId: "x", textZone: "top" }] },
+      { scenes: [{ productId: DOLL, textZone: "middle" }] },
+      { scenes: [{ productId: DOLL, useExact: "yes" }] },
+      { scenes: [{ productId: DOLL, pictureIndex: 4 }] },
+      { scenes: [{ productId: DOLL, pictureIndex: -1 }] },
+      { scenes: [{ productId: DOLL, pictureIndex: 1.5 }] },
+      // A kept picture is picked to be seen, not hidden behind the exact photo.
+      { scenes: [{ productId: DOLL, pictureIndex: 0, useExact: true }] },
+      { scenes: [{ productId: DOLL, textZone: "top", look: "studio" }] },
+      {
+        scenes: [
+          { productId: DOLL, textZone: "top" },
+          { productId: DOLL, useExact: true },
+        ],
+      },
+      { scenes: [1, 2, 3, 4].map(() => ({ productId: DOLL, useExact: true })) },
+      { sticker: "Жаңа", motion: "lively" },
+    ])
+      expect(parseProductAdUpdateRequest(bad)).toBeNull();
+  });
+
+  const scene = (
+    productId: string,
+    overrides: Partial<ProductAdStoredScene> = {}
+  ): ProductAdStoredScene => ({
+    productId,
+    exact: { bucket: "media", path: `exact-${productId}.png` },
+    muse: { bucket: "media", path: `scene-${productId}-a1.png` },
+    method: "muse",
+    check: { same: true, difference: null },
+    box: { x: 0.2, y: 0.3, w: 0.5, h: 0.5 },
+    attempts: 1,
+    pictures: [
+      {
+        ref: { bucket: "media", path: `scene-${productId}-a0.png` },
+        box: { x: 0.1, y: 0.2, w: 0.4, h: 0.4 },
+        place: "linen shelf",
+        madeAt: new Date("2026-11-03T10:00:00.000Z"),
+      },
+      {
+        ref: { bucket: "media", path: `scene-${productId}-a1.png` },
+        box: { x: 0.2, y: 0.3, w: 0.5, h: 0.5 },
+        place: "oak table by a window",
+        madeAt: new Date("2026-11-03T10:01:00.000Z"),
+      },
+    ],
+    ...overrides,
+  });
+
+  it("finds scene changes for products the ad doesn't show, or pictures a scene didn't keep", () => {
+    const scenes = [scene(DOLL), scene(MUG, { pictures: undefined })];
+    expect(
+      adSceneChangeIssues(
+        [
+          { productId: DOLL, pictureIndex: 1 },
+          { productId: MUG, textZone: "top" },
+        ],
+        scenes
+      )
+    ).toEqual([]);
+    expect(
+      adSceneChangeIssues(
+        [
+          { productId: DOLL, pictureIndex: 2 },
+          { productId: MUG, pictureIndex: 0 },
+          { productId: CLOCK, useExact: true },
+        ],
+        scenes
+      )
+    ).toEqual([
+      `${DOLL} has no kept picture 2.`,
+      `${MUG} has no kept picture 0.`,
+      `${CLOCK} isn't one of the ad's scenes.`,
+    ]);
+    expect(adSceneChangeIssues(undefined, scenes)).toEqual([]);
+  });
+
+  it("puts a kept picture back with its box, checked, and turns the exact photo off", () => {
+    const [doll, mug] = applyAdSceneChanges(
+      [scene(DOLL, { useExact: true }), scene(MUG)],
+      [
+        { productId: DOLL, pictureIndex: 0 },
+        { productId: MUG, textZone: "top", useExact: true },
+      ]
+    );
+    expect(doll).toMatchObject({
+      muse: { bucket: "media", path: `scene-${DOLL}-a0.png` },
+      box: { x: 0.1, y: 0.2, w: 0.4, h: 0.4 },
+      method: "muse",
+      check: { same: true, difference: null },
+      useExact: false,
+    });
+    expect(mug).toMatchObject({ textZone: "top", useExact: true });
+    expect(mug!.muse).toEqual(scene(MUG).muse);
+  });
+
+  it("sees a change to a scene's picture, zone or exact photo, and nothing else", () => {
+    const scenes = [scene(DOLL), scene(MUG)];
+    expect(
+      sameAdScenes(
+        scenes,
+        scenes.map(entry => ({ ...entry }))
+      )
+    ).toBe(true);
+    // Defaults read the same as v1's absent fields.
+    expect(
+      sameAdScenes(scenes, [
+        { ...scene(DOLL), textZone: "auto", useExact: false },
+        scene(MUG),
+      ])
+    ).toBe(true);
+    // The picture already in the video, picked again, changes nothing.
+    expect(
+      sameAdScenes(
+        scenes,
+        applyAdSceneChanges(scenes, [{ productId: DOLL, pictureIndex: 1 }])
+      )
+    ).toBe(true);
+    for (const change of [
+      { productId: DOLL, pictureIndex: 0 },
+      { productId: DOLL, textZone: "bottom" as const },
+      { productId: MUG, useExact: true },
+    ])
+      expect(sameAdScenes(scenes, applyAdSceneChanges(scenes, [change]))).toBe(
+        false
+      );
+  });
+});
+
+describe("New picture", () => {
+  it("takes a tested setting or the owner's place in up to 80 letters, exactly one", () => {
+    expect(
+      parseProductAdSceneRequest({
+        requestId: " press-2 ",
+        setting: "gift_table",
+      })
+    ).toEqual({ requestId: "press-2", setting: "gift_table" });
+    expect(
+      parseProductAdSceneRequest({
+        requestId: "press-3",
+        words: "  киіз үй ішінде,\nтекемет үстінде ",
+        changes: { scenes: [{ productId: MUG, textZone: "top" }] },
+      })
+    ).toEqual({
+      requestId: "press-3",
+      words: "киіз үй ішінде, текемет үстінде",
+      changes: { scenes: [{ productId: MUG, textZone: "top" }] },
+    });
+    expect(
+      parseProductAdSceneRequest({ requestId: "p", words: "а".repeat(80) })
+    ).toEqual({ requestId: "p", words: "а".repeat(80) });
+    for (const bad of [
+      null,
+      { setting: "gift_table" },
+      { requestId: "x".repeat(65), setting: "gift_table" },
+      { requestId: "p" },
+      { requestId: "p", setting: "gift_table", words: "a yurt" },
+      { requestId: "p", setting: "moon" },
+      { requestId: "p", words: "   " },
+      { requestId: "p", words: "а".repeat(81) },
+      { requestId: "p", words: 5 },
+      { requestId: "p", setting: "gift_table", changes: {} },
+      { requestId: "p", setting: "gift_table", changes: { sticker: 4 } },
+      { requestId: "p", setting: "gift_table", look: "studio" },
+    ])
+      expect(parseProductAdSceneRequest(bad)).toBeNull();
   });
 });
 

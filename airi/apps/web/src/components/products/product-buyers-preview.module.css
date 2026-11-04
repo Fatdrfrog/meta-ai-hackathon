@@ -27,15 +27,19 @@
   color: var(--p-ink);
 }
 
-.screen {
-  /* The buyer's WhatsApp, light in both themes. */
+/* The buyer's WhatsApp, light in both themes: the preview's screen, and the
+   order form's screen alone (the Flow editor's preview in Edit questions). */
+.screen,
+.form {
   --b-ink: var(--p-label-ink);
   --b-ink-2: var(--p-label-ink-2);
   --b-paper: var(--p-label);
   /* The cards are made on pure white; this is a picture of them. */
   --b-card: #fff;
   --b-line: color-mix(in oklab, var(--p-label-ink) 12%, transparent);
+}
 
+.screen {
   min-height: 420px;
   overflow: hidden;
   border-radius: var(--p-r-phone);
@@ -172,12 +176,15 @@
 .form {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  /* As wide as its column, also alone in the Flow editor's preview. */
+  width: calc(100% - 32px);
   max-height: 520px;
   margin: 16px;
   overflow: hidden;
   border-radius: 16px;
   background: var(--b-paper);
   box-shadow: 0 0 0 1px var(--b-line);
+  color: var(--b-ink);
 }
 
 .formBar {
@@ -253,6 +260,46 @@
   font-size: 13px;
   line-height: 18px;
   color: var(--b-ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* An edited form's own questions: a choice, a list, a longer text box. */
+.question {
+  display: grid;
+  gap: 8px;
+}
+
+.radio {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in oklab, var(--b-ink) 45%, transparent);
+}
+
+.select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.select svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.area {
+  min-height: 64px;
+}
+
+.other {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--b-ink-2);
+  overflow-wrap: anywhere;
 }
 
 .submit {

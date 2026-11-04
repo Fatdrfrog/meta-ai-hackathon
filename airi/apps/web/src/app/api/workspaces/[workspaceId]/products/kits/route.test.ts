@@ -28,6 +28,7 @@ jest.mock("@/lib/products/kits", () => ({
   readProductKitPlan: (...args: unknown[]) => mockReadPlan(...args),
 }));
 
+import { StorageQuotaError } from "@icecore/airi-runtime/storage-quota";
 import { GET, maxDuration, POST } from "./route";
 
 const workspaceId = "workspace-1";
@@ -109,9 +110,56 @@ describe("POST a kit", () => {
         make: { carousel: true, orderForm: true },
         language: null,
         timeZone: "Asia/Tokyo",
+        edits: null,
       },
     });
     expect(response.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("passes the owner's edits on, and says which of their checks failed", async () => {
+    const edits = {
+      carousel: { name: "products_x", components: [{ type: "BODY" }] },
+      orderForm: { config: { templateId: "products_order_form", screens: [] } },
+    };
+    mockMakeKit.mockResolvedValueOnce({ kit, repeated: false });
+    expect((await POST(post({ ...body, edits }), context)).status).toBe(201);
+    expect(mockMakeKit.mock.calls[0]![0].request.edits).toEqual(edits);
+
+    mockMakeKit.mockResolvedValueOnce({
+      invalid: ["One", "Two", "Three", "Four"],
+    });
+    const invalid = await POST(post({ ...body, edits }), context);
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toEqual({
+      error: "The request is invalid",
+      code: "invalid_request",
+      issues: ["One", "Two", "Three"],
+    });
+  });
+
+  it("refuses an edit for a part the press doesn't make, before anything is read", async () => {
+    const response = await POST(
+      post({
+        ...body,
+        make: { carousel: false, orderForm: true },
+        edits: { carousel: { name: "products_x", components: [] } },
+      }),
+      context
+    );
+    expect(response.status).toBe(400);
+    expect(mockMakeKit).not.toHaveBeenCalled();
+  });
+
+  it("says when the edited carousel's name is taken, and when Meta couldn't say", async () => {
+    mockMakeKit.mockResolvedValueOnce({ refused: "template_name_taken" });
+    const taken = await POST(post(), context);
+    expect(taken.status).toBe(409);
+    expect(await taken.json()).toMatchObject({ code: "template_name_taken" });
+
+    mockMakeKit.mockResolvedValueOnce({ refused: "meta_unavailable" });
+    const unsure = await POST(post(), context);
+    expect(unsure.status).toBe(503);
+    expect(await unsure.json()).toMatchObject({ code: "draft_failed" });
   });
 
   it("answers a carousel Meta was slow to answer as still being checked, within the route's 60 s", async () => {
@@ -183,6 +231,15 @@ describe("POST a kit", () => {
     const few = await POST(post(), context);
     expect(few.status).toBe(409);
     expect(await few.json()).toMatchObject({ code: "not_enough_products" });
+  });
+
+  it("says the storage is full when the edited cards' pictures can't be kept", async () => {
+    mockMakeKit.mockRejectedValueOnce(
+      new StorageQuotaError("company_storage_limit_exceeded", "Storage is full")
+    );
+    const response = await POST(post(), context);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "storage_full" });
   });
 
   it("answers 503 when the kit can't be made at all", async () => {

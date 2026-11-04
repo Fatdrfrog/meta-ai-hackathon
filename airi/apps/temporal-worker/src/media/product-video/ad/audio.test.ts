@@ -7,6 +7,7 @@ import test, { type TestContext } from "node:test";
 
 import {
   buildVoiceTrack,
+  changeTempo,
   cutSpeech,
   decodeVoice,
   encodeFlac,
@@ -449,4 +450,19 @@ test("ffmpeg: the voice track is normalised in two passes to stereo 48 kHz", asy
   assert.ok(peak > 3000, `peak ${peak}`);
   assert.ok(peak < 32767 * 0.9, "true peak kept under -1.5 dBTP, about");
   assert.equal(await buildVoiceTrack([], 6, out, dir), false);
+});
+
+test("ffmpeg: new words a little long are said faster, their length cut by the factor", async (t) => {
+  if (!hasFfmpeg()) return t.skip("ffmpeg isn't installed");
+  const dir = await workDir(t);
+  const words = sound(4, [
+    [0.2, 1.8],
+    [2.2, 3.8],
+  ]);
+  const faster = await changeTempo(words, 1.12, dir, "line");
+  close(pcmSeconds(faster), 4 / 1.12, 0.03);
+  assert.equal(faster.sampleRate, RATE);
+  assert.equal(await changeTempo(words, 1, dir, "same"), words);
+  await assert.rejects(changeTempo(words, 1.5, dir, "too"), RangeError);
+  await assert.rejects(changeTempo(words, 0.9, dir, "slow"), RangeError);
 });

@@ -2,6 +2,7 @@ import {
   productAdLines,
   productAdShopName,
   type ProductAdBox,
+  type ProductAdTextZone,
 } from "@icecore/temporal";
 import sharp, { type OverlayOptions } from "sharp";
 import {
@@ -677,27 +678,40 @@ export async function exactScene(
   cutout: Buffer,
 ): Promise<{ image: Buffer; box: ProductAdBox }> {
   const product = await trimmedCutout(cutout);
-  const [rect] = shelfRow(
-    [product.size],
-    { x: 110, w: 860 },
-    PLANK_TOP_SCENE + 6,
-    640,
-  );
+  const rect = exactRect(product.size);
   const image = await sharp(
-    wallSvg(AD_FRAME, PLANK_TOP_SCENE, groundShadows(rect!)),
+    wallSvg(AD_FRAME, PLANK_TOP_SCENE, groundShadows(rect)),
   )
-    .composite([await placedCutout(product.image, rect!)])
+    .composite([await placedCutout(product.image, rect)])
     .jpeg({ quality: 90, mozjpeg: true })
     .toBuffer();
-  return {
-    image,
-    box: {
-      x: rect!.x / AD_FRAME.width,
-      y: rect!.y / AD_FRAME.height,
-      w: rect!.w / AD_FRAME.width,
-      h: rect!.h / AD_FRAME.height,
-    },
-  };
+  return { image, box: frameBox(rect) };
+}
+
+/** Where the exact still stands a product of `size` (its opaque part). */
+function exactRect(size: Size): Rect {
+  return shelfRow([size], { x: 110, w: 860 }, PLANK_TOP_SCENE + 6, 640)[0]!;
+}
+
+const frameBox = (rect: Rect): ProductAdBox => ({
+  x: rect.x / AD_FRAME.width,
+  y: rect.y / AD_FRAME.height,
+  w: rect.w / AD_FRAME.width,
+  h: rect.h / AD_FRAME.height,
+});
+
+/**
+ * The product's box in its exact still, as exactScene draws it, without
+ * drawing it: for ads made before the box was kept beside the still. Null
+ * for an empty cut-out. Code only, no model call.
+ */
+export async function exactSceneBox(
+  cutout: Buffer,
+): Promise<ProductAdBox | null> {
+  const box = await alphaBox(cutout);
+  return box
+    ? frameBox(exactRect({ width: box.width, height: box.height }))
+    : null;
 }
 
 /**
@@ -741,6 +755,8 @@ export async function productSceneLayers(input: {
   caption: string;
   priceText: string;
   sticker: string | null;
+  /** Where the words go: "auto" (the default) or the owner's top or bottom. */
+  zone?: ProductAdTextZone;
 }): Promise<{
   label: PlacedLayer;
   tag: PlacedLayer;
@@ -758,6 +774,7 @@ export async function productSceneLayers(input: {
     label,
     tag,
     sticker,
+    zone: input.zone,
   });
   return {
     label: { layer: label, rect: layout.label },
@@ -1161,6 +1178,8 @@ export async function feedStill(input: {
   name: string;
   caption: string;
   priceText: string;
+  /** The owner's choice of where the words sit, as in the video. */
+  zone?: ProductAdTextZone;
 }): Promise<Buffer> {
   const { image, crop } = await coverBackground(
     input.picture,
@@ -1174,6 +1193,7 @@ export async function feedStill(input: {
     caption: input.caption,
     priceText: input.priceText,
     sticker: null,
+    zone: input.zone,
   });
   return composeStill(image, [words.label, words.tag], AD_FEED_FRAME);
 }

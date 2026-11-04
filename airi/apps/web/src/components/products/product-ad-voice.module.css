@@ -1,0 +1,273 @@
+/* The ad's voice picker (Part V), in the Paper look: product-theme.module.css
+   tokens only, no loops or glow. The pills and checks are the studio's own
+   (product-ad-studio.module.css); these are the parts only voices have. */
+
+.picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.about {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+/* A quiet amber line: the video fell back, or a voice couldn't be copied. */
+.warn {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-accent-wash);
+  box-shadow: inset 0 0 0 1px var(--p-accent-line);
+  color: var(--p-accent-ink);
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.warn svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+.copied {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+}
+
+.confirm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+}
+
+/* "Remove my voice": a text button, underlined, never red until confirmed. */
+.link {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--p-ink-2);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--p-ink);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.link:disabled {
+  color: var(--p-ink-3);
+  cursor: default;
+}
+
+.subLegend {
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* airi's voices: a card each, the chosen one raised with the pick line. */
+.stocks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 479px) {
+  .stocks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+  padding: 10px 10px 10px 12px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-sunk);
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  transition:
+    background-color var(--p-dur-fast) var(--p-ease-out),
+    box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+
+.stock[data-checked] {
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+}
+
+.stockPick {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.stockDot {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: var(--p-r-pill);
+  background: var(--p-raised);
+  box-shadow: inset 0 0 0 1.5px var(--p-line-strong);
+}
+
+.stock[data-checked] .stockDot {
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-accent),
+    inset 0 0 0 4.5px var(--p-raised),
+    inset 0 0 0 8px var(--p-accent);
+}
+
+.stockPick input:focus-visible + .stockDot {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.stockText {
+  display: grid;
+  min-width: 0;
+}
+
+.stockName {
+  color: var(--p-ink);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.stockAbout {
+  color: var(--p-ink-2);
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}
+
+.play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--p-r-pill);
+  background: var(--p-raised);
+  box-shadow: inset 0 0 0 1px var(--p-line-strong);
+  color: var(--p-ink);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.play:hover {
+  box-shadow: inset 0 0 0 1px var(--p-pick-line);
+}
+
+.play:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.play svg {
+  width: 14px;
+  height: 14px;
+}
+
+.play[aria-pressed="true"] {
+  background: var(--p-accent-wash);
+  box-shadow: inset 0 0 0 1px var(--p-accent-line);
+  color: var(--p-accent-ink);
+}
+
+.stockProblem {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.nowLabel {
+  color: var(--p-ink-2);
+}
+
+/* The video a copy of the voice is made from, named before the consent tick. */
+.source {
+  margin: 0;
+  color: var(--p-ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+/* The consent: a small Paper sheet over the page (a bottom drawer on phones). */
+.dialog.dialog {
+  max-width: min(480px, calc(100vw - 2rem));
+  border: 0;
+  background: var(--p-raised);
+  box-shadow: var(--p-shadow-sheet);
+  color: var(--p-ink);
+}
+
+.dialogBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+}
+
+.dialogTitle {
+  margin: 0;
+  color: var(--p-ink);
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -282,6 +282,27 @@ commit, which is how Vercel env changes reach a commit production already serves
 project and team variables listed below; it runs on GitHub-hosted runners so it
 never waits behind a worker deploy on `DEPLOY_RUNS_ON`.
 
+#### Rolling back: web first, never the worker alone
+
+The worker reads and writes Products ads through the web's own models, so a
+worker image carries the ad document's shape of its commit. Roll the web back
+first (Vercel Instant Rollback), and roll the worker back only together with
+it; never roll the worker back on its own while the web it runs for is newer.
+Products Studio v2 (ad edit runs, scene pictures, voices) is the case in point:
+
+- A pre-v2 worker under v2 web runs every "New picture" and voice run (both
+  are workflow mode `make`) as a first make. Saving its scenes in v1's shape
+  drops each scene's `pictures`, `redo`, `place`, `textZone`, `useExact`,
+  `exactBox`, `allowance` and `textOverlap`, and it reads "clone" and "stock"
+  ads with no voice. An Update (`render`) run keeps the pictures but ignores
+  the words' zone and the exact photo, and its failure marks the ad failed
+  rather than writing `lastRun`.
+- A pre-v2 web alone saves "Update the video" without `script.openings`,
+  `script.endings` and each scene's `spoken` line (mongoose drops fields its
+  schema doesn't know).
+- Either way, expect those v2 fields to be lost on any ad the rolled-back side
+  touches.
+
 ### Conversation classification Pub/Sub rollout
 
 The web runtime and Temporal worker both publish canonical classification

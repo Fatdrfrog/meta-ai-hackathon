@@ -3,53 +3,95 @@
 // types.ts, so the page and the API import it from there.
 
 import type {
+  ProductAdEndingKind,
   ProductAdErrorCode,
   ProductAdIdeaKind,
+  ProductAdOpeningKind,
+  ProductAdOption,
+  ProductAdRedoOutcome,
+  ProductAdRunKind,
   ProductAdSceneMethod,
+  ProductAdScenePlace,
+  ProductAdSetting,
   ProductAdStatus,
   ProductAdStep,
-  ProductAdVoice,
+  ProductAdTextOverlap,
+  ProductAdTextZone,
+  ProductAdVoiceMode,
+  ProductAdVoiceResult,
   ProductShopWordsCode,
   ProductVideoImportPhotoStop,
 } from "@icecore/temporal";
 
 export {
   PRODUCT_AD_CTWA_QUESTIONS,
+  PRODUCT_AD_ENDING_KINDS,
   PRODUCT_AD_ERROR_CODES,
   PRODUCT_AD_IDEA_KINDS,
   PRODUCT_AD_IDEA_MAX_LENGTH,
   PRODUCT_AD_MAX_PRODUCTS,
+  PRODUCT_AD_MAX_SCENE_ATTEMPTS,
   PRODUCT_AD_MIN_PRODUCTS,
+  PRODUCT_AD_NEW_PICTURE_MAX_MICROS,
+  PRODUCT_AD_OPENING_KINDS,
+  PRODUCT_AD_OPTIONS_MAX,
+  PRODUCT_AD_PICTURES_KEPT,
+  PRODUCT_AD_PLACE_REFUSALS,
+  PRODUCT_AD_PLACE_WORDS_MAX,
+  PRODUCT_AD_REDO_OUTCOMES,
+  PRODUCT_AD_RUN_KINDS,
   PRODUCT_AD_SCENE_METHODS,
   PRODUCT_AD_SETTINGS,
   PRODUCT_AD_STATUSES,
   PRODUCT_AD_STEPS,
+  PRODUCT_AD_STOCK_VOICES,
   PRODUCT_AD_TEXT_LIMITS,
+  PRODUCT_AD_TEXT_ZONES,
+  PRODUCT_AD_VOICE_FALLBACKS,
+  PRODUCT_AD_VOICE_MODES,
   PRODUCT_AD_VOICES,
   PRODUCT_SHOP_WORDS_CODES,
   productAdLettersSupported,
   productAdLines,
+  productAdOptionIssues,
   productAdScriptIssues,
   productAdShopName,
+  productAdRecordingIsPaid,
+  productAdStockVoice,
   productAdTextIssues,
+  type ProductAdEndingKind,
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
+  type ProductAdOpeningKind,
+  type ProductAdOption,
+  type ProductAdPlaceRefusal,
+  type ProductAdRedoOutcome,
+  type ProductAdRunKind,
   type ProductAdSceneMethod,
+  type ProductAdScenePlace,
   type ProductAdScript,
   type ProductAdSetting,
   type ProductAdStatus,
   type ProductAdStep,
+  type ProductAdStockVoice,
   type ProductAdTextLimit,
+  type ProductAdTextOverlap,
+  type ProductAdTextZone,
   type ProductAdVoice,
+  type ProductAdVoiceFallback,
+  type ProductAdVoiceMode,
+  type ProductAdVoiceResult,
   type ProductShopWordsCode,
 } from "@icecore/temporal";
 
 /**
  * What stops a workspace paying for an ad's AI action now: the company's AI
- * spending limit, the plan's included actions, or the free trial. The
- * import's own reasons, ruled the same way.
+ * spending limit, the plan's included actions, or the free trial (the
+ * import's own reasons, ruled the same way); or the company turned AI off.
  */
-export type ProductAdAdmissionStop = ProductVideoImportPhotoStop;
+export type ProductAdAdmissionStop =
+  | ProductVideoImportPhotoStop
+  | "ai_disabled";
 
 /** One video ad, as the studio and the "Made from your shelf" list show it; links are signed. */
 export type ProductAdRecord = {
@@ -77,7 +119,38 @@ export type ProductAdRecord = {
   >;
   /** The brief, as the owner chose it. */
   idea: { kind: ProductAdIdeaKind; text: string | null };
-  voice: ProductAdVoice;
+  /** The voice asked for: "own" and "none" as in v1, or new words read by "clone" or "stock". */
+  voice: ProductAdVoiceMode;
+  /** The Airi voice asked for, with "stock"; null otherwise. */
+  stockVoiceId: string | null;
+  /**
+   * The voice the latest video actually has, when new words were asked for,
+   * and why it fell back when it did; null for "own" and "none".
+   */
+  voiceResult: ProductAdVoiceResult | null;
+  /**
+   * Whether any product has the owner's recording (a clip of them saying
+   * it), so "Your recording" has words to say; absent reads as true.
+   */
+  hasRecording?: boolean;
+  /** What the current (or latest) run does; "make" for ads from before edit runs. */
+  runKind: ProductAdRunKind;
+  /**
+   * How the latest finished run went. An edit run (render, scene or voice)
+   * that failed leaves the ad ready with its earlier video: the update card
+   * says why from here. Null before any run finished, and on ads from before.
+   */
+  lastRun: ProductAdRecordLastRun | null;
+  /**
+   * "New picture" presses the ad's AI action still has room for, read from
+   * the ledger for a ready ad by GET /products/ads/[adId] only; null
+   * elsewhere (the made list, and while it's made).
+   */
+  picturesLeft: number | null;
+  /** Muse Spark's openings to choose from; [] for ads from before them. */
+  openings: Array<ProductAdOption<ProductAdOpeningKind>>;
+  /** Muse Spark's endings to choose from; [] for ads from before them. */
+  endings: Array<ProductAdOption<ProductAdEndingKind>>;
   /** How buyers reach the shop at the end: the connected number, else the shop's name. */
   ending: { phone: string | null; shopName: string };
   /** The products as the ad shows them, snapshotted when it was made. */
@@ -101,18 +174,14 @@ export type ProductAdRecord = {
    * One per product, filled in as each picture lands. The made list leaves
    * their links out (null): it shows the poster.
    */
-  scenes: Array<{
-    productId: string;
-    method: ProductAdSceneMethod;
-    imageUrl: string | null;
-    /** Whether Muse Spark checked that the scene still shows the same product. */
-    checked: boolean;
-  }>;
+  scenes: ProductAdRecordScene[];
   video: {
     url: string;
     bytes: number;
     seconds: number;
     posterUrl: string | null;
+    /** The run that made this video ("Video 2 · 13 s"); older than `renderNo` while another run goes. */
+    renderNo?: number;
   } | null;
   /**
    * The Status picture (9:16) and the 4:5 ad picture, as soon as each
@@ -139,6 +208,55 @@ export type ProductAdRecord = {
   pricesChanged?: boolean;
 };
 
+/** One product's scene as the studio shows it, filled in as its picture lands. */
+export type ProductAdRecordScene = {
+  productId: string;
+  method: ProductAdSceneMethod;
+  imageUrl: string | null;
+  /** Whether Muse Spark checked that the scene still shows the same product. */
+  checked: boolean;
+  /** Where its words sit; "auto" for ads from before. */
+  textZone: ProductAdTextZone;
+  /** "Use my exact photo here"; false for ads from before. */
+  useExact: boolean;
+  /**
+   * The Muse Image pictures it kept, oldest first (at most 4), to pick again
+   * for free; `index` is what PATCH's `pictureIndex` takes. Links are null
+   * in the made list.
+   */
+  pictures: Array<{
+    index: number;
+    url: string | null;
+    /** The place it was made in, in English. */
+    place: string;
+    /** Whether it's the picture in the video now. */
+    current: boolean;
+  }>;
+  /** The place its picture was asked for; null for ads from before. */
+  place: ProductAdScenePlace | null;
+  /** The latest "New picture" press: outcome null while it runs; null when there was none. */
+  redo: {
+    /** The run the press made; its outcome is news only while it's the ad's latest run. */
+    renderNo?: number;
+    outcome: ProductAdRedoOutcome | null;
+    /** Muse Spark's refusal of a described place, in English; null otherwise. */
+    reason: string | null;
+    /** Muse Spark's English reading of the described place; null for a setting chip. */
+    englishPlace: string | null;
+  } | null;
+  /** Whether the latest render's words cover the product; null when unknown. */
+  textOverlap: ProductAdTextOverlap | null;
+};
+
+/** How the ad's latest finished run went (`ProductAdRecord.lastRun`). */
+export type ProductAdRecordLastRun = {
+  renderNo: number;
+  kind: ProductAdRunKind;
+  outcome: "ready" | "failed";
+  errorCode: ProductAdErrorCode | null;
+  at: string;
+};
+
 /** POST /products/ads: make an ad of 1 to 3 shelf products. */
 export type ProductAdCreateRequest = {
   /** The page's id for this press, so a repeat returns the same ad. */
@@ -146,17 +264,60 @@ export type ProductAdCreateRequest = {
   /** In the order the ad shows them. */
   productIds: string[];
   idea: { kind: ProductAdIdeaKind; text?: string };
-  voice: ProductAdVoice;
+  voice: ProductAdVoiceMode;
+  /** With voice "stock": one of PRODUCT_AD_STOCK_VOICES' ids. */
+  stockVoiceId?: string;
   /** Whether to show the person from the video, and that they agreed to it. */
   presenter: { use: boolean; consent: boolean };
 };
 
-/** PATCH /products/ads/[adId]: the owner's edits, which make the video again. */
+/** One scene's free changes in PATCH /products/ads/[adId]. */
+export type ProductAdSceneChange = {
+  productId: string;
+  textZone?: ProductAdTextZone;
+  useExact?: boolean;
+  /** One of the scene's kept pictures (0 to 3) to use again. */
+  pictureIndex?: number;
+};
+
+/**
+ * PATCH /products/ads/[adId]: the owner's free changes ("Update the video"),
+ * which make the video again with no model call. Choosing one of Muse
+ * Spark's openings or endings sends its text as `sticker` or `ending`.
+ */
 export type ProductAdUpdateRequest = {
   sticker?: string;
   captions?: Array<{ productId: string; caption: string }>;
   priceCardTitle?: string;
   ending?: string;
+  scenes?: ProductAdSceneChange[];
+};
+
+/**
+ * POST /products/ads/[adId]/scenes/[productId]: "New picture" for one scene,
+ * in a tested setting or a place the owner describes (exactly one of the
+ * two), with any pending free changes riding along. Answers 202 `{ad}`.
+ */
+export type ProductAdSceneRequest = {
+  /** The page's id for this press, so a repeat starts nothing twice. */
+  requestId: string;
+  setting?: ProductAdSetting;
+  /** 1 to PRODUCT_AD_PLACE_WORDS_MAX characters after trimming, in any language. */
+  words?: string;
+  changes?: ProductAdUpdateRequest;
+};
+
+/**
+ * POST /products/ads/[adId]/voice (Part V): read the ad in another voice,
+ * or in new words. Answers 202 `{ad}` with a "voice" run started, or 200 as
+ * it is when nothing changes.
+ */
+export type ProductAdVoiceRequest = {
+  /** The page's id for this press, so a repeat starts nothing twice. */
+  requestId: string;
+  voice: ProductAdVoiceMode;
+  /** With voice "stock": one of PRODUCT_AD_STOCK_VOICES' ids. */
+  stockVoiceId?: string;
 };
 
 export type ProductAdResponse = { ad: ProductAdRecord };

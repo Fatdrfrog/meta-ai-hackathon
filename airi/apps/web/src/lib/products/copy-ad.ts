@@ -3,14 +3,40 @@
 
 import {
   PRODUCT_AD_IDEA_MAX_LENGTH,
+  PRODUCT_AD_PLACE_WORDS_MAX,
   type ProductAdAdmissionStop,
+  type ProductAdEndingKind,
   type ProductAdErrorCode,
   type ProductAdIdeaKind,
+  type ProductAdOpeningKind,
+  type ProductAdPlaceRefusal,
   type ProductAdProductProblem,
+  type ProductAdRedoOutcome,
+  type ProductAdSetting,
   type ProductAdStatus,
   type ProductAdStep,
+  type ProductAdTextZone,
   type ProductAdVoice,
 } from "./types";
+
+const ZONE_NAMES: Record<ProductAdTextZone, string> = {
+  auto: "Auto",
+  top: "Top",
+  bottom: "Bottom",
+};
+
+/** A tested setting inside a sentence: "set the doll on a stone counter". */
+const settingsInline = {
+  oak_table_window: "an oak table by a window",
+  linen_shelf: "a linen shelf",
+  stone_counter: "a stone counter",
+  playroom_shelf: "a playroom shelf",
+  gift_table: "a gift table",
+} satisfies Record<ProductAdSetting, string>;
+
+/** "1 new picture", "8 new pictures". */
+const newPictures = (count: number) =>
+  count === 1 ? "1 new picture" : `${count} new pictures`;
 
 /** "Кукла Лол", "Кукла Лол and Кружка", "Кукла Лол, Кружка and Сағат". */
 const listOf = (names: readonly string[]) =>
@@ -23,6 +49,7 @@ const SPEND_STOPS: Record<ProductAdAdmissionStop, string> = {
   spend_limit: "Your company's AI spending limit has been reached",
   ai_actions_used: "Your plan's included AI actions are used up",
   trial_ended: "Your free trial has ended",
+  ai_disabled: "AI is turned off for your company",
 };
 
 export const AD_COPY = {
@@ -95,7 +122,7 @@ export const AD_COPY = {
     language: "Language",
     languageSpoken: (language: string) => `${language}, the language you spoke`,
     languageUnknown: "English: Airi couldn't tell the language you spoke",
-    cost: "1 AI action · about a minute · you can leave this page",
+    cost: "1 AI action · about 1-2 minutes · you can leave this page",
     make: "Make the ad",
     starting: "Starting…",
     letters: "Video ads support Latin and Cyrillic letters for now.",
@@ -117,6 +144,7 @@ export const AD_COPY = {
       spend_limit: `${SPEND_STOPS.spend_limit}, so an ad can't be made.`,
       ai_actions_used: `${SPEND_STOPS.ai_actions_used}, so an ad can't be made.`,
       trial_ended: `${SPEND_STOPS.trial_ended}, so an ad can't be made.`,
+      ai_disabled: `${SPEND_STOPS.ai_disabled}, so an ad can't be made.`,
       ad_unavailable: "The ad couldn't be started. Try again.",
       failed: "That didn't work. Try again.",
     },
@@ -261,7 +289,183 @@ export const AD_COPY = {
       } satisfies Record<ProductAdStep, string>,
       took: (parts: readonly string[]) => `Took ${parts.join(" · ")}`,
       cost: (usd: string) => `1 AI action · ${usd}`,
+      // One line per scene whose picture a "New picture" press made.
+      newPicturePlace: (place: string) =>
+        `Muse Spark read your place: “${place}”; Muse Image made it; Muse Spark checked it; SAM 3.1 framed it.`,
+      newPictureSetting: (name: string, setting: ProductAdSetting) =>
+        `Muse Image set the ${name} on ${settingsInline[setting]}; Muse Spark checked it; SAM 3.1 framed it.`,
     },
+
+    // The finished ad's tools (studio v2): openings and endings, scenes,
+    // and one free "Update the video" for every free change.
+    videoTag: (renderNo: number, seconds: number) =>
+      `Video ${renderNo} · ${Math.round(seconds)} s`,
+    updatingChip: "Updating",
+    openingTitle: "Opening words",
+    openingAbout:
+      "The sticker buyers read in the first second. Muse Spark wrote three kinds; pick one or write your own.",
+    openingAboutV1:
+      "The sticker buyers read in the first second. Change it, or keep it.",
+    openingKinds: {
+      news: "News",
+      question: "Question",
+      promise: "Promise",
+    } satisfies Record<ProductAdOpeningKind, string>,
+    endingTitle: "Ending",
+    endingAbout:
+      "What buyers do next. Airi adds the shop's name and WhatsApp under it.",
+    endingKinds: {
+      order: "Order",
+      ask: "Ask",
+      reserve: "Reserve",
+    } satisfies Record<ProductAdEndingKind, string>,
+    ownWordsOption: "Your own words",
+    ownOpeningLabel: "Your own opening words",
+    ownEndingLabel: "Your own ending words",
+    inVideoNow: "In the video now",
+    changed: "changed",
+    scenesTitle: "Scenes",
+    scenesAbout:
+      "A new picture is made by Muse Image and checked by Muse Spark to still show your product. If the check fails, the scene keeps its picture.",
+    scenesPick: "Scene to change",
+    sceneTab: (index: number, name: string) => `Scene ${index + 1} · ${name}`,
+    sceneOf: (index: number, count: number) => `Scene ${index + 1} of ${count}`,
+    badgeMuse: "Muse Image · checked by Muse Spark",
+    badgeMuseUnchecked: "Muse Image",
+    badgeExact: "Your exact photo",
+    pictureAlt: (name: string) => `The scene of ${name}`,
+    placeTitle: "Place",
+    settings: {
+      oak_table_window: "Oak table by a window",
+      linen_shelf: "Linen shelf",
+      stone_counter: "Stone counter",
+      playroom_shelf: "Playroom shelf",
+      gift_table: "Gift table",
+    } satisfies Record<ProductAdSetting, string>,
+    describePlace: "Describe a place",
+    placeNow: "now",
+    describeLabel: "Your place, in any language",
+    describeCount: (count: number) => `${count}/${PRODUCT_AD_PLACE_WORDS_MAX}`,
+    describeHelp:
+      "Muse Spark turns it into a scene. Places only: no people, words or logos.",
+    newPicture: "New picture",
+    // The paid gate measured 46-58 s in the job alone (2026-11-03).
+    newPictureNote: (left: number | null) =>
+      left === null
+        ? "About 1 minute · uses this ad's AI action"
+        : `About 1 minute · ${newPictures(left)} left on this ad`,
+    newPictureWhy: {
+      noneLeft: "No new pictures left on this ad",
+      busy: "One change at a time",
+      noPlace: "Choose a place first",
+      noWords: "Describe the place first",
+      fixLines: "Fix the lines in red first",
+    },
+    newPictureErrors: {
+      no_pictures_left: "This ad has no budget left for new pictures.",
+      ad_not_ready: "One change at a time: wait for this one to finish.",
+      invalid_request: "Some changes can't go in. Check the lines in red.",
+      product_not_found: "That product isn't in this ad any more.",
+      spend_limit: `${SPEND_STOPS.spend_limit}, so a new picture can't be made.`,
+      ai_actions_used: `${SPEND_STOPS.ai_actions_used}, so a new picture can't be made.`,
+      trial_ended: `${SPEND_STOPS.trial_ended}, so a new picture can't be made.`,
+      ai_disabled: `${SPEND_STOPS.ai_disabled}, so a new picture can't be made.`,
+      ad_unavailable: "The new picture couldn't be started. Try again.",
+      failed: "That didn't work. Try again.",
+    },
+    earlierTitle: "Earlier pictures",
+    earlierAbout: "Tap one to use it again. Free.",
+    earlierPicture: (index: number, place: string) =>
+      place ? `Picture ${index + 1}: ${place}` : `Picture ${index + 1}`,
+    zoneTitle: "Words on the picture",
+    zones: ZONE_NAMES,
+    coverHint: (name: string, zone: "top" | "bottom" | null) =>
+      zone
+        ? `The words cover the ${name}. ${ZONE_NAMES[zone]} keeps it clear.`
+        : `The words cover the ${name}.`,
+    moveWordsTo: (zone: "top" | "bottom") => `Use ${ZONE_NAMES[zone]}`,
+    exactToggle: "Use my exact photo here · free",
+    sceneSteps: {
+      reading: "Muse Spark is reading your place",
+      read: (place: string) => `Muse Spark read your place: “${place}”`,
+      image: (name: string) => `Muse Image is setting your ${name} there`,
+      check: (name: string) => `Muse Spark checks it's still your ${name}`,
+      frame: "SAM 3.1 frames it, then the video updates",
+    },
+    sceneStepsLabel: "How the new picture is going",
+    outcomes: {
+      new: () => "The new picture is in, and the video is updated.",
+      kept_check: (name: string) =>
+        `Muse Spark found the new picture changed your ${name}, so this scene keeps its picture.`,
+      place_refused: (reason: string) =>
+        `Muse Spark can't use this place: ${reason}. Describe a place only, with no people, words or logos.`,
+      image_refused: () => "Muse Image wouldn't make this place. Try another.",
+      no_budget: () => "This ad has no budget left for new pictures.",
+      unavailable: () => "Muse Image didn't answer. Try again in a minute.",
+      ai_disabled: () =>
+        "AI is turned off for your company, so a new picture can't be made.",
+    } satisfies Record<ProductAdRedoOutcome, (detail: string) => string>,
+    placeRefusals: {
+      people: "it has people in it",
+      text: "it asks for words or writing",
+      logo: "it asks for a logo",
+      brand: "it names a brand",
+      unclear: "it isn't clear what place it is",
+    } satisfies Record<ProductAdPlaceRefusal, string>,
+    placeRefusedOther: "it isn't a place it can set your product in",
+
+    // The update card: what isn't in the video yet, and the one free update.
+    pendingTitle: (count: number) =>
+      count === 1
+        ? "1 change isn't in the video yet"
+        : `${count} changes aren't in the video yet`,
+    pendingBar: (count: number) =>
+      count === 1 ? "1 change" : `${count} changes`,
+    update: "Update the video",
+    updateNote: "Free · about 20 s · no AI used",
+    undoAll: "Undo all",
+    updating: (clock: string) => `Updating the video… ${clock}`,
+    makingPicture: (clock: string) => `Making a new picture… ${clock}`,
+    waitForUpdate: "Wait for this update to finish",
+    oneAtATime: "One change at a time",
+    rideAlong:
+      "The video updates with the new picture, and with any changes you made before it.",
+    updateFailed: (reason: string) =>
+      `The video couldn't be updated: ${reason}. Your earlier video is still here.`,
+    changes: {
+      opening: (text: string) => `Opening: ${text}`,
+      ending: (text: string) => `Ending: ${text}`,
+      priceCardTitle: (text: string) => `Title of the price card: ${text}`,
+      caption: (name: string) => `${name}: caption`,
+      zone: (name: string, zone: ProductAdTextZone) =>
+        zone === "auto"
+          ? `${name}: words placed by Airi`
+          : `${name}: words at the ${zone}`,
+      exact: (name: string, on: boolean) =>
+        on ? `${name}: your exact photo` : `${name}: Muse Image's picture`,
+      picture: (name: string) => `${name}: an earlier picture`,
+    },
+    updateErrors: {
+      ad_not_ready: "One change at a time: wait for this one to finish.",
+      invalid_request: "Some changes can't go in. Check the lines in red.",
+      ad_unavailable: "The video couldn't be updated. Try again.",
+      failed: "That didn't work. Try again.",
+    },
+    aiTitle: "AI on this ad",
+    aiWords: (withOptions: boolean) =>
+      withOptions
+        ? "Muse Spark wrote the words, 3 openings and 3 endings"
+        : "Muse Spark wrote the words",
+    aiPictures: (count: number) =>
+      count === 0
+        ? "Your exact photos: no AI pictures"
+        : count === 1
+          ? "Muse Image made 1 picture, checked by Muse Spark"
+          : `Muse Image made ${count} pictures, each checked by Muse Spark`,
+    aiFraming: "SAM 3.1 framed them",
+    aiPicturesLeft: (left: number) =>
+      `${newPictures(left)} left · all in this ad's one AI action`,
+    aiPicturesMeter: "New pictures left on this ad",
 
     // Failed.
     failed: (reason: string) => `The ad couldn't be made: ${reason}.`,
@@ -272,6 +476,7 @@ export const AD_COPY = {
       photo_missing: "a product's photo is no longer in your media storage",
       too_big: "the video stayed over WhatsApp's 16 MB, even made smaller",
       failed: "something went wrong while making it",
+      ai_disabled: "AI is turned off for your company",
     } satisfies Record<ProductAdErrorCode, string>,
     failedChip: "Couldn't be made",
     tryAgain: "Try again",
@@ -281,6 +486,7 @@ export const AD_COPY = {
       spend_limit: `${SPEND_STOPS.spend_limit}, so it can't be made again.`,
       ai_actions_used: `${SPEND_STOPS.ai_actions_used}, so it can't be made again.`,
       trial_ended: `${SPEND_STOPS.trial_ended}, so it can't be made again.`,
+      ai_disabled: `${SPEND_STOPS.ai_disabled}, so it can't be made again.`,
       ad_unavailable: "It couldn't be started. Try again.",
       failed: "That didn't work. Try again.",
     },
@@ -292,6 +498,7 @@ export const AD_COPY = {
       ready: "The ad is ready.",
       failed: "The ad couldn't be made.",
     } satisfies Record<ProductAdStatus, string>,
+    announceUpdating: "The video is being updated.",
 
     // Opening an ad.
     loading: "Loading the ad…",

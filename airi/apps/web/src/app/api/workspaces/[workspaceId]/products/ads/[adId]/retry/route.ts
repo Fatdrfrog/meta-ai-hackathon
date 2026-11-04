@@ -17,8 +17,10 @@ type Context = { params: Promise<{ workspaceId: string; adId: string }> };
 /**
  * "Try again" on a failed ad: 202 with the ad, a new run resuming it that
  * reuses the pictures already made. 409 when the workspace can't pay for AI
- * now (trial_ended, spend_limit, ai_actions_used). An ad that isn't failed
- * answers 200 as it is.
+ * now (trial_ended, spend_limit, ai_actions_used). On a ready ad whose
+ * latest "Update the video" or "New picture" failed, 202 with the video
+ * being made again from what's saved, for free. Any other ad answers 200 as
+ * it is.
  */
 export async function POST(_request: Request, { params }: Context) {
   const { workspaceId, adId } = await params;

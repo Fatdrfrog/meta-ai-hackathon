@@ -254,7 +254,8 @@ export type ProductAdStep = (typeof PRODUCT_AD_STEPS)[number];
  * Why an ad failed, as a code the studio explains. The spending refusals are
  * the import's own: an ad already running finishes with exact photos instead.
  * photo_missing: a product's photo is gone from storage. too_big: the video
- * stayed over WhatsApp's 16 MB at the smallest size.
+ * stayed over WhatsApp's 16 MB at the smallest size. ai_disabled: the
+ * company turned AI off (main's workspace_ai_disabled); a retry can't help.
  */
 export const PRODUCT_AD_ERROR_CODES = [
   "spend_limit",
@@ -263,6 +264,7 @@ export const PRODUCT_AD_ERROR_CODES = [
   "photo_missing",
   "too_big",
   "failed",
+  "ai_disabled",
 ] as const;
 export type ProductAdErrorCode = (typeof PRODUCT_AD_ERROR_CODES)[number];
 
@@ -347,9 +349,23 @@ export type ProductAdScript = {
     productId: string;
     caption: string;
     setting: ProductAdSetting;
+    /**
+     * What the voice-over says over this scene, in the ad's language, for
+     * "Your voice, new words" and "Airi voices" (Part V). A price in it is
+     * written by code from the shelf, never by the model. Absent on ads
+     * written before it.
+     */
+    spoken?: string;
   }>;
   priceCardTitle: string;
   ending: string;
+  /**
+   * Muse Spark's openings to choose from, one per kind; `sticker` is the one
+   * in the video. 0 to 3; absent on ads written before them.
+   */
+  openings?: ProductAdOption<ProductAdOpeningKind>[];
+  /** Muse Spark's endings to choose from, one per kind; `ending` is the one in the video. */
+  endings?: ProductAdOption<ProductAdEndingKind>[];
   /** The post text's opening, before the code's price lines. */
   postIntro: string;
   /** Click-to-WhatsApp ad copy. */
@@ -380,6 +396,24 @@ export type ProductAdStoredScene = {
   box: ProductAdBox | null;
   /** Muse Image calls made for it so far. */
   attempts: number;
+  // v2's creative tools; every one optional, so ads made before them read
+  // as their defaults.
+  /** Where the words sit on the picture; "auto" (v1's placement) when absent. */
+  textZone?: ProductAdTextZone;
+  /** "Use my exact photo here": the exact still renders instead of Muse Image's scene. */
+  useExact?: boolean;
+  /** The product's box in the exact still; recomputed from the cut-out when absent. */
+  exactBox?: ProductAdBox | null;
+  /** Muse Image pictures that passed the check, newest last, at most PRODUCT_AD_PICTURES_KEPT. */
+  pictures?: ProductAdScenePicture[];
+  /** The place the scene's picture was asked for. */
+  place?: ProductAdScenePlace;
+  /** Muse Image calls this scene may make in all; PRODUCT_AD_MAX_SCENE_ATTEMPTS when absent. */
+  allowance?: number;
+  /** The latest "New picture" press; null or absent when there was none. */
+  redo?: ProductAdSceneRedo | null;
+  /** Whether the latest render's words cover the product, for the Top/Bottom hint. */
+  textOverlap?: ProductAdTextOverlap | null;
 };
 
 /** The Status picture (9:16) and the 4:5 ad picture, kept as soon as each exists. */
@@ -406,3 +440,282 @@ export type ProductAdStepTiming = { startedAt: Date; finishedAt: Date | null };
 export type ProductAdTimings = Partial<
   Record<ProductAdStep, ProductAdStepTiming>
 >;
+
+// ---------------------------------------------------------------------------
+// Studio v2: the ad's creative tools and its voices. Every field below is
+// optional on the stored ad, so ads made before v2 keep working, and the
+// workflow and activity contracts stay at version 1: a scene or voice run is
+// a "make" run, a words run a "render" run, and the ad's `runKind` says which.
+
+/**
+ * What a run of the ad does. make: the first video (or a retry of a failed
+ * one). render: the free "Update the video" (the words, their place, the
+ * exact photo, an earlier picture), with no model call. scene: "New
+ * picture" for one scene, paying only for that scene. voice: the voice-over
+ * again in another voice or new words, paying only for the text-to-speech.
+ * render, scene and voice are edit runs: one that fails leaves the ad ready
+ * with its earlier video (`lastRun` says why), never failed.
+ */
+export const PRODUCT_AD_RUN_KINDS = [
+  "make",
+  "render",
+  "scene",
+  "voice",
+] as const;
+export type ProductAdRunKind = (typeof PRODUCT_AD_RUN_KINDS)[number];
+
+/** Where a scene's words sit: auto (v1's placement), or forced to the top or bottom band. */
+export const PRODUCT_AD_TEXT_ZONES = ["auto", "top", "bottom"] as const;
+export type ProductAdTextZone = (typeof PRODUCT_AD_TEXT_ZONES)[number];
+
+/** The kinds of opening Muse Spark writes, one of each. */
+export const PRODUCT_AD_OPENING_KINDS = [
+  "news",
+  "question",
+  "promise",
+] as const;
+export type ProductAdOpeningKind = (typeof PRODUCT_AD_OPENING_KINDS)[number];
+
+/** The kinds of ending Muse Spark writes, one of each. */
+export const PRODUCT_AD_ENDING_KINDS = ["order", "ask", "reserve"] as const;
+export type ProductAdEndingKind = (typeof PRODUCT_AD_ENDING_KINDS)[number];
+
+/** Openings (and endings) one script offers at most. */
+export const PRODUCT_AD_OPTIONS_MAX = 3;
+
+/**
+ * One of Muse Spark's openings or endings: the text in the ad's language,
+ * its kind, and an English gloss for the owner ("New pieces have arrived").
+ */
+export type ProductAdOption<K extends string> = {
+  text: string;
+  kind: K;
+  gloss: string;
+};
+
+/**
+ * How a "New picture" press ended. new: the new picture is in. kept_check:
+ * Muse Spark found it changed the product. place_refused: Muse Spark
+ * wouldn't use the described place. image_refused: Muse Image wouldn't make
+ * it. no_budget: the ad's AI action had no room left. unavailable: a Meta
+ * model didn't answer. ai_disabled: the company turned AI off while the run
+ * went. In every case but new, the scene keeps its picture.
+ */
+export const PRODUCT_AD_REDO_OUTCOMES = [
+  "new",
+  "kept_check",
+  "place_refused",
+  "image_refused",
+  "no_budget",
+  "unavailable",
+  "ai_disabled",
+] as const;
+export type ProductAdRedoOutcome = (typeof PRODUCT_AD_REDO_OUTCOMES)[number];
+
+/** Why Muse Spark refused a described place, as `redo.reason` holds it. */
+export const PRODUCT_AD_PLACE_REFUSALS = [
+  "people",
+  "text",
+  "logo",
+  "brand",
+  "unclear",
+] as const;
+export type ProductAdPlaceRefusal = (typeof PRODUCT_AD_PLACE_REFUSALS)[number];
+
+/** The longest place the owner may describe, in characters, after trimming. */
+export const PRODUCT_AD_PLACE_WORDS_MAX = 80;
+
+/** Muse Image pictures a scene keeps to pick again for free. */
+export const PRODUCT_AD_PICTURES_KEPT = 4;
+
+/** Muse Image calls a scene may make before any "New picture" press (v1's MAX_SCENE_ATTEMPTS). */
+export const PRODUCT_AD_MAX_SCENE_ATTEMPTS = 2;
+
+/** Muse Image tries one "New picture" press adds to the scene's allowance. */
+export const PRODUCT_AD_REDO_ATTEMPTS = 2;
+
+/** Muse Spark reading a described place: one short JSON call. */
+export const PRODUCT_AD_PLACE_MAX_COST_MICROS = 5_000;
+
+/**
+ * The most one "New picture" press may cost: the place (5 000), two Muse
+ * Image tries each with Muse Spark's check (2 x (10 000 + 10 000)) and SAM's
+ * framing (2 500). The studio's "{n} new pictures left" divides the ad's
+ * room by it.
+ */
+export const PRODUCT_AD_NEW_PICTURE_MAX_MICROS = 47_500;
+
+/** A Muse Image picture a scene kept, to pick again for free. */
+export type ProductAdScenePicture = {
+  ref: ProductAdFileRef;
+  /** SAM 3.1's box of the product in it; null when framing failed. */
+  box: ProductAdBox | null;
+  /** The place it was made in, in English, for the studio's lines. */
+  place: string;
+  madeAt: Date;
+};
+
+/**
+ * The place a scene's picture was asked for: one of the tested settings, or
+ * the owner's own words with Muse Spark's English reading of them (null
+ * until read, or when refused).
+ */
+export type ProductAdScenePlace = {
+  setting: ProductAdSetting | null;
+  words: string | null;
+  englishPlace: string | null;
+};
+
+/**
+ * A "New picture" press on a scene: the render it runs in, what the scene
+ * was before it (restored when the press doesn't end in a new picture), and
+ * how it ended (null while it runs).
+ */
+export type ProductAdSceneRedo = {
+  requestId: string;
+  renderNo: number;
+  from: {
+    muse: ProductAdFileRef | null;
+    box: ProductAdBox | null;
+    method: ProductAdSceneMethod;
+    check: ProductAdStoredScene["check"];
+    /**
+     * The setting the replaced picture was made in, as the script had it
+     * before the press (which writes the pressed chip there): what an ad
+     * from before v2 names its first picture by. Absent on older presses.
+     */
+    setting?: ProductAdSetting | null;
+  };
+  outcome: ProductAdRedoOutcome | null;
+  /** Muse Spark's refusal kind for a described place, in English; null otherwise. */
+  reason: string | null;
+  /**
+   * The scene's Muse Image allowance this press raised it to, set by the
+   * worker once as the press's run starts, so a retried attempt never
+   * raises it twice; absent until then.
+   */
+  allowance?: number;
+};
+
+/**
+ * Whether the rendered words cover the product (more than 4% of its box),
+ * and the band that would keep it clear; null suggests nothing better.
+ */
+export type ProductAdTextOverlap = {
+  covers: boolean;
+  suggested: "top" | "bottom" | null;
+};
+
+/**
+ * How the ad's latest finished run went, for the update card: an edit run
+ * that failed leaves the ad ready with its earlier video and says why here.
+ */
+export type ProductAdLastRun = {
+  renderNo: number;
+  kind: ProductAdRunKind;
+  outcome: "ready" | "failed";
+  errorCode: ProductAdErrorCode | null;
+  /** The failure in words, for support; not shown to the owner. */
+  message: string | null;
+  at: Date;
+};
+
+// Voices (Part V). The ad's `voice` takes one of these modes; v1's
+// PRODUCT_AD_VOICES ("own", "none") stays the subset ads were made with
+// before them.
+
+/**
+ * own: "Your recording", the owner's polished clips from the video (v1).
+ * clone: "Your voice, new words", the script's spoken lines read by the
+ * workspace's ElevenLabs clone of the owner (made only after their consent).
+ * stock: "Airi voices", read by one of airi's curated ElevenLabs voices
+ * (`stockVoiceId`). none: silent.
+ */
+export const PRODUCT_AD_VOICE_MODES = [
+  "own",
+  "clone",
+  "stock",
+  "none",
+] as const;
+export type ProductAdVoiceMode = (typeof PRODUCT_AD_VOICE_MODES)[number];
+
+/**
+ * Why a render's voice-over wasn't the new words asked for, so it fell back
+ * to the recording (or silence without one). no_voice: no cloned voice for
+ * the workspace, or an unknown Airi voice. unavailable: ElevenLabs didn't
+ * answer or isn't set up. spend_refused: the ad's AI action had no room.
+ * price_unchecked: a spoken price didn't read back as the shelf's. too_long:
+ * the lines didn't fit the ad's length.
+ */
+export const PRODUCT_AD_VOICE_FALLBACKS = [
+  "no_voice",
+  "unavailable",
+  "spend_refused",
+  "price_unchecked",
+  "too_long",
+] as const;
+export type ProductAdVoiceFallback =
+  (typeof PRODUCT_AD_VOICE_FALLBACKS)[number];
+
+/**
+ * The voice-over a render read in new words, kept so a later render with
+ * the same voice and words reuses it instead of paying again.
+ */
+export type ProductAdVoiceOver = {
+  mode: "clone" | "stock";
+  /** ElevenLabs' id of the voice that read it. */
+  voiceId: string;
+  /** The ElevenLabs model that read it. */
+  modelId: string;
+  /** One line per product's scene, in the ad's order. */
+  lines: Array<{
+    productId: string;
+    /** The words read, prices written in by code. */
+    text: string;
+    audio: ProductAdFileRef;
+    seconds: number;
+  }>;
+  /** The voice and the words it read, hashed: a render with the same key reuses it. */
+  key: string;
+  /** What reading it cost, in millionths of a US dollar. */
+  costMicros: number;
+  madeAt: Date;
+};
+
+/** What the latest video's voice was, when the ad asked for new words. */
+export type ProductAdVoiceResult = {
+  used: ProductAdVoiceMode;
+  /** Why it isn't the voice asked for; null when it is. */
+  fallback: ProductAdVoiceFallback | null;
+};
+
+/**
+ * A workspace's cloned voice (product_voices): pending while it's made from
+ * the owner's video, ready to read ads, failed (`errorCode` says why), or
+ * removed (deleted at ElevenLabs by "Remove my voice").
+ */
+export const PRODUCT_VOICE_STATES = [
+  "pending",
+  "ready",
+  "failed",
+  "removed",
+] as const;
+export type ProductVoiceState = (typeof PRODUCT_VOICE_STATES)[number];
+
+/**
+ * Why a voice couldn't be cloned. too_little_speech: the video's narration
+ * had under PRODUCT_VOICE_MIN_SPEECH_SECONDS of clear speech. no_source:
+ * the video or its sound is gone. clone_failed: ElevenLabs refused or
+ * didn't answer. spend_refused: the AI ledger refused the cost.
+ */
+export const PRODUCT_VOICE_ERROR_CODES = [
+  "too_little_speech",
+  "no_source",
+  "clone_failed",
+  "spend_refused",
+] as const;
+export type ProductVoiceErrorCode = (typeof PRODUCT_VOICE_ERROR_CODES)[number];
+
+/** Clear speech a clone needs at least, and takes at most, in seconds. */
+export const PRODUCT_VOICE_MIN_SPEECH_SECONDS = 20;
+export const PRODUCT_VOICE_MAX_SPEECH_SECONDS = 120;

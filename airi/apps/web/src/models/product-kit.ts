@@ -9,6 +9,8 @@ import {
   type ProductKitPartErrorCode,
   type ProductShopWordsCode,
 } from "@/lib/products/types";
+import type { WhatsAppFlowConfig } from "@icecore/scenario-contracts";
+import type { WhatsAppComponent } from "@icecore/shared/types/whatsapp";
 
 /** Why a part wasn't made; `message` is Meta's own words for a refusal. */
 export type ProductKitStoredError = {
@@ -24,6 +26,27 @@ export type ProductKitPrice = {
   priceIsFrom: boolean;
 };
 
+/** A template an earlier send left at Meta, before "Edit and send again" sent a new one. */
+export type ProductKitStoredEarlierTemplate = {
+  templateId?: string | null;
+  templateName?: string | null;
+  metaStatus?: string | null;
+  replacedAt: Date;
+};
+
+/** A Flow an earlier version published, before "Edit order form" published a new one. */
+export type ProductKitStoredEarlierFlow = {
+  flowId?: string | null;
+  flowName?: string | null;
+  replacedAt: Date;
+};
+
+/** The most earlier templates or Flows a part remembers. */
+export const PRODUCT_KIT_EARLIER_MAX = 10;
+
+/** The biggest edited carousel a kit keeps, as JSON: checked before it's saved. */
+export const PRODUCT_KIT_COMPONENTS_MAX_BYTES = 16 * 1024;
+
 /** The order form: a WhatsApp Flow, published when Meta takes it. */
 export interface IProductKitOrderFormPart {
   state: ProductKitOrderFormState;
@@ -35,6 +58,16 @@ export interface IProductKitOrderFormPart {
   error?: ProductKitStoredError | null;
   /** When this part last changed: one "making" too long has timed out. */
   updatedAt: Date;
+  // Studio v2: editing. All optional: kits from before read as not edited, version 1.
+  /** The questions as sent; absent for kits from before v2. */
+  config?: WhatsAppFlowConfig | null;
+  /** Whether `config` is the owner's edit rather than the shelf's. */
+  edited?: boolean;
+  /** 1 for the form Make published; one more per "Edit order form" on a ready one. */
+  version?: number;
+  earlier?: ProductKitStoredEarlierFlow[];
+  /** The latest edit's request id: a repeat of it returns the kit as it is. */
+  lastEditRequestId?: string | null;
 }
 
 /** The carousel: a marketing template sent to Meta for review. */
@@ -58,6 +91,17 @@ export interface IProductKitCarouselPart {
   checkedAt?: Date | null;
   error?: ProductKitStoredError | null;
   updatedAt: Date;
+  // Studio v2: editing. All optional: kits from before read as not edited.
+  /**
+   * The template components as sent, at most PRODUCT_KIT_COMPONENTS_MAX_BYTES
+   * as JSON; absent for kits from before v2.
+   */
+  components?: WhatsAppComponent[] | null;
+  /** Whether `components` are the owner's edit rather than the shelf's. */
+  edited?: boolean;
+  earlier?: ProductKitStoredEarlierTemplate[];
+  /** The latest edit's request id: a repeat of it returns the kit as it is. */
+  lastEditRequestId?: string | null;
 }
 
 /**
@@ -111,6 +155,32 @@ const PriceSchema = new mongoose.Schema<ProductKitPrice>(
   { _id: false }
 );
 
+const EarlierTemplateSchema =
+  new mongoose.Schema<ProductKitStoredEarlierTemplate>(
+    {
+      templateId: { type: String, default: null },
+      templateName: { type: String, maxlength: 512, default: null },
+      metaStatus: { type: String, maxlength: 40, default: null },
+      replacedAt: { type: Date, required: true },
+    },
+    { _id: false }
+  );
+
+const EarlierFlowSchema = new mongoose.Schema<ProductKitStoredEarlierFlow>(
+  {
+    flowId: { type: String, default: null },
+    flowName: { type: String, maxlength: 200, default: null },
+    replacedAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+const atMostEarlier = {
+  validator: (entries: unknown[] | undefined) =>
+    !entries || entries.length <= PRODUCT_KIT_EARLIER_MAX,
+  message: `A kit part remembers at most ${PRODUCT_KIT_EARLIER_MAX} earlier sends`,
+};
+
 const OrderFormPartSchema = new mongoose.Schema<IProductKitOrderFormPart>(
   {
     state: {
@@ -124,6 +194,15 @@ const OrderFormPartSchema = new mongoose.Schema<IProductKitOrderFormPart>(
     prices: { type: [PriceSchema], default: undefined },
     error: { type: PartErrorSchema, default: null },
     updatedAt: { type: Date, required: true },
+    config: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    edited: { type: Boolean, default: undefined },
+    version: { type: Number, min: 1, default: undefined },
+    earlier: {
+      type: [EarlierFlowSchema],
+      default: undefined,
+      validate: atMostEarlier,
+    },
+    lastEditRequestId: { type: String, maxlength: 64, default: undefined },
   },
   { _id: false }
 );
@@ -143,6 +222,14 @@ const CarouselPartSchema = new mongoose.Schema<IProductKitCarouselPart>(
     checkedAt: { type: Date, default: null },
     error: { type: PartErrorSchema, default: null },
     updatedAt: { type: Date, required: true },
+    components: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    edited: { type: Boolean, default: undefined },
+    earlier: {
+      type: [EarlierTemplateSchema],
+      default: undefined,
+      validate: atMostEarlier,
+    },
+    lastEditRequestId: { type: String, maxlength: 64, default: undefined },
   },
   { _id: false }
 );

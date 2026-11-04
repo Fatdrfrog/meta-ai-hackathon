@@ -48,6 +48,13 @@ async function trialEnded(workspaceId: string): Promise<boolean> {
  * workspace that can't pay for platform AI can't import.
  */
 export const productImportSpend = {
+  /**
+   * The guard for provider work no reservation covers: a voice clone, a
+   * voice sample. airi.chat re-reads its company-wide AI switch here and
+   * throws once it's off; this copy of airi has no such switch, so there is
+   * nothing to check.
+   */
+  async assertAiEnabled(_workspaceId: string): Promise<void> {},
   /** The workspace's allowance as projected now; unlike a reservation, it admits no action. */
   async allowance(workspaceId: string) {
     const { getWorkspaceTextAiAllowance } = await import(

@@ -1,5 +1,7 @@
 import {
   carouselVerdict,
+  kitPartBusy,
+  kitPartCanEdit,
   kitPartCanRetry,
   productKitStatus,
 } from "./kit-status";
@@ -106,5 +108,38 @@ describe("kitPartCanRetry", () => {
     ).toBe(false);
     expect(kitPartCanRetry("carousel", { state: "skipped" })).toBe(false);
     expect(kitPartCanRetry("carousel", null)).toBe(false);
+  });
+});
+
+describe("kitPartCanEdit", () => {
+  it("edits a carousel with Meta in any verdict, or one that wasn't made", () => {
+    for (const metaStatus of [
+      "PENDING",
+      "APPROVED",
+      "REJECTED",
+      "PAUSED",
+      null,
+    ])
+      expect(
+        kitPartCanEdit("carousel", { state: "submitted", metaStatus })
+      ).toBe(true);
+    expect(kitPartCanEdit("carousel", { state: "failed" })).toBe(true);
+  });
+
+  it("edits a published form (a new version), a draft, or one that wasn't made", () => {
+    for (const state of ["ready", "draft", "failed"])
+      expect(kitPartCanEdit("orderForm", { state })).toBe(true);
+  });
+
+  it("waits while a part is made or looked for, and never edits a skipped or missing part", () => {
+    expect(kitPartCanEdit("carousel", { state: "making" })).toBe(false);
+    expect(kitPartCanEdit("carousel", { state: "checking" })).toBe(false);
+    expect(kitPartCanEdit("carousel", { state: "skipped" })).toBe(false);
+    expect(kitPartCanEdit("orderForm", { state: "making" })).toBe(false);
+    expect(kitPartCanEdit("orderForm", { state: "skipped" })).toBe(false);
+    expect(kitPartCanEdit("orderForm", null)).toBe(false);
+    expect(kitPartBusy({ state: "checking" })).toBe(true);
+    expect(kitPartBusy({ state: "making" })).toBe(true);
+    expect(kitPartBusy({ state: "failed" })).toBe(false);
   });
 });

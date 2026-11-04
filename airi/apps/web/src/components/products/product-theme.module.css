@@ -148,6 +148,19 @@
   color: var(--p-ink);
 }
 
+/*
+ * The scrim behind a Products dialog: the paper's own ink, never black. It
+ * sits outside .theme (the overlay is the dialog's sibling), so its colour
+ * is written here; doubled for the specificity over airi's bg-black/50.
+ */
+.scrim.scrim {
+  background: rgb(36 30 26 / 0.34);
+}
+
+:global(.dark) .scrim.scrim {
+  background: rgb(20 18 16 / 0.6);
+}
+
 /* Dark: elevation, not blackness. */
 :global(.dark) .theme {
   --p-paper: #141210;

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   productAdLettersSupported,
   productAdLines,
+  productAdOptionIssues,
   productAdScriptIssues,
   productAdShopName,
   productAdTextIssues,
@@ -202,4 +203,38 @@ test("a scene's setting is one of the places Muse Image knows", () => {
   assert.deepEqual(issues, [
     "scenes[1].setting must be one of oak_table_window, linen_shelf, stone_counter, playroom_shelf, gift_table.",
   ]);
+});
+
+test("openings and endings pass the words' own checks, one of each kind, at most three", () => {
+  const limit = PRODUCT_AD_TEXT_LIMITS.sticker;
+  assert.deepEqual(
+    productAdOptionIssues(
+      "openings",
+      [
+        { text: "Сөреде жаңа тауар", kind: "news", gloss: "New on the shelf" },
+        {
+          text: "Сыйлық іздейсіз бе?",
+          kind: "question",
+          gloss: "Looking for a gift?",
+        },
+      ],
+      limit,
+    ),
+    [],
+  );
+  const issues = productAdOptionIssues(
+    "openings",
+    [
+      { text: "5000 ₸ ғана", kind: "news", gloss: "Only 5000" },
+      { text: "Жаңа", kind: "news", gloss: "New" },
+      { text: "Жаңа", kind: "question", gloss: "New" },
+      { text: "Жаңа", kind: "promise", gloss: "New" },
+    ],
+    limit,
+  );
+  assert.ok(
+    issues.some((issue) => issue.startsWith("openings[0] has a digit")),
+  );
+  assert.ok(issues.includes("openings must hold at most 3."));
+  assert.ok(issues.includes("openings must each be of a different kind."));
 });

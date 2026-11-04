@@ -147,6 +147,28 @@
   gap: 8px;
 }
 
+/* A part's tile: the tick (a label), and under a hairline its edit row. */
+.part {
+  display: grid;
+  align-content: start;
+  border-radius: var(--p-r-tile);
+  background: var(--p-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--p-line),
+    var(--p-shadow-control);
+  transition: box-shadow var(--p-dur-fast) var(--p-ease-out);
+}
+
+.part:has(input:checked) {
+  box-shadow:
+    inset 0 0 0 1.5px var(--p-pick-line),
+    var(--p-shadow-control);
+}
+
+.part[data-disabled] {
+  background: var(--p-sunk);
+}
+
 .toggle {
   position: relative;
   display: grid;
@@ -155,23 +177,58 @@
   gap: 12px;
   padding: 14px;
   border-radius: var(--p-r-tile);
-  background: var(--p-raised);
-  box-shadow:
-    inset 0 0 0 1px var(--p-line),
-    var(--p-shadow-control);
   cursor: pointer;
-  transition: box-shadow var(--p-dur-fast) var(--p-ease-out);
-}
-
-.toggle:has(input:checked) {
-  box-shadow:
-    inset 0 0 0 1.5px var(--p-pick-line),
-    var(--p-shadow-control);
 }
 
 .toggle[data-disabled] {
-  background: var(--p-sunk);
   cursor: not-allowed;
+}
+
+/* Edit cards / Edit questions, then "Edited" and Reset once saved. */
+.editRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 14px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--p-line);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.editActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.resetQuestion {
+  flex-basis: 100%;
+  color: var(--p-ink);
+  text-wrap: pretty;
+}
+
+/* Asks before a language or product change starts the edits again. */
+.confirm {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  max-width: 60ch;
+  padding: 12px 14px;
+  border-radius: var(--p-r-tile);
+  background: var(--p-accent-wash);
+  box-shadow: inset 0 0 0 1px var(--p-accent-line);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-ink);
+  text-wrap: pretty;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .toggleText {
@@ -370,6 +427,14 @@
   text-wrap: pretty;
 }
 
+.partNote {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-ink-2);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
 .partActions {
   display: flex;
   flex-wrap: wrap;
@@ -483,7 +548,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toggle {
+  .part {
     transition: none;
   }
 }

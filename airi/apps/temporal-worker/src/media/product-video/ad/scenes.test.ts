@@ -7,9 +7,12 @@ import sharp from "sharp";
 
 import { AD_FRAME, coverCrop, placeSceneText, REELS_SAFE } from "./layout";
 import {
+  framePicture,
   frameScene,
+  keepPicture,
   makeMuseScene,
   MAX_SCENE_ATTEMPTS,
+  placeName,
   scenePrompt,
   wholeProductBox,
   type SceneDeps,
@@ -122,7 +125,11 @@ function models(answers: {
 }
 
 test("the scene prompt places the product in its setting and keeps the top third empty", () => {
-  const prompt = scenePrompt("playroom_shelf", "blonde doll", null);
+  const prompt = scenePrompt(
+    { setting: "playroom_shelf" },
+    "blonde doll",
+    null,
+  );
   assert.match(
     prompt,
     /Place this exact blonde doll unchanged on a white shelf in a bright children's playroom/,
@@ -144,7 +151,11 @@ test("the scene prompt places the product in its setting and keeps the top third
   assert.match(prompt, /Add no text, prices/);
   assert.doesNotMatch(prompt, /last picture/);
   assert.match(
-    scenePrompt("gift_table", "doll", "The dress is red, not blue."),
+    scenePrompt(
+      { setting: "gift_table" },
+      "doll",
+      "The dress is red, not blue.",
+    ),
     /The last picture changed the product: The dress is red, not blue\. Keep that exactly/,
   );
 });
@@ -158,7 +169,7 @@ test("a scene that passes the check is kept: one Muse Image and one Muse Spark c
   const { saves, stored, job: sceneJob } = job(deps, paid);
   const outcome = await makeMuseScene(
     await product(),
-    "playroom_shelf",
+    { setting: "playroom_shelf" },
     fresh(),
     sceneJob,
   );
@@ -187,7 +198,7 @@ test("a refusal leaves the exact still, with no check and no retry", async () =>
   const { stored, job: sceneJob } = job(deps, paid);
   const outcome = await makeMuseScene(
     await product(),
-    "gift_table",
+    { setting: "gift_table" },
     fresh(),
     sceneJob,
   );
@@ -214,7 +225,7 @@ test("a mismatch gets one retry with the difference named, then the exact still"
   const { stored, job: sceneJob } = job(deps, paid);
   const outcome = await makeMuseScene(
     await product(),
-    "oak_table_window",
+    { setting: "oak_table_window" },
     fresh(),
     sceneJob,
   );
@@ -249,7 +260,7 @@ test("a mismatch, then a scene that passes: the second is used", async () => {
   const { stored, job: sceneJob } = job(deps, paid);
   const outcome = await makeMuseScene(
     await product(),
-    "playroom_shelf",
+    { setting: "playroom_shelf" },
     fresh(),
     sceneJob,
   );
@@ -266,7 +277,7 @@ test("an outage counts as a try; the next one may pass", async () => {
   const { operations, paid } = ledger();
   const outcome = await makeMuseScene(
     await product(),
-    "linen_shelf",
+    { setting: "linen_shelf" },
     fresh(),
     job(deps, paid).job,
   );
@@ -285,7 +296,7 @@ test("a reservation the ledger refuses leaves the exact still and says so", asyn
   );
   const outcome = await makeMuseScene(
     await product(),
-    "stone_counter",
+    { setting: "stone_counter" },
     fresh(),
     job(deps, paid).job,
   );
@@ -299,7 +310,7 @@ test("a retried run pays for nothing saved: a kept scene, or the tries used up",
   const { operations, paid } = ledger();
   const kept = await makeMuseScene(
     await product(),
-    "playroom_shelf",
+    { setting: "playroom_shelf" },
     {
       ...fresh(),
       method: "muse",
@@ -311,7 +322,7 @@ test("a retried run pays for nothing saved: a kept scene, or the tries used up",
   assert.equal(kept.scene.method, "muse");
   const usedUp = await makeMuseScene(
     await product(),
-    "playroom_shelf",
+    { setting: "playroom_shelf" },
     {
       ...fresh(),
       attempts: MAX_SCENE_ATTEMPTS,
@@ -330,7 +341,7 @@ test("a retried run pays for nothing saved: a kept scene, or the tries used up",
   const resumed = ledger();
   await makeMuseScene(
     await product(),
-    "playroom_shelf",
+    { setting: "playroom_shelf" },
     {
       ...fresh(),
       attempts: 1,
@@ -434,4 +445,150 @@ test("a box SAM drew round part of the product grows up to the cut-out's whole s
   );
   // Never past the picture's top.
   assert.equal(wholeProductBox(box, size, { width: 100, height: 1000 }).y, 0);
+});
+
+test("a described place goes in the prompt as the setting it is; a tested one keeps v1's words", () => {
+  const described = scenePrompt(
+    { englishPlace: "a felt rug inside a yurt" },
+    "blonde doll",
+    null,
+  );
+  assert.match(
+    described,
+    /Place this exact blonde doll unchanged in this setting: a felt rug inside a yurt, in soft daylight/,
+  );
+  assert.match(
+    scenePrompt({ setting: "stone_counter" }, "cup", null),
+    /unchanged on a pale stone counter, in soft daylight from the left\./,
+  );
+  assert.equal(placeName({ setting: "stone_counter" }), "a pale stone counter");
+  assert.equal(
+    placeName({ englishPlace: "a felt rug inside a yurt" }),
+    "a felt rug inside a yurt",
+  );
+});
+
+test("a raised allowance buys more tries, numbered on from the scene's last", async () => {
+  const { deps, prompts } = models({
+    scenes: ["scene", "scene"],
+    checks: [
+      { same: false, difference: "The dress is red." },
+      { same: true, difference: null },
+    ],
+  });
+  const { operations, paid } = ledger();
+  const { stored, job: sceneJob } = job(deps, paid);
+  const outcome = await makeMuseScene(
+    await product(),
+    { englishPlace: "a felt rug inside a yurt" },
+    // v1's two tries used, and a "New picture" press added two.
+    { ...fresh(), attempts: MAX_SCENE_ATTEMPTS, allowance: 4 },
+    sceneJob,
+  );
+  assert.deepEqual(operations, [
+    "scene:doll:a3",
+    "check:doll:a3",
+    "scene:doll:a4",
+    "check:doll:a4",
+  ]);
+  assert.match(prompts[0]!, /in this setting: a felt rug inside a yurt/);
+  assert.equal(outcome.stop, "new");
+  assert.deepEqual(stored, ["doll:4"]);
+  // The passed picture is kept, named by its place, to pick again.
+  assert.deepEqual(
+    outcome.scene.pictures?.map((picture) => [
+      picture.ref.path,
+      picture.place,
+      picture.box,
+    ]),
+    [["scene-doll-a4.jpg", "a felt rug inside a yurt", null]],
+  );
+
+  // Without a raise there's no try left, and nothing is paid.
+  const none = ledger();
+  const spent = await makeMuseScene(
+    await product(),
+    { setting: "playroom_shelf" },
+    { ...fresh(), attempts: 4, allowance: 4 },
+    job(deps, none.paid).job,
+  );
+  assert.deepEqual(none.operations, []);
+  assert.equal(spent.stop, "unavailable");
+});
+
+test("how the tries ended: kept_check, image_refused, no_budget or unavailable", async () => {
+  const cases: Array<
+    [
+      Parameters<typeof models>[0],
+      (operation: string) => boolean,
+      ReturnType<typeof makeMuseScene> extends Promise<infer O>
+        ? O extends { stop: infer S }
+          ? S
+          : never
+        : never,
+    ]
+  > = [
+    [
+      {
+        scenes: ["scene", "scene"],
+        checks: [
+          { same: false, difference: "a" },
+          { same: false, difference: "b" },
+        ],
+      },
+      () => false,
+      "kept_check",
+    ],
+    [{ scenes: ["refuse"], checks: [] }, () => false, "image_refused"],
+    [
+      { scenes: ["scene"], checks: [] },
+      (operation) => operation.startsWith("scene:"),
+      "no_budget",
+    ],
+    [{ scenes: ["outage", "outage"], checks: [] }, () => false, "unavailable"],
+  ];
+  for (const [answers, refuse, stop] of cases) {
+    const { deps } = models(answers);
+    const outcome = await makeMuseScene(
+      await product(),
+      { setting: "gift_table" },
+      fresh(),
+      job(deps, ledger(refuse).paid).job,
+    );
+    assert.equal(outcome.stop, stop);
+    assert.equal(outcome.scene.method, "exact");
+  }
+});
+
+test("a scene keeps its newest four pictures, never dropping the one it shows", () => {
+  const ref = (n: number) => ({ bucket: "b", path: `p${n}.jpg` });
+  const picture = (n: number) => ({
+    ref: ref(n),
+    box: null,
+    place: `place ${n}`,
+    madeAt: new Date(2026, 10, 3, 10, n),
+  });
+  const scene: ProductAdStoredScene = {
+    ...fresh(),
+    method: "muse",
+    muse: ref(4),
+    pictures: [1, 2, 3, 4].map(picture),
+  };
+  keepPicture(scene, picture(5));
+  assert.deepEqual(
+    scene.pictures?.map((kept) => kept.ref.path),
+    ["p2.jpg", "p3.jpg", "p4.jpg", "p5.jpg"],
+  );
+  // The owner picked the oldest again: it stays when a fifth comes.
+  scene.muse = ref(2);
+  keepPicture(scene, picture(6));
+  assert.deepEqual(
+    scene.pictures?.map((kept) => kept.ref.path),
+    ["p2.jpg", "p4.jpg", "p5.jpg", "p6.jpg"],
+  );
+  // Framing gives the picture shown its box.
+  scene.box = { x: 0.1, y: 0.2, w: 0.3, h: 0.4 };
+  framePicture(scene);
+  assert.deepEqual(scene.pictures?.[0]?.box, scene.box);
+  assert.equal(scene.pictures?.[3]?.box, null);
 });

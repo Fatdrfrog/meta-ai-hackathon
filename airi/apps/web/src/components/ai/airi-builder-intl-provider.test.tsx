@@ -4,8 +4,9 @@
 
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider, useTranslations } from "next-intl";
+import { NextIntlClientProvider, useLocale, useTranslations } from "next-intl";
 import type React from "react";
+import { ScopedIntlProvider } from "@/components/i18n/scoped-intl-provider";
 import {
   AiriBuilderIntlProvider,
   AiriPreviewLoadFailure,
@@ -23,6 +24,8 @@ const mockIntl = {
 jest.mock("next-intl", () => {
   const React = jest.requireActual<typeof import("react")>("react");
   const MessagesContext = React.createContext<Record<string, unknown>>({});
+  // The provider's locale, as next-intl gives it to its subtree.
+  const LocaleContext = React.createContext<string | undefined>(undefined);
   const lookup = (messages: Record<string, unknown>, path: string) =>
     path
       .split(".")
@@ -34,19 +37,25 @@ jest.mock("next-intl", () => {
         messages
       );
   return {
-    useLocale: () => mockIntl.locale,
+    useLocale: () => React.useContext(LocaleContext) ?? mockIntl.locale,
     useMessages: () => React.useContext(MessagesContext),
     NextIntlClientProvider: ({
+      locale,
       messages,
       children,
     }: {
+      locale?: string;
       messages: Record<string, unknown>;
       children: React.ReactNode;
     }) =>
       React.createElement(
-        MessagesContext.Provider,
-        { value: messages },
-        children
+        LocaleContext.Provider,
+        { value: locale },
+        React.createElement(
+          MessagesContext.Provider,
+          { value: messages },
+          children
+        )
       ),
     useTranslations: (namespace: string) => {
       const messages = React.useContext(MessagesContext);
@@ -189,5 +198,67 @@ describe("AiriBuilderIntlProvider", () => {
     expect(screen.getByTestId("builder")).toHaveTextContent("Page back");
     expect(screen.getByTestId("builder")).toHaveTextContent("Page edit");
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("gives an English-only section English builders on a Russian page", async () => {
+    mockIntl.locale = "ru";
+    const en = {
+      Scenarios: jest.requireActual("../../../messages/scenarios/en/page.json")
+        .Scenarios,
+      templates: jest.requireActual("../../../messages/templates/en/page.json")
+        .templates,
+    };
+
+    render(
+      <NextIntlClientProvider
+        locale="ru"
+        messages={{
+          Scenarios: { simulationBack: "Назад" },
+          templates: { form: { edit: "Редактировать шаблон" } },
+        }}
+      >
+        <AiriBuilderIntlProvider
+          locale="en"
+          fallback={<div role="status">Loading builder</div>}
+        >
+          <TranslatedBuilder />
+          <LocaleProbe />
+        </AiriBuilderIntlProvider>
+      </NextIntlClientProvider>
+    );
+
+    // The page's Russian catalogs don't count: the English ones download.
+    const builder = await screen.findByTestId("builder");
+    expect(builder).toHaveTextContent(en.Scenarios.simulationBack);
+    expect(builder).toHaveTextContent(en.templates.form.edit);
+    expect(builder).not.toHaveTextContent("Назад");
+    expect(screen.getByTestId("locale")).toHaveTextContent("en");
+    expect(mockIntl.missing).toEqual([]);
+  });
+});
+
+function LocaleProbe() {
+  return <span data-testid="locale">{useLocale()}</span>;
+}
+
+describe("ScopedIntlProvider", () => {
+  it("keeps the page's locale unless one is given", () => {
+    mockIntl.locale = "ru";
+    render(
+      <NextIntlClientProvider locale="ru" messages={{ Page: { a: "b" } }}>
+        <ScopedIntlProvider messages={{ Extra: {} }}>
+          <LocaleProbe />
+        </ScopedIntlProvider>
+        <ScopedIntlProvider locale="en" messages={{ Extra: {} }}>
+          <span data-testid="forced">
+            <LocaleProbe />
+          </span>
+        </ScopedIntlProvider>
+      </NextIntlClientProvider>
+    );
+
+    const [kept] = screen.getAllByTestId("locale");
+    expect(kept).toHaveTextContent("ru");
+    expect(screen.getByTestId("forced")).toHaveTextContent("en");
   });
 });
