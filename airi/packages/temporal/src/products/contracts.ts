@@ -291,6 +291,16 @@ export const PRODUCT_AD_SETTINGS = [
   "festive_table",
   "vanity_table",
   "kitchen_counter",
+  "cafe_table",
+  "wooden_workbench",
+  "garden_patio",
+  "bookshop_desk",
+  "velvet_display",
+  "terracotta_ledge",
+  "minimal_pedestal",
+  "cozy_living_room",
+  "bakery_counter",
+  "woven_rug",
 ] as const;
 export type ProductAdSetting = (typeof PRODUCT_AD_SETTINGS)[number];
 

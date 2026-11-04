@@ -620,7 +620,7 @@ describe("picks wait for Update", () => {
     expect(screen.getByText("Updating")).toBeVisible();
   });
 
-  it("cycles the opening with a tap on its sticker, made on Update", async () => {
+  it("cycles or edits the opening and ending inline, made only on Update", async () => {
     routes[`PATCH ${AD_URL}`] = answer(
       { ad: adRecord({ status: "making", runKind: "render", renderNo: 2 }) },
       202
@@ -630,11 +630,16 @@ describe("picks wait for Update", () => {
       name: /Opening 1 of 3/,
     });
     fireEvent.click(sticker);
+    const endingInput = screen.getByRole("textbox", { name: "Ending words" });
+    fireEvent.change(endingInput, {
+      target: { value: "Напишите в WhatsApp для заказа" },
+    });
     expect(callsTo("PATCH", AD_URL)).toHaveLength(0);
     fireEvent.click(screen.getByRole("button", { name: "Update video" }));
     await waitFor(() => expect(callsTo("PATCH", AD_URL)).toHaveLength(1));
     expect(bodyOf("PATCH", AD_URL)).toEqual({
       sticker: "Сыйлық іздеп жүрсіз бе?",
+      ending: "Напишите в WhatsApp для заказа",
     });
   });
 
@@ -672,7 +677,7 @@ describe("picks wait for Update", () => {
     expect(bodyOf("PATCH", AD_URL)).toEqual({ motion: "filmed_sold" });
   });
 
-  it("starts a New place only on its second tap", async () => {
+  it("opens a modal of 20 places plus custom input on New place, and waits for Update video", async () => {
     const SCENE_URL = `${AD_URL}/scenes/${DOLL}`;
     routes[`POST ${SCENE_URL}`] = answer(
       { ad: adRecord({ status: "making", runKind: "scene", renderNo: 2 }) },
@@ -681,13 +686,24 @@ describe("picks wait for Update", () => {
     bench("reel_shelf");
     const place = await screen.findByRole("button", { name: /^New place\./ });
     fireEvent.click(place);
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getAllByRole("radio")).toHaveLength(20);
     expect(callsTo("POST", SCENE_URL)).toHaveLength(0);
-    expect(screen.getByText("Make · 1 picture")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /^Make · 1 picture/ }));
+    fireEvent.click(
+      within(dialog).getByRole("radio", { name: /Sunny cafe table/ })
+    );
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Choose place" })
+    );
+    expect(callsTo("POST", SCENE_URL)).toHaveLength(0);
+    expect(
+      screen.getByRole("button", { name: "New place: Sunny cafe table" })
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Update video" }));
     await waitFor(() => expect(callsTo("POST", SCENE_URL)).toHaveLength(1));
     expect(bodyOf("POST", SCENE_URL)).toEqual({
       requestId: expect.any(String),
-      setting: "gift_table",
+      setting: "cafe_table",
     });
   });
 

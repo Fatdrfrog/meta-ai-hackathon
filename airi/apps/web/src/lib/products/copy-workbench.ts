@@ -132,6 +132,8 @@ export const WORKBENCH_COPY = {
         `Opening ${index + 1} of ${count}. Tap for the next one.`,
       ending: (index: number, count: number) =>
         `Ending ${index + 1} of ${count}. Tap for the next one.`,
+      openingInput: "Opening words",
+      endingInput: "Ending words",
     },
     shots: {
       shot: (index: number, name: string) => `Shot ${index + 1}: ${name}`,
@@ -152,6 +154,15 @@ export const WORKBENCH_COPY = {
           ? "New place: a new picture by Muse Image, from this ad's AI action"
           : `New place: a new picture by Muse Image, ${left} left on this ad`,
       noneLeft: "No new pictures left on this ad",
+      modalTitle: "Choose a new place",
+      modalSubtitle: (left: number | null) =>
+        left === null
+          ? "Pick one of the 20 places or describe your own. Nothing is made until you update the video."
+          : `Pick one of the 20 places or describe your own (${left} left on this ad). Nothing is made until you update the video.`,
+      placesLabel: "20 places",
+      ownPlaceLabel: "Or describe your own place, in any language",
+      ownPlacePlaceholder: "e.g. a felt rug inside a yurt",
+      choosePlace: "Choose place",
       describeTitle: "Describe a place",
       describeLabel: "Your place, in any language",
       describeMake: "Make · 1 picture",

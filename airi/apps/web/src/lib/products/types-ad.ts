@@ -29,6 +29,9 @@ import type {
 import type { ProductAdMetaRecord } from "./types-meta";
 
 export {
+  cleanAdScriptForLanguage,
+  cleanNonKazakhWhatsApp,
+  isKazakhAdLanguage,
   PRODUCT_AD_CTWA_QUESTIONS,
   PRODUCT_AD_ENDING_KINDS,
   PRODUCT_AD_ERROR_CODES,
@@ -363,6 +366,9 @@ export type ProductAdSceneRequest = {
   /** 1 to PRODUCT_AD_PLACE_WORDS_MAX characters after trimming, in any language. */
   words?: string;
   changes?: ProductAdUpdateRequest;
+  /** An optional voice change riding along in the same Update press. */
+  voice?: ProductAdVoiceMode;
+  stockVoiceId?: string;
 };
 
 /**

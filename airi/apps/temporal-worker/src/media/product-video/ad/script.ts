@@ -1,5 +1,6 @@
 import { MetaModelApiError } from "@icecore/airi-runtime/meta-model-api";
 import {
+  cleanAdScriptForLanguage,
   PRODUCT_AD_CTWA_QUESTIONS,
   PRODUCT_AD_ENDING_KINDS,
   PRODUCT_AD_OPENING_KINDS,
@@ -84,6 +85,21 @@ const SETTING_WORDS: Record<ProductAdSetting, string> = {
     "a festive table with a patterned tablecloth and warm string lights",
   vanity_table: "a light vanity table with a round mirror in soft daylight",
   kitchen_counter: "a bright kitchen counter with fresh green herbs",
+  cafe_table: "a small round cafe table in warm morning sunlight",
+  wooden_workbench: "a warm wooden craft workbench with natural wood grain",
+  garden_patio:
+    "a natural stone table on a sunlit garden patio with soft green leaves behind",
+  bookshop_desk:
+    "a tidy wooden study desk with stacked books softly blurred behind",
+  velvet_display:
+    "a soft cream velvet jewelry display stand under warm boutique light",
+  terracotta_ledge:
+    "a warm terracotta courtyard ledge in soft afternoon sunlight",
+  minimal_pedestal:
+    "a clean travertine stone pedestal in a sunlit minimalist studio",
+  cozy_living_room: "a low wooden coffee table in a bright, cozy living room",
+  bakery_counter: "a warm butcher-block bakery counter in soft morning light",
+  woven_rug: "a handwoven patterned rug in warm natural daylight",
 };
 
 /** Muse Image's words for a setting, which scenes.ts puts in its prompt. */
@@ -456,7 +472,10 @@ export function adScriptPrompt(
       `the post, the greeting and the questions are sentences with full stops, commas and question marks; the ` +
       `openings, sticker, captions, title, endings and ending need no full stop (a question opening keeps its ` +
       `question mark). These rules hold for every opening and ending too. Write the shop's name exactly as given, and the app ` +
-      `as WhatsApp in Latin letters, joining a Kazakh ending with a hyphen (WhatsApp-қа). Keep every text within its length.`,
+      (isKazakh(request)
+        ? `as WhatsApp in Latin letters, joining a Kazakh ending with a hyphen (WhatsApp-қа). `
+        : `as WhatsApp in Latin letters, with no Kazakh ending attached (for example "в WhatsApp", never "WhatsApp-қа"). Do not mix languages. `) +
+      `Keep every text within its length.`,
     isKazakh(request)
       ? `Spell Kazakh with its own letters (ә, ғ, қ, ң, ө, ұ, ү, һ, і), never with another language's, such as җ.`
       : "",
@@ -613,9 +632,14 @@ function checkedOptions<K extends string>(
  * dropped, for a repair call the script needs anyway.
  */
 export function withCheckedOptions(
-  script: AdScript,
+  rawScript: AdScript,
   request: ScriptRequest,
 ): { script: AdScript; issues: string[] } {
+  const script = cleanAdScriptForLanguage(
+    rawScript,
+    request.language,
+    request.wordsCode,
+  );
   const limits = PRODUCT_AD_TEXT_LIMITS;
   const openings = checkedOptions(
     "openings",

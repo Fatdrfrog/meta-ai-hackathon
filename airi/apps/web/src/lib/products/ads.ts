@@ -24,6 +24,7 @@ import {
   type ShopWords,
 } from "@/lib/products/shop-words";
 import {
+  cleanAdScriptForLanguage,
   PRODUCT_AD_NEW_PICTURE_MAX_MICROS,
   PRODUCT_AD_STEPS,
   productAdLettersSupported,
@@ -394,21 +395,23 @@ const AI_PICTURES_NOTE: Record<ProductShopWordsCode, string> = {
  */
 export function adPostText(
   ad: Pick<IProductAd, "script" | "products" | "scenes" | "ending"> & {
+    language?: string | null;
     wordsCode: ProductShopWordsCode | null;
   }
 ): string | null {
   if (!ad.script) return null;
+  const script = cleanAdScriptForLanguage(ad.script, ad.language, ad.wordsCode);
   const prices = ad.products
     .map(product => `${product.name} — ${product.priceText}`)
     .join("\n");
   const contact = ad.ending.phone
     ? `WhatsApp: ${ad.ending.phone}`
     : ad.ending.shopName.trim();
-  const call = [ad.script.ending.trim(), contact].filter(Boolean).join("\n");
+  const call = [script.ending.trim(), contact].filter(Boolean).join("\n");
   const aiNote = ad.scenes.some(scene => scene.method === "muse")
     ? AI_PICTURES_NOTE[ad.wordsCode ?? "en"]
     : "";
-  return [ad.script.postIntro.trim(), prices, call, aiNote]
+  return [script.postIntro.trim(), prices, call, aiNote]
     .filter(Boolean)
     .join("\n\n");
 }
@@ -581,7 +584,9 @@ async function toAdRecord(
       : null,
     full ? adTemplateStills(workspaceId, doc) : undefined,
   ]);
-  const script = doc.script;
+  const script = doc.script
+    ? cleanAdScriptForLanguage(doc.script, doc.language, doc.wordsCode)
+    : null;
   const meta = adMetaRecord(doc);
   return {
     id: String(doc._id),
@@ -1450,8 +1455,18 @@ export async function redoProductAdScene(params: {
       $set: {
         script,
         scenes,
-        // A pending motion change rides along, as the words do.
+        // A pending motion or voice change rides along, as the words do.
         ...(changes.motion ? { motion: changes.motion } : {}),
+        ...(request.voice !== undefined
+          ? {
+              voice: request.voice,
+              stockVoiceId:
+                request.voice === "stock"
+                  ? (request.stockVoiceId ?? null)
+                  : null,
+              voiceResult: null,
+            }
+          : {}),
         runKind: "scene",
         status: "making",
         step: "pictures",

@@ -337,3 +337,90 @@ export function productAdScriptIssues(
   }
   return issues;
 }
+
+/** Whether the ad's language is Kazakh. */
+export function isKazakhAdLanguage(
+  language: string | null | undefined,
+  wordsCode?: string | null,
+): boolean {
+  const spoken = (language ?? "").trim();
+  if (spoken && !/^[a-z]{2}$/i.test(spoken)) {
+    return /^(kazakh|kazak|qazaq|қазақ|казах|kaz$)/i.test(spoken);
+  }
+  const code = (spoken || wordsCode || "").trim().toLowerCase();
+  return code === "kk" || code === "kaz";
+}
+
+/**
+ * Strips a Kazakh case suffix attached to "WhatsApp" (such as "WhatsApp-қа"
+ * in "Напишите в WhatsApp-қа для заказа") when it appears in a Russian
+ * phrase ("в WhatsApp-қа", "WhatsApp-қа для заказа") or in a non-Kazakh ad.
+ */
+export function cleanNonKazakhWhatsApp(
+  text: string,
+  isKazakh: boolean,
+): string {
+  // "в WhatsApp-қа" / "на WhatsApp-қа" or "WhatsApp-қа для/чтобы" is always a mixed-language error.
+  let cleaned = text
+    .replace(
+      /(^|\s)((?:в|на|через)\s+)WhatsApp-[A-Za-zÀ-ɏЀ-ԯ]+/gi,
+      "$1$2WhatsApp",
+    )
+    .replace(
+      /\bWhatsApp-[A-Za-zÀ-ɏЀ-ԯ]+(?=\s+(?:для|чтобы|по|и|или|прямо|сейчас)(?:[\s.,!?;:»")]|$))/gi,
+      "WhatsApp",
+    );
+  if (!isKazakh) {
+    cleaned = cleaned.replace(/\bWhatsApp-[A-Za-zÀ-ɏЀ-ԯ]+/gi, "WhatsApp");
+  }
+  return cleaned;
+}
+
+/**
+ * Cleans mixed-language "WhatsApp-қа" suffixes across every text field of an
+ * ad's script.
+ */
+export function cleanAdScriptForLanguage<
+  T extends Omit<ProductAdScript, "edited"> & { edited?: boolean },
+>(
+  script: T,
+  language: string | null | undefined,
+  wordsCode?: string | null,
+): T {
+  const kazakh = isKazakhAdLanguage(language, wordsCode);
+  const fix = (text: string) => cleanNonKazakhWhatsApp(text, kazakh);
+  return {
+    ...script,
+    sticker: fix(script.sticker),
+    scenes: script.scenes.map((scene) => ({
+      ...scene,
+      caption: fix(scene.caption),
+      ...(scene.spoken !== undefined ? { spoken: fix(scene.spoken) } : {}),
+    })),
+    priceCardTitle: fix(script.priceCardTitle),
+    ending: fix(script.ending),
+    ...(script.openings
+      ? {
+          openings: script.openings.map((option) => ({
+            ...option,
+            text: fix(option.text),
+          })),
+        }
+      : {}),
+    ...(script.endings
+      ? {
+          endings: script.endings.map((option) => ({
+            ...option,
+            text: fix(option.text),
+          })),
+        }
+      : {}),
+    postIntro: fix(script.postIntro),
+    ctwa: {
+      headline: fix(script.ctwa.headline),
+      primaryText: fix(script.ctwa.primaryText),
+      greeting: fix(script.ctwa.greeting),
+      questions: script.ctwa.questions.map(fix),
+    },
+  };
+}

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  cleanAdScriptForLanguage,
+  cleanNonKazakhWhatsApp,
   productAdLettersSupported,
   productAdLines,
   productAdOptionIssues,
@@ -201,8 +203,40 @@ test("a scene's setting is one of the places Muse Image knows", () => {
     ["doll", "mug"],
   );
   assert.deepEqual(issues, [
-    "scenes[1].setting must be one of oak_table_window, linen_shelf, stone_counter, playroom_shelf, gift_table, market_stall, marble_boutique, festive_table, vanity_table, kitchen_counter.",
+    "scenes[1].setting must be one of oak_table_window, linen_shelf, stone_counter, playroom_shelf, gift_table, market_stall, marble_boutique, festive_table, vanity_table, kitchen_counter, cafe_table, wooden_workbench, garden_patio, bookshop_desk, velvet_display, terracotta_ledge, minimal_pedestal, cozy_living_room, bakery_counter, woven_rug.",
   ]);
+});
+
+test("cleanNonKazakhWhatsApp removes mixed-language WhatsApp-қа suffixes while keeping pure Kazakh", () => {
+  assert.equal(
+    cleanNonKazakhWhatsApp("Напишите в WhatsApp-қа для заказа", false),
+    "Напишите в WhatsApp для заказа",
+  );
+  assert.equal(
+    cleanNonKazakhWhatsApp("Напишите в WhatsApp-қа для заказа", true),
+    "Напишите в WhatsApp для заказа",
+  );
+  assert.equal(
+    cleanNonKazakhWhatsApp("WhatsApp-қа жазып тапсырыс беріңіз", true),
+    "WhatsApp-қа жазып тапсырыс беріңіз",
+  );
+  const cleaned = cleanAdScriptForLanguage(
+    {
+      ...script(),
+      ending: "Напишите в WhatsApp-қа для заказа",
+      endings: [
+        {
+          text: "Напишите в WhatsApp-қа для заказа",
+          kind: "order",
+          gloss: "Message us on WhatsApp to order",
+        },
+      ],
+    },
+    "Russian",
+    "ru",
+  );
+  assert.equal(cleaned.ending, "Напишите в WhatsApp для заказа");
+  assert.equal(cleaned.endings?.[0]?.text, "Напишите в WhatsApp для заказа");
 });
 
 test("openings and endings pass the words' own checks, one of each kind, at most three", () => {

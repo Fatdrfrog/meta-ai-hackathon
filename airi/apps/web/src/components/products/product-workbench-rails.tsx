@@ -167,30 +167,39 @@ export type WorkbenchLook =
     }
   | { kind: "none" };
 
+/** A new place chosen in the modal, waiting for Update. */
+export type PlacePick = {
+  productId: string;
+  place: { setting: ProductAdSetting } | { words: string };
+};
+
 export function LookRail({
   ad,
   productId,
   look,
   pending,
+  placePick = null,
+  onClearPlacePick,
   onQueue,
   onColourway,
   onCarouselLook,
-  onNewPlace,
+  onOpenNewPlace,
   newPlaceBlocked,
 }: {
   ad: ProductAdRecord;
   productId: string;
   look: WorkbenchLook;
   pending: ProductAdUpdateRequest | null;
+  placePick?: PlacePick | null;
+  onClearPlacePick?: () => void;
   onQueue: (change: ProductAdUpdateRequest) => void;
   onColourway: (colourway: ProductAdStudioColourway) => void;
   onCarouselLook: (look: "room" | "studio") => void;
-  /** The second tap on New place. */
-  onNewPlace: (productId: string, setting: ProductAdSetting) => void;
+  /** Opens the modal of 20 places + custom place input. */
+  onOpenNewPlace: () => void;
   /** Why New place can't start now ("AI is off for your company"); null when it can. */
   newPlaceBlocked: string | null;
 }) {
-  const [armed, setArmed] = useState<string | null>(null);
   if (look.kind === "none") return null;
   const product = ad.products.find(entry => entry.productId === productId);
   if (!product) return null;
@@ -273,8 +282,14 @@ export function LookRail({
     scene.redo.renderNo === ad.renderNo
       ? scene.redo.outcome
       : null;
-  const isArmed = armed === productId;
-  const setting = nextSetting(scene?.place?.setting ?? null);
+  const pickedPlace =
+    placePick?.productId === productId ? placePick.place : null;
+  const pickedPlaceLabel = pickedPlace
+    ? "setting" in pickedPlace
+      ? PRODUCTS_COPY.ad.settings[pickedPlace.setting]
+      : `«${pickedPlace.words}»`
+    : null;
+  const isPicked = pickedPlace !== null;
 
   return (
     <Rail
@@ -287,7 +302,7 @@ export function LookRail({
           </p>
         ) : blocked ? (
           <p className={styles.note}>{blocked}</p>
-        ) : isArmed ? (
+        ) : isPicked ? (
           <p className={styles.note}>{COPY.look.newPlaceNote(left)}</p>
         ) : null
       }
@@ -295,11 +310,11 @@ export function LookRail({
       <button
         type="button"
         className={cn(styles.tile, styles.lookTile, styles.wallTile)}
-        aria-pressed={shown.exact}
+        aria-pressed={!isPicked && shown.exact}
         aria-label={`${COPY.look.wall}. ${COPY.look.exactPhoto}`}
-        data-on={shown.exact || undefined}
+        data-on={(!isPicked && shown.exact) || undefined}
         onClick={() => {
-          setArmed(null);
+          onClearPlacePick?.();
           onQueue({ scenes: [{ productId, useExact: true }] });
         }}
       >
@@ -317,7 +332,8 @@ export function LookRail({
       </button>
       {pictures.length > 0
         ? pictures.map(picture => {
-            const on = !shown.exact && shown.pictureIndex === picture.index;
+            const on =
+              !isPicked && !shown.exact && shown.pictureIndex === picture.index;
             return (
               <button
                 key={picture.index}
@@ -327,7 +343,7 @@ export function LookRail({
                 aria-label={`${COPY.look.picture(picture.index, picture.place)}. ${COPY.look.keptPicture}`}
                 data-on={on || undefined}
                 onClick={() => {
-                  setArmed(null);
+                  onClearPlacePick?.();
                   onQueue({
                     scenes: [
                       {
@@ -354,7 +370,7 @@ export function LookRail({
           })
         : scene?.method === "muse" && scene.imageUrl
           ? (() => {
-              const on = !shown.exact;
+              const on = !isPicked && !shown.exact;
               return (
                 <button
                   type="button"
@@ -362,7 +378,7 @@ export function LookRail({
                   aria-pressed={on}
                   data-on={on || undefined}
                   onClick={() => {
-                    setArmed(null);
+                    onClearPlacePick?.();
                     onQueue({ scenes: [{ productId, useExact: false }] });
                   }}
                 >
@@ -381,25 +397,22 @@ export function LookRail({
       <button
         type="button"
         className={cn(styles.tile, styles.lookTile, styles.newPlace)}
-        data-armed={isArmed || undefined}
+        data-on={isPicked || undefined}
+        data-armed={isPicked || undefined}
         data-running={running || undefined}
         disabled={blocked !== null || (busy && !running)}
+        aria-pressed={isPicked}
         aria-busy={running || undefined}
         aria-label={
           running
             ? `${COPY.look.making}…`
-            : isArmed
-              ? `${COPY.look.makeOnePicture}: ${PRODUCTS_COPY.ad.settings[setting]}`
+            : isPicked
+              ? `${COPY.look.newPlace}: ${pickedPlaceLabel}`
               : `${COPY.look.newPlace}. ${COPY.look.newPlaceNote(left)}`
         }
         onClick={() => {
           if (running) return;
-          if (!isArmed) {
-            setArmed(productId);
-            return;
-          }
-          setArmed(null);
-          onNewPlace(productId, setting);
+          onOpenNewPlace();
         }}
       >
         {running ? (
@@ -407,8 +420,6 @@ export function LookRail({
             <Sparkles aria-hidden="true" />
             {COPY.look.making}
           </span>
-        ) : isArmed ? (
-          <span className={styles.makeChip}>{COPY.look.makeOnePicture}</span>
         ) : (
           <>
             <Wand2 aria-hidden="true" className={styles.newPlaceIcon} />
@@ -417,7 +428,9 @@ export function LookRail({
             </span>
           </>
         )}
-        <span className={styles.tileName}>{COPY.look.newPlace}</span>
+        <span className={styles.tileName}>
+          {pickedPlaceLabel ?? COPY.look.newPlace}
+        </span>
       </button>
     </Rail>
   );

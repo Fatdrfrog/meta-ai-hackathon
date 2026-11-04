@@ -189,6 +189,8 @@ export function effectiveAdChanges(
 
 /** The workbench's free changes, as they wait and go. */
 export type ProductAdAutoUpdate = {
+  /** Whether a page-level ProductAdAutoUpdateProvider owns this controller. */
+  shared?: boolean;
   /** Queued and not sent yet, as the ad doesn't have it; null when nothing waits. */
   pending: ProductAdUpdateRequest | null;
   /** Update was pressed: the PATCH is on its way, or waits for the run going to end. */
@@ -542,6 +544,7 @@ export function useSharedAdAutoUpdate(
   if (!shared) return fallback;
   const state = adId ? shared.states.get(adId) : undefined;
   return {
+    shared: true,
     pending: state?.pending ?? null,
     sending: state?.sending ?? false,
     problem: state?.problem ?? null,

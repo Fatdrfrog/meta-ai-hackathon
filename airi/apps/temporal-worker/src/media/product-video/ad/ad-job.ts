@@ -10,6 +10,7 @@ import {
 } from "@icecore/airi-runtime/meta-model-api";
 import { getWorkspaceAiRequiredDetails } from "@icecore/shared/lib/workspace-ai-errors";
 import {
+  cleanAdScriptForLanguage,
   PRODUCT_AD_PLACE_MAX_COST_MICROS,
   PRODUCT_AD_REDO_ATTEMPTS,
   productAdMotionOf,
@@ -317,7 +318,9 @@ export async function runProductAd(ports: AdJobPorts): Promise<AdRunResult> {
   );
 
   const products = await loadProducts(ports, ad.products);
-  let script = ad.script;
+  let script = ad.script
+    ? cleanAdScriptForLanguage(ad.script, ad.language, ad.wordsCode)
+    : null;
   const scenes = new Map(
     ad.scenes.map((scene) => [scene.productId, { ...scene }]),
   );
@@ -1096,10 +1099,14 @@ async function adVoices(
 ): Promise<{ voices: Map<string, Pcm>; lines: Map<string, string> }> {
   const lines = new Map<string, string>();
   // Only a make or a voice run pays for the voice; a scene run ("New
-  // picture") or a render reuses what's kept, as a render does.
+  // picture") also reads a new stock or cloned voice when one rode along
+  // with the press (kept lines for an unchanged voice cost $0).
   const runKind = ad.runKind ?? "make";
   const mode: ProductAdMode =
-    ports.mode === "make" && (runKind === "make" || runKind === "voice")
+    ports.mode === "make" &&
+    (runKind === "make" ||
+      runKind === "voice" ||
+      (runKind === "scene" && (ad.voice === "clone" || ad.voice === "stock")))
       ? "make"
       : "render";
   if (ad.voice !== "clone" && ad.voice !== "stock") {

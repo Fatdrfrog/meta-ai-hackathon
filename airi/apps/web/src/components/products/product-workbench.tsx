@@ -13,6 +13,8 @@ import { PRODUCTS_COPY } from "@/lib/products/copy";
 import type { ProductTemplate } from "@/lib/products/templates";
 import {
   PRODUCT_AD_PLACE_WORDS_MAX,
+  PRODUCT_AD_SETTINGS,
+  PRODUCT_AD_TEXT_LIMITS,
   productAdMotionOf,
   type ProductAdPublishRequest,
   type ProductAdRecord,
@@ -51,6 +53,7 @@ import {
   adRequestId,
   clockTime,
   wordsEdited,
+  wordsIssue,
 } from "./product-ad-parts";
 import {
   CtwaDetails,
@@ -79,8 +82,10 @@ import {
 import {
   adVoiceKey,
   LookRail,
+  nextSetting,
   ShotsRail,
   VoiceRail,
+  type PlacePick,
   type VoicePick,
   type WorkbenchLook,
 } from "./product-workbench-rails";
@@ -401,12 +406,22 @@ function AdWorkbench({
     template.renderer === "motion" ? (template.motion ?? null) : null;
   const motion = ad ? productAdMotionOf(ad.motion) : null;
   const hasVideo = Boolean(ad?.video);
-  const { queue, send } = auto;
+  const { queue, send, shared } = auto;
   useEffect(() => {
-    if (!want || !hasVideo || motion === null || motion === want) return;
+    // On the Products page (shared provider), clicking a Reel tile sends its
+    // motion from the page; only a standalone workbench sends it here.
+    if (
+      shared ||
+      !want ||
+      !hasVideo ||
+      ad?.status !== "ready" ||
+      motion === null ||
+      motion === want
+    )
+      return;
     queue({ motion: want });
     send();
-  }, [want, motion, hasVideo, queue, send]);
+  }, [shared, want, motion, hasVideo, ad?.status, queue, send]);
 
   // A run that ends changes the tiles' art and stamps on the page.
   const status = ad?.status;
@@ -725,21 +740,31 @@ function lookOf(
   return { kind: "none" };
 }
 
-/** An opening or ending the preview cycles through Muse Spark's options. */
+/** An opening or ending the preview cycles through Muse Spark's options and lets the owner edit. */
 function cycleOf(
   options: ReadonlyArray<{ text: string }>,
   text: string | null,
+  savedText: string | undefined,
+  limit: { chars: number; lines?: number },
+  inputLabel: string,
   onPick: (text: string) => void,
   disabled: boolean
 ): WorkbenchCycle | null {
   if (text === null) return null;
   const at = options.findIndex(option => !wordsEdited(option.text, text));
   const count = Math.max(1, options.length);
+  const changed = wordsEdited(text, savedText);
+  const issue = changed ? wordsIssue(text, limit) : null;
+  const maxLength = limit.chars * (limit.lines ?? 1) + 20;
   return {
     text,
     index: Math.max(0, at),
     count: options.length > 1 ? count : 1,
     disabled,
+    inputLabel,
+    maxLength,
+    issue,
+    onChange: onPick,
     onNext: () => {
       const next = options[(at + 1) % options.length];
       if (next) onPick(next.text);
@@ -789,6 +814,7 @@ function AdReadyBench({
   const [sheet, setSheet] = useState(false);
   const [runOpen, setRunOpen] = useState(false);
   const [describe, setDescribe] = useState(false);
+  const [placePick, setPlacePick] = useState<PlacePick | null>(null);
   const [placeProblem, setPlaceProblem] = useState<string | null>(null);
   // A voice picked on the rail; it waits for Update with the other picks.
   const [voicePick, setVoicePick] = useState<VoicePick | null>(null);
@@ -813,12 +839,13 @@ function AdReadyBench({
 
   const running = ad.status === "making";
   const updating = running || auto.sending || voiceSending;
-  // The picks waiting for Update: free changes, and a voice the video hasn't.
+  // The picks waiting for Update: free changes, a new place, and a voice the video hasn't.
   const voiceChange =
     voicePick && (voicePick.key !== adVoiceKey(ad) || ad.voiceResult?.fallback)
       ? voicePick
       : null;
-  const hasChanges = auto.pending !== null || voiceChange !== null;
+  const hasChanges =
+    auto.pending !== null || voiceChange !== null || placePick !== null;
   // Why Post and Create wait: an update going, or picks not made yet.
   const updateWhy = updating
     ? COPY.states.waitForUpdate
@@ -906,50 +933,67 @@ function AdReadyBench({
         ? [ad.video.posterUrl]
         : [];
 
-  // The opening and ending, cycled on the preview.
+  // The opening and ending, cycled or edited inline on the preview.
   const sticker = auto.pending?.sticker ?? ad.script?.sticker ?? null;
   const endingText = auto.pending?.ending ?? ad.script?.ending ?? null;
   const opening = cycleOf(
     ad.openings,
     sticker,
+    ad.script?.sticker,
+    PRODUCT_AD_TEXT_LIMITS.sticker,
+    COPY.cycle.openingInput,
     text => auto.queue({ sticker: text }),
     false
   );
   const ending = cycleOf(
     ad.endings,
     endingText,
+    ad.script?.ending,
+    PRODUCT_AD_TEXT_LIMITS.ending,
+    COPY.cycle.endingInput,
     text => auto.queue({ ending: text }),
     false
   );
+  const wordsInvalid = Boolean(opening?.issue || ending?.issue);
 
-  const newPlace = async (
-    productId: string,
-    place: { setting: ProductAdSetting } | { words: string }
-  ) => {
-    setPlaceProblem(null);
-    // What waits goes in with the new picture.
-    const changes = auto.take();
-    try {
-      setAd(
-        await redoProductAdScene(workspaceId, ad.id, productId, {
-          requestId: adRequestId(),
-          ...place,
-          ...(changes ? { changes } : {}),
-        })
-      );
-      return true;
-    } catch (error) {
-      if (changes) auto.queue(changes);
-      const code = error instanceof ProductDraftError ? error.code : "failed";
-      const errors: Record<string, string> = AD.newPictureErrors;
-      setPlaceProblem(errors[code] ?? COPY.newPlaceFailed);
-      return false;
-    }
-  };
-
-  // Update: every pick in one run. A new voice carries the free changes in
-  // its voice run; otherwise they go as one free render.
+  // Update: every pick in one run. A new place carries any voice and free
+  // changes in its scene run; a new voice carries the free changes in its
+  // voice run; otherwise they go as one free render.
   const update = async () => {
+    if (wordsInvalid) return;
+    if (placePick) {
+      setVoiceSending(true);
+      setPlaceProblem(null);
+      setVoiceProblem(null);
+      const changes = auto.take();
+      try {
+        setAd(
+          await redoProductAdScene(workspaceId, ad.id, placePick.productId, {
+            requestId: adRequestId(),
+            ...placePick.place,
+            ...(changes ? { changes } : {}),
+            ...(voiceChange
+              ? {
+                  voice: voiceChange.voice,
+                  ...(voiceChange.stockVoiceId
+                    ? { stockVoiceId: voiceChange.stockVoiceId }
+                    : {}),
+                }
+              : {}),
+          })
+        );
+        setPlacePick(null);
+        setVoicePick(null);
+      } catch (error) {
+        if (changes) auto.queue(changes);
+        const code = error instanceof ProductDraftError ? error.code : "failed";
+        const errors: Record<string, string> = AD.newPictureErrors;
+        setPlaceProblem(errors[code] ?? COPY.newPlaceFailed);
+      } finally {
+        setVoiceSending(false);
+      }
+      return;
+    }
     if (!voiceChange) {
       auto.send();
       return;
@@ -981,6 +1025,8 @@ function AdReadyBench({
   };
   const discard = () => {
     auto.cancel();
+    setPlacePick(null);
+    setPlaceProblem(null);
     setVoicePick(null);
     setVoiceProblem(null);
   };
@@ -1316,14 +1362,19 @@ function AdReadyBench({
               productId={shotId}
               look={look}
               pending={auto.pending}
+              placePick={placePick}
+              onClearPlacePick={() => {
+                if (placePick?.productId === shotId) setPlacePick(null);
+              }}
               onQueue={auto.queue}
               onColourway={next =>
                 setColourways(current => ({ ...current, [shotId]: next }))
               }
               onCarouselLook={setCarouselLook}
-              onNewPlace={(productId, setting) =>
-                void newPlace(productId, { setting })
-              }
+              onOpenNewPlace={() => {
+                setPlaceProblem(null);
+                setDescribe(true);
+              }}
               newPlaceBlocked={paidBlocked}
             />
             {placeProblem ? (
@@ -1366,7 +1417,11 @@ function AdReadyBench({
               </Button>
               <Button
                 type="button"
-                disabled={updateCents > 0 && paidBlocked !== null}
+                disabled={
+                  wordsInvalid ||
+                  ((updateCents > 0 || placePick !== null) &&
+                    paidBlocked !== null)
+                }
                 onClick={() => void update()}
               >
                 {updateCents > 0
@@ -1438,15 +1493,24 @@ function AdReadyBench({
         />
       ) : null}
       {look.kind === "scene" ? (
-        <DescribePlace
+        <NewPlaceSheet
+          key={`${shotId}-${describe ? "open" : "closed"}`}
           id={ids}
           open={describe}
           onOpenChange={setDescribe}
-          onMake={words =>
-            newPlace(shotId, { words }).then(done => {
-              if (done) setDescribe(false);
-            })
+          nowSetting={
+            ad.scenes.find(scene => scene.productId === shotId)?.place
+              ?.setting ?? null
           }
+          initialPlace={
+            placePick?.productId === shotId ? placePick.place : null
+          }
+          picturesLeft={ad.picturesLeft}
+          onChoose={place => {
+            setPlaceProblem(null);
+            setPlacePick({ productId: shotId, place });
+            setDescribe(false);
+          }}
           problem={placeProblem}
         />
       ) : null}
@@ -1454,48 +1518,107 @@ function AdReadyBench({
   );
 }
 
-/** "Describe a place…" from ⋯: v2's described place, off the main surface. */
-function DescribePlace({
+/**
+ * The New place modal: 20 tested places to choose from, plus a custom input
+ * to describe any place. Choosing one queues it for the next Update press.
+ */
+function NewPlaceSheet({
   id,
   open,
   onOpenChange,
-  onMake,
+  nowSetting,
+  initialPlace,
+  picturesLeft,
+  onChoose,
   problem,
 }: {
   id: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onMake: (words: string) => Promise<void>;
+  nowSetting: ProductAdSetting | null;
+  initialPlace: { setting: ProductAdSetting } | { words: string } | null;
+  picturesLeft: number | null;
+  onChoose: (place: { setting: ProductAdSetting } | { words: string }) => void;
   problem: string | null;
 }) {
-  const [words, setWords] = useState("");
-  const [sending, setSending] = useState(false);
+  const [selected, setSelected] = useState<ProductAdSetting | null>(() =>
+    initialPlace && "setting" in initialPlace
+      ? initialPlace.setting
+      : initialPlace && "words" in initialPlace
+        ? null
+        : nextSetting(nowSetting)
+  );
+  const [words, setWords] = useState(() =>
+    initialPlace && "words" in initialPlace ? initialPlace.words : ""
+  );
   const text = oneLine(words);
+  const customActive = text.length > 0 && selected === null;
+  const canChoose = customActive || selected !== null;
   return (
-    <Dialog open={open} onOpenChange={next => !sending && onOpenChange(next)}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
         overlayClassName={theme.scrim}
-        className={cn(theme.theme, styles.sheet)}
+        className={cn(theme.theme, styles.sheet, styles.placesSheet)}
       >
         <DialogTitle className={cn(theme.displayM, styles.sheetTitle)}>
-          {COPY.look.describeTitle}
+          {COPY.look.modalTitle}
         </DialogTitle>
         <DialogDescription className={styles.note}>
-          {AD.describeHelp}
+          {COPY.look.modalSubtitle(picturesLeft)}
         </DialogDescription>
-        <label htmlFor={`${id}-place`} className={styles.fieldLabel}>
-          {COPY.look.describeLabel}
-        </label>
-        <input
-          id={`${id}-place`}
-          className={styles.input}
-          value={words}
-          maxLength={PRODUCT_AD_PLACE_WORDS_MAX}
-          autoComplete="off"
-          disabled={sending}
-          onChange={event => setWords(event.target.value)}
-        />
+        <div
+          role="radiogroup"
+          aria-label={COPY.look.placesLabel}
+          className={styles.placesGrid}
+        >
+          {PRODUCT_AD_SETTINGS.map(setting => {
+            const on = selected === setting && !customActive;
+            return (
+              <button
+                key={setting}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                data-on={on || undefined}
+                className={styles.placeOption}
+                onClick={() => {
+                  setSelected(setting);
+                  setWords("");
+                }}
+              >
+                <span>{AD.settings[setting]}</span>
+                {setting === nowSetting ? (
+                  <span className={styles.placeNowChip}>{AD.placeNow}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+        <div className={styles.customPlace}>
+          <div className={styles.customPlaceHead}>
+            <label htmlFor={`${id}-place`} className={styles.fieldLabel}>
+              {COPY.look.ownPlaceLabel}
+            </label>
+            <span className={styles.captionCount}>
+              {AD.describeCount(Array.from(words).length)}
+            </span>
+          </div>
+          <input
+            id={`${id}-place`}
+            className={styles.input}
+            value={words}
+            placeholder={COPY.look.ownPlacePlaceholder}
+            maxLength={PRODUCT_AD_PLACE_WORDS_MAX}
+            autoComplete="off"
+            onChange={event => {
+              const next = event.target.value;
+              setWords(next);
+              if (oneLine(next)) setSelected(null);
+            }}
+          />
+          <p className={styles.note}>{AD.describeHelp}</p>
+        </div>
         {problem ? (
           <p role="alert" className={styles.issue}>
             {problem}
@@ -1505,20 +1628,19 @@ function DescribePlace({
           <Button
             type="button"
             variant="ghost"
-            disabled={sending}
             onClick={() => onOpenChange(false)}
           >
             {COPY.look.describeCancel}
           </Button>
           <Button
             type="button"
-            disabled={sending || !text}
+            disabled={!canChoose}
             onClick={() => {
-              setSending(true);
-              void onMake(text).finally(() => setSending(false));
+              if (customActive) onChoose({ words: text });
+              else if (selected) onChoose({ setting: selected });
             }}
           >
-            {COPY.look.describeMake}
+            {COPY.look.choosePlace}
           </Button>
         </div>
       </DialogContent>

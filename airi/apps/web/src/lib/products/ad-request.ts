@@ -242,13 +242,16 @@ const SCENE_REQUEST_KEYS: ReadonlySet<string> = new Set([
   "setting",
   "words",
   "changes",
+  "voice",
+  "stockVoiceId",
 ]);
 
 /**
  * The body of POST /products/ads/[adId]/scenes/[productId] ("New picture"),
  * checked: the press's id, exactly one of a tested setting or the owner's
  * place in 1 to PRODUCT_AD_PLACE_WORDS_MAX characters (one line, trimmed),
- * and any pending free changes as PATCH takes them. Null when it isn't one.
+ * and any pending free changes or voice change as PATCH/voice take them.
+ * Null when it isn't one.
  */
 export function parseProductAdSceneRequest(
   body: unknown
@@ -275,6 +278,23 @@ export function parseProductAdSceneRequest(
     const changes = parseProductAdUpdateRequest(body.changes);
     if (!changes) return null;
     request.changes = changes;
+  }
+  if (body.voice !== undefined) {
+    if (!(PRODUCT_AD_VOICE_MODES as readonly unknown[]).includes(body.voice))
+      return null;
+    const voice = body.voice as ProductAdVoiceMode;
+    if (voice === "stock") {
+      const stock = productAdStockVoice(body.stockVoiceId);
+      if (!stock) return null;
+      request.voice = voice;
+      request.stockVoiceId = stock.id;
+    } else {
+      if (body.stockVoiceId !== undefined && body.stockVoiceId !== null)
+        return null;
+      request.voice = voice;
+    }
+  } else if (body.stockVoiceId !== undefined) {
+    return null;
   }
   return request;
 }

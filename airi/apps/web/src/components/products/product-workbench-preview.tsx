@@ -28,12 +28,16 @@ const COPY = PRODUCTS_COPY.workbench;
 /** One picture shown in a frame. */
 export type WorkbenchPicture = { url: string; alt: string };
 
-/** A sticker the preview cycles: the words shown now, and Muse Spark's options. */
+/** A sticker the preview cycles and lets the owner edit: the words shown now, and Muse Spark's options. */
 export type WorkbenchCycle = {
   text: string;
   index: number;
   count: number;
   onNext: () => void;
+  onChange?: (text: string) => void;
+  inputLabel?: string;
+  maxLength?: number;
+  issue?: string | null;
   disabled: boolean;
 };
 
@@ -63,6 +67,40 @@ function CycleSticker({
   className: string;
 }) {
   const interactive = cycle.count > 1;
+  if (cycle.onChange) {
+    return (
+      <div className={styles.stickerField}>
+        <div className={className} data-invalid={cycle.issue ? "" : undefined}>
+          <input
+            type="text"
+            value={cycle.text}
+            disabled={cycle.disabled}
+            maxLength={cycle.maxLength ?? 60}
+            aria-label={cycle.inputLabel}
+            aria-invalid={cycle.issue ? true : undefined}
+            onChange={event => cycle.onChange?.(event.target.value)}
+            className={styles.stickerInput}
+          />
+          {interactive ? (
+            <button
+              type="button"
+              className={styles.cycleBadge}
+              onClick={cycle.onNext}
+              disabled={cycle.disabled}
+              aria-label={`${cycle.text}. ${label(cycle.index, cycle.count)}`}
+            >
+              <RefreshCw aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+        {cycle.issue ? (
+          <p role="alert" className={styles.issue}>
+            {cycle.issue}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
   if (!interactive)
     return (
       <span className={className}>
